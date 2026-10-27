@@ -20,26 +20,26 @@ import io.agentscope.core.model.GenerateOptions;
 import java.util.Objects;
 
 /**
- * Base class for summary-related events.
+ * 摘要相关事件的基类。
  *
- * <p>This sealed class provides common context for all summary events that occur
- * when a ReActAgent reaches its maximum iterations and generates a summary:
+ * <p>此密封类为所有摘要事件提供公共上下文；这些事件发生在
+ * ReActAgent 达到最大迭代次数并生成摘要时：
  * <ul>
- *   <li>{@link #getModelName()} - The model name (e.g., "qwen-plus", "gpt-4")</li>
- *   <li>{@link #getGenerateOptions()} - The generation options (temperature, etc.)</li>
+ *   <li>{@link #getModelName()}：模型名称（例如 "qwen-plus"、"gpt-4"）</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项（temperature 等）</li>
  * </ul>
  *
- * <p>Subclasses represent different stages of the summary process:
+ * <p>子类表示摘要流程的不同阶段：
  * <ul>
- *   <li>{@link PreSummaryEvent} - Before summary generation</li>
- *   <li>{@link SummaryChunkEvent} - During streaming</li>
- *   <li>{@link PostSummaryEvent} - After summary generation completes</li>
+ *   <li>{@link PreSummaryEvent}：摘要生成前</li>
+ *   <li>{@link SummaryChunkEvent}：流式输出期间</li>
+ *   <li>{@link PostSummaryEvent}：摘要生成完成后</li>
  * </ul>
  *
  * @see PreSummaryEvent
  * @see SummaryChunkEvent
  * @see PostSummaryEvent
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public abstract sealed class SummaryEvent extends HookEvent
@@ -49,13 +49,13 @@ public abstract sealed class SummaryEvent extends HookEvent
     private final GenerateOptions generateOptions;
 
     /**
-     * Constructor for SummaryEvent.
+     * SummaryEvent 的构造器。
      *
-     * @param type The event type (must not be null)
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null if using model defaults)
-     * @throws NullPointerException if type, agent, or modelName is null
+     * @param type 事件类型（不可为 null）
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（使用模型默认值时可为 null）
+     * @throws NullPointerException 当 type、agent 或 modelName 为 null 时抛出
      */
     protected SummaryEvent(
             HookEventType type, Agent agent, String modelName, GenerateOptions generateOptions) {
@@ -65,19 +65,19 @@ public abstract sealed class SummaryEvent extends HookEvent
     }
 
     /**
-     * Get the model name.
+     * 获取模型名称。
      *
-     * @return The model name (e.g., "qwen-plus", "gpt-4")
+     * @return 模型名称（例如 "qwen-plus"、"gpt-4"）
      */
     public final String getModelName() {
         return modelName;
     }
 
     /**
-     * Get the generation options.
+     * 获取生成选项。
      *
-     * @return The generation options (temperature, maxTokens, etc.), or null if using model
-     *     defaults
+     * @return 生成选项（temperature、maxTokens 等）；使用模型
+     *     默认值时为 null
      */
     public final GenerateOptions getGenerateOptions() {
         return generateOptions;

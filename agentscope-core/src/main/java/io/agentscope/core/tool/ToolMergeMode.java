@@ -16,36 +16,30 @@
 package io.agentscope.core.tool;
 
 /**
- * Enum defining how externally injected tools (e.g. from a frontend) should be merged with an
- * agent's shared toolkit.
+ * 定义如何将外部注入工具（例如前端工具）与智能体共享工具集合并的枚举。
  *
- * <p>An external tool is by definition schema-only (no local implementation). This enum controls
- * how a per-call {@link ToolRequestConfig} is composed with the shared, stateless {@link Toolkit}
- * to produce the tool surface for one call.
+ * <p>外部工具按定义只有模式、没有本地实现。此枚举控制逐调用 {@link ToolRequestConfig} 如何与共享无状态 {@link Toolkit} 组合，形成一次调用可见的工具范围。
  */
 public enum ToolMergeMode {
 
     /**
-     * Use only externally injected tools.
+     * 仅使用外部注入工具。
      *
-     * <p>The agent's shared toolkit is ignored completely. Only the tools carried in the per-call
-     * request config will be available.
+     * <p>完全忽略智能体共享工具集，只提供逐调用请求配置携带的工具。
      */
     EXTERNAL_ONLY,
 
     /**
-     * Use only the agent's shared toolkit.
+     * 仅使用智能体共享工具集。
      *
-     * <p>Externally injected tools are ignored. Only tools registered in the agent's toolkit will
-     * be available.
+     * <p>忽略外部注入工具，只提供已注册到智能体工具集的工具。
      */
     AGENT_ONLY,
 
     /**
-     * Merge external tools with the agent's toolkit, external takes priority.
+     * 合并外部工具与智能体工具集，外部工具优先。
      *
-     * <p>Both external tools and agent toolkit tools are available. If there are name conflicts,
-     * external tools override agent tools.
+     * <p>两者均可用；名称冲突时，外部工具覆盖智能体工具。
      */
     MERGE_EXTERNAL_PRIORITY
 }

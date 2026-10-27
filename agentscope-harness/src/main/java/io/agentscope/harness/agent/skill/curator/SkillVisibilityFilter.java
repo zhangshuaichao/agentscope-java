@@ -20,21 +20,21 @@ import io.agentscope.core.skill.AgentSkill;
 import java.util.List;
 
 /**
- * Runtime gate that decides which skills are exposed to the model on a per-call basis. Hooked
- * after {@code DynamicSkillMiddleware} composes the merged repository view, so it sees the
- * final-list of candidate skills before they reach the system prompt.
+ * 按调用决定向模型暴露哪些技能的运行时门控。接在 {@code DynamicSkillMiddleware} 组合仓库视图之后，因此能在候选技能进入系统提示前看到最终列表。
  *
- * <p>The standard implementations live in this package:
+ * <p>本包的标准实现：
  * <ul>
- *   <li>{@link EnvironmentFilter} — environment matching (applies to every skill)</li>
- *   <li>{@link CanaryFilter} — userId-keyed percentage rollout (agent-created only)</li>
- *   <li>{@link AllowListFilter} — explicit name allow-list (agent-created only)</li>
- *   <li>{@link CompositeFilter} — chains other filters with AND semantics</li>
+ * <li>{@link EnvironmentFilter}：环境匹配（作用于全部技能）。</li>
+ * <li>{@link CanaryFilter}：以 userId 为键的百分比灰度发布（仅智能体创建的技能）。</li>
+ * <li>{@link AllowListFilter}：显式名称允许名单（仅智能体创建的技能）。</li>
+ * <li>{@link CompositeFilter}：以 AND 语义串联其他过滤器。</li>
  * </ul>
  */
 @SuppressWarnings("deprecation")
 public interface SkillVisibilityFilter {
 
-    /** Filter the skill list down to those visible for the current runtime context. */
+    /**
+     * 将技能列表过滤为当前运行时上下文可见的子集。
+     */
     List<AgentSkill> filter(List<AgentSkill> all, RuntimeContext ctx);
 }

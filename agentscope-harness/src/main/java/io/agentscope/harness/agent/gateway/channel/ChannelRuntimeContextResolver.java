@@ -18,26 +18,25 @@ package io.agentscope.harness.agent.gateway.channel;
 import io.agentscope.core.agent.RuntimeContext;
 
 /**
- * Resolves a caller-provided {@link RuntimeContext} for a Channel / Gateway turn.
+ * 为渠道／网关轮次解析调用方提供的 {@link RuntimeContext}。
  *
- * <p>Applications can plug this into {@link
- * io.agentscope.harness.agent.gateway.HarnessGateway} (or via {@link
- * io.agentscope.harness.agent.gateway.GatewayBootstrap}) to attach request-scoped values such as
- * tenant information, force-sync flags, or tool dependencies. Gateway identity fields ({@code
- * sessionId}, {@code userId}, {@code outboundAddress}, …) are still applied after resolution and
- * take precedence over conflicting caller values.
+ * <p>应用可将它接入 {@link io.agentscope.harness.agent.gateway.HarnessGateway}，
+ * 或通过 {@link io.agentscope.harness.agent.gateway.GatewayBootstrap} 接入，
+ * 附加租户信息、强制同步标志、工具依赖等请求级值。网关身份字段（{@code
+ * sessionId}、{@code userId}、{@code outboundAddress} 等）仍在解析之后应用，
+ * 并覆盖冲突的调用方值。
  *
- * <p>Return {@code null} to leave the existing caller context (from {@link
- * ChannelRuntimeContextRequest#callerContext()}) unchanged.
+ * <p>返回 {@code null} 时，保留已有调用方上下文
+ * （来自 {@link ChannelRuntimeContextRequest#callerContext()}）不变。
  */
 @FunctionalInterface
 public interface ChannelRuntimeContextResolver {
 
     /**
-     * Resolve the runtime context for the current channel turn.
+     * 解析当前渠道轮次的运行上下文。
      *
-     * @param request channel turn metadata, including any caller-supplied context
-     * @return a runtime context to use as the merge base, or {@code null} to keep {@link
+     * @param request 渠道轮次元数据，包括调用方提供的上下文
+     * @return 作为合并基础的运行上下文；{@code null} 表示保留 {@link
      *     ChannelRuntimeContextRequest#callerContext()}
      */
     RuntimeContext resolve(ChannelRuntimeContextRequest request);

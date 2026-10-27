@@ -19,51 +19,52 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Layout entry that creates a directory, optionally with nested child entries.
+ * 创建目录的布局条目，可包含嵌套子条目。
  *
- * <p>Child entries are a map of filename to {@link WorkspaceEntry} and may themselves be
- * nested {@code DirEntry} instances, enabling recursive tree-like workspace structures.
+ * <p>子条目是文件名到 {@link WorkspaceEntry} 的映射，本身也可为嵌套的 {@code DirEntry} 实例，支持递归树状工作区结构。
  */
 public class DirEntry extends WorkspaceEntry {
 
     private Map<String, WorkspaceEntry> children = new LinkedHashMap<>();
 
-    /** Creates an empty directory entry. */
+    /**
+ * 创建空目录条目。
+ */
     public DirEntry() {}
 
     /**
-     * Creates a directory entry with the given children.
+     * 使用给定子条目创建目录条目。
      *
-     * @param children map of child name to child entry
+     * @param children 子名称到子条目的映射
      */
     public DirEntry(Map<String, WorkspaceEntry> children) {
         this.children = new LinkedHashMap<>(children);
     }
 
     /**
-     * Returns the child entries in this directory.
+     * 返回此目录中的子条目。
      *
-     * @return mutable map of child name to child entry
+     * @return 子名称到子条目的可变映射
      */
     public Map<String, WorkspaceEntry> getChildren() {
         return children;
     }
 
     /**
-     * Sets the child entries for this directory.
+     * 设置此目录的子条目。
      *
-     * @param children map of child name to child entry
+     * @param children 子名称到子条目的映射
      */
     public void setChildren(Map<String, WorkspaceEntry> children) {
         this.children = children != null ? children : new LinkedHashMap<>();
     }
 
     /**
-     * Adds a child entry to this directory.
+     * 向此目录添加子条目。
      *
-     * @param name child filename
-     * @param entry child entry
-     * @return this instance for chaining
+     * @param name 子文件名
+     * @param entry 子条目
+     * @return 当前实例，支持链式调用
      */
     public DirEntry child(String name, WorkspaceEntry entry) {
         this.children.put(name, entry);

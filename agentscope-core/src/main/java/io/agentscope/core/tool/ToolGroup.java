@@ -20,12 +20,11 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a named group of tools with activation state.
+ * 表示带激活状态的命名工具组。
  *
- * <p>Tool groups allow organizing tools into logical categories and controlling their availability
- * dynamically. Only tools from active groups are made available to agents.
+ * <p>工具组将工具按逻辑类别组织，并动态控制可用性。只有激活组中的工具对智能体可用。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  *
  * <pre>{@code
  * ToolGroup adminGroup = ToolGroup.builder()
@@ -45,16 +44,16 @@ public class ToolGroup {
     private final String description;
     private boolean active;
     private final ToolGroupScope scope;
-    private final Set<String> tools; // Tool names in this group
+    private final Set<String> tools; // 此组内的工具名称
 
     /**
-     * Protected constructor for subclass use.
+     * 供子类使用的受保护构造器。
      *
-     * @param name The group name (required)
-     * @param description The group description
-     * @param active Initial activation state
-     * @param scope The group scope
-     * @param tools Initial set of tool names
+     * @param name 组名（必填）
+     * @param description 组描述
+     * @param active 初始激活状态
+     * @param scope 组作用域
+     * @param tools 初始工具名称集合
      */
     protected ToolGroup(
             String name,
@@ -74,91 +73,91 @@ public class ToolGroup {
     }
 
     /**
-     * Gets the name of this tool group.
+     * 获取工具组名称。
      *
-     * @return The group name (never null)
+     * @return 组名（永不为 null）
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Gets the description of this tool group.
+     * 获取工具组描述。
      *
-     * @return The group description (empty string if not set)
+     * @return 组描述（未设置时为空字符串）
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Checks if this tool group is currently active.
+     * 检查工具组当前是否激活。
      *
-     * @return true if active, false otherwise
+     * @return 激活时为 true，否则为 false
      */
     public boolean isActive() {
         return active;
     }
 
     /**
-     * Sets the activation state of this tool group.
+     * 设置工具组激活状态。
      *
-     * @param active true to activate, false to deactivate
+     * @param active true 表示激活，false 表示停用
      */
     public void setActive(boolean active) {
         this.active = active;
     }
 
     /**
-     * Gets the scope of this tool group.
+     * 获取工具组作用域。
      *
-     * @return The group scope ({@link ToolGroupScope#META} or {@link ToolGroupScope#EXTERNAL})
+     * @return 组作用域（{@link ToolGroupScope#META} 或 {@link ToolGroupScope#EXTERNAL}）
      */
     public ToolGroupScope getScope() {
         return scope;
     }
 
     /**
-     * Gets a defensive copy of the tools in this group.
+     * 获取组内工具的防御性副本。
      *
-     * @return A new set containing the tool names
+     * @return 包含工具名称的新集合
      */
     public Set<String> getTools() {
-        return new HashSet<>(tools); // Defensive copy
+        return new HashSet<>(tools); // 防御性复制
     }
 
     /**
-     * Adds a tool to this group.
+     * 向组内添加工具。
      *
-     * @param toolName The name of the tool to add
+     * @param toolName 要添加的工具名称
      */
     public void addTool(String toolName) {
         tools.add(toolName);
     }
 
     /**
-     * Removes a tool from this group.
+     * 从组内移除工具。
      *
-     * @param toolName The name of the tool to remove
+     * @param toolName 要移除的工具名称
      */
     public void removeTool(String toolName) {
         tools.remove(toolName);
     }
 
     /**
-     * Checks if this group contains a specific tool.
+     * 检查组是否包含指定工具。
      *
-     * @param toolName The tool name to check
-     * @return true if the tool is in this group, false otherwise
+     * @param toolName 要检查的工具名称
+     * @return 工具在组内时为 true，否则为 false
      */
     public boolean containsTool(String toolName) {
         return tools.contains(toolName);
     }
 
     /**
-     * Creates a deep copy of this tool group, preserving the concrete type for subclasses.
+     * 创建工具组的深副本，保留子类的具体类型。
      *
-     * @return A new ToolGroup (or subclass) instance with the same state
+     * @return 状态相同的新 ToolGroup 或子类实例
      */
     public ToolGroup copy() {
         return ToolGroup.builder()
@@ -171,15 +170,17 @@ public class ToolGroup {
     }
 
     /**
-     * Creates a new builder for constructing ToolGroup instances.
+     * 创建用于构造 ToolGroup 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /** Builder for constructing ToolGroup instances. */
+    /**
+     * 用于构造 ToolGroup 实例的构建器。
+     */
     public static class Builder {
 
         private String name;
@@ -189,10 +190,10 @@ public class ToolGroup {
         private Set<String> tools = new HashSet<>();
 
         /**
-         * Sets the name of the tool group.
+         * 设置工具组名称。
          *
-         * @param name The group name (required)
-         * @return This builder for method chaining
+         * @param name 组名（必填）
+         * @return 当前构建器，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -200,10 +201,10 @@ public class ToolGroup {
         }
 
         /**
-         * Sets the description of the tool group.
+         * 设置工具组描述。
          *
-         * @param description The group description
-         * @return This builder for method chaining
+         * @param description 组描述
+         * @return 当前构建器，支持链式调用
          */
         public Builder description(String description) {
             this.description = description;
@@ -211,10 +212,10 @@ public class ToolGroup {
         }
 
         /**
-         * Sets the initial activation state.
+         * 设置初始激活状态。
          *
-         * @param active true for active (default), false for inactive
-         * @return This builder for method chaining
+         * @param active true 表示激活（默认），false 表示未激活
+         * @return 当前构建器，支持链式调用
          */
         public Builder active(boolean active) {
             this.active = active;
@@ -222,11 +223,10 @@ public class ToolGroup {
         }
 
         /**
-         * Sets the scope of the tool group.
+         * 设置工具组作用域。
          *
-         * @param scope {@link ToolGroupScope#META} (default) for agent-managed,
-         *              {@link ToolGroupScope#EXTERNAL} for developer-managed
-         * @return This builder for method chaining
+         * @param scope {@link ToolGroupScope#META}（默认）由智能体管理，{@link ToolGroupScope#EXTERNAL} 由开发者管理
+         * @return 当前构建器，支持链式调用
          */
         public Builder scope(ToolGroupScope scope) {
             this.scope = scope;
@@ -234,10 +234,10 @@ public class ToolGroup {
         }
 
         /**
-         * Sets the initial set of tools in this group.
+         * 设置组内初始工具集合。
          *
-         * @param tools The tool names (a defensive copy will be made)
-         * @return This builder for method chaining
+         * @param tools 工具名称（进行防御性复制）
+         * @return 当前构建器，支持链式调用
          */
         public Builder tools(Set<String> tools) {
             this.tools = new HashSet<>(tools);
@@ -245,10 +245,10 @@ public class ToolGroup {
         }
 
         /**
-         * Builds a new ToolGroup with the configured settings.
+         * 使用配置构建 ToolGroup。
          *
-         * @return A new ToolGroup instance
-         * @throws NullPointerException if name is null
+         * @return 新的 ToolGroup 实例
+         * @throws NullPointerException 当 name 为 null 时
          */
         public ToolGroup build() {
             return new ToolGroup(this);

@@ -16,7 +16,7 @@
 package io.agentscope.core.shutdown;
 
 /**
- * Policy for handling incomplete reasoning content on shutdown interruption.
+ * 关闭中断时处理未完成推理内容的策略。
  */
 public enum PartialReasoningPolicy {
     SAVE,

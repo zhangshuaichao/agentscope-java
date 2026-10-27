@@ -16,8 +16,8 @@
 package io.agentscope.harness.agent.subagent.task;
 
 /**
- * Lifecycle status of a background subagent task. Terminal statuses ({@link #isTerminal()}) will
- * never change, so status checks can be skipped for finished tasks.
+ * 后台子智能体任务的生命周期状态。终态（{@link #isTerminal()}）
+ * 永不改变，因此可以跳过已结束任务的状态检查。
  */
 public enum TaskStatus {
     PENDING,
@@ -27,8 +27,8 @@ public enum TaskStatus {
     CANCELLED;
 
     /**
-     * Whether this status represents a final state that will never change. Useful for skipping
-     * redundant status polling on tasks that are already done.
+     * 此状态是否表示不会再改变的最终状态。
+     * 可用于跳过已经结束任务的冗余状态轮询。
      */
     public boolean isTerminal() {
         return this == COMPLETED || this == FAILED || this == CANCELLED;

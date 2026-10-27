@@ -19,7 +19,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-/** Remote endpoint identity: base URL plus optional auth/routing headers. */
+/**
+ * 远程端点身份：基础 URL 加可选的认证／路由请求头。
+ */
 public final class RemoteTarget {
 
     private final String baseUrl;

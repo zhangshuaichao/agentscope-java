@@ -33,7 +33,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
 
 /**
- * @deprecated since 2.0.0. Use {@link OtelTracingMiddleware} instead.
+ * @deprecated 自 2.0.0 起弃用，请改用 {@link OtelTracingMiddleware}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public interface Tracer {

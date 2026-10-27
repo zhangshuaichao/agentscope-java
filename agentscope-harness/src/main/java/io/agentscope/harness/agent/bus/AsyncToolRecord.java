@@ -18,14 +18,13 @@ package io.agentscope.harness.agent.bus;
 import java.time.Instant;
 
 /**
- * Tracks the lifecycle of an async tool execution that has been offloaded to the background.
- *
- * @param id          unique identifier for this async tool execution
- * @param sessionId   the session that initiated the tool call
- * @param toolName    name of the tool being executed
- * @param toolCallId  the original tool_call id from the LLM
- * @param status      current status: RUNNING, COMPLETED, FAILED, or TIMEOUT
- * @param createdAt   when the async execution was registered
+ * 跟踪转入后台的异步工具执行的生命周期。
+ * @param id 本次异步执行的唯一标识符
+ * @param sessionId 发起工具调用的会话
+ * @param toolName 执行的工具名称
+ * @param toolCallId 模型原始 tool_call ID
+ * @param status 当前状态：RUNNING、COMPLETED、FAILED 或 TIMEOUT
+ * @param createdAt 注册异步执行的时间
  */
 public record AsyncToolRecord(
         String id,

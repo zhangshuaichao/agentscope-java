@@ -22,13 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JVM hook for SIGTERM graceful shutdown entry.
+ * 用于 SIGTERM 优雅关闭入口的 JVM 钩子。
  *
- * <p>Shutdown order:
+ * <p>关闭顺序：
  * <ol>
- *   <li>Trigger graceful shutdown (reject new requests, interrupt at checkpoints)</li>
- *   <li>Wait for all active agent requests to complete or timeout</li>
- *   <li>Close HTTP transports (only after agents are done)</li>
+ *   <li>触发优雅关闭（拒绝新请求，在检查点中断）</li>
+ *   <li>等待所有活跃智能体请求完成或超时</li>
+ *   <li>关闭 HTTP 传输层（只能在智能体处理完毕后进行）</li>
  * </ol>
  */
 public final class AgentScopeJvmShutdownHook {
@@ -51,9 +51,9 @@ public final class AgentScopeJvmShutdownHook {
                                     try {
                                         manager.performGracefulShutdown();
                                         Duration timeout = manager.getConfig().shutdownTimeout();
-                                        // Wait for shutdown timeout + an extra grace period,
-                                        // so agents have time to handle the interrupt and
-                                        // clean up before HTTP transports are closed.
+                                        // 等待关闭超时时长，再额外留出一段宽限期，
+                                        // 使智能体有时间处理中断并完成清理，
+                                        // 然后才关闭 HTTP 传输层。
                                         Duration awaitTimeout =
                                                 timeout != null
                                                         ? timeout.plus(INTERRUPT_GRACE_PERIOD)

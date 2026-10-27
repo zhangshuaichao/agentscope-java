@@ -23,11 +23,11 @@ import io.agentscope.core.model.ChatModelBase;
 import java.util.Objects;
 
 /**
- * Credential for the DeepSeek API.
+ * DeepSeek API 的凭据。
  *
- * <p>No {@code DeepSeekChatModel} class ships in agentscope-core yet, so {@link
- * #getChatModelClass()} throws {@link UnsupportedOperationException}. The credential itself
- * (id/api-key/base-url) round-trips through JSON for storage compatibility.
+ * <p>agentscope-core 尚未提供 {@code DeepSeekChatModel} 类，因此
+ * {@link #getChatModelClass()} 抛出 {@link UnsupportedOperationException}。
+ * 为保持存储兼容性，凭据自身（id/api-key/base-url）仍支持 JSON 序列化与反序列化。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"id", "type", "api_key", "base_url"})

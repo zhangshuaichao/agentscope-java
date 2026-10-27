@@ -24,7 +24,7 @@ import java.util.Objects;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * {@link RemoteSnapshotClient} backed by Redis binary values.
+ * 使用 Redis 二进制值的 {@link RemoteSnapshotClient}。
  */
 public class RedisRemoteSnapshotClient implements RemoteSnapshotClient {
 
@@ -33,11 +33,10 @@ public class RedisRemoteSnapshotClient implements RemoteSnapshotClient {
     private final Integer ttlSeconds;
 
     /**
-     * Creates a Redis-backed snapshot client.
-     *
-     * @param jedis initialized jedis client
-     * @param keyPrefix redis key prefix (optional)
-     * @param ttlSeconds optional TTL in seconds (null or negative means no TTL)
+     * 创建基于 Redis 的快照客户端。
+     * @param jedis 已初始化的 Jedis 客户端
+     * @param keyPrefix 可选 Redis 键前缀
+     * @param ttlSeconds 可选 TTL 秒数，null 或非正数表示不设 TTL
      */
     public RedisRemoteSnapshotClient(UnifiedJedis jedis, String keyPrefix, Integer ttlSeconds) {
         this.jedis = Objects.requireNonNull(jedis, "jedis must not be null");

@@ -33,41 +33,38 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Tool for viewing text file content with optional line range specification and listing directory
- * contents.
+ * 查看文本文件内容（可指定行范围）和列出目录内容的工具。
  *
- * <p>This tool provides the following capabilities:
+ * <p>支持：
  * <ul>
- *   <li>Viewing entire file content</li>
- *   <li>Viewing specific line ranges (e.g., lines 1-100)</li>
- *   <li>Viewing from the end using negative indices (e.g., last 100 lines: [-100, -1])</li>
- *   <li>Listing files and directories in a specified directory with full paths</li>
+ * <li>查看完整文件</li>
+ * <li>查看指定行范围（例如 1–100 行）</li>
+ * <li>通过负索引从末尾查看（例如末尾 100 行：[-100, -1]）</li>
+ * <li>列出指定目录中的文件和目录及其完整路径</li>
  * </ul>
  *
- * <p>Security: When baseDir is specified, all file operations are restricted to that directory
- * to prevent unauthorized file access.
+ * <p>安全性：指定 baseDir 时，所有文件操作限制在该目录内，避免未授权访问。
  */
 public class ReadFileTool {
 
     private static final Logger logger = LoggerFactory.getLogger(ReadFileTool.class);
 
     /**
-     * Base directory to restrict file access. If null, no restriction is applied.
-     * This prevents path traversal attacks and unauthorized file access.
+     * 限制文件访问的基目录；为 null 时不限制。用于防范路径遍历和未授权访问。
      */
     private final Path baseDir;
 
     /**
-     * Creates a ReadFileTool with no base directory restriction.
+     * 创建不限制基目录的 ReadFileTool。
      */
     public ReadFileTool() {
         this(null);
     }
 
     /**
-     * Creates a ReadFileTool with a base directory restriction.
+     * 创建限制基目录的 ReadFileTool。
      *
-     * @param baseDir The base directory to restrict file access to. If null, no restriction is applied.
+     * @param baseDir 限制文件访问的基目录；为 null 时不限制
      */
     public ReadFileTool(String baseDir) {
         this.baseDir = baseDir != null ? Paths.get(baseDir).toAbsolutePath().normalize() : null;
@@ -79,14 +76,11 @@ public class ReadFileTool {
     }
 
     /**
-     * View the file content in the specified range with line numbers.
-     * If ranges is not provided, the entire file will be returned.
+     * 查看指定行范围的文件内容并附带行号。未提供 ranges 时返回整个文件。
      *
-     * @param filePath The target file path
-     * @param ranges The range of lines to be viewed (e.g., lines 1 to 100: "1,100"),
-     *               inclusive. If not provided, the entire file will be returned.
-     *               To view the last 100 lines, use "-100,-1". Format: "start,end" or "[start,end]"
-     * @return The file content with line numbers or an error message
+     * @param filePath 目标文件路径
+     * @param ranges 待查看行范围，包含两端（例如第 1 至 100 行为 "1,100"）；未提供时返回整个文件。末尾 100 行使用 "-100,-1"。格式为 "start,end" 或 "[start,end]"
+     * @return 带行号的文件内容或错误消息
      */
     @Tool(
             name = "view_text_file",
@@ -110,7 +104,7 @@ public class ReadFileTool {
 
         return Mono.fromCallable(
                         () -> {
-                            // Validate path is within base directory
+                            // 验证路径位于基目录内
                             Path path;
                             try {
                                 path = FileToolUtils.validatePath(filePath, baseDir);
@@ -122,23 +116,23 @@ public class ReadFileTool {
                                 return ToolResultBlock.error(e.getMessage());
                             }
 
-                            // Check if file exists
+                            // 检查文件存在
                             if (!Files.exists(path)) {
                                 logger.warn("File does not exist: {}", filePath);
                                 return ToolResultBlock.error(
                                         String.format("The file %s does not exist.", filePath));
                             }
 
-                            // Check if path is a file
+                            // 检查路径为文件
                             if (!Files.isRegularFile(path)) {
                                 logger.warn("Path is not a regular file: {}", filePath);
                                 return ToolResultBlock.error(
                                         String.format("The path %s is not a file.", filePath));
                             }
 
-                            // Parse ranges if provided
+                            // 提供范围时进行解析
                             if (ranges == null || ranges.trim().isEmpty()) {
-                                // Return entire file content
+                                // 返回完整文件内容
                                 ReadResult result = readLines(path, 1, Integer.MAX_VALUE);
                                 logger.debug(
                                         "Returning entire file content ({} lines)",
@@ -149,7 +143,7 @@ public class ReadFileTool {
                                                 filePath, result.content));
                             }
 
-                            // Parse the range
+                            // 解析范围
                             int[] rangeArray = FileToolUtils.parseRanges(ranges);
                             if (rangeArray == null) {
                                 logger.warn("Invalid range format: {}", ranges);
@@ -163,7 +157,7 @@ public class ReadFileTool {
                             int start = rangeArray[0];
                             int end = rangeArray[1];
 
-                            // Handle negative indices (count from the end)
+                            // 处理负索引（从末尾计数）
                             int totalLines = -1;
                             if (start < 0 || end < 0) {
                                 totalLines = countLines(path);
@@ -175,7 +169,7 @@ public class ReadFileTool {
                                 }
                             }
 
-                            // Validate range
+                            // 验证范围
                             if (start < 1) {
                                 start = 1;
                             }
@@ -228,10 +222,10 @@ public class ReadFileTool {
     }
 
     /**
-     * List files and directories in the specified directory.
+     * 列出指定目录内的文件和目录。
      *
-     * @param dirPath The target directory path
-     * @return A list of files and directories with their full paths
+     * @param dirPath 目标目录路径
+     * @return 带完整路径的文件和目录列表
      */
     @Tool(
             name = "list_directory",
@@ -249,7 +243,7 @@ public class ReadFileTool {
 
         return Mono.fromCallable(
                         () -> {
-                            // Validate path is within base directory
+                            // 验证路径位于基目录内
                             Path path;
                             try {
                                 path = FileToolUtils.validatePath(dirPath, baseDir);
@@ -261,21 +255,21 @@ public class ReadFileTool {
                                 return ToolResultBlock.error(e.getMessage());
                             }
 
-                            // Check if path exists
+                            // 检查路径存在
                             if (!Files.exists(path)) {
                                 logger.warn("Directory does not exist: {}", dirPath);
                                 return ToolResultBlock.error(
                                         String.format("The directory %s does not exist.", dirPath));
                             }
 
-                            // Check if path is a directory
+                            // 检查路径为目录
                             if (!Files.isDirectory(path)) {
                                 logger.warn("Path is not a directory: {}", dirPath);
                                 return ToolResultBlock.error(
                                         String.format("The path %s is not a directory.", dirPath));
                             }
 
-                            // List files and directories
+                            // 列出文件和目录
                             List<String> files = new ArrayList<>();
                             List<String> directories = new ArrayList<>();
 
@@ -300,7 +294,7 @@ public class ReadFileTool {
                                         "Error listing directory: " + e.getMessage());
                             }
 
-                            // Format output
+                            // 格式化输出
                             StringBuilder result = new StringBuilder();
                             result.append(String.format("Contents of directory %s:\n\n", dirPath));
 

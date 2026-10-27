@@ -16,22 +16,19 @@
 package io.agentscope.harness.agent.sandbox.snapshot;
 
 /**
- * Factory that creates {@link SandboxSnapshot} instances for a given session ID.
+ * 为给定会话 ID 创建 {@link SandboxSnapshot} 实例的工厂。
  *
- * <p>Implementations configure WHERE snapshots are stored:
- * {@link NoopSnapshotSpec} (disabled), {@link LocalSnapshotSpec} (local disk),
- * {@link RemoteSnapshotSpec} (remote storage).
+ * <p>实现配置快照保存位置：{@link NoopSnapshotSpec}（禁用）、{@link LocalSnapshotSpec}（本地磁盘）、{@link RemoteSnapshotSpec}（远程存储）。
  *
- * <p>The {@code snapshotId} parameter passed to {@link #build} allows each session to have
- * its own isolated snapshot file/object, while sharing the same storage configuration.
+ * <p>传给 {@link #build} 的 {@code snapshotId} 参数让每个会话拥有独立快照文件／对象，同时共享相同的存储配置。
  */
 public interface SandboxSnapshotSpec {
 
     /**
-     * Creates a {@link SandboxSnapshot} for the given session ID.
+     * 为给定会话 ID 创建 {@link SandboxSnapshot}。
      *
-     * @param snapshotId unique identifier for the snapshot (typically the session UUID)
-     * @return a new snapshot instance configured for the given ID
+     * @param snapshotId 快照唯一标识符（通常为会话 UUID）
+     * @return 为给定 ID 配置的新快照实例
      */
     SandboxSnapshot build(String snapshotId);
 }

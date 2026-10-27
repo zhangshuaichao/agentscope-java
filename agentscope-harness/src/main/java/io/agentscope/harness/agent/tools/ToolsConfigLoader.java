@@ -29,14 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Loads {@code workspace/tools.json} into a {@link ToolsConfig}.
+ * 将 {@code workspace/tools.json} 加载为 {@link ToolsConfig}。
  *
- * <p>Reads through {@link WorkspaceManager#readManagedWorkspaceFileUtf8} so that the
- * filesystem-overlay (sandbox / remote) path is honoured exactly like {@code AGENTS.md}. Performs
- * {@code ${ENV_VAR}} substitution against {@link System#getenv} on the raw JSON text before
- * parsing so that secrets in headers, env entries, urls, etc. are kept out of the file. Parse
- * failures never throw — they log and return {@link Optional#empty()} so the agent still builds
- * with its default toolkit.
+ * <p>通过 {@link WorkspaceManager#readManagedWorkspaceFileUtf8} 读取，使沙箱/远程文件系统叠加路径
+ * 与 {@code AGENTS.md} 一样得到遵守。解析前，在原始 JSON 文本上对 {@code ${ENV_VAR}}
+ * 根据 {@link System#getenv} 执行替换，使请求头、环境变量项、URL 等中的密钥无需直接写入文件。
+ * 解析失败不抛出异常，而是记录日志并返回 {@link Optional#empty()}，使智能体仍可使用默认工具集构建。
+ *
+ * <p>【学习提示】环境变量替换只是减少文件中的明文凭证，不等于运行时数据已脱敏。
+ * 配置缺失或解析失败会回退默认工具集，不能把配置加载失败误认为“全部工具已禁用”。
  */
 public final class ToolsConfigLoader {
 
@@ -50,9 +51,9 @@ public final class ToolsConfigLoader {
     private ToolsConfigLoader() {}
 
     /**
-     * Reads {@code tools.json} relative to the workspace managed by {@code wsManager}. Returns
-     * {@link Optional#empty()} when the file is missing, blank, unreadable (e.g. sandbox
-     * filesystem accessed before its call context exists), or unparseable.
+     * 读取 {@code tools.json}，路径相对于 {@code wsManager} 管理的工作区。
+     * 文件缺失、空白、不可读（例如尚无调用上下文时访问沙箱文件系统）或无法解析时，
+     * 返回 {@link Optional#empty()}。
      */
     public static Optional<ToolsConfig> load(WorkspaceManager wsManager) {
         if (wsManager == null) {
@@ -64,8 +65,8 @@ public final class ToolsConfigLoader {
                     wsManager.readManagedWorkspaceFileUtf8(
                             RuntimeContext.empty(), WorkspaceConstants.TOOLS_JSON);
         } catch (Exception e) {
-            // Sandbox/remote filesystems may not be reachable at build time. Fall back silently —
-            // the agent should still build.
+            // 构建时沙箱或远程文件系统可能不可达，静默回退，
+            // 让智能体仍可完成构建。
             log.debug(
                     "Could not read {} via workspace manager ({}); skipping.",
                     WorkspaceConstants.TOOLS_JSON,
@@ -89,9 +90,9 @@ public final class ToolsConfigLoader {
     }
 
     /**
-     * Replaces {@code ${VAR}} occurrences in {@code raw} with {@link System#getenv} values. Unset
-     * variables resolve to an empty string and are logged at WARN. Useful so that headers like
-     * {@code "Authorization": "Bearer ${GITHUB_TOKEN}"} can stay out of the workspace file.
+     * 对 {@code ${VAR}} 占位符执行替换，将 {@code raw} 中的对应内容换为 {@link System#getenv} 的值。
+     * 未设置的变量替换为空字符串并记录 WARN，
+     * 使 {@code "Authorization": "Bearer ${GITHUB_TOKEN}"} 这样的配置无需将实际密钥写入工作区文件。
      */
     static String substituteEnv(String raw) {
         Matcher m = ENV_VAR.matcher(raw);

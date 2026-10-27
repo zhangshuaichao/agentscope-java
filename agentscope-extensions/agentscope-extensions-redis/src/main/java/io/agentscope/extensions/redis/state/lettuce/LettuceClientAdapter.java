@@ -33,25 +33,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Adapter for Lettuce Redis client.
+ * Lettuce Redis 客户端适配器。
  *
- * <p>This adapter supports multiple Redis deployment modes through different client types:
+ * <p>通过不同客户端类型支持多种部署：
+ * <ul><li>{@link RedisClient}：单机与哨兵。</li>
+ * <li>{@link RedisClusterClient}：集群。</li></ul>
+ * <p>内部共享连接与命令实例，提高连接利用率。
+ * 实现用条件分支选择单机／哨兵和集群的命令 API，适配当前所用 API 的模式差异。
  *
- * <ul>
- *   <li>{@link RedisClient} - Standalone and Sentinel modes
- *   <li>{@link RedisClusterClient} - Cluster mode
- * </ul>
- *
- * <p>The adapter internally manages a shared connection and commands instance for efficient
- * connection usage.
- *
- * <p>This implementation uses direct conditional checks to handle Lettuce's separate command
- * APIs for standalone/sentinel and cluster modes. This is the simplest approach given
- * Lettuce's lack of a unified API across deployment modes.
- *
- * <p>Usage Examples:
- *
- * <p>Standalone Mode:
+ * <p>单机示例：
  * <pre>{@code
  * // Create standalone RedisClient
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
@@ -61,8 +51,7 @@ import org.slf4j.LoggerFactory;
  *     .lettuceClient(redisClient)
  *     .build();
  * }</pre>
- *
- * <p>Cluster Mode:
+ * <p>集群示例：
  * <pre>{@code
  * // Create cluster client
  * RedisClusterClient clusterClient = RedisClusterClient.create("redis://localhost:7000");
@@ -73,8 +62,7 @@ import org.slf4j.LoggerFactory;
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
  *     .build();
  * }</pre>
- *
- * <p>Sentinel Mode:
+ * <p>哨兵示例：
  * <pre>{@code
  * // Create Lettuce RedisClient for sentinel
  * RedisURI sentinelUri = RedisURI.builder()
@@ -97,21 +85,18 @@ public class LettuceClientAdapter implements RedisClientAdapter {
     private static final Logger log = LoggerFactory.getLogger(LettuceClientAdapter.class);
 
     /**
-     * Redis commands for standalone and sentinel modes.
-     * Null when operating in cluster mode.
+     * 单机与哨兵模式使用的 Redis 命令对象，集群模式下为 null。
      */
     private final RedisCommands<String, String> commands;
 
     /**
-     * Redis cluster commands for cluster mode.
-     * Null when operating in standalone or sentinel mode.
+     * 集群模式使用的 Redis 命令对象，单机与哨兵模式下为 null。
      */
     private final RedisAdvancedClusterCommands<String, String> clusterCommands;
 
     /**
-     * Closeable resource handler for cleaning up connections and clients.
-     * Uses a strategy pattern to handle different cleanup logic for
-     * standalone/sentinel and cluster modes.
+     * 可关闭资源句柄，负责连接与客户端清理。
+     * 通过策略模式封装单机／哨兵与集群的不同清理逻辑。
      */
     private final AutoCloseable closeable;
 
@@ -125,11 +110,10 @@ public class LettuceClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Create adapter from RedisClient (standalone/sentinel mode).
-     *
-     * @param redisClient the RedisClient for standalone or sentinel mode
-     * @return a new LettuceClientAdapter
-     * @throws NullPointerException if redisClient is null
+     * 从 RedisClient 创建单机／哨兵适配器。
+     * @param redisClient 单机或哨兵模式的 RedisClient
+     * @return 新建的 LettuceClientAdapter
+     * @throws NullPointerException redisClient 为 null 时抛出
      */
     public static LettuceClientAdapter of(RedisClient redisClient) {
         if (redisClient == null) {
@@ -141,11 +125,10 @@ public class LettuceClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Create adapter from RedisClusterClient (cluster mode).
-     *
-     * @param redisClusterClient the RedisClusterClient for cluster mode
-     * @return a new LettuceClientAdapter
-     * @throws NullPointerException if redisClusterClient is null
+     * 从 RedisClusterClient 创建集群适配器。
+     * @param redisClusterClient 集群模式的 RedisClusterClient
+     * @return 新建的 LettuceClientAdapter
+     * @throws NullPointerException redisClusterClient 为 null 时抛出
      */
     public static LettuceClientAdapter of(RedisClusterClient redisClusterClient) {
         if (redisClusterClient == null) {
@@ -256,11 +239,10 @@ public class LettuceClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Helper method to scan keys using the provided scan function.
-     *
-     * @param pattern the key pattern to match
-     * @param scanFunction the function to perform the scan
-     * @return the set of matching keys
+     * 使用给定扫描函数查找键的辅助方法。
+     * @param pattern 待匹配键模式
+     * @param scanFunction 执行扫描的函数
+     * @return 匹配键集合
      */
     private static Set<String> scanKeys(String pattern, ScanFunction scanFunction) {
         Set<String> keys = new HashSet<>();
@@ -275,7 +257,7 @@ public class LettuceClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Functional interface for scan operations.
+     * 扫描操作的函数式接口。
      */
     @FunctionalInterface
     private interface ScanFunction {

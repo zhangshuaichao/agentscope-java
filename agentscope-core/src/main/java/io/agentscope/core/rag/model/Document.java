@@ -22,17 +22,15 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Document class representing a document chunk in the RAG system.
+ * 表示 RAG 系统中文档分块的文档类。
  *
- * <p>This is the core data structure for RAG operations. Each document contains
- * metadata, an optional embedding vector, and an optional similarity score.
+ * <p>这是 RAG 操作的核心数据结构。每份文档包含元数据、可选的嵌入向量
+ * 以及可选的相似度分数。
  *
- * <p>The document ID is automatically generated as a deterministic UUID based on
- * the document metadata (doc_id, chunk_id, and content), ensuring consistent IDs
- * for the same content across different runs.
+ * <p>根据文档元数据（doc_id、chunk_id 和 content）自动生成确定性 UUID 作为文档 ID，
+ * 确保相同内容在不同运行中获得一致的 ID。
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class Document {
@@ -44,12 +42,11 @@ public class Document {
     private String vectorName;
 
     /**
-     * Creates a new Document instance.
+     * 创建新的 Document 实例。
      *
-     * <p>The document ID is automatically generated as a deterministic UUID based on
-     * the metadata (doc_id, chunk_id, and content).
+     * <p>根据元数据（doc_id、chunk_id 和 content）自动生成确定性 UUID 作为文档 ID。
      *
-     * @param metadata the document metadata
+     * @param metadata 文档元数据
      */
     public Document(DocumentMetadata metadata) {
         if (metadata == null) {
@@ -60,99 +57,97 @@ public class Document {
     }
 
     /**
-     * Gets the document ID.
+     * 获取文档 ID。
      *
-     * @return the document ID (UUID string)
+     * @return 文档 ID（UUID 字符串）
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the document metadata.
+     * 获取文档元数据。
      *
-     * @return the document metadata
+     * @return 文档元数据
      */
     public DocumentMetadata getMetadata() {
         return metadata;
     }
 
     /**
-     * Gets the embedding vector.
+     * 获取嵌入向量。
      *
-     * @return the embedding vector, or null if not set
+     * @return 嵌入向量；未设置时为 null
      */
     public double[] getEmbedding() {
         return embedding;
     }
 
     /**
-     * Sets the embedding vector.
+     * 设置嵌入向量。
      *
-     * @param embedding the embedding vector
+     * @param embedding 嵌入向量
      */
     public void setEmbedding(double[] embedding) {
         this.embedding = embedding;
     }
 
     /**
-     * Gets the similarity score.
+     * 获取相似度分数。
      *
-     * @return the similarity score, or null if not set
+     * @return 相似度分数；未设置时为 null
      */
     public Double getScore() {
         return score;
     }
 
     /**
-     * Sets the similarity score.
+     * 设置相似度分数。
      *
-     * @param score the similarity score
+     * @param score 相似度分数
      */
     public void setScore(Double score) {
         this.score = score;
     }
 
     /**
-     * Gets the custom payload from document metadata.
+     * 获取文档元数据中的自定义载荷。
      *
-     * <p>This is a convenience method that delegates to the metadata's getPayload().
-     * The payload contains business-specific fields such as filename, department,
-     * author, tags, and other custom metadata.
+     * <p>这是委派给元数据 getPayload() 的便捷方法。载荷包含文件名、部门、
+     * 作者、标签等业务专用字段，以及其他自定义元数据。
      *
-     * @return an unmodifiable map of custom metadata fields (never null)
+     * @return 自定义元数据字段的不可修改映射（绝不为 null）
      */
     public Map<String, Object> getPayload() {
         return metadata.getPayload();
     }
 
     /**
-     * Gets a specific payload value by key.
+     * 按键获取指定载荷值。
      *
-     * <p>This is a convenience method that delegates to the metadata's getPayloadValue().
-     * Use this to retrieve individual payload values without accessing the entire map.
+     * <p>这是委派给元数据 getPayloadValue() 的便捷方法。
+     * 使用它可获取单个载荷值，无须访问整个映射。
      *
-     * @param key the payload key
-     * @return the payload value, or null if the key doesn't exist
-     * @throws NullPointerException if key is null
+     * @param key 载荷键
+     * @return 载荷值；键不存在时为 null
+     * @throws NullPointerException 当 key 为 null 时抛出
      */
     public Object getPayloadValue(String key) {
         return metadata.getPayloadValue(key);
     }
 
     /**
-     * Gets a specific payload value by key and converts it to the specified type.
+     * 按键获取指定载荷值，并转换为指定类型。
      *
-     * <p>This method is useful when the payload contains complex objects (like custom POJOs)
-     * that were serialized to Map during storage. It uses Jackson's ObjectMapper to convert
-     * the Map back to the original type.
+     * <p>当载荷包含复杂对象（例如自定义 POJO），且存储时被序列化为 Map 时，
+     * 此方法很有用。它使用 Jackson 的 ObjectMapper，将 Map 转回原始类型。
      *
-     * @param <T> the target type
-     * @param key the payload key
-     * @param targetClass the target class to convert to
-     * @return the payload value converted to the specified type, or null if the key doesn't exist
-     * @throws IllegalArgumentException if the value cannot be converted to the target type
-     * @throws NullPointerException if key or clazz is null
+     * @param <T> 目标类型
+     * @param key 载荷键
+     * @param targetClass 要转换到的目标类
+     * @return 转换为指定类型的载荷值；键不存在时为 null
+     * @throws IllegalArgumentException 值无法转换为目标类型时抛出
+     * @throws NullPointerException 当 key 或 clazz 为 null 时抛出
      */
     public <T> T getPayloadValueAs(String key, Class<T> targetClass) {
         Object value = getPayloadValue(key);
@@ -171,58 +166,57 @@ public class Document {
     }
 
     /**
-     * Checks if the document payload contains a specific key.
+     * 检查文档载荷是否包含指定键。
      *
-     * <p>This is a convenience method that delegates to the metadata's hasPayloadKey().
-     * Use this to safely check for the existence of a payload field before retrieving it.
+     * <p>这是委派给元数据 hasPayloadKey() 的便捷方法。
+     * 获取载荷字段之前，可用它安全检查该字段是否存在。
      *
-     * @param key the payload key to check
-     * @return true if the key exists in the payload, false otherwise
-     * @throws NullPointerException if key is null
+     * @param key 要检查的载荷键
+     * @return 载荷中存在该键时为 true，否则为 false
+     * @throws NullPointerException 当 key 为 null 时抛出
      */
     public boolean hasPayloadKey(String key) {
         return metadata.hasPayloadKey(key);
     }
 
     /**
-     * Gets the document vector name.
+     * 获取文档向量名称。
      *
-     * @return the document name, or null if not set
+     * @return 文档名称；未设置时为 null
      */
     public String getVectorName() {
         return vectorName;
     }
 
     /**
-     * Sets the document vector name.
+     * 设置文档向量名称。
      *
-     * @param vectorName the document name
+     * @param vectorName 文档名称
      */
     public void setVectorName(String vectorName) {
         this.vectorName = vectorName;
     }
 
     /**
-     * Generates a deterministic document ID based on metadata.
+     * 根据元数据生成确定性的文档 ID。
      *
-     * <p>This method creates a UUID v3 (name-based with MD5) from a JSON representation
-     * of the document's key fields (doc_id, chunk_id, content). This ensures that the
-     * same document content always generates the same ID.
+     * <p>此方法根据文档关键字段（doc_id、chunk_id、content）的 JSON 表示，
+     * 创建 UUID v3（基于名称，使用 MD5）。这确保相同文档内容始终生成相同 ID。
      *
-     * @param metadata the document metadata
-     * @return a deterministic UUID string
+     * @param metadata 文档元数据
+     * @return 确定性的 UUID 字符串
      */
     private static String generateDocumentId(DocumentMetadata metadata) {
-        // Create a map with doc_id, chunk_id, and content
+        // 创建包含 doc_id、chunk_id 和 content 的映射
         Map<String, Object> keyMap = new LinkedHashMap<>();
         keyMap.put("doc_id", metadata.getDocId());
         keyMap.put("chunk_id", metadata.getChunkId());
         keyMap.put("content", metadata.getContent());
 
-        // Serialize to JSON using default UTF-8
+        // 使用默认 UTF-8 编码序列化为 JSON
         String jsonKey = JsonUtils.getJsonCodec().toJson(keyMap);
 
-        // Generate UUID v3 (name-based with MD5) from the JSON string
+        // 根据 JSON 字符串生成 UUID v3（基于名称，使用 MD5）
         return UUID.nameUUIDFromBytes(jsonKey.getBytes(StandardCharsets.UTF_8)).toString();
     }
 

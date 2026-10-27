@@ -37,25 +37,26 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Agent-callable tool that lets a {@code ReActAgent} create, edit, patch, and archive skills in
- * its workspace. Ported from the hermes-agent {@code skill_manage} tool surface so existing skill
- * authoring prompts stay portable.
+ * 智能体可调用的工具，使 {@code ReActAgent} 能在其工作区中创建、编辑、
+ * 修补和归档技能。移植自 hermes-agent 的 {@code skill_manage} 工具接口，
+ * 使已有技能编写提示保持可移植性。
  *
- * <p>Six actions, dispatched on the {@code action} parameter:
+ * <p>根据 {@code action} 参数分派六种操作：
  * <ul>
- *   <li>{@code create} — write a brand-new {@code SKILL.md} (frontmatter required)</li>
- *   <li>{@code edit} — full-rewrite the {@code SKILL.md} of an existing skill</li>
- *   <li>{@code patch} — targeted find-and-replace within {@code SKILL.md} or a support file</li>
- *   <li>{@code write_file} — add/overwrite a single file under {@code references/} /
- *       {@code templates/} / {@code scripts/} / {@code assets/}</li>
- *   <li>{@code remove_file} — delete a single support file</li>
- *   <li>{@code delete} — archive the entire skill directory (non-destructive)</li>
+ *   <li>{@code create}：写入全新的 {@code SKILL.md}（必须包含前置元数据）</li>
+ *   <li>{@code edit}：完整重写现有技能的 {@code SKILL.md}</li>
+ *   <li>{@code patch}：在 {@code SKILL.md} 或辅助文件中定向查找并替换</li>
+ *   <li>{@code write_file}：添加／覆盖 {@code references/} /
+ *       {@code templates/} / {@code scripts/} / {@code assets/} 下的单个文件</li>
+ *   <li>{@code remove_file}：删除单个辅助文件</li>
+ *   <li>{@code delete}：归档整个技能目录（非破坏性）</li>
  * </ul>
  *
- * <p><b>Staging</b>: by default ({@link SkillManageConfig#autoPromote()} = false), {@code create}
- * writes to {@code skills/_drafts/<name>/}; {@code edit}/{@code patch}/{@code write_file}/{@code
- * remove_file}/{@code delete} resolve the skill by name across both draft and main directories
- * (drafts win on collision). Set {@code autoPromote=true} to write straight to {@code skills/}.
+ * <p><b>暂存</b>：默认情况下（{@link SkillManageConfig#autoPromote()} = false），
+ * {@code create} 写入 {@code skills/_drafts/<name>/}；
+ * {@code edit}/{@code patch}/{@code write_file}/{@code remove_file}/{@code delete}
+ * 按名称在草稿和主目录中解析技能（冲突时草稿优先）。
+ * 设置 {@code autoPromote=true} 可直接写入 {@code skills/}。
  */
 public class SkillManageTool implements AgentTool {
 
@@ -63,8 +64,8 @@ public class SkillManageTool implements AgentTool {
 
     public static final String NAME = "skill_manage";
 
-    // Validation constants (mirrored from hermes tools/skill_manager_tool.py); the name rule
-    // is sourced from core so authoring and construction reject the same names
+    // 验证常量（对应 hermes tools/skill_manager_tool.py）；名称规则
+    // 来自 core，使编写与构造过程拒绝相同的非法名称
     static final int MAX_NAME_LENGTH = SkillUtil.MAX_SKILL_NAME_LENGTH;
     static final int MAX_DESCRIPTION_LENGTH = 1024;
     static final int MAX_SKILL_CONTENT_CHARS = 100_000;
@@ -73,16 +74,24 @@ public class SkillManageTool implements AgentTool {
     static final Set<String> ALLOWED_SUBDIRS =
             Set.of("references", "templates", "scripts", "assets");
 
-    /** Repository pointing at the live skills root (e.g. {@code skills/}). */
+    /**
+     * 指向正式技能根目录的仓库（例如 {@code skills/}）。
+     */
     private final WorkspaceSkillRepository mainRepo;
 
-    /** Repository pointing at the draft staging dir (e.g. {@code skills/_drafts/}). */
+    /**
+     * 指向草稿暂存目录的仓库（例如 {@code skills/_drafts/}）。
+     */
     private final WorkspaceSkillRepository draftsRepo;
 
-    /** Optional telemetry sidecar; null disables provenance + counter writes. */
+    /**
+     * 可选遥测附属组件；null 禁用来源与计数器写入。
+     */
     private final SkillUsageStore usageStore;
 
-    /** Optional audit log; null disables auditing. */
+    /**
+     * 可选审计日志；null 禁用审计。
+     */
     private final SkillAuditLog auditLog;
 
     private final SkillManageConfig config;
@@ -291,7 +300,7 @@ public class SkillManageTool implements AgentTool {
     }
 
     // ---------------------------------------------------------------------
-    //  Actions
+    // 操作
     // ---------------------------------------------------------------------
 
     private ToolResultBlock doCreate(
@@ -304,7 +313,7 @@ public class SkillManageTool implements AgentTool {
         if (contentErr != null) {
             return ToolResultBlock.error(contentErr);
         }
-        // Reject if a skill with this name already exists in either repo.
+        // 任一仓库已存在同名技能时拒绝。
         if (mainRepo.skillExists(name, ctx) || draftsRepo.skillExists(name, ctx)) {
             return ToolResultBlock.error(
                     "A skill named '" + name + "' already exists. Use action=edit to update it.");
@@ -339,13 +348,13 @@ public class SkillManageTool implements AgentTool {
             return ToolResultBlock.error(
                     "Failed to write skill '" + name + "'. Check logs for details.");
         }
-        // Static security scan post-write; roll back on DANGEROUS so the agent can revise.
+        // 写入后进行静态安全扫描；判定为 DANGEROUS 时回滚，供智能体修订。
         if (config.securityScan()) {
             SkillSecurityScanner.ScanResult scan =
                     SkillSecurityScanner.scan(name, content, skill.getResources());
             if (!SkillSecurityScanner.shouldAllow(
                     SkillSecurityScanner.TrustLevel.AGENT_CREATED, scan.verdict())) {
-                target.delete(name, ctx); // best-effort rollback (archives the bad draft)
+                target.delete(name, ctx); // 尽力回滚（归档不合格草稿）
                 return ToolResultBlock.error(
                         "Security scan blocked this skill ("
                                 + scan.verdict()
@@ -353,7 +362,7 @@ public class SkillManageTool implements AgentTool {
                                 + scan.reportText());
             }
         }
-        // Telemetry: record provenance so visibility filters / curator can see this skill.
+        // 遥测：记录来源，使可见性过滤器／整理器能够识别此技能。
         if (usageStore != null) {
             try {
                 if (config.autoPromote()) {
@@ -410,9 +419,9 @@ public class SkillManageTool implements AgentTool {
             return ToolResultBlock.error(
                     "The 'name' parameter must match the SKILL.md frontmatter 'name' field.");
         }
-        // Stash the previous SKILL.md so we can roll back on a DANGEROUS scan verdict.
+        // 保存之前的 SKILL.md，以便扫描判定为 DANGEROUS 时回滚。
         String previous = target.readSkillFile(name, "SKILL.md", ctx);
-        boolean ok = target.save(List.of(skill), true /* force = overwrite */, ctx);
+        boolean ok = target.save(List.of(skill), true /* force = 覆盖 */, ctx);
         if (!ok) {
             return ToolResultBlock.error("Failed to edit skill '" + name + "'.");
         }
@@ -469,9 +478,11 @@ public class SkillManageTool implements AgentTool {
                     "File not found: " + relPath + " (in skill '" + name + "')");
         }
 
-        // Fuzzy-match ladder: EXACT → TRAILING_WS_STRIPPED → WHITESPACE_COLLAPSED. Looser
-        // levels only fire when stricter levels return zero matches; uniqueness is then
-        // checked against the chosen level's matches so non-replace_all stays safe.
+        // 模糊匹配阶梯：EXACT → TRAILING_WS_STRIPPED → WHITESPACE_COLLAPSED。
+        // 只有严格级别没有匹配时才尝试宽松级别；之后基于选中级别的匹配
+        // 检查唯一性，确保非 replace_all 模式安全。
+        // 【学习提示】容忍空白差异不等于允许歧义替换：先选首个命中级别，
+        // 再检查该级别的全部候选；非 replaceAll 模式只有唯一命中才能修改。
         FuzzyTextMatcher.SearchResult search = FuzzyTextMatcher.search(existing, oldString);
         if (search.isEmpty()) {
             return ToolResultBlock.error(
@@ -488,7 +499,7 @@ public class SkillManageTool implements AgentTool {
         String updated;
         int replacements;
         if (replaceAll) {
-            // Apply replacements right-to-left so earlier offsets aren't invalidated.
+            // 从右向左应用替换，避免使较早位置的偏移失效。
             StringBuilder buf = new StringBuilder(existing);
             for (int i = matches.size() - 1; i >= 0; i--) {
                 FuzzyTextMatcher.MatchRange m = matches.get(i);
@@ -526,7 +537,7 @@ public class SkillManageTool implements AgentTool {
                     SkillSecurityScanner.scanSingleFile(relPath, updated);
             if (!SkillSecurityScanner.shouldAllow(
                     SkillSecurityScanner.TrustLevel.AGENT_CREATED, scan.verdict())) {
-                target.writeSkillFile(name, relPath, existing, ctx); // rollback
+                target.writeSkillFile(name, relPath, existing, ctx); // 回滚
                 return ToolResultBlock.error(
                         "Security scan blocked this patch ("
                                 + scan.verdict()
@@ -535,8 +546,8 @@ public class SkillManageTool implements AgentTool {
             }
         }
         bumpPatchSilent(name);
-        // Surface the fuzziness level so the LLM knows when whitespace was normalised — useful
-        // for the agent to decide whether to re-verify by reading the file back.
+        // 报告模糊匹配级别，使 LLM 知道何时规范化了空白，
+        // 便于智能体决定是否需要重新读取文件验证。
         String levelSuffix =
                 matchedLevel == FuzzyTextMatcher.Level.EXACT
                         ? ""
@@ -626,8 +637,8 @@ public class SkillManageTool implements AgentTool {
         if (target == null) {
             return ToolResultBlock.error("Skill '" + name + "' not found.");
         }
-        // absorbedInto validation: if non-empty, the target must exist (matches hermes intent so
-        // the Curator can later classify consolidation vs pruning).
+        // absorbedInto 验证：非空时，目标必须存在（与 hermes 意图一致，
+        // 便于整理器之后区分合并与裁剪）。
         if (absorbedInto != null && !absorbedInto.isBlank()) {
             String trimmed = absorbedInto.trim();
             if (trimmed.equals(name)) {
@@ -664,10 +675,12 @@ public class SkillManageTool implements AgentTool {
     }
 
     // ---------------------------------------------------------------------
-    //  Helpers
+    // 辅助方法
     // ---------------------------------------------------------------------
 
-    /** Best-effort {@code bumpPatch}; never throws into the caller. */
+    /**
+     * 尽力执行 {@code bumpPatch}；绝不向调用方抛出异常。
+     */
     private void bumpPatchSilent(String name) {
         if (usageStore == null) {
             return;
@@ -679,7 +692,9 @@ public class SkillManageTool implements AgentTool {
         }
     }
 
-    /** Locate the repository that owns a skill by name; drafts win on collision. */
+    /**
+     * 按名称定位拥有技能的仓库；冲突时草稿优先。
+     */
     private WorkspaceSkillRepository locate(String name, RuntimeContext ctx) {
         if (draftsRepo.skillExists(name, ctx)) {
             return draftsRepo;
@@ -710,7 +725,7 @@ public class SkillManageTool implements AgentTool {
         if (content.length() > MAX_SKILL_CONTENT_CHARS) {
             return "SKILL.md content exceeds " + MAX_SKILL_CONTENT_CHARS + " chars.";
         }
-        // Must look like frontmatter: starts with "---" on first line and contains closing "---".
+        // 必须具有前置元数据形式：首行以 "---" 开头，并包含结束的 "---"。
         String trimmed = content.startsWith("\uFEFF") ? content.substring(1) : content;
         trimmed = trimmed.stripLeading();
         if (!trimmed.startsWith("---")) {

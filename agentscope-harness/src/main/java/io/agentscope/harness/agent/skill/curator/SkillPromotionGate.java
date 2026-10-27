@@ -22,16 +22,13 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Decides whether a draft skill is allowed to be promoted into the live skills directory.
+ * 决定草稿技能是否获准晋级到正式技能目录。
  *
- * <p>Implementations:
+ * <p>实现：
  * <ul>
- *   <li>{@code RejectAllGate} — defers everything; only programmatic
- *       {@code HarnessAgent.promoteSkill(...)} can move drafts forward (enterprise default)</li>
- *   <li>{@code LocalApprovalGate} — single-replica HITL via the host shell / CLI prompt</li>
- *   <li>{@code NotifyAndWaitGate} — multi-replica: writes a {@code .review_request.json}
- *       file next to the draft and notifies one or more {@code NotificationSink}s; waits
- *       for an external system to call {@code promoteSkill} again</li>
+ * <li>{@code RejectAllGate}：全部延后，程序调用 {@code HarnessAgent.promoteSkill(...)} 仍需门控批准，默认实现不会放行（企业默认）。</li>
+ * <li>{@code LocalApprovalGate}：通过宿主 Shell / CLI 提示实现单副本 HITL。</li>
+ * <li>{@code NotifyAndWaitGate}：多副本模式，在草稿旁写入 {@code .review_request.json} 并通知一个或多个 {@code NotificationSink}；等待外部系统再次调用 {@code promoteSkill}。</li>
  * </ul>
  *
  * @see SkillCandidate
@@ -40,12 +37,13 @@ import reactor.core.publisher.Mono;
 public interface SkillPromotionGate {
 
     /**
-     * Review a draft. Implementations should perform whatever side effects they need
-     * (notification, prompt, etc.) and return a {@link PromotionDecision}.
+     * 评审草稿。实现应执行所需副作用（通知、提示等），并返回 {@link PromotionDecision}。
      */
     Mono<PromotionDecision> review(SkillCandidate candidate, RuntimeContext ctx);
 
-    /** Final outcome of a gate review. */
+    /**
+     * 一次门控评审的最终结果。
+     */
     sealed interface PromotionDecision
             permits PromotionDecision.Approve, PromotionDecision.Reject, PromotionDecision.Defer {
 

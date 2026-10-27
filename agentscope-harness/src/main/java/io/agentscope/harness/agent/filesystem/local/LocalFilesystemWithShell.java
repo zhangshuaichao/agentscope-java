@@ -37,29 +37,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Filesystem with unrestricted local shell command execution.
+ * 支持不受限制的本地 Shell 命令执行的文件系统。
  *
- * <p>This implementation extends {@link LocalFilesystem} to add shell command execution
- * capabilities. Commands are executed directly on the host system without any
- * sandboxing, process isolation, or security restrictions.
+ * <p>此实现扩展 {@link LocalFilesystem}，加入 Shell 命令执行能力。
+ * 命令直接在宿主系统上执行，没有沙箱、进程隔离或安全限制。
  *
- * <p><b>WARNING:</b> This implementation grants agents BOTH direct filesystem access AND unrestricted
- * shell execution on your local machine. Use with extreme caution and only in
- * appropriate environments (local dev, CI/CD with proper secret management).
+ * <p><b>警告：</b>此实现同时授予智能体直接文件系统访问和本机不受限制的 Shell 执行能力。
+ * 务必谨慎，仅用于合适环境（本地开发、配有妥善密钥管理的 CI/CD）。
+ *
+ * <p>【学习提示】文件 API 的路径模式不会把 ProcessBuilder 启动的 Shell 变成隔离进程。
+ * 即使读取和写入路径受约束，也不能据此推断命令只能访问相同目录。
  */
 public class LocalFilesystemWithShell extends LocalFilesystem implements AbstractSandboxFilesystem {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFilesystemWithShell.class);
 
-    /** Default timeout in seconds for shell command execution. */
+    /**
+     * Shell 命令执行的默认超时，单位秒。
+     */
     public static final int DEFAULT_EXECUTE_TIMEOUT = 120;
 
-    /** Read buffer size (bytes) for the stream drainer threads. */
+    /**
+     * 流排空线程的读取缓冲区大小，单位字节。
+     */
     private static final int DRAIN_CHUNK_BYTES = 8192;
 
     /**
-     * Safety net (millis) for joining drainer threads after the process exits or is destroyed.
-     * Never reached in practice: process exit closes the streams and ends the drainers at once.
+     * 进程退出或被销毁后，等待流排空线程结束的兜底时限，单位毫秒。
+     * 正常情况下进程退出会关闭流并立即结束排空线程，无需等满此时限。
      */
     private static final long DRAIN_JOIN_TIMEOUT_MILLIS = 5000;
 
@@ -69,26 +74,25 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     private final Map<String, String> env;
 
     /**
-     * Working directory passed to {@link ProcessBuilder#directory(java.io.File)} for shell
-     * commands. When {@code null}, falls back to {@link #getCwd()} (with per-call namespace
-     * prefix). Decouples shell {@code pwd} from the filesystem root so overlay-mode callers can
-     * keep filesystem operations rooted at the agent workspace while shell sees the user's
-     * project directory.
+     * Shell 命令传给 {@link ProcessBuilder#directory(java.io.File)} 的工作目录。
+     * 为 {@code null} 时回退到 {@link #getCwd()}（附加本次调用的命名空间前缀）。
+     * 将 Shell {@code pwd} 与文件系统根解耦，使覆盖模式调用方能让文件操作仍以智能体
+     * 工作区为根，而 Shell 使用用户项目目录。
      */
     private final Path shellCwd;
 
     /**
-     * Creates an abstract filesystem with default settings.
+     * 使用默认设置创建抽象文件系统。
      *
-     * @param rootDir working directory for both filesystem and shell operations
+     * @param rootDir 文件系统和 Shell 操作共同使用的工作目录
      */
     public LocalFilesystemWithShell(Path rootDir) {
         this(rootDir, false, DEFAULT_EXECUTE_TIMEOUT, 100_000, null, false, null);
     }
 
     /**
-     * Same as {@link #LocalFilesystemWithShell(Path)} with a path string; see
-     * {@link LocalFilesystem#LocalFilesystem(String)} for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystemWithShell(Path)} 相同，但接收路径字符串；
+     * {@code null}／空白规则参见 {@link LocalFilesystem#LocalFilesystem(String)}。
      */
     public LocalFilesystemWithShell(String rootDir) {
         this(
@@ -102,18 +106,18 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Creates an abstract filesystem with default settings and namespace support.
+     * 使用默认设置和命名空间支持创建抽象文件系统。
      *
-     * @param rootDir working directory for both filesystem and shell operations
-     * @param namespaceFactory optional namespace factory for path scoping ({@code null} for none)
+     * @param rootDir 文件系统和 Shell 操作共同使用的工作目录
+     * @param namespaceFactory 限定路径作用域的可选命名空间工厂（{@code null} 表示不使用）
      */
     public LocalFilesystemWithShell(Path rootDir, NamespaceFactory namespaceFactory) {
         this(rootDir, false, DEFAULT_EXECUTE_TIMEOUT, 100_000, null, false, namespaceFactory);
     }
 
     /**
-     * Same as {@link #LocalFilesystemWithShell(Path, NamespaceFactory)} with a path string; see
-     * {@link LocalFilesystem#LocalFilesystem(String)} for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystemWithShell(Path, NamespaceFactory)} 相同，但接收路径字符串；
+     * {@code null}／空白规则参见 {@link LocalFilesystem#LocalFilesystem(String)}。
      */
     public LocalFilesystemWithShell(String rootDir, NamespaceFactory namespaceFactory) {
         this(
@@ -127,14 +131,14 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Creates a abstract filesystem with full configuration.
+     * 使用完整配置创建抽象文件系统。
      *
-     * @param rootDir working directory for both filesystem and shell operations
-     * @param virtualMode enable virtual path mode for filesystem operations
-     * @param timeout default maximum time in seconds for shell command execution
-     * @param maxOutputBytes maximum number of bytes to capture from command output
-     * @param env environment variables for shell commands ({@code null} for empty)
-     * @param inheritEnv whether to inherit the parent process's environment variables
+     * @param rootDir 文件系统和 Shell 操作共同使用的工作目录
+     * @param virtualMode 为文件系统操作启用虚拟路径模式
+     * @param timeout Shell 命令执行的默认最长时间，单位秒
+     * @param maxOutputBytes 最多捕获的命令输出字节数
+     * @param env Shell 命令环境变量（{@code null} 表示空）
+     * @param inheritEnv 是否继承父进程环境变量
      */
     public LocalFilesystemWithShell(
             Path rootDir,
@@ -147,8 +151,8 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Same as {@link #LocalFilesystemWithShell(Path, boolean, int, int, Map, boolean)} with a path
-     * string; see {@link LocalFilesystem#LocalFilesystem(String)} for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystemWithShell(Path, boolean, int, int, Map, boolean)} 相同，
+     * 但接收路径字符串；{@code null}／空白规则参见 {@link LocalFilesystem#LocalFilesystem(String)}。
      */
     public LocalFilesystemWithShell(
             String rootDir,
@@ -168,15 +172,15 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Creates a abstract filesystem with full configuration and namespace support.
+     * 使用完整配置和命名空间支持创建抽象文件系统。
      *
-     * @param rootDir working directory for both filesystem and shell operations
-     * @param virtualMode enable virtual path mode for filesystem operations
-     * @param timeout default maximum time in seconds for shell command execution
-     * @param maxOutputBytes maximum number of bytes to capture from command output
-     * @param env environment variables for shell commands ({@code null} for empty)
-     * @param inheritEnv whether to inherit the parent process's environment variables
-     * @param namespaceFactory optional namespace factory for path scoping ({@code null} for none)
+     * @param rootDir 文件系统和 Shell 操作共同使用的工作目录
+     * @param virtualMode 为文件系统操作启用虚拟路径模式
+     * @param timeout Shell 命令执行的默认最长时间，单位秒
+     * @param maxOutputBytes 最多捕获的命令输出字节数
+     * @param env Shell 命令环境变量（{@code null} 表示空）
+     * @param inheritEnv 是否继承父进程环境变量
+     * @param namespaceFactory 限定路径作用域的可选命名空间工厂（{@code null} 表示不使用）
      */
     public LocalFilesystemWithShell(
             Path rootDir,
@@ -198,18 +202,17 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Creates a abstract filesystem with full configuration, namespace support, and a custom
-     * shell working directory.
+     * 使用完整配置、命名空间支持和自定义 Shell 工作目录创建抽象文件系统。
      *
-     * @param rootDir working directory for filesystem operations (read/write/edit/glob/...)
-     * @param virtualMode enable virtual path mode for filesystem operations
-     * @param timeout default maximum time in seconds for shell command execution
-     * @param maxOutputBytes maximum number of bytes to capture from command output
-     * @param env environment variables for shell commands ({@code null} for empty)
-     * @param inheritEnv whether to inherit the parent process's environment variables
-     * @param namespaceFactory optional namespace factory for path scoping ({@code null} for none)
-     * @param shellCwd working directory for shell command execution; when {@code null}, falls
-     *     back to {@code rootDir} (with namespace prefix when configured)
+     * @param rootDir 文件系统操作（读取／写入／编辑／glob 等）的工作目录
+     * @param virtualMode 为文件系统操作启用虚拟路径模式
+     * @param timeout Shell 命令执行的默认最长时间，单位秒
+     * @param maxOutputBytes 最多捕获的命令输出字节数
+     * @param env Shell 命令环境变量（{@code null} 表示空）
+     * @param inheritEnv 是否继承父进程环境变量
+     * @param namespaceFactory 限定路径作用域的可选命名空间工厂（{@code null} 表示不使用）
+     * @param shellCwd Shell 命令执行工作目录；为 {@code null} 时回退到 {@code rootDir}
+     *     （配置命名空间时附加相应前缀）
      */
     public LocalFilesystemWithShell(
             Path rootDir,
@@ -233,20 +236,20 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Most-complete constructor: filesystem operations follow {@code mode} and {@code pathPolicy}
-     * (see {@link LocalFilesystem#LocalFilesystem(Path, LocalFsMode, PathPolicy, int, NamespaceFactory)});
-     * shell commands run with {@code pwd = shellCwd} when set, otherwise the filesystem root.
+     * 最完整的构造方法：文件系统操作遵循 {@code mode} 和 {@code pathPolicy}
+     * （见 {@link LocalFilesystem#LocalFilesystem(Path, LocalFsMode, PathPolicy, int, NamespaceFactory)}）；
+     * 设置 Shell 工作目录时命令以 {@code pwd = shellCwd} 运行，否则使用文件系统根。
      *
-     * @param rootDir filesystem root for relative-path operations
-     * @param mode path-resolution policy ({@code null} treated as {@link LocalFsMode#UNRESTRICTED})
-     * @param pathPolicy allow-list for {@link LocalFsMode#ROOTED}; ignored otherwise
-     * @param timeout default shell timeout (seconds, must be positive)
-     * @param maxOutputBytes byte cap for captured shell output
-     * @param env environment variables for shell commands ({@code null} for empty)
-     * @param inheritEnv whether to inherit the parent process environment
-     * @param namespaceFactory optional per-user/session namespace factory
-     * @param shellCwd shell {@code pwd}; {@code null} falls back to {@code rootDir} (with
-     *     namespace prefix when configured)
+     * @param rootDir 相对路径操作的文件系统根目录
+     * @param mode 路径解析策略（{@code null} 视为 {@link LocalFsMode#UNRESTRICTED}）
+     * @param pathPolicy {@link LocalFsMode#ROOTED} 的允许列表；其他模式忽略
+     * @param timeout 默认 Shell 超时（秒，必须为正）
+     * @param maxOutputBytes 捕获 Shell 输出的字节数上限
+     * @param env Shell 命令环境变量（{@code null} 表示空）
+     * @param inheritEnv 是否继承父进程环境变量
+     * @param namespaceFactory 可选的按用户／会话划分的命名空间工厂
+     * @param shellCwd Shell {@code pwd}；{@code null} 时回退到 {@code rootDir}
+     *     （配置命名空间时附加相应前缀）
      */
     public LocalFilesystemWithShell(
             Path rootDir,
@@ -281,9 +284,9 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Same as {@link #LocalFilesystemWithShell(Path, boolean, int, int, Map, boolean,
-     * NamespaceFactory)} with a path string; see {@link LocalFilesystem#LocalFilesystem(String)}
-     * for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystemWithShell(Path, boolean, int, int, Map, boolean,
+     * NamespaceFactory)} 相同，但接收路径字符串；{@code null}／空白规则参见
+     * {@link LocalFilesystem#LocalFilesystem(String)}。
      */
     public LocalFilesystemWithShell(
             String rootDir,
@@ -309,9 +312,9 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Returns the working directory configured for shell {@code execute()} calls, or {@code null}
-     * when shell falls back to the filesystem root (with namespace prefix). Used by upstream
-     * code that needs to expose the user-visible project directory in prompts or diagnostics.
+     * 返回为 Shell {@code execute()} 调用配置的工作目录；
+     * Shell 回退到文件系统根（带命名空间前缀）时返回 {@code null}。
+     * 供需要在提示词或诊断中展示用户可见项目目录的上层代码使用。
      */
     public Path getShellCwd() {
         return shellCwd;
@@ -346,15 +349,17 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
 
             Process proc = pb.start();
 
-            // stdout/stderr must be drained concurrently with waitFor: if the child writes
-            // more than the OS pipe buffer (~4 KB on Windows, 64 KB default on Linux) while
-            // the parent blocks in waitFor, both sides deadlock and every such command is
-            // misreported as a timeout (exit 124).
+            // stdout/stderr 必须与 waitFor 并发排空：若子进程写入的数据
+            // 超过操作系统管道缓冲区（Windows 约 4 KB，Linux 默认 64 KB），而
+            // 父进程阻塞在 waitFor 中，双方就会死锁，导致这类命令
+            // 被误报为超时（退出码 124）。
             ByteArrayOutputStream stdoutBuf = new ByteArrayOutputStream();
             ByteArrayOutputStream stderrBuf = new ByteArrayOutputStream();
             Thread stdoutDrainer = drainAsync(proc.getInputStream(), stdoutBuf);
             Thread stderrDrainer = drainAsync(proc.getErrorStream(), stderrBuf);
 
+            // 【学习提示】排空输出使用后台线程，但当前调用仍阻塞在 waitFor 和后续 join。
+            // 此方法是同步 API；接入响应式流程时，应由调用层选择合适的阻塞任务调度器。
             boolean finished = proc.waitFor(effectiveTimeout, TimeUnit.SECONDS);
             if (!finished) {
                 proc.destroyForcibly();
@@ -457,9 +462,8 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
     }
 
     /**
-     * Continuously copies a subprocess stream into {@code buf} on a daemon thread so the child
-     * never blocks on a full OS pipe buffer. Read errors (e.g. the stream closing when the
-     * process is destroyed on timeout) end the drainer quietly.
+     * 在守护线程上持续把子进程流复制到 {@code buf}，防止子进程因操作系统管道缓冲区已满而阻塞。
+     * 读取错误（例如超时销毁进程时关闭流）会使排空线程安静结束。
      */
     private static Thread drainAsync(InputStream in, ByteArrayOutputStream buf) {
         Thread t =
@@ -472,7 +476,7 @@ public class LocalFilesystemWithShell extends LocalFilesystem implements Abstrac
                                     buf.write(chunk, 0, n);
                                 }
                             } catch (IOException ignored) {
-                                // Stream closed because the process was destroyed; nothing to do.
+                                // 进程被销毁导致流关闭，无需处理。
                             }
                         });
         t.setDaemon(true);

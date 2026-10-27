@@ -26,15 +26,11 @@ import java.util.Set;
 import reactor.core.publisher.Mono;
 
 /**
- * {@link ToolBase} subclass generated for methods annotated with {@link Tool}.
+ * 为 {@link Tool} 注解方法生成的 {@link ToolBase} 子类。
  *
- * <p>Bridges the annotation-driven registration path in {@link Toolkit#registerToolMethod(Object,
- * Method, String, ExtendedModel, Map)} into the {@link ToolBase} contract so {@code @Tool} methods
- * participate in {@link io.agentscope.core.permission.PermissionEngine} evaluation, the safe-flag
- * machinery in {@link ToolExecutor}, and the agent's pending-confirmation flow.
+ * <p>将 {@link Toolkit#registerToolMethod(Object, Method, String, ExtendedModel, Map)} 的注解驱动注册路径接入 {@link ToolBase} 契约，使 {@code @Tool} 方法参与 {@link io.agentscope.core.permission.PermissionEngine} 权限评估、{@link ToolExecutor} 的安全标志机制和智能体的待确认流程。
  *
- * <p>Construction validates the {@code stateInjected} contract: the annotation flag must agree
- * with the presence of an {@link AgentState} parameter on the underlying method.
+ * <p>构造时验证 {@code stateInjected} 契约：注解标志必须与底层方法是否包含 {@link AgentState} 参数一致。
  */
 final class ReflectiveFunctionTool extends ToolBase {
 
@@ -63,10 +59,9 @@ final class ReflectiveFunctionTool extends ToolBase {
     }
 
     /**
-     * Build a {@code ReflectiveFunctionTool} from the {@code @Tool}-annotated method.
+     * 从带 {@code @Tool} 注解的方法构建 {@code ReflectiveFunctionTool}。
      *
-     * @throws IllegalArgumentException if the {@code stateInjected} flag disagrees with the method
-     *     signature or if more than one {@link AgentState} parameter is declared.
+     * @throws IllegalArgumentException 当 {@code stateInjected} 标志与方法签名不一致，或声明了多个 {@link AgentState} 参数时
      */
     static ReflectiveFunctionTool create(
             Object toolObject,
@@ -128,9 +123,9 @@ final class ReflectiveFunctionTool extends ToolBase {
                             + "set stateInjected=true to enable state injection.");
         }
 
-        // strict=true is the single switch: it recursively injects
-        // additionalProperties=false into the schema (satisfying OpenAI strict mode
-        // and enabling local rejection of undeclared parameters on any provider)
+        // strict=true 是统一开关：递归地向模式注入
+        // additionalProperties=false（满足 OpenAI 严格模式，
+        // 并支持对任意提供商在本地拒绝未声明的参数）
         Map<String, Object> schema =
                 schemaGenerator.generateParameterSchema(
                         method,

@@ -22,25 +22,15 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * Renders the harness {@code <available_skills>} system-prompt block from a {@link SkillCatalog}.
+ * 从 {@link SkillCatalog} 渲染 harness 的 {@code <available_skills>} 系统提示块。
  *
- * <p>By default the catalog renders the slim view: one {@code <skill>} element per entry with
- * {@code <name>}, {@code <description>}, {@code <skill-id>} and, when present, {@code
- * <files-root>}. The full frontmatter view (all YAML metadata rendered as XML) remains available
- * by constructing the builder with {@code exposeAllMetadata=true}.
+ * <p>默认使用精简视图：每个条目对应一个 {@code <skill>} 元素，包含 {@code <name>}、{@code <description>}、{@code <skill-id>}，以及存在时的 {@code <files-root>}。使用 {@code exposeAllMetadata=true} 构建时，仍可启用完整 frontmatter 视图（将全部 YAML 元数据渲染为 XML）。
  *
- * <p>Differences from the legacy {@code AgentSkillPromptProvider}:
- *
+ * <p>与旧 {@code AgentSkillPromptProvider} 的差异：
  * <ul>
- *   <li>Each {@code <skill>} optionally carries a {@code <files-root>} child giving the
- *       absolute path to that skill's files. The middleware decides whether to populate this
- *       based on shell availability and skill source.
- *   <li>The {@code <code_execution>} section is emitted only when at least one entry in the
- *       catalog has a non-null {@code filesRoot} (i.e. shell is available and at least one
- *       skill's files are reachable). The new instruction tells the LLM to use each skill's
- *       {@code <files-root>} rather than a single hardcoded root.
- *   <li>Resource fallback for non-SKILL.md paths is implemented by
- *       {@link SkillLoadTool}; the prompt does not need to mention it.
+ * <li>每个 {@code <skill>} 可包含 {@code <files-root>} 子元素，给出技能文件的绝对路径。中间件根据 Shell 可用性和技能来源决定是否填充。
+ * <li>仅当目录中至少一个条目具有非 null 的 {@code filesRoot} 时才输出 {@code <code_execution>} 节（即 Shell 可用且至少一个技能文件可达）。新指令要求 LLM 使用各技能的 {@code <files-root>}，而不是单一硬编码根路径。
+ * <li>非 SKILL.md 路径的资源回退由 {@link SkillLoadTool} 实现，无需在提示中说明。
  * </ul>
  */
 @SuppressWarnings("deprecation")
@@ -106,12 +96,11 @@ public final class SkillPromptBuilder {
     }
 
     /**
-     * Render the prompt block. Returns an empty string when no skills pass the filter, so the
-     * caller can no-op concatenation.
+     * 渲染提示块。无技能通过过滤时返回空字符串，便于调用方直接拼接。
      *
-     * @param catalog the per-call snapshot (non-null)
-     * @param filter  visibility filter applied per skill name (non-null; use {@link SkillFilter#all()})
-     * @return prompt text, or empty string when nothing is visible
+     * @param catalog 单次调用快照（非 null）
+     * @param filter 按技能名称应用的可见性过滤器（非 null；可用 {@link SkillFilter#all()}）
+     * @return 提示文本；无可见内容时为空字符串
      */
     public String render(SkillCatalog catalog, SkillFilter filter) {
         if (catalog == null || catalog.isEmpty()) {
@@ -143,9 +132,9 @@ public final class SkillPromptBuilder {
         }
         sb.append("</available_skills>");
 
-        // Only emit the code-execution section when at least one visible skill is shell-reachable.
-        // No filesRoot anywhere => no shell tool registered (or all skills are unreachable),
-        // so the instruction would mislead the LLM.
+        // 至少一个可见技能能通过 Shell 访问时，才输出代码执行节。
+        // 完全没有 filesRoot 意味着未注册 Shell 工具（或全部技能都不可达），
+        // 此时输出执行指令会误导 LLM。
         if (anyWithFilesRoot) {
             sb.append(codeExecutionInstruction);
         }
@@ -153,7 +142,9 @@ public final class SkillPromptBuilder {
         return sb.toString();
     }
 
-    /** Convenience overload used by the middleware when no extra filter is active. */
+    /**
+     * 供中间件在无额外过滤器时使用的便捷重载。
+     */
     public String render(SkillCatalog catalog) {
         return render(catalog, SkillFilter.all());
     }

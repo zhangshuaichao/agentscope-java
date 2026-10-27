@@ -16,10 +16,10 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result of a file write operation.
+ * 文件写入操作的结果。
  *
- * @param path absolute path of written file, {@code null} on failure
- * @param error error message on failure, {@code null} on success
+ * @param path 已写入文件的绝对路径；失败时为 {@code null}
+ * @param error 失败时的错误消息；成功时为 {@code null}
  */
 public record WriteResult(String path, String error) {
 

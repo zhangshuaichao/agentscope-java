@@ -18,10 +18,10 @@ package io.agentscope.harness.agent.filesystem.model;
 import java.util.List;
 
 /**
- * Result from abstract filesystem glob operations.
+ * 抽象文件系统 glob 操作的结果。
  *
- * @param error error message on failure, {@code null} on success
- * @param matches list of matching file info entries on success, {@code null} on failure
+ * @param error 失败时的错误消息；成功时为 {@code null}
+ * @param matches 成功时的匹配文件信息列表；失败时为 {@code null}
  */
 public record GlobResult(String error, List<FileInfo> matches) {
 

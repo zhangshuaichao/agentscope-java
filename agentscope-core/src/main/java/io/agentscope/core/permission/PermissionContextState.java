@@ -27,11 +27,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Permission evaluation context: mode + working directories + three rule tables.
+ * 权限评估上下文：模式、工作目录和三张规则表。
  *
- * <p>Rule tables are keyed by tool name; each value is the ordered list of rules registered for
- * that tool. The engine evaluates {@code denyRules} first, then {@code askRules}, then tool
- * self-check, then {@code allowRules}; see the {@code PermissionEngine} javadoc for full ordering.
+ * <p>规则表以工具名称为键，每个值是为该工具注册的有序规则列表。
+ * 引擎先评估 {@code denyRules}，再评估 {@code askRules}、工具自检，
+ * 最后评估 {@code allowRules}；完整顺序见 {@code PermissionEngine} 的 Javadoc。
  */
 @JsonPropertyOrder({"mode", "working_directories", "allow_rules", "deny_rules", "ask_rules"})
 public final class PermissionContextState {
@@ -98,10 +98,10 @@ public final class PermissionContextState {
     }
 
     /**
-     * Whether this context is "trivial" — built from {@link Builder#build()} with no further
-     * customisation. Used by ReAct agents to decide whether to engage the full permission engine
-     * (rules + mode + tool self-check) or fall back to the lightweight, pre-2.0 path that only
-     * gates on the tool's own {@code checkPermissions} self-check.
+     * 此上下文是否属于“简单”上下文，即直接由 {@link Builder#build()} 构建，
+     * 没有进一步定制。ReAct 智能体据此决定启用完整权限引擎
+     * （规则、模式、工具自检），还是回退到 2.0 之前的轻量路径，
+     * 该路径仅由工具自身的 {@code checkPermissions} 自检把关。
      */
     @JsonIgnore
     public boolean isTrivial() {
@@ -137,13 +137,12 @@ public final class PermissionContextState {
     }
 
     /**
-     * Returns a copy of this context with the {@link PermissionMode} replaced and every working
-     * directory and rule preserved. Used to switch the evaluation mode at runtime (e.g. flipping a
-     * session into {@link PermissionMode#BYPASS}) without losing the configured rules.
+     * 返回替换了 {@link PermissionMode} 的上下文副本，保留所有工作目录和规则。
+     * 用于运行时切换评估模式（例如将会话切换到 {@link PermissionMode#BYPASS}），
+     * 同时不丢失已配置的规则。
      *
-     * @param newMode the mode the returned context should use
-     * @return a new context identical to this one except for its mode (returns {@code this} when the
-     *     mode is unchanged)
+     * @param newMode 返回的上下文应使用的模式
+     * @return 除模式外与当前对象相同的新上下文（模式未改变时返回 {@code this}）
      */
     public PermissionContextState withMode(PermissionMode newMode) {
         Objects.requireNonNull(newMode, "newMode must not be null");

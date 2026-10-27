@@ -20,16 +20,13 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * A {@link ToolGroup} that is bound to a specific skill. When the associated skill is in use,
- * this tool group should be activated alongside it.
+ * 绑定特定技能的 {@link ToolGroup}。使用关联技能时，应同时激活此工具组。
  *
- * <p>The {@link #getDescription()} method appends a reminder to the base description, informing
- * the model that this tool group must be activated whenever the bound skill is active.
+ * <p>{@link #getDescription()} 在基础描述后添加提醒，告知模型绑定技能激活时必须启用此工具组。
  *
- * <p>Scope defaults to {@link ToolGroupScope#META} so the agent can manage it via
- * {@code reset_equipped_tools}.
+ * <p>作用域默认为 {@link ToolGroupScope#META}，使智能体能通过 {@code reset_equipped_tools} 管理它。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  *
  * <pre>{@code
  * SkillToolGroup group = SkillToolGroup.skillBuilder()
@@ -59,18 +56,18 @@ public class SkillToolGroup extends ToolGroup {
     }
 
     /**
-     * Returns the name of the skill that this tool group is bound to.
+     * 返回工具组绑定的技能名称。
      *
-     * @return The skill name (never null)
+     * @return 技能名称（永不为 null）
      */
     public String getActivateOnSkill() {
         return activateOnSkill;
     }
 
     /**
-     * Returns the enhanced description that includes a reminder about the skill binding.
+     * 返回包含技能绑定提醒的增强描述。
      *
-     * @return The base description plus a skill-activation reminder
+     * @return 基础描述与技能激活提醒
      */
     @Override
     public String getDescription() {
@@ -94,15 +91,17 @@ public class SkillToolGroup extends ToolGroup {
     }
 
     /**
-     * Creates a new builder for constructing SkillToolGroup instances.
+     * 创建用于构造 SkillToolGroup 实例的构建器。
      *
-     * @return A new SkillToolGroup builder instance
+     * @return 新的 SkillToolGroup 构建器实例
      */
     public static Builder skillBuilder() {
         return new Builder();
     }
 
-    /** Builder for constructing SkillToolGroup instances. */
+    /**
+     * 用于构造 SkillToolGroup 实例的构建器。
+     */
     public static class Builder {
 
         private String name;
@@ -112,10 +111,10 @@ public class SkillToolGroup extends ToolGroup {
         private Set<String> tools = new HashSet<>();
 
         /**
-         * Sets the name of the tool group.
+         * 设置工具组名称。
          *
-         * @param name The group name (required)
-         * @return This builder for method chaining
+         * @param name 组名（必填）
+         * @return 当前构建器，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -123,10 +122,10 @@ public class SkillToolGroup extends ToolGroup {
         }
 
         /**
-         * Sets the base description of the tool group.
+         * 设置工具组基础描述。
          *
-         * @param description The group description
-         * @return This builder for method chaining
+         * @param description 组描述
+         * @return 当前构建器，支持链式调用
          */
         public Builder description(String description) {
             this.description = description;
@@ -134,10 +133,10 @@ public class SkillToolGroup extends ToolGroup {
         }
 
         /**
-         * Sets the initial activation state.
+         * 设置初始激活状态。
          *
-         * @param active true for active, false for inactive (default)
-         * @return This builder for method chaining
+         * @param active true 表示激活，false 表示未激活（默认）
+         * @return 当前构建器，支持链式调用
          */
         public Builder active(boolean active) {
             this.active = active;
@@ -145,10 +144,10 @@ public class SkillToolGroup extends ToolGroup {
         }
 
         /**
-         * Sets the skill that this tool group is bound to.
+         * 设置工具组绑定的技能。
          *
-         * @param skillName The skill name (required)
-         * @return This builder for method chaining
+         * @param skillName 技能名称（必填）
+         * @return 当前构建器，支持链式调用
          */
         public Builder activateOnSkill(String skillName) {
             this.activateOnSkill = skillName;
@@ -156,10 +155,10 @@ public class SkillToolGroup extends ToolGroup {
         }
 
         /**
-         * Sets the initial set of tools in this group.
+         * 设置组内初始工具集合。
          *
-         * @param tools The tool names (a defensive copy will be made)
-         * @return This builder for method chaining
+         * @param tools 工具名称（进行防御性复制）
+         * @return 当前构建器，支持链式调用
          */
         public Builder tools(Set<String> tools) {
             this.tools = new HashSet<>(tools);
@@ -167,10 +166,10 @@ public class SkillToolGroup extends ToolGroup {
         }
 
         /**
-         * Builds a new SkillToolGroup with the configured settings.
+         * 使用配置构建 SkillToolGroup。
          *
-         * @return A new SkillToolGroup instance
-         * @throws NullPointerException if name or activateOnSkill is null
+         * @return 新的 SkillToolGroup 实例
+         * @throws NullPointerException 当 name 或 activateOnSkill 为 null 时
          */
         public SkillToolGroup build() {
             return new SkillToolGroup(this);

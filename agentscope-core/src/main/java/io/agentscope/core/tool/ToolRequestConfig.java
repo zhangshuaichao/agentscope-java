@@ -21,31 +21,22 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable per-call tool request config. Composed (NOT copied) with a shared, stateless {@link
- * Toolkit} to produce the tool surface for one call. Never mutates nor copies the shared toolkit.
+ * 不可变的逐调用工具请求配置。与共享无状态 {@link Toolkit} 组合而非复制，生成一次调用可见的工具范围，从不修改或复制共享工具集。
  *
- * <p>Produced by any external-tool-injection layer (AG-UI adapter today); {@link #NONE} means "use
- * the shared toolkit as-is". {@link #externalTools()} are {@link SchemaOnlyTool} instances — in
- * this framework an external tool is by definition schema-only (no local implementation), and
- * {@code SchemaOnlyTool} carries only a schema (no {@code groupManager}/registry back-reference),
- * so they are safe to construct per-call and carry in an immutable request config. The concrete
- * type ({@code Map<String, SchemaOnlyTool>} rather than {@code Map<String, AgentTool>}) makes
- * "external tool ⇒ schema-only" a compile-time invariant.
+ * <p>由外部工具注入层（当前为 AG-UI 适配器）产生；{@link #NONE} 表示原样使用共享工具集。{@link #externalTools()} 为 {@link SchemaOnlyTool} 实例：本框架的外部工具按定义仅包含模式，没有本地实现。{@code SchemaOnlyTool} 不携带 {@code groupManager} 或注册表反向引用，可安全地按调用构造并保存于不可变配置。具体类型 {@code Map<String, SchemaOnlyTool>} 而非 {@code Map<String, AgentTool>}，将“外部工具必为仅模式工具”确立为编译期不变量。
  *
- * <p>Contract: {@code externalTools} always take priority over the backend regardless of {@code
- * mergeMode} — {@code mergeMode} only governs backend visibility ({@link
- * ToolMergeMode#EXTERNAL_ONLY} hides the backend without changing the registry). {@code
- * AGENT_ONLY} therefore only ever pairs with an empty tool map (that is {@link #NONE}); a
- * non-empty {@code externalTools} combined with {@code AGENT_ONLY} is rejected.
+ * <p>契约：无论 {@code mergeMode} 为何，{@code externalTools} 始终优先于后端；{@code mergeMode} 只控制后端可见性（{@link ToolMergeMode#EXTERNAL_ONLY} 隐藏后端而不修改注册表）。因此 {@code AGENT_ONLY} 只能与空工具映射配对（即 {@link #NONE}）；非空 {@code externalTools} 与 {@code AGENT_ONLY} 的组合会被拒绝。
  */
 public record ToolRequestConfig(
-        Map<String, SchemaOnlyTool> externalTools, // name -> external (schema-only) tool, overrides
-        // backend
-        ToolMergeMode mergeMode // AGENT_ONLY implies NONE; otherwise MERGE_EXTERNAL_PRIORITY or
+        Map<String, SchemaOnlyTool> externalTools, // 名称 -> 外部工具（仅模式），覆盖
+        // 后端工具
+        ToolMergeMode mergeMode // AGENT_ONLY 意味着 NONE；否则为 MERGE_EXTERNAL_PRIORITY 或
         // EXTERNAL_ONLY
         ) {
 
-    /** Sentinel meaning "use the shared toolkit as-is". */
+    /**
+     * 表示原样使用共享工具集的哨兵值。
+     */
     public static final ToolRequestConfig NONE =
             new ToolRequestConfig(Map.of(), ToolMergeMode.AGENT_ONLY);
 
@@ -53,10 +44,10 @@ public record ToolRequestConfig(
         if (externalTools == null || externalTools.isEmpty()) {
             externalTools = Map.of();
         } else {
-            // Preserve insertion order (callers build an ordered LinkedHashMap, and schema
-            // generation is order-sensitive) while making the map immutable — Map.copyOf() would
-            // drop order. Validate each entry eagerly so this value type stays fail-fast about
-            // nulls (Map.copyOf-style) instead of deferring the failure to schema generation.
+            // 保留插入顺序（调用方使用有序 LinkedHashMap，且模式生成
+            // 对顺序敏感），同时使映射不可变；Map.copyOf() 会
+            // 丢失顺序。立即验证每个条目，使此值类型能像 Map.copyOf 一样对 null
+            // 快速失败，而不是将错误推迟到模式生成时。
             Map<String, SchemaOnlyTool> copy = new LinkedHashMap<>();
             externalTools.forEach(
                     (name, tool) ->
@@ -80,11 +71,7 @@ public record ToolRequestConfig(
     }
 
     /**
-     * Resolves the tool visible for {@code name} under this request config: an external tool takes
-     * priority, then in {@link ToolMergeMode#EXTERNAL_ONLY} the backend
-     * is hidden, then the supplied backend registry is consulted. This is the single home of the
-     * "external → hide-backend → registry" policy, shared by {@link
-     * Toolkit#getTool(String, ToolRequestConfig)} and the executor so they cannot drift.
+     * 解析本请求配置下 {@code name} 可见的工具：外部工具优先；{@link ToolMergeMode#EXTERNAL_ONLY} 模式下隐藏后端；否则查询给定后端注册表。这是“外部工具 → 隐藏后端 → 注册表”策略的唯一实现，由 {@link Toolkit#getTool(String, ToolRequestConfig)} 和执行器共享，避免逻辑偏离。
      */
     AgentTool resolveTool(String name, ToolRegistry registry) {
         AgentTool external = externalTools.get(name);
@@ -98,20 +85,14 @@ public record ToolRequestConfig(
     }
 
     /**
-     * Whether this config hides the backend registry entirely (request-scoped {@link
-     * ToolMergeMode#EXTERNAL_ONLY}). Shared by {@link #resolveTool(String, ToolRegistry)}
-     * and {@link Toolkit#getToolSchemas(java.util.Collection, ToolRequestConfig)} so the policy
-     * cannot drift.
+     * 此配置是否完全隐藏后端注册表（请求级 {@link ToolMergeMode#EXTERNAL_ONLY}）。由 {@link #resolveTool(String, ToolRegistry)} 和 {@link Toolkit#getToolSchemas(java.util.Collection, ToolRequestConfig)} 共享，保证策略一致。
      */
     boolean hidesBackend() {
         return mergeMode == ToolMergeMode.EXTERNAL_ONLY;
     }
 
     /**
-     * Whether {@code name} is shadowed by an external tool, which always overrides the backend
-     * regardless of merge mode. Shared by {@link #resolveTool(String, ToolRegistry)}, the
-     * executor's availability gate, and {@link
-     * Toolkit#getToolSchemas(java.util.Collection, ToolRequestConfig)}.
+     * {@code name} 是否被外部工具遮蔽；无论合并模式为何，外部工具始终覆盖后端。由 {@link #resolveTool(String, ToolRegistry)}、执行器可用性门禁和 {@link Toolkit#getToolSchemas(java.util.Collection, ToolRequestConfig)} 共享。
      */
     boolean overrides(String name) {
         return externalTools.containsKey(name);

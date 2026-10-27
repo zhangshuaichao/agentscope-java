@@ -22,36 +22,35 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Utility for loading v1 session data into the 2.0 {@link AgentState} format.
+ * 将 v1 会话数据加载为 2.0 {@link AgentState} 格式的工具。
  *
- * <p>This class reads the legacy session keys ({@code memory_messages},
- * {@code toolkit_activeGroups}) and constructs an equivalent {@link AgentState} object. The
- * original session data is not modified or migrated in place. This utility is only an explicit
- * migration entry point; normal agent activation does not read these keys. Persist the returned
- * state explicitly or import it through {@code SessionMigration.importBaseline}.
+ * <p>读取旧版会话键（{@code memory_messages}、
+ * {@code toolkit_activeGroups}），并构造等价的 {@link AgentState} 对象。
+ * 原始会话数据不会被修改，也不会原地迁移。此工具仅提供显式迁移入口；
+ * 正常的智能体激活流程不会读取这些键。请显式持久化返回的状态，
+ * 或通过 {@code SessionMigration.importBaseline} 导入。
  *
- * <p>Legacy keys carry no 2.0-era {@link PermissionContextState}, so callers that need a specific
- * permission context (for example {@code BYPASS} for a pre-seeded privileged session) must pass it
- * in explicitly — otherwise the reconstructed state silently falls back to the default
- * permission mode.
+ * <p>旧版键不含 2.0 的 {@link PermissionContextState}。若调用方需要指定的
+ * 权限上下文（例如为预置特权会话设置 {@code BYPASS}），必须显式传入；
+ * 否则重建的状态会静默回退到默认权限模式。
  */
 public final class LegacyStateLoader {
 
     private LegacyStateLoader() {}
 
     /**
-     * Load an {@link AgentState} from a v1 session.
+     * 从 v1 会话加载 {@link AgentState}。
      *
-     * <p>Reads:
+     * <p>读取以下内容：
      * <ul>
-     *   <li>{@code memory_messages} — conversation history</li>
-     *   <li>{@code toolkit_activeGroups} — tool activation state</li>
+     *   <li>{@code memory_messages} — 对话历史</li>
+     *   <li>{@code toolkit_activeGroups} — 工具激活状态</li>
      * </ul>
      *
-     * @param stateStore the state store to read from
-     * @param userId nullable user identifier
-     * @param sessionId the session identifier (required)
-     * @return a new AgentState populated with the legacy data
+     * @param stateStore 要读取的状态存储
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符（必填）
+     * @return 使用旧版数据填充的新 AgentState
      */
     public static AgentState loadFromLegacySession(
             AgentStateStore stateStore, String userId, String sessionId) {
@@ -59,18 +58,17 @@ public final class LegacyStateLoader {
     }
 
     /**
-     * Load an {@link AgentState} from a v1 session, applying the supplied permission context.
+     * 从 v1 会话加载 {@link AgentState}，并应用指定的权限上下文。
      *
-     * <p>See {@link #loadFromLegacySession(AgentStateStore, String, String)} for the read keys.
-     * Legacy keys carry no permission context; passing {@code permCtx} is the only way to
-     * preserve a non-default permission mode (for example {@code BYPASS}) when reconstructing
-     * state from a v1 session.
+     * <p>读取的键见 {@link #loadFromLegacySession(AgentStateStore, String, String)}。
+     * 旧版键不携带权限上下文；必须传入 {@code permCtx}，才能在从 v1 会话重建状态时
+     * 保留非默认权限模式（例如 {@code BYPASS}）。
      *
-     * @param stateStore the state store to read from
-     * @param userId nullable user identifier
-     * @param sessionId the session identifier (required)
-     * @param permCtx the permission context to attach, or {@code null} to keep the default
-     * @return a new AgentState populated with the legacy data
+     * @param stateStore 要读取的状态存储
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符（必填）
+     * @param permCtx 要附加的权限上下文；为 {@code null} 时保留默认值
+     * @return 使用旧版数据填充的新 AgentState
      */
     public static AgentState loadFromLegacySession(
             AgentStateStore stateStore,
@@ -81,16 +79,15 @@ public final class LegacyStateLoader {
     }
 
     /**
-     * Loads legacy state without discarding the presence of the singleton tool-group key.
+     * 加载旧版状态，同时保留单一工具组键是否存在的信息。
      *
-     * <p>The presence bit is required because an explicitly persisted {@code
-     * toolkit_activeGroups=[]} has different semantics from a missing key even though both produce
-     * an empty {@link ToolContextState}.
+     * <p>必须保留存在标记，因为显式持久化的 {@code
+     * toolkit_activeGroups=[]} 与键不存在具有不同语义，尽管两者都会产生
+     * 空的 {@link ToolContextState}。
      *
-     * <p>The overload with a {@link PermissionContextState} applies the supplied permission
-     * context to the reconstructed state; legacy keys themselves never carry one. Callers that
-     * do not need a specific permission mode may use the {@code (stateStore, userId, sessionId)}
-     * variant.
+     * <p>接收 {@link PermissionContextState} 的重载会将指定权限上下文应用到
+     * 重建状态；旧版键本身从不携带该上下文。不需要指定权限模式的调用方
+     * 可以使用 {@code (stateStore, userId, sessionId)} 版本。
      */
     public static LegacyLoadResult loadFromLegacySessionWithPresence(
             AgentStateStore stateStore, String userId, String sessionId) {
@@ -98,18 +95,18 @@ public final class LegacyStateLoader {
     }
 
     /**
-     * Loads legacy state without discarding the presence of the singleton tool-group key, and
-     * applies the supplied permission context to the reconstructed state.
+     * 加载旧版状态，同时保留单一工具组键的存在信息，
+     * 并将指定的权限上下文应用到重建状态。
      *
-     * <p>See {@link #loadFromLegacySessionWithPresence(AgentStateStore, String, String)} for the
-     * presence semantics. When {@code permCtx} is non-null it is attached to the reconstructed
-     * {@link AgentState}; otherwise the state keeps the default permission context.
+     * <p>存在性的语义见 {@link #loadFromLegacySessionWithPresence(AgentStateStore, String, String)}。
+     * 当 {@code permCtx} 非空时，将其附加到重建的 {@link AgentState}；
+     * 否则保留默认权限上下文。
      *
-     * @param stateStore the state store to read from
-     * @param userId nullable user identifier
-     * @param sessionId the session identifier (required)
-     * @param permCtx the permission context to attach, or {@code null} to keep the default
-     * @return the reconstructed legacy state and whether the legacy keys were present
+     * @param stateStore 要读取的状态存储
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符（必填）
+     * @param permCtx 要附加的权限上下文；为 {@code null} 时保留默认值
+     * @return 重建的旧版状态，以及旧版键是否存在
      */
     public static LegacyLoadResult loadFromLegacySessionWithPresence(
             AgentStateStore stateStore,
@@ -138,8 +135,8 @@ public final class LegacyStateLoader {
     }
 
     /**
-     * Result of reading the v1 session keys. {@code found} is true for non-empty legacy messages or
-     * a present tool-group key, including a tool-group value whose list is explicitly empty.
+     * 读取 v1 会话键的结果。旧版消息非空或工具组键存在时，{@code found} 为 true；
+     * 工具组键存在且其列表显式为空的情况也算存在。
      */
     public record LegacyLoadResult(AgentState state, boolean found) {}
 }

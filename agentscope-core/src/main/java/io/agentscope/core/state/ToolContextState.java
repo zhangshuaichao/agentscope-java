@@ -36,16 +36,19 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Read-cache backing for file-touching tools (Read / Write / Edit).
+ * 文件操作工具（Read / Write / Edit）的读取缓存支撑状态。
  *
- * <p>Maintains an ordered LRU list of {@link ReadCacheEntry} bounded by both entry count and
- * total bytes. Cache reads are validated against the file's current mtime; stale entries are
- * evicted on access. All filesystem interaction runs on {@link Schedulers#boundedElastic()} so
- * Reactor's non-blocking schedulers are never blocked.
+ * <p>维护有序的 {@link ReadCacheEntry} LRU 列表，同时限制条目数量和总字节数。
+ * 读取缓存时会核对文件当前的修改时间；访问过期条目时将其移除。
+ * 所有文件系统交互都运行在 {@link Schedulers#boundedElastic()} 上，
+ * 避免阻塞 Reactor 的非阻塞调度器。
  *
- * <p>Only configuration fields ({@code maxCacheFiles}, {@code maxCacheBytes},
- * {@code activatedGroups}) participate in JSON serialization. The in-memory LRU cache itself is
- * runtime state and is reconstructed empty on deserialization.
+ * <p>只有配置字段（{@code maxCacheFiles}、{@code maxCacheBytes}、
+ * {@code activatedGroups}）参与 JSON 序列化。内存中的 LRU 缓存本身属于运行时状态，
+ * 反序列化时会重建为空缓存。
+ *
+ * <p>【学习提示】恢复会话不等于恢复文件缓存内容。缓存命中还要检查文件修改时间；
+ * 子智能体创建登记则由单独的 spawn_registry 属性序列化，不能与读取缓存混为一谈。
  */
 @JsonPropertyOrder({"max_cache_files", "max_cache_bytes", "activated_groups", "spawn_registry"})
 public final class ToolContextState {
@@ -101,7 +104,11 @@ public final class ToolContextState {
         return maxCacheBytes;
     }
 
-    /** Snapshot of the cache list at call time. Modifications do not affect the live cache. */
+    /**
+     * 调用时缓存列表的快照，修改该快照不会影响实时缓存。
+     *
+     * <p>【学习提示】快照用来观察状态，不是写入入口；要修改实际缓存，必须走维护缓存约束的方法。
+     */
     @JsonIgnore
     public List<ReadCacheEntry> getReadFileCache() {
         synchronized (readFileCache) {
@@ -115,9 +122,9 @@ public final class ToolContextState {
     }
 
     /**
-     * Replace the activated tool groups with the given list.
+     * 将已激活工具组替换为指定列表。
      *
-     * @param groups the new activated groups; {@code null} clears the list
+     * @param groups 新的已激活工具组；{@code null} 会清空列表
      */
     public synchronized void setActivatedGroups(List<String> groups) {
         this.activatedGroups.clear();
@@ -131,11 +138,11 @@ public final class ToolContextState {
     }
 
     /**
-     * Adds the given tool groups to the activated set, preserving order and ignoring nulls and
-     * duplicates. This is an atomic read-modify-write: concurrent callers (e.g. parallel tool
-     * calls within one session) cannot lose one another's additions.
+     * 将指定工具组加入激活集合，保持顺序并忽略 null 和重复项。
+     * 这是原子的读—改—写操作：并发调用方（例如同一会话内的并行工具调用）
+     * 不会丢失彼此新增的组。
      *
-     * @param groups the groups to activate; {@code null} is a no-op
+     * @param groups 要激活的工具组；{@code null} 不执行操作
      */
     public synchronized void addActivatedGroups(List<String> groups) {
         if (groups == null) {
@@ -149,10 +156,10 @@ public final class ToolContextState {
     }
 
     /**
-     * Removes the given tool groups from the activated set. Atomic read-modify-write; order of the
-     * remaining groups is preserved.
+     * 从激活集合中移除指定工具组。采用原子读—改—写操作，
+     * 保留其余工具组的顺序。
      *
-     * @param groups the groups to deactivate; {@code null} is a no-op
+     * @param groups 要停用的工具组；{@code null} 不执行操作
      */
     public synchronized void removeActivatedGroups(List<String> groups) {
         if (groups == null) {
@@ -162,14 +169,13 @@ public final class ToolContextState {
     }
 
     /**
-     * Atomically drops the groups in {@code toRemove} and then adds {@code toAdd}, preserving
-     * order and ignoring nulls/duplicates. This is a single read-modify-write so an additive tool
-     * (e.g. skill activation) running concurrently cannot be lost by a "replace"-style tool (e.g.
-     * {@code reset_equipped_tools}) that interleaves between its read and write.
+     * 原子地移除 {@code toRemove} 中的组，再加入 {@code toAdd}，
+     * 保持顺序并忽略 null 和重复项。这是单次读—改—写操作，因此并发执行的
+     * 追加型工具（例如技能激活）的结果，不会被交错执行的替换型工具
+     * （例如 {@code reset_equipped_tools}）在读取与写入之间覆盖丢失。
      *
-     * @param toRemove the groups to drop (e.g. META-scoped group names); {@code null} is a removal
-     *     no-op
-     * @param toAdd the groups to add; {@code null} is an addition no-op
+     * @param toRemove 要移除的工具组（例如 META 作用域组名）；{@code null} 不执行移除
+     * @param toAdd 要加入的工具组；{@code null} 不执行添加
      */
     public synchronized void replaceActivatedGroups(
             Collection<String> toRemove, Collection<String> toAdd) {
@@ -191,10 +197,10 @@ public final class ToolContextState {
     }
 
     /**
-     * Register a spawned subagent entry so it survives session restore and cross-replica routing.
+     * 注册已创建的子智能体条目，使其可跨会话恢复和副本路由继续使用。
      *
-     * @param key the agent key (e.g. {@code agent:general-purpose:uuid})
-     * @param entry the serializable spawn metadata
+     * @param key 智能体键（例如 {@code agent:general-purpose:uuid}）
+     * @param entry 可序列化的创建元数据
      */
     public void putSpawnEntry(String key, SpawnEntry entry) {
         if (key != null && entry != null) {
@@ -202,9 +208,7 @@ public final class ToolContextState {
         }
     }
 
-    /**
-     * Remove a spawn entry by key.
-     */
+    /** 按键移除子智能体创建条目。 */
     public void removeSpawnEntry(String key) {
         if (key != null) {
             this.spawnRegistry.remove(key);
@@ -212,9 +216,8 @@ public final class ToolContextState {
     }
 
     /**
-     * Serializable metadata for a spawned subagent, persisted alongside the parent agent's state
-     * so that {@code agent_send} can lazily rebuild the live {@code Agent} instance after session
-     * restore or on a different replica.
+     * 已创建子智能体的可序列化元数据，与父智能体状态一起持久化，
+     * 使 {@code agent_send} 能在会话恢复后或其他副本上按需重建实时 {@code Agent} 实例。
      */
     public record SpawnEntry(
             @JsonProperty("key") String key,
@@ -239,8 +242,8 @@ public final class ToolContextState {
     }
 
     /**
-     * Look up the cached entry for {@code filePath}. Evicts and returns empty if the file's mtime
-     * has changed or the file no longer exists.
+     * 查找 {@code filePath} 对应的缓存条目。若文件修改时间已变化或文件已不存在，
+     * 则移除条目并返回空值。
      */
     public Mono<Optional<ReadCacheEntry>> getCache(String filePath) {
         return Mono.fromCallable(
@@ -266,9 +269,9 @@ public final class ToolContextState {
     }
 
     /**
-     * Insert {@code lines} for {@code filePath} into the cache, evicting older entries to satisfy
-     * both {@code maxCacheFiles} and {@code maxCacheBytes}. If the file's mtime is unavailable the
-     * insert is silently skipped.
+     * 将 {@code lines} 作为 {@code filePath} 的内容加入缓存，移除较旧的条目，
+     * 同时满足 {@code maxCacheFiles} 和 {@code maxCacheBytes} 限制。
+     * 若无法取得文件修改时间，则静默跳过插入。
      */
     public Mono<Void> cacheFile(String filePath, List<String> lines) {
         return Mono.<Void>fromCallable(

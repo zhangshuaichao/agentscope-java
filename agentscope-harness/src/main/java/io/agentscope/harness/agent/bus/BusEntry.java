@@ -18,9 +18,8 @@ package io.agentscope.harness.agent.bus;
 import java.util.Map;
 
 /**
- * A single entry read from a {@link MessageBus} queue or log.
- *
- * @param entryId transport-level entry identifier (e.g. Redis Stream entry id)
- * @param payload the JSON-serializable payload
+ * 从 {@link MessageBus} 队列或日志中读取的一条记录。
+ * @param entryId 传输层记录标识符，例如 Redis Stream 记录 ID
+ * @param payload 可序列化为 JSON 的载荷
  */
 public record BusEntry(String entryId, Map<String, Object> payload) {}

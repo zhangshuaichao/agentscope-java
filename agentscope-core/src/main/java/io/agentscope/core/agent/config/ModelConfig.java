@@ -19,14 +19,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.agentscope.core.model.Model;
 
 /**
- * Model invocation configuration. {@link #maxRetries()} bounds the retry count on a single
- * model call; {@link #fallbackModel()} (nullable) is invoked if the primary model still fails
- * after exhausting retries — the fallback shares the same {@code maxRetries} budget. {@link
- * #failoverListener()} (nullable) is notified when such a switch happens.
+ * 模型调用配置。{@link #maxRetries()} 限制单次模型调用的重试次数；
+ * 主模型耗尽重试仍失败时调用可空的 {@link #fallbackModel()}，回退模型使用相同的 {@code maxRetries} 重试额度。
+ * 发生此类切换时通知可空的 {@link #failoverListener()}。
  *
- * <p>The {@code fallbackModel} and {@code failoverListener} fields are intentionally excluded
- * from JSON serialisation ({@code @JsonIgnore}): they hold live instances (credentials,
- * connections, callbacks) that don't round-trip cleanly through a state snapshot.
+ * <p>{@code fallbackModel} 和 {@code failoverListener} 字段有意排除在 JSON 序列化之外（{@code @JsonIgnore}），
+ * 因为它们持有实时实例（凭据、连接、回调），无法通过状态快照可靠地往返还原。
  */
 public record ModelConfig(
         int maxRetries,
@@ -42,14 +40,15 @@ public record ModelConfig(
     }
 
     /**
-     * Convenience constructor without failover observation; equivalent to passing a {@code null}
-     * listener.
+     * 不观察回退切换的便捷构造方法，相当于传入 {@code null} 监听器。
      */
     public ModelConfig(int maxRetries, Model fallbackModel) {
         this(maxRetries, fallbackModel, null);
     }
 
-    /** Returns a config initialised to all default values (no fallback model). */
+    /**
+     * 返回全部采用默认值的配置（无回退模型）。
+     */
     public static ModelConfig defaults() {
         return new ModelConfig(DEFAULT_MAX_RETRIES, null, null);
     }

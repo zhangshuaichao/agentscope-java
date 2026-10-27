@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.tools;
 
-/** A connection failure whose public message never contains endpoint credentials. */
+/** 连接失败异常，其公开消息绝不包含端点凭证。 */
 public final class McpConnectionException extends RuntimeException {
     private final String serverName;
 

@@ -26,23 +26,23 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 /**
- * Per-process dispatcher that wakes idle sessions when background work completes.
+ * 每进程调度器，在后台工作完成时唤醒闲置会话。
  *
- * <p>Subscribes to the shared wakeup signal channel on {@link MessageBus#subscribeWakeup()} and
- * drains the durable wakeup queue on each signal. For each queued entry whose target session is
- * idle, triggers a new reasoning round via {@link WakeupTarget#runWakeup(String)}.
+ * <p>订阅 {@link MessageBus#subscribeWakeup()} 的共享唤醒信号渠道，
+ * 每次信号到达时排空持久化唤醒队列。对目标会话闲置的队列条目，
+ * 通过 {@link WakeupTarget#runWakeup(String)} 触发新的推理轮次。
  *
- * It serves as the universal activator for all cross-session communication:
+ * 它是跨会话通信的统一激活入口：
  *
  * <ul>
- *   <li>Background subagent task completion
- *   <li>Async tool results ({@link io.agentscope.harness.agent.middleware.AsyncToolMiddleware})
- *   <li>Team messages (future Agent Teams support)
- *   <li>Scheduled task triggers
+ *   <li>后台子智能体任务完成
+ *   <li>异步工具结果（{@link io.agentscope.harness.agent.middleware.AsyncToolMiddleware}）
+ *   <li>团队消息（后续 Agent Teams 支持）
+ *   <li>计划任务触发
  * </ul>
  *
- * <p>Lifecycle: call {@link #start()} after the gateway is fully configured. Call {@link #close()}
- * on shutdown. Typically managed by the application bootstrap or gateway factory.
+ * <p>生命周期：网关完整配置后调用 {@link #start()}；关闭时调用 {@link #close()}。
+ * 通常由应用启动引导或网关工厂管理。
  */
 public class WakeupDispatcher implements AutoCloseable {
 
@@ -55,38 +55,34 @@ public class WakeupDispatcher implements AutoCloseable {
     private volatile Disposable subscription;
 
     /**
-     * Thin interface for the two gateway operations the dispatcher needs. {@link HarnessGateway}
-     * implements this directly; tests can supply a stub.
+     * 调度器所需两个网关操作的轻量接口。{@link HarnessGateway} 直接实现它，测试可提供桩对象。
      */
     public interface WakeupTarget {
         boolean isSessionRunning(String sessionId);
 
         /**
-         * Triggers a wakeup run without an owning user id.
+         * 在不提供所属用户 ID 的情况下触发唤醒执行。
          *
-         * @param sessionId the session to wake up
-         * @return the agent's response, or {@link Mono#empty()} if the session is unknown
-         * @deprecated implementers should override {@link #runWakeup(String, String)} instead, so
-         *     the dispatcher can propagate the owning user id. Required for runtimes that isolate
-         *     agent state by {@code (userId, sessionId)}: without it, a wakeup-driven round loads
-         *     state from an anonymous slot and the original conversation is lost. This overload is
-         *     retained for backward compatibility and defaults to ignoring the user id.
+         * @param sessionId 要唤醒的会话
+         * @return 智能体响应；未知会话时为 {@link Mono#empty()}
+         * @deprecated 实现方应改为覆盖 {@link #runWakeup(String, String)}，使调度器能向下传递所属用户 ID。
+         *     按 {@code (userId, sessionId)} 隔离状态的运行时必须如此；否则唤醒轮次会从匿名槽位加载，
+         *     无法恢复原对话。此重载为向后兼容而保留，默认忽略用户 ID。
          */
         @Deprecated
         Mono<Msg> runWakeup(String sessionId);
 
         /**
-         * Triggers a wakeup run for an idle session, carrying the owning user id when present.
+         * 为闲置会话触发唤醒执行，并在存在所属用户 ID 时携带它。
          *
-         * <p>Called by {@link WakeupDispatcher} when a background task completes or a team message
-         * arrives. Implementations should set the user id on the agent runtime context when
-         * non-blank, so agent state is loaded from the same {@code (userId, sessionId)} slot as
-         * the original user-driven run.
+         * <p>后台任务完成或团队消息到达时由 {@link WakeupDispatcher} 调用。
+         * 用户 ID 非空白时，实现应把它设置到智能体运行上下文，
+         * 使状态从与原用户调用相同的 {@code (userId, sessionId)} 槽位加载。
          *
-         * @param userId the owning user id carried by the wakeup entry; {@code null} or blank when
-         *     the producer had none (e.g. single-tenant runtimes)
-         * @param sessionId the session to wake up
-         * @return the agent's response, or {@link Mono#empty()} if the session is unknown
+         * @param userId 唤醒条目携带的所属用户 ID；产生方未提供时为 {@code null} 或空白
+         *     （例如单租户运行时）
+         * @param sessionId 要唤醒的会话
+         * @return 智能体响应；未知会话时为 {@link Mono#empty()}
          */
         default Mono<Msg> runWakeup(String userId, String sessionId) {
             return runWakeup(sessionId);
@@ -99,8 +95,7 @@ public class WakeupDispatcher implements AutoCloseable {
     }
 
     /**
-     * Starts the dispatcher: performs an initial drain of any queued wakeups (to pick up signals
-     * produced while this process was down), then subscribes to the live signal channel.
+     * 启动调度器：先排空已有唤醒队列（处理本进程停机期间产生的信号），再订阅实时信号渠道。
      */
     public void start() {
         drainAndDispatch();

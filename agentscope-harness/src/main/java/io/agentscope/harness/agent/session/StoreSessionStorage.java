@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-/** Reuses the workspace's distributed store and resolved namespace, with a private runtime partition. */
+/**
+ * 复用工作区的分布式存储与已解析的命名空间，并使用运行时私有分区。
+ */
 public final class StoreSessionStorage implements AtomicSessionStorage {
     private final BaseStore store;
     private final List<String> namespace;

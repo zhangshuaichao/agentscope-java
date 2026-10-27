@@ -22,15 +22,14 @@ import java.util.UUID;
 import reactor.core.publisher.Mono;
 
 /**
- * Credential metadata for a model provider.
+ * 模型服务商的凭据元数据。
  *
- * <p>Each credential carries the connection material (API key, base URL, host, etc.) needed by a
- * specific {@link ChatModelBase} subclass. Subclasses declare which model class consumes them via
- * {@link #getChatModelClass()} and optionally enumerate the catalog of usable models via {@link
- * #listModels()}.
+ * <p>每个凭据包含特定 {@link ChatModelBase} 子类需要的连接信息
+ * （API 密钥、基础 URL、主机等）。子类通过 {@link #getChatModelClass()} 声明
+ * 使用它的模型类，也可通过 {@link #listModels()} 枚举可用模型目录。
  *
- * <p>{@code id} is an auto-generated 32-char hex string identifying this credential instance; it is
- * carried in JSON for round-tripping but not used for authentication itself.
+ * <p>{@code id} 是自动生成的 32 位十六进制字符串，用于标识此凭据实例；
+ * JSON 保留该字段以支持往返转换，但它本身不用于身份验证。
  */
 public abstract class CredentialBase {
 
@@ -46,15 +45,14 @@ public abstract class CredentialBase {
     }
 
     /**
-     * The {@link ChatModelBase} subclass that consumes this credential. Subclasses without a
-     * matching Java model implementation throw {@link UnsupportedOperationException}.
+     * 使用此凭据的 {@link ChatModelBase} 子类。没有对应 Java 模型实现的子类
+     * 将抛出 {@link UnsupportedOperationException}。
      */
     public abstract Class<? extends ChatModelBase> getChatModelClass();
 
     /**
-     * Enumerate the candidate models available under this credential. The default implementation
-     * throws {@link UnsupportedOperationException}; concrete model discovery is provided by a
-     * future {@code ChatModelBase.listModels} hook.
+     * 枚举此凭据下可用的候选模型。默认实现抛出 {@link UnsupportedOperationException}；
+     * 具体模型发现能力将由未来的 {@code ChatModelBase.listModels} 钩子提供。
      */
     public Mono<List<ModelCard>> listModels() {
         return Mono.error(

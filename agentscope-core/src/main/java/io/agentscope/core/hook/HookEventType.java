@@ -16,50 +16,50 @@
 package io.agentscope.core.hook;
 
 /**
- * Enum representing all hook event types.
+ * 表示全部钩子事件类型的枚举。
  *
- * <p>These events are fired at different stages of agent execution and can be
- * intercepted by implementing the {@link Hook} interface.
+ * <p>这些事件在智能体执行的不同阶段触发，
+ * 可通过实现 {@link Hook} 接口拦截。
  *
  * @see Hook
  * @see HookEvent
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public enum HookEventType {
-    /** Before agent starts processing */
+    /** 智能体开始处理之前 */
     PRE_CALL,
 
-    /** After agent completes processing */
+    /** 智能体完成处理之后 */
     POST_CALL,
 
-    /** Before LLM reasoning */
+    /** LLM 推理之前 */
     PRE_REASONING,
 
-    /** After LLM reasoning completes */
+    /** LLM 推理完成之后 */
     POST_REASONING,
 
-    /** During LLM reasoning streaming */
+    /** LLM 推理流式输出期间 */
     REASONING_CHUNK,
 
-    /** Before tool execution */
+    /** 工具执行之前 */
     PRE_ACTING,
 
-    /** After tool execution completes */
+    /** 工具执行完成之后 */
     POST_ACTING,
 
-    /** During tool execution streaming */
+    /** 工具执行流式输出期间 */
     ACTING_CHUNK,
 
-    /** Before summary generation (when max iterations reached) */
+    /** 摘要生成之前（达到最大迭代次数时） */
     PRE_SUMMARY,
 
-    /** After summary generation completes */
+    /** 摘要生成完成之后 */
     POST_SUMMARY,
 
-    /** During summary streaming */
+    /** 摘要流式输出期间 */
     SUMMARY_CHUNK,
 
-    /** When an error occurs */
+    /** 发生错误时 */
     ERROR
 }

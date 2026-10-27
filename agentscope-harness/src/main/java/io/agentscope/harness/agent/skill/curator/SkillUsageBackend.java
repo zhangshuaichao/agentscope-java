@@ -20,30 +20,34 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * Persistence backend for {@link SkillUsageStore}. Implementations may use a workspace file
- * (single-process) or a distributed {@code BaseStore} (cross-node CAS).
+ * {@link SkillUsageStore} 的持久化后端。可使用工作区文件（单进程）或分布式 {@code BaseStore}（跨节点 CAS）。
  */
 interface SkillUsageBackend {
 
-    /** Load all skill usage records keyed by skill name. */
+    /**
+     * 加载全部技能使用记录，以技能名称为键。
+     */
     Map<String, SkillUsageRecord> loadAll();
 
-    /** Read a single record by skill name. */
+    /**
+     * 按技能名称读取单条记录。
+     */
     Optional<SkillUsageRecord> get(String name);
 
     /**
-     * Apply {@code mutator} to the record for {@code name}. Creates a fresh
-     * {@link SkillUsageRecord#defaults()} record when none exists.
+     * 将 {@code mutator} 应用于 {@code name} 对应的记录；不存在时创建新的 {@link SkillUsageRecord#defaults()} 记录。
      *
-     * <p>Contract:
+     * <p>约定：
      * <ul>
-     *   <li>Returning the same instance as the input is a no-op (no write).
-     *   <li>Returning {@code null} deletes the record when it exists.
-     *   <li>Returning a different instance creates or replaces the record.
+     * <li>返回与输入相同的实例表示不操作，不写入。
+     * <li>返回 {@code null} 表示删除已有记录。
+     * <li>返回不同实例表示创建或替换记录。
      * </ul>
      */
     void mutate(String name, UnaryOperator<SkillUsageRecord> mutator);
 
-    /** Replaces the entire usage map atomically (or best-effort for multi-key stores). */
+    /**
+     * 原子替换整个使用记录映射（多键存储中尽力而为）。
+     */
     void replaceAll(Map<String, SkillUsageRecord> data);
 }

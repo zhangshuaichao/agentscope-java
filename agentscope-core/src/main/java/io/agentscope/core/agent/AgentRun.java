@@ -27,19 +27,18 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * A single-use, lazy execution handle. Register it before subscribing to {@link #stream()}.
- * Each handle owns its cancellation and status; it never registers RuntimeContext on an agent.
- * A second subscription is rejected, so one handle never runs twice (an adopted caller-supplied
- * runId's uniqueness is the caller's). Cancelling a subscription also cancels this handle.
- * Create another handle to retry.
+ * 一次性、惰性执行句柄。应在订阅 {@link #stream()} 之前注册它。
+ * 每个句柄独立管理取消和状态，绝不会在智能体上注册 RuntimeContext。
+ * 第二次订阅会被拒绝，因此同一句柄不会执行两次（采用调用方提供的 runId 时，其唯一性由调用方保证）。
+ * 取消订阅也会取消此句柄。重试时应创建新句柄。
  *
- * @param <T> the execution's output type (typically Msg or AgentEvent)
+ * @param <T> 执行的输出类型（通常是 Msg 或 AgentEvent）
  */
 public final class AgentRun<T> {
     /**
-     * Execution-handle state. COMPLETED means the publisher returned normally, including a
-     * suspended or unsuccessful semantic result. Inspect AgentResult / durable turn status for
-     * the logical outcome. QUEUED includes setup before admission to the core lifecycle.
+     * 执行句柄状态。COMPLETED 表示发布者正常返回，包括语义上暂停或不成功的结果。
+     * 请检查 AgentResult／持久化轮次状态以确定逻辑结果。
+     * QUEUED 包括获准进入核心生命周期前的准备阶段。
      */
     public enum Status {
         CREATED,
@@ -49,7 +48,9 @@ public final class AgentRun<T> {
         FAILED,
         CANCELLED;
 
-        /** Whether no further execution can start through this handle. */
+        /**
+         * 是否无法再通过此句柄启动任何执行。
+         */
         public boolean isTerminal() {
             return this == COMPLETED || this == FAILED || this == CANCELLED;
         }
@@ -103,53 +104,66 @@ public final class AgentRun<T> {
     }
 
     /**
-     * Wrap an agent invocation without starting it. Prefer the agent's prepareRun/prepareCall APIs.
+     * 包装智能体调用但不启动它。优先使用智能体的 prepareRun/prepareCall API。
      */
     public static <T> AgentRun<T> create(String agentId, Supplier<? extends Publisher<T>> source) {
         return create(agentId, null, source);
     }
 
     /**
-     * Wrap an agent invocation without starting it, adopting {@code runId} — typically {@code
-     * ctx.getRunId()} — so the handle and the {@link RuntimeContext} identify the same execution.
-     * Null/blank generates one.
+     * 包装智能体调用但不启动它，并采用 {@code runId}（通常为 {@code ctx.getRunId()}），
+     * 使句柄与 {@link RuntimeContext} 标识同一次执行。为 null 或空白时生成新标识符。
      */
     public static <T> AgentRun<T> create(
             String agentId, String runId, Supplier<? extends Publisher<T>> source) {
         return new AgentRun<>(agentId, runId, source);
     }
 
-    /** Stable opaque identifier for this single execution. */
+    /**
+     * 此次独立执行的稳定、不透明标识符。
+     */
     public String runId() {
         return control.runId();
     }
 
-    /** Current execution state; a cooperative interrupt may still be RUNNING until observed. */
+    /**
+     * 当前执行状态；协作式中断被观察到之前，状态仍可能为 RUNNING。
+     */
     public Status status() {
         return control.status();
     }
 
-    /** Subscribe once to start execution. Cancellation is reported as CancellationException. */
+    /**
+     * 通过一次订阅启动执行。取消以 CancellationException 报告。
+     */
     public Flux<T> stream() {
         return stream;
     }
 
-    /** A replayable terminal-status notification; observing it does not start execution. */
+    /**
+     * 可重放的终态通知；观察它不会启动执行。
+     */
     public Mono<Status> termination() {
         return control.termination();
     }
 
-    /** Immediately cancel this run's reactive subscription, including a queued run. */
+    /**
+     * 立即取消此次运行的响应式订阅，包括仍在排队的运行。
+     */
     public boolean cancel() {
         return control.cancel();
     }
 
-    /** Cooperatively interrupt a running run, or cancel it if it has not started. */
+    /**
+     * 协作式中断正在执行的运行；尚未启动时则取消。
+     */
     public boolean interrupt(Msg message) {
         return control.interrupt(InterruptSource.USER, message);
     }
 
-    /** Cooperatively interrupt without an associated user message. */
+    /**
+     * 不附带用户消息地进行协作式中断。
+     */
     public boolean interrupt() {
         return interrupt(null);
     }

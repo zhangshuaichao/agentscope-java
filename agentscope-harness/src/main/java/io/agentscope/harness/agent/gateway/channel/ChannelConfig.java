@@ -20,20 +20,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Per-channel routing configuration: default agent fallback, DM session scope, and ordered binding
- * rules evaluated by {@link ChannelRouter}.
+ * 每渠道路由配置：默认智能体回退、私聊会话作用域，以及由 {@link ChannelRouter} 评估的有序绑定规则。
  *
- * <p>Used by {@link Channel} implementations to parameterize routing without hard-coding agent ids
- * or session shapes in adapter code.
+ * <p>{@link Channel} 实现用它参数化路由，避免在适配器代码中硬编码智能体 ID 或会话结构。
  *
- * @param channelId the logical channel identifier this config applies to (must match {@link
- *     Channel#channelId()})
- * @param defaultAgentId fallback agent id when no binding matches; if null the global default
- *     agent (registered via {@link io.agentscope.harness.agent.gateway.Gateway#bindMainAgent}) is
- *     used
- * @param dmScope controls how DM ({@link PeerKind#DIRECT}) sessions are keyed; defaults to {@link
+ * @param channelId 此配置适用的逻辑渠道标识（必须匹配 {@link
+ *     Channel#channelId()}）
+ * @param defaultAgentId 未匹配绑定时的回退智能体 ID；null 时使用通过
+ *     {@link io.agentscope.harness.agent.gateway.Gateway#bindMainAgent} 注册的全局默认智能体
+ * @param dmScope 控制私聊（{@link PeerKind#DIRECT}）会话键的构造；默认 {@link
  *     DmScope#MAIN}
- * @param bindings ordered list of binding rules; evaluated in list order within each priority tier
+ * @param bindings 有序绑定规则列表；每个优先级层内按列表顺序评估
  */
 public record ChannelConfig(
         String channelId, String defaultAgentId, DmScope dmScope, List<ChannelBinding> bindings) {
@@ -44,17 +41,23 @@ public record ChannelConfig(
         bindings = bindings != null ? List.copyOf(bindings) : List.of();
     }
 
-    /** Minimal config: channel id only, using global agent default and {@link DmScope#MAIN}. */
+    /**
+     * 最简配置：仅提供渠道 ID，使用全局默认智能体及 {@link DmScope#MAIN}。
+     */
     public static ChannelConfig of(String channelId) {
         return new ChannelConfig(channelId, null, DmScope.MAIN, List.of());
     }
 
-    /** Config with explicit default agent (no binding rules). */
+    /**
+     * 明确指定默认智能体的配置（无绑定规则）。
+     */
     public static ChannelConfig of(String channelId, String defaultAgentId) {
         return new ChannelConfig(channelId, defaultAgentId, DmScope.MAIN, List.of());
     }
 
-    /** Returns a builder for constructing channel configs fluently. */
+    /**
+     * 返回支持链式调用的渠道配置构建器。
+     */
     public static Builder builder(String channelId) {
         return new Builder(channelId);
     }

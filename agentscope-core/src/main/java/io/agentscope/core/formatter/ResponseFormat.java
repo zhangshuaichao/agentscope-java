@@ -19,16 +19,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response format configuration for model APIs.
+ * 模型 API 的响应格式配置。
  *
- * <p>This class supports three response format types:
+ * <p>支持三种响应格式：
  * <ul>
- *   <li><b>text</b>: Plain text response (default)</li>
- *   <li><b>json_object</b>: Valid JSON object response</li>
- *   <li><b>json_schema</b>: Response conforming to a specific JSON Schema</li>
+ *   <li><b>text</b>：纯文本响应（默认）</li>
+ *   <li><b>json_object</b>：合法的 JSON 对象响应</li>
+ *   <li><b>json_schema</b>：符合指定 JSON Schema 的响应</li>
  * </ul>
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * // Plain text
  * ResponseFormat format = ResponseFormat.text();
@@ -48,11 +48,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseFormat {
 
-    /** The type of response format: "text", "json_object", or "json_schema". */
+    /**
+     * 响应格式类型："text"、"json_object" 或 "json_schema"。
+     */
     @JsonProperty("type")
     private String type;
 
-    /** JSON Schema specification (only for json_schema type). */
+    /**
+     * JSON Schema 规范（仅适用于 json_schema 类型）。
+     */
     @JsonProperty("json_schema")
     private JsonSchema jsonSchema;
 
@@ -64,35 +68,32 @@ public class ResponseFormat {
     }
 
     /**
-     * Create a plain text response format.
+     * 创建纯文本响应格式。
      *
-     * @return ResponseFormat configured for plain text
+     * @return 配置为纯文本的 ResponseFormat
      */
     public static ResponseFormat text() {
         return new ResponseFormat("text", null);
     }
 
     /**
-     * Create a JSON object response format.
+     * 创建 JSON 对象响应格式。
      *
-     * <p>The model will return a valid JSON object, but without
-     * a specific schema validation.
+     * <p>模型将返回合法的 JSON 对象，但不按照特定模式校验。
      *
-     * @return ResponseFormat configured for JSON object
+     * @return 配置为 JSON 对象的 ResponseFormat
      */
     public static ResponseFormat jsonObject() {
         return new ResponseFormat("json_object", null);
     }
 
     /**
-     * Create a JSON Schema response format with structured output validation.
+     * 创建带结构化输出校验的 JSON Schema 响应格式。
      *
-     * <p>The model will return a response that conforms to the provided
-     * JSON Schema. When strict mode is enabled, the response will be
-     * validated against the schema.
+     * <p>模型将返回符合所给 JSON Schema 的响应。启用严格模式时，将按模式校验响应。
      *
-     * @param schema The JSON Schema defining the expected structure
-     * @return ResponseFormat configured for JSON Schema validation
+     * @param schema 定义预期结构的 JSON Schema
+     * @return 配置为 JSON Schema 校验的 ResponseFormat
      */
     public static ResponseFormat jsonSchema(JsonSchema schema) {
         return new ResponseFormat("json_schema", schema);

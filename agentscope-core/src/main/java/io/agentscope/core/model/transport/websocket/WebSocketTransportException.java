@@ -19,18 +19,20 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * WebSocket transport layer exception.
+ * WebSocket 传输层异常。
  *
- * <p>Wraps underlying transport errors with connection context to help diagnose issues. This
- * exception preserves the complete error chain while adding transport-specific context.
+ * <p>包装底层传输错误并附带连接上下文，帮助诊断问题。
+ * 保留完整异常链，同时添加传输专用上下文。
  *
- * <p>Context information includes:
- *
+ * <p>上下文信息包括：
  * <ul>
  *   <li>WebSocket URL
- *   <li>Connection state (OPEN/CLOSED/CONNECTING)
- *   <li>Request headers (for authentication/configuration debugging)
+ *   <li>连接状态（OPEN/CLOSED/CONNECTING）
+ *   <li>请求头（用于认证／配置调试）
  * </ul>
+ *
+ * <p>【学习提示】异常携带的请求头可能包含凭据；调试时仍应控制日志输出和脱敏，
+ * 不能因为信息来自异常对象就假定可以公开。
  */
 public class WebSocketTransportException extends RuntimeException {
 
@@ -39,12 +41,12 @@ public class WebSocketTransportException extends RuntimeException {
     private final Map<String, String> headers;
 
     /**
-     * Create a WebSocketTransportException.
+     * 创建 WebSocketTransportException。
      *
-     * @param message Error message
-     * @param cause Root cause exception
+     * @param message 错误消息
+     * @param cause 根因异常
      * @param url WebSocket URL
-     * @param connectionState Connection state (OPEN/CLOSED/CONNECTING)
+     * @param connectionState 连接状态（OPEN/CLOSED/CONNECTING）
      */
     public WebSocketTransportException(
             String message, Throwable cause, String url, String connectionState) {
@@ -52,13 +54,13 @@ public class WebSocketTransportException extends RuntimeException {
     }
 
     /**
-     * Create a WebSocketTransportException with headers.
+     * 创建包含请求头的 WebSocketTransportException。
      *
-     * @param message Error message
-     * @param cause Root cause exception
+     * @param message 错误消息
+     * @param cause 根因异常
      * @param url WebSocket URL
-     * @param connectionState Connection state
-     * @param headers Request headers (for debugging)
+     * @param connectionState 连接状态
+     * @param headers 请求头（用于调试）
      */
     public WebSocketTransportException(
             String message,
@@ -73,7 +75,7 @@ public class WebSocketTransportException extends RuntimeException {
     }
 
     /**
-     * Get the WebSocket URL.
+     * 获取 WebSocket URL。
      *
      * @return WebSocket URL
      */
@@ -82,18 +84,18 @@ public class WebSocketTransportException extends RuntimeException {
     }
 
     /**
-     * Get the connection state.
+     * 获取连接状态。
      *
-     * @return Connection state
+     * @return 连接状态
      */
     public String getConnectionState() {
         return connectionState;
     }
 
     /**
-     * Get the request headers.
+     * 获取请求头。
      *
-     * @return Request headers (immutable)
+     * @return 不可变的请求头
      */
     public Map<String, String> getHeaders() {
         return headers;

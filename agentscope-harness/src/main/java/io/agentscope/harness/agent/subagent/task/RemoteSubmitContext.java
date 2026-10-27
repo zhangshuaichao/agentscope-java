@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Context sent with a remote task submission (permissions, streaming preferences, parent identity).
+ * 远程任务提交携带的上下文（权限、流式偏好、父级身份）。
  */
 public final class RemoteSubmitContext {
 
@@ -77,8 +77,8 @@ public final class RemoteSubmitContext {
     }
 
     /**
-     * Caller-defined attributes forwarded as {@code context.attributes}. Never null; empty when the
-     * parent supplied none.
+     * 以 {@code context.attributes} 转发的调用方自定义属性。绝不为 null；
+     * 父级未提供属性时为空集合。
      */
     public Map<String, Object> attributes() {
         return attributes;
@@ -137,8 +137,8 @@ public final class RemoteSubmitContext {
         }
 
         /**
-         * Caller-defined attributes sent as {@code context.attributes}, kept apart from the
-         * protocol's own context fields. Values must be JSON-serializable.
+         * 以 {@code context.attributes} 发送的调用方自定义属性，
+         * 与协议自身的上下文字段分开保存。值必须可序列化为 JSON。
          */
         public Builder attributes(Map<String, Object> attributes) {
             this.attributes = attributes;

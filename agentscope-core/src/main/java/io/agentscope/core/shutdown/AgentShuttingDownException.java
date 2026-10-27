@@ -16,7 +16,7 @@
 package io.agentscope.core.shutdown;
 
 /**
- * Exception thrown when request is rejected or interrupted during shutdown.
+ * 请求在关闭期间被拒绝或中断时抛出的异常。
  */
 public class AgentShuttingDownException extends RuntimeException {
 

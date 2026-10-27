@@ -22,21 +22,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Document metadata containing content and chunking information.
+ * 包含内容和分块信息的文档元数据。
  *
- * <p>This class stores metadata about a document chunk, including the content
- * (which can be text, image, video, etc.), document ID, chunk ID, and optional
- * custom payload fields.
+ * <p>此类存储文档分块的元数据，包括内容（可以是文本、图像、视频等）、
+ * 文档 ID、分块 ID，以及可选的自定义载荷字段。
  *
- * <p>The content field uses {@link ContentBlock} which is a sealed hierarchy
- * supporting different content types (TextBlock, ImageBlock, VideoBlock, etc.).
+ * <p>content 字段使用 {@link ContentBlock}，它是支持不同内容类型的密封层次结构
+ * （TextBlock、ImageBlock、VideoBlock 等）。
  *
- * <p>The payload field allows storing custom metadata such as file name,
- * department, author, creation time, tags, and other business-specific fields.
- * These fields are stored as key-value pairs and will be persisted to vector
- * databases along with the document content.
+ * <p>payload 字段允许存储文件名、部门、作者、创建时间、标签等自定义元数据
+ * 及其他业务专用字段。这些字段以键值对形式存储，
+ * 并与文档内容一同持久化到向量数据库。
  *
- * <p>Example usage with payload:
+ * <p>带有载荷的使用示例：
  * <pre>{@code
  * Map<String, Object> payload = new HashMap<>();
  * payload.put("filename", "report.pdf");
@@ -49,8 +47,7 @@ import java.util.Map;
  * DocumentMetadata metadata = new DocumentMetadata(content, "doc-123", "chunk-0", payload);
  * }</pre>
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class DocumentMetadata {
@@ -61,31 +58,29 @@ public class DocumentMetadata {
     private final Map<String, Object> payload;
 
     /**
-     * Creates a new DocumentMetadata instance without custom payload.
+     * 创建不含自定义载荷的新 DocumentMetadata 实例。
      *
-     * <p>This constructor is provided for backward compatibility. For new code,
-     * consider using the constructor with payload parameter or the builder pattern
-     * if you need to add custom metadata fields.
+     * <p>此构造器用于向后兼容。对于新代码，如果需要添加自定义元数据字段，
+     * 可考虑使用带 payload 参数的构造器或构建器模式。
      *
-     * @param content the content block (text, image, video, etc.)
-     * @param docId the document ID
-     * @param chunkId the chunk ID within the document
+     * @param content 内容块（文本、图像、视频等）
+     * @param docId 文档 ID
+     * @param chunkId 文档内的分块 ID
      */
     public DocumentMetadata(ContentBlock content, String docId, String chunkId) {
         this(content, docId, chunkId, null);
     }
 
     /**
-     * Creates a new DocumentMetadata instance with custom payload.
+     * 创建包含自定义载荷的新 DocumentMetadata 实例。
      *
-     * <p>The payload map is copied to prevent external modifications. The returned
-     * payload from {@link #getPayload()} will be an unmodifiable view.
+     * <p>复制 payload 映射，以防外部修改。{@link #getPayload()} 返回的载荷是不可修改视图。
      *
-     * @param content the content block (text, image, video, etc.)
-     * @param docId the document ID
-     * @param chunkId the chunk ID within the document
-     * @param payload the custom metadata fields (can be null or empty)
-     * @throws IllegalArgumentException if content, docId, or chunkId is null
+     * @param content 内容块（文本、图像、视频等）
+     * @param docId 文档 ID
+     * @param chunkId 文档内的分块 ID
+     * @param payload 自定义元数据字段（可为 null 或空映射）
+     * @throws IllegalArgumentException 当 content、docId 或 chunkId 为 null 时抛出
      */
     public DocumentMetadata(
             ContentBlock content, String docId, String chunkId, Map<String, Object> payload) {
@@ -101,7 +96,7 @@ public class DocumentMetadata {
         this.content = content;
         this.docId = docId;
         this.chunkId = chunkId;
-        // Create an unmodifiable copy to prevent external modifications
+        // 创建不可修改的副本，以防外部修改
         this.payload =
                 payload != null && !payload.isEmpty()
                         ? Collections.unmodifiableMap(new HashMap<>(payload))
@@ -109,54 +104,52 @@ public class DocumentMetadata {
     }
 
     /**
-     * Gets the content block.
+     * 获取内容块。
      *
-     * @return the content block
+     * @return 内容块
      */
     public ContentBlock getContent() {
         return content;
     }
 
     /**
-     * Gets the document ID.
+     * 获取文档 ID。
      *
-     * @return the document ID
+     * @return 文档 ID
      */
     public String getDocId() {
         return docId;
     }
 
     /**
-     * Gets the chunk ID.
+     * 获取分块 ID。
      *
-     * @return the chunk ID
+     * @return 分块 ID
      */
     public String getChunkId() {
         return chunkId;
     }
 
     /**
-     * Gets the custom payload metadata.
+     * 获取自定义载荷元数据。
      *
-     * <p>Returns an unmodifiable map of custom metadata fields. This map contains
-     * business-specific fields such as filename, department, author, tags, etc.
-     * The map is never null but may be empty if no payload was provided.
+     * <p>返回自定义元数据字段的不可修改映射，其中包含文件名、部门、作者、标签等
+     * 业务专用字段。映射绝不为 null，但未提供载荷时可能为空。
      *
-     * @return an unmodifiable map of custom metadata fields (never null)
+     * @return 自定义元数据字段的不可修改映射（绝不为 null）
      */
     public Map<String, Object> getPayload() {
         return payload;
     }
 
     /**
-     * Gets a specific payload value by key.
+     * 按键获取指定载荷值。
      *
-     * <p>This is a convenience method to retrieve individual payload values without
-     * needing to access the entire payload map.
+     * <p>这是获取单个载荷值的便捷方法，无须访问整个载荷映射。
      *
-     * @param key the payload key
-     * @return the payload value, or null if the key doesn't exist
-     * @throws NullPointerException if key is null
+     * @param key 载荷键
+     * @return 载荷值；键不存在时为 null
+     * @throws NullPointerException 当 key 为 null 时抛出
      */
     public Object getPayloadValue(String key) {
         if (key == null) {
@@ -166,14 +159,13 @@ public class DocumentMetadata {
     }
 
     /**
-     * Checks if the payload contains a specific key.
+     * 检查载荷是否包含指定键。
      *
-     * <p>Use this method to safely check for the existence of a payload field
-     * before attempting to retrieve its value.
+     * <p>尝试获取载荷字段值之前，可用此方法安全检查该字段是否存在。
      *
-     * @param key the payload key to check
-     * @return true if the key exists in the payload, false otherwise
-     * @throws NullPointerException if key is null
+     * @param key 要检查的载荷键
+     * @return 载荷中存在该键时为 true，否则为 false
+     * @throws NullPointerException 当 key 为 null 时抛出
      */
     public boolean hasPayloadKey(String key) {
         if (key == null) {
@@ -183,13 +175,12 @@ public class DocumentMetadata {
     }
 
     /**
-     * Gets the text content from the content block.
+     * 从内容块获取文本内容。
      *
-     * <p>This is a convenience method that extracts text from the ContentBlock.
-     * For TextBlock, it returns the text. For other block types, it returns their
-     * string representation.
+     * <p>这是从 ContentBlock 提取文本的便捷方法。对于 TextBlock 返回文本；
+     * 对于其他块类型，返回其字符串表示。
      *
-     * @return the text content, or empty string if not available
+     * @return 文本内容；不可用时为空字符串
      */
     public String getContentText() {
         if (content instanceof TextBlock textBlock) {
@@ -199,13 +190,12 @@ public class DocumentMetadata {
     }
 
     /**
-     * Creates a new builder for constructing DocumentMetadata instances.
+     * 创建用于构造 DocumentMetadata 实例的新构建器。
      *
-     * <p>The builder pattern provides a fluent API for creating DocumentMetadata
-     * with optional payload fields. This is especially useful when you need to
-     * add multiple custom metadata fields.
+     * <p>构建器模式提供流式 API，用于创建带有可选载荷字段的 DocumentMetadata。
+     * 需要添加多个自定义元数据字段时，这种方式尤其方便。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * DocumentMetadata metadata = DocumentMetadata.builder()
      *     .content(TextBlock.builder().text("Content").build())
@@ -216,19 +206,17 @@ public class DocumentMetadata {
      *     .build();
      * }</pre>
      *
-     * @return a new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing DocumentMetadata instances with fluent API.
+     * 通过流式 API 构造 DocumentMetadata 实例的构建器。
      *
-     * <p>This builder provides a convenient way to create DocumentMetadata objects,
-     * especially when working with custom payload fields. All fields can be set
-     * independently, and the builder validates required fields when {@link #build()}
-     * is called.
+     * <p>此构建器提供创建 DocumentMetadata 对象的便捷方式，尤其适合处理自定义载荷字段。
+     * 所有字段都可独立设置，调用 {@link #build()} 时会验证必填字段。
      */
     public static class Builder {
         private ContentBlock content;
@@ -239,10 +227,10 @@ public class DocumentMetadata {
         private Builder() {}
 
         /**
-         * Sets the content block.
+         * 设置内容块。
          *
-         * @param content the content block (text, image, video, etc.)
-         * @return this builder for method chaining
+         * @param content 内容块（文本、图像、视频等）
+         * @return 当前构建器，以支持方法链式调用
          */
         public Builder content(ContentBlock content) {
             this.content = content;
@@ -250,10 +238,10 @@ public class DocumentMetadata {
         }
 
         /**
-         * Sets the document ID.
+         * 设置文档 ID。
          *
-         * @param docId the document ID
-         * @return this builder for method chaining
+         * @param docId 文档 ID
+         * @return 当前构建器，以支持方法链式调用
          */
         public Builder docId(String docId) {
             this.docId = docId;
@@ -261,10 +249,10 @@ public class DocumentMetadata {
         }
 
         /**
-         * Sets the chunk ID.
+         * 设置分块 ID。
          *
-         * @param chunkId the chunk ID within the document
-         * @return this builder for method chaining
+         * @param chunkId 文档内的分块 ID
+         * @return 当前构建器，以支持方法链式调用
          */
         public Builder chunkId(String chunkId) {
             this.chunkId = chunkId;
@@ -272,13 +260,12 @@ public class DocumentMetadata {
         }
 
         /**
-         * Sets the entire payload map.
+         * 设置完整的载荷映射。
          *
-         * <p>This replaces any previously set payload. The map is copied to prevent
-         * external modifications.
+         * <p>这会替换此前设置的载荷。映射会被复制，以防外部修改。
          *
-         * @param payload the custom metadata fields (can be null)
-         * @return this builder for method chaining
+         * @param payload 自定义元数据字段（可为 null）
+         * @return 当前构建器，以支持方法链式调用
          */
         public Builder payload(Map<String, Object> payload) {
             this.payload = payload != null ? new HashMap<>(payload) : null;
@@ -286,15 +273,14 @@ public class DocumentMetadata {
         }
 
         /**
-         * Adds a single payload field.
+         * 添加单个载荷字段。
          *
-         * <p>This method allows adding payload fields one at a time. If the payload
-         * map doesn't exist yet, it will be created automatically.
+         * <p>此方法允许逐个添加载荷字段；载荷映射尚不存在时，会自动创建。
          *
-         * @param key the payload key
-         * @param value the payload value
-         * @return this builder for method chaining
-         * @throws NullPointerException if key is null
+         * @param key 载荷键
+         * @param value 载荷值
+         * @return 当前构建器，以支持方法链式调用
+         * @throws NullPointerException 当 key 为 null 时抛出
          */
         public Builder addPayload(String key, Object value) {
             if (key == null) {
@@ -308,10 +294,10 @@ public class DocumentMetadata {
         }
 
         /**
-         * Builds a new DocumentMetadata instance with the configured values.
+         * 根据已配置的值构建新的 DocumentMetadata 实例。
          *
-         * @return a new DocumentMetadata instance
-         * @throws IllegalArgumentException if required fields (content, docId, chunkId) are null
+         * @return 新的 DocumentMetadata 实例
+         * @throws IllegalArgumentException 必填字段（content、docId、chunkId）为 null 时抛出
          */
         public DocumentMetadata build() {
             return new DocumentMetadata(content, docId, chunkId, payload);

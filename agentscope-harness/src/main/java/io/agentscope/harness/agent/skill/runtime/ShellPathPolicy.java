@@ -19,20 +19,13 @@ import io.agentscope.harness.agent.skill.runtime.MarketplaceStager.StageResult;
 import java.nio.file.Path;
 
 /**
- * Resolves the absolute {@code filesRoot} path emitted in {@code <available_skills>} and
- * {@code load_skill_through_path} responses, given a skill's {@link StageResult} and the
- * current shell mode.
+ * 根据技能的 {@link StageResult} 和当前 Shell 模式，解析 {@code <available_skills>} 与 {@code load_skill_through_path} 响应中输出的绝对 {@code filesRoot} 路径。
  *
- * <p>Three modes the policy knows about:
- *
+ * <p>支持三种策略模式：
  * <ul>
- *   <li>{@link Mode#NO_SHELL} — no {@code ShellExecuteTool} registered. Returns {@code null}
- *       for every skill so the prompt omits {@code <files-root>} and the code-execution
- *       instruction block entirely.
- *   <li>{@link Mode#SANDBOX} — sandbox-backed filesystem. Paths use the sandbox-internal
- *       prefix ({@code /workspace/}).
- *   <li>{@link Mode#LOCAL_WITH_SHELL} — {@code LocalFilesystemWithShell}. Paths use the
- *       absolute host workspace root.
+ * <li>{@link Mode#NO_SHELL}：未注册 {@code ShellExecuteTool}。所有技能均返回 {@code null}，因此提示完全省略 {@code <files-root>} 和代码执行指令块。
+ * <li>{@link Mode#SANDBOX}：沙箱文件系统，使用沙箱内部前缀（{@code /workspace/}）。
+ * <li>{@link Mode#LOCAL_WITH_SHELL}：{@code LocalFilesystemWithShell}，使用宿主工作区的绝对根路径。
  * </ul>
  */
 public final class ShellPathPolicy {
@@ -55,21 +48,24 @@ public final class ShellPathPolicy {
         this.sandboxPrefix = sandboxPrefix;
     }
 
-    /** No shell is available; every {@code filesRoot} resolves to {@code null}. */
+    /**
+     * 无可用 Shell；所有 {@code filesRoot} 都解析为 {@code null}。
+     */
     public static ShellPathPolicy noShell() {
         return new ShellPathPolicy(Mode.NO_SHELL, null, null);
     }
 
-    /** Sandbox mode — paths under the default {@code /workspace/} prefix. */
+    /**
+     * 沙箱模式：路径位于默认 {@code /workspace/} 前缀下。
+     */
     public static ShellPathPolicy sandbox() {
         return sandbox(SANDBOX_WORKSPACE_PREFIX);
     }
 
     /**
-     * Sandbox mode with a custom workspace prefix. Use this when the sandbox backend mounts the
-     * workspace at a non-default location (e.g. {@code /home/agentscope/workspace} for AgentRun).
+     * 使用自定义工作区前缀的沙箱模式。沙箱后端将工作区挂载到非默认位置时使用（例如 AgentRun 的 {@code /home/agentscope/workspace}）。
      *
-     * @param workspacePrefix absolute path of the workspace root inside the sandbox
+     * @param workspacePrefix 沙箱内部工作区根目录的绝对路径
      */
     public static ShellPathPolicy sandbox(String workspacePrefix) {
         return new ShellPathPolicy(
@@ -78,7 +74,9 @@ public final class ShellPathPolicy {
                 workspacePrefix != null ? workspacePrefix : SANDBOX_WORKSPACE_PREFIX);
     }
 
-    /** Local-with-shell mode — paths absolute on the host. */
+    /**
+     * 本地带 Shell 模式：使用宿主机绝对路径。
+     */
     public static ShellPathPolicy localWithShell(Path workspaceRoot) {
         if (workspaceRoot == null) {
             throw new IllegalArgumentException("workspaceRoot required for LOCAL_WITH_SHELL");
@@ -91,11 +89,10 @@ public final class ShellPathPolicy {
     }
 
     /**
-     * Returns the absolute {@code filesRoot} for the given skill, or {@code null} when shell
-     * is unavailable / the skill has no shell-reachable representation.
+     * 返回指定技能的绝对 {@code filesRoot}；Shell 不可用或技能没有 Shell 可达形式时返回 {@code null}。
      *
-     * @param skillName the skill's {@code name}
-     * @param stage     staging outcome from {@link MarketplaceStager#stage}
+     * @param skillName 技能的 {@code name}
+     * @param stage {@link MarketplaceStager#stage} 的暂存结果
      */
     public String resolve(String skillName, StageResult stage) {
         if (mode == Mode.NO_SHELL || stage == null || stage instanceof StageResult.None) {
@@ -151,10 +148,9 @@ public final class ShellPathPolicy {
     }
 
     /**
-     * Escapes spaces with backslash (e.g. {@code "a b" -> "a\ b"}) so the value can be embedded
-     * unquoted in POSIX shell commands without word-splitting.
+     * 用反斜杠转义空格（例如 {@code "a b" -> "a\ b"}），使值能不加引号地嵌入 POSIX Shell 命令而不发生单词拆分。
      *
-     * <p>This is not a general-purpose shell escaping routine.
+     * <p>这不是通用的 Shell 转义函数。
      */
     static String escapeSpaces(String value) {
         return value.indexOf(' ') >= 0 ? value.replace(" ", "\\ ") : value;

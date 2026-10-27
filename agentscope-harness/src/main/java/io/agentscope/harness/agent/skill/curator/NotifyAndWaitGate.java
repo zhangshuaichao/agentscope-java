@@ -28,13 +28,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Multi-replica gate. On {@code review} writes a {@code .review_request.json} file next to the
- * draft skill (so the file is visible to whichever replica gets the eventual approval call) and
- * fires every configured {@link NotificationSink} concurrently. Always returns
- * {@link SkillPromotionGate.PromotionDecision.Defer} — the actual approval comes from the
- * external system calling {@code HarnessAgent.promoteSkill(...)} on any replica.
+ * 多副本门控。{@code review} 时在草稿技能旁写入 {@code .review_request.json}，使最终接收批准调用的任意副本都能看到该文件，并并发触发全部已配置 {@link NotificationSink}。始终返回 {@link SkillPromotionGate.PromotionDecision.Defer}；外部系统可在任意副本调用 {@code HarnessAgent.promoteSkill(...)} 重新发起流程，但当前门控不会读取批准状态或自动返回批准；要真正晋级需另行接入批准决策。
  *
- * <p>Sinks are best-effort. A failed sink is logged but does not block the gate or the agent.
+ * <p>通知接收端尽力而为：失败会记录日志，但不阻止门控或智能体继续。
  */
 public class NotifyAndWaitGate implements SkillPromotionGate {
 

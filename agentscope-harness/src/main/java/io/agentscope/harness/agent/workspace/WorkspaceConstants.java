@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.workspace;
 
-/** Path constants for the workspace directory structure. */
+/** 工作区目录结构的路径常量。 */
 public final class WorkspaceConstants {
 
     private WorkspaceConstants() {}

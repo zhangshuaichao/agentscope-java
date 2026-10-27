@@ -16,23 +16,19 @@
 package io.agentscope.harness.agent.artifact;
 
 /**
- * A single artifact delivery request issued by the {@code deliver_artifact} tool.
+ * {@code deliver_artifact} 工具发起的一次产物交付请求。
  *
- * <p>The tool downloads the file bytes from the agent filesystem and hands them to a configured
- * {@link ArtifactDeliveryTarget}, which is responsible for storing the artifact in its destination
- * (e.g. a project's artifacts directory / artifact store, WebDAV, an object store).
+ * <p>工具从智能体文件系统下载文件字节，交给已配置的 {@link ArtifactDeliveryTarget}；
+ * 后者负责存入目标位置，例如项目产物目录／产物库、WebDAV 或对象存储。
  *
- * @param filePath path of the generated file in the agent workspace, normalized the same way as
- *     other file tools (relative to the workspace, or absolute where permitted by the active
- *     filesystem)
- * @param content file bytes downloaded from the filesystem
- * @param fileName target file name after delivery; defaults to the basename of {@code filePath}.
- *     Always a plain file name — the tool rejects values containing path separators, {@code .} or
- *     {@code ..}, so targets can resolve it directly
- * @param description short description of the artifact, may be {@code null}
- * @param force whether an existing artifact with the same {@code fileName} should be overwritten
- *     ({@code false} by default — the target rejects the delivery and the agent should retry with a
- *     new {@code fileName})
+ * @param filePath 智能体工作区中生成文件的路径，与其他文件工具采用相同规范化方式
+ *      （相对于工作区，或在当前文件系统允许时使用绝对路径）
+ * @param content 从文件系统下载的文件字节
+ * @param fileName 交付后的目标文件名，默认是 {@code filePath} 的基础名称。
+ *      始终是普通文件名；工具拒绝路径分隔符、{@code .} 和 {@code ..}，目标可直接解析
+ * @param description 产物的简短说明，可以为 {@code null}
+ * @param force 是否覆盖同名 {@code fileName} 的现有产物
+ *      （默认为 {@code false}：目标拒绝交付，智能体应使用新的 {@code fileName} 重试）
  */
 public record ArtifactDeliveryRequest(
         String filePath, byte[] content, String fileName, String description, boolean force) {}

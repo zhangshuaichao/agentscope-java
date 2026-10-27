@@ -42,9 +42,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * JSON file-based {@link AgentStateStore} implementation.
+ * 基于 JSON 文件的 {@link AgentStateStore} 实现。
  *
- * <p>On-disk layout:
+ * <p>磁盘布局：
  *
  * <pre>
  * &lt;root&gt;/
@@ -59,35 +59,34 @@ import reactor.core.scheduler.Schedulers;
  *       ...
  * </pre>
  *
- * <p>{@code safe(...)} keeps the literal string when it matches
- * {@code ^[a-zA-Z0-9_\-.]+$}; otherwise it is Base64-URL encoded (no padding) so the
- * filesystem accepts it.
+ * <p>{@code safe(...)} 在字符串匹配 {@code ^[a-zA-Z0-9_\-.]+$} 时保留原值；
+ * 否则使用不带填充的 Base64-URL 编码，确保文件系统能够接受。
  *
- * <p>Features: atomic file operations, UTF-8 encoding, graceful handling of missing
- * sessions, hash-based append-or-rewrite for list state.
+ * <p>功能包括：原子文件操作、UTF-8 编码、平稳处理不存在的会话，
+ * 以及基于哈希判断列表状态应追加还是重写。
  */
 public class JsonFileAgentStateStore implements AgentStateStore {
 
-    /** Sentinel directory for callers that pass {@code userId == null}. */
+    /** 为传入 {@code userId == null} 的调用方保留的哨兵目录。 */
     private static final String ANON_USER = "__anon__";
 
-    /** Pattern for file-system safe characters: alphanumeric, underscore, hyphen, dot. */
+    /** 文件系统安全字符的模式：字母、数字、下划线、连字符和点。 */
     private static final Pattern SAFE_FILENAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.]+$");
 
     private final Path rootDirectory;
 
     /**
-     * Create a {@code JsonFileAgentStateStore} with the default root:
-     * {@code ~/.agentscope/state}.
+     * 使用默认根目录创建 {@code JsonFileAgentStateStore}：
+     * {@code ~/.agentscope/state}。
      */
     public JsonFileAgentStateStore() {
         this(Paths.get(System.getProperty("user.home"), ".agentscope", "state"));
     }
 
     /**
-     * Create a {@code JsonFileAgentStateStore} rooted at the given directory.
+     * 以指定目录为根目录创建 {@code JsonFileAgentStateStore}。
      *
-     * @param rootDirectory root directory under which user / session sub-directories live
+     * @param rootDirectory 用户／会话子目录所在的根目录
      */
     public JsonFileAgentStateStore(Path rootDirectory) {
         this.rootDirectory = rootDirectory;
@@ -128,7 +127,7 @@ public class JsonFileAgentStateStore implements AgentStateStore {
                 List<? extends State> newItems = values.subList((int) existingCount, values.size());
                 appendToList(file, newItems);
             }
-            // else: no change, skip writing
+            // 否则：没有变化，跳过写入
             writeHashFile(hashFile, currentHash);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save list: " + key, e);
@@ -239,14 +238,12 @@ public class JsonFileAgentStateStore implements AgentStateStore {
         }
     }
 
-    /** Returns the configured root directory (for diagnostics). */
+    /** 返回配置的根目录（用于诊断）。 */
     public Path getRootDirectory() {
         return rootDirectory;
     }
 
-    /**
-     * Clear every session under every user. Returns the number of session directories removed.
-     */
+    /** 清除所有用户的全部会话，返回删除的会话目录数量。 */
     public Mono<Integer> clearAllSessions() {
         return Mono.fromSupplier(
                         () -> {
@@ -279,8 +276,8 @@ public class JsonFileAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Returns the directory under which all state files for {@code (userId, sessionId)} live.
-     * Subclasses can override this if they need a different layout.
+     * 返回存放 {@code (userId, sessionId)} 所有状态文件的目录。
+     * 子类若需要不同的布局，可重写此方法。
      */
     protected Path getSessionDir(String userId, String sessionId) {
         return rootDirectory

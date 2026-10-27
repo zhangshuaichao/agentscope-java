@@ -51,20 +51,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Tool for executing shell commands with security validation.
+ * 带安全验证的 Shell 命令执行工具。
  *
- * <p>Features: command whitelist, user approval callback, multiple command detection,
- * timeout support (default 300s), platform-specific validation, customizable charset
- * for decoding command output (default UTF-8).
+ * <p>支持命令白名单、用户批准回调、多命令检测、超时（默认 300 秒）、平台特定验证，以及自定义输出解码字符集（默认 UTF-8）。
  *
- * <p><b>Charset Support:</b> The tool supports custom charset configuration for decoding
- * command output streams (stdout/stderr). This is particularly useful when working with
- * systems that use non-UTF-8 encodings (e.g., GBK, GB2312 for Chinese Windows systems).
- * The charset can be configured at tool construction time or overridden per command execution.
+ * <p><b>字符集支持：</b>可配置 stdout/stderr 输出流解码字符集，适用于非 UTF-8 系统（例如中文 Windows 的 GBK、GB2312）。可在构造时配置，也可逐命令覆盖。
  *
- * <p><b>Security Warning:</b> {@code new ShellCommandTool()} allows arbitrary command execution.
- * For production, ALWAYS use whitelist: {@code new ShellCommandTool(allowedCommands)}
- * or with callback: {@code new ShellCommandTool(allowedCommands, approvalCallback)}
+ * <p><b>安全警告：</b>{@code new ShellCommandTool()} 允许执行任意命令。生产环境务必使用白名单 {@code new ShellCommandTool(allowedCommands)}，或带回调的 {@code new ShellCommandTool(allowedCommands, approvalCallback)}。
  *
  * @see CommandValidator
  * @see UnixCommandValidator
@@ -76,9 +69,7 @@ public class ShellCommandTool implements AgentTool {
     private static final int DEFAULT_TIMEOUT = 300;
 
     /**
-     * Shared thread pool for asynchronous stream reading.
-     * Uses cached thread pool for dynamic scaling with 60s idle timeout.
-     * Daemon threads ensure they don't prevent JVM shutdown.
+     * 异步读取流的共享线程池，使用可缓存线程池动态伸缩，空闲超时 60 秒。守护线程不会阻止 JVM 关闭。
      */
     private static final ExecutorService STREAM_READER_POOL =
             Executors.newCachedThreadPool(
@@ -92,7 +83,7 @@ public class ShellCommandTool implements AgentTool {
                                             r,
                                             "ShellCommand-StreamReader-"
                                                     + counter.incrementAndGet());
-                            t.setDaemon(true); // Daemon thread won't prevent JVM shutdown
+                            t.setDaemon(true); // 守护线程不会阻止 JVM 关闭
                             return t;
                         }
                     });
@@ -103,8 +94,7 @@ public class ShellCommandTool implements AgentTool {
     private final Path baseDir;
 
     /**
-     * The charset used to decode command output streams (stdout/stderr).
-     * Defaults to UTF-8.
+     * 用于解码命令输出流 stdout/stderr 的字符集，默认为 UTF-8。
      */
     private final Charset charset;
 
@@ -117,10 +107,10 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Constructor with command whitelist and approval callback.
+     * 使用命令白名单和批准回调的构造器。
      *
-     * @param allowedCommands Set of allowed command executables
-     * @param approvalCallback Callback function to request user approval
+     * @param allowedCommands 允许的可执行程序集合
+     * @param approvalCallback 请求用户批准的回调
      */
     public ShellCommandTool(
             Set<String> allowedCommands, Function<String, Boolean> approvalCallback) {
@@ -133,11 +123,11 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Constructor with base directory, command whitelist, and approval callback.
+     * 使用基目录、命令白名单和批准回调的构造器。
      *
-     * @param baseDir Base directory for command execution (null to use current directory)
-     * @param allowedCommands Set of allowed command executables
-     * @param approvalCallback Callback function to request user approval
+     * @param baseDir 命令执行基目录（null 表示当前目录）
+     * @param allowedCommands 允许的可执行程序集合
+     * @param approvalCallback 请求用户批准的回调
      */
     public ShellCommandTool(
             String baseDir,
@@ -152,11 +142,11 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Constructor with command whitelist, approval callback, and custom validator.
+     * 使用命令白名单、批准回调和自定义验证器的构造器。
      *
-     * @param allowedCommands Set of allowed command executables (null to allow all commands)
-     * @param approvalCallback Callback function to request user approval
-     * @param commandValidator Custom command validator
+     * @param allowedCommands 允许的可执行程序集合（null 表示全部允许）
+     * @param approvalCallback 请求用户批准的回调
+     * @param commandValidator 自定义命令验证器
      */
     public ShellCommandTool(
             Set<String> allowedCommands,
@@ -166,14 +156,14 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Constructor with base directory, command whitelist, approval callback, and custom validator.
+     * 使用基目录、命令白名单、批准回调和自定义验证器的构造器。
      *
-     * <p>Uses UTF-8 as the default charset for decoding command output.
+     * <p>默认使用 UTF-8 解码命令输出。
      *
-     * @param baseDir Base directory for command execution (null to use current directory)
-     * @param allowedCommands Set of allowed command executables (null to allow all commands)
-     * @param approvalCallback Callback function to request user approval
-     * @param commandValidator Custom command validator
+     * @param baseDir 命令执行基目录（null 表示当前目录）
+     * @param allowedCommands 允许的可执行程序集合（null 表示全部允许）
+     * @param approvalCallback 请求用户批准的回调
+     * @param commandValidator 自定义命令验证器
      */
     public ShellCommandTool(
             String baseDir,
@@ -184,16 +174,15 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Full constructor with all configuration options including charset.
+     * 包含字符集在内全部配置选项的完整构造器。
      *
-     * <p>This is the most comprehensive constructor that allows setting all available options.
-     * All other constructors delegate to this one with default values.
+     * <p>可设置所有可用选项，其他构造器均以默认值委托给它。
      *
-     * @param baseDir Base directory for command execution (null to use current directory)
-     * @param allowedCommands Set of allowed command executables (null to allow all commands)
-     * @param approvalCallback Callback function to request user approval
-     * @param commandValidator Custom command validator (null to use platform-specific default)
-     * @param charset Charset used to decode command output streams (null to use UTF-8)
+     * @param baseDir 命令执行基目录（null 表示当前目录）
+     * @param allowedCommands 允许的可执行程序集合（null 表示全部允许）
+     * @param approvalCallback 请求用户批准的回调
+     * @param commandValidator 自定义命令验证器（null 表示平台默认值）
+     * @param charset 输出流解码字符集（null 表示 UTF-8）
      */
     public ShellCommandTool(
             String baseDir,
@@ -201,8 +190,8 @@ public class ShellCommandTool implements AgentTool {
             Function<String, Boolean> approvalCallback,
             CommandValidator commandValidator,
             Charset charset) {
-        // Use ConcurrentHashMap.newKeySet() for thread-safe, high-performance concurrent access
-        // Create defensive copy to prevent external modifications
+        // 使用 ConcurrentHashMap.newKeySet() 支持线程安全且高性能的并发访问
+        // 进行防御性复制，防止外部修改
         if (allowedCommands != null && !allowedCommands.isEmpty()) {
             this.allowedCommands = ConcurrentHashMap.newKeySet(allowedCommands.size());
             this.allowedCommands.addAll(allowedCommands);
@@ -222,9 +211,9 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Create a default command validator based on the operating system.
+     * 根据操作系统创建默认命令验证器。
      *
-     * @return Platform-specific command validator
+     * @return 平台特定命令验证器
      */
     private static CommandValidator createDefaultValidator() {
         String os = System.getProperty("os.name").toLowerCase();
@@ -235,25 +224,22 @@ public class ShellCommandTool implements AgentTool {
         }
     }
 
-    // =============================== Allowed Commands Management ===============================
+    // =============================== 允许命令管理 ===============================
 
     /**
-     * Get an unmodifiable view of the allowed commands.
-     * The returned set is thread-safe for reading but cannot be modified directly.
-     * Use {@link #addAllowedCommand(String)}, {@link #removeAllowedCommand(String)},
-     * or {@link #clearAllowedCommands()} to modify the whitelist.
+     * 获取允许命令的不可修改视图。返回集合可线程安全地读取，但不能直接修改。使用 {@link #addAllowedCommand(String)}、{@link #removeAllowedCommand(String)} 或 {@link #clearAllowedCommands()} 修改白名单。
      *
-     * @return An unmodifiable view of the allowed command executables
+     * @return 允许的可执行程序集合的不可修改视图
      */
     public Set<String> getAllowedCommands() {
         return Collections.unmodifiableSet(allowedCommands);
     }
 
     /**
-     * Add a command to the whitelist in a thread-safe manner.
+     * 以线程安全方式向白名单添加命令。
      *
-     * @param command The command executable to add
-     * @return true if the command was added, false if it was already present
+     * @param command 要添加的可执行程序
+     * @return 添加成功为 true，已存在为 false
      */
     public boolean addAllowedCommand(String command) {
         if (command == null || command.trim().isEmpty()) {
@@ -267,10 +253,10 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Remove a command from the whitelist in a thread-safe manner.
+     * 以线程安全方式从白名单移除命令。
      *
-     * @param command The command executable to remove
-     * @return true if the command was removed, false if it was not present
+     * @param command 要移除的可执行程序
+     * @return 移除成功为 true，不存在为 false
      */
     public boolean removeAllowedCommand(String command) {
         boolean removed = allowedCommands.remove(command);
@@ -281,7 +267,7 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Clear all commands from the whitelist in a thread-safe manner.
+     * 以线程安全方式清空白名单。
      */
     public void clearAllowedCommands() {
         allowedCommands.clear();
@@ -289,65 +275,60 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Check if a command is in the whitelist.
+     * 检查命令是否在白名单中。
      *
-     * @param command The command executable to check
-     * @return true if the command is whitelisted
+     * @param command 待检查可执行程序
+     * @return 在白名单中为 true
      */
     public boolean isCommandAllowed(String command) {
         return allowedCommands.contains(command);
     }
 
     /**
-     * Get the approval callback function.
-     * Returns the callback that is used to request user approval for non-whitelisted commands.
+     * 获取批准回调，即用于请求用户批准非白名单命令的回调。
      *
-     * <p>This method is useful for cloning ShellCommandTool instances with the same configuration.
+     * <p>可用于克隆具有相同配置的 ShellCommandTool。
      *
-     * @return The approval callback function, or null if not configured
+     * @return 批准回调；未配置时为 null
      */
     public Function<String, Boolean> getApprovalCallback() {
         return approvalCallback;
     }
 
     /**
-     * Get the command validator.
-     * Returns the validator used for command security validation.
+     * 获取用于命令安全验证的验证器。
      *
-     * <p>This method is useful for cloning ShellCommandTool instances with the same configuration.
+     * <p>可用于克隆具有相同配置的 ShellCommandTool。
      *
-     * @return The command validator instance
+     * @return 命令验证器实例
      */
     public CommandValidator getCommandValidator() {
         return commandValidator;
     }
 
     /**
-     * Get the base directory for command execution.
-     * Returns the directory where commands will be executed.
+     * 获取命令执行基目录，即命令实际执行的目录。
      *
-     * <p>This method is useful for cloning ShellCommandTool instances with a different base directory.
+     * <p>可用于以不同基目录克隆 ShellCommandTool。
      *
-     * @return The base directory path, or null if using current directory
+     * @return 基目录路径；使用当前目录时为 null
      */
     public Path getBaseDir() {
         return baseDir;
     }
 
     /**
-     * Get the charset used for decoding command output streams.
-     * Returns the charset used to decode stdout and stderr from executed commands.
+     * 获取命令输出流的解码字符集，即 stdout 和 stderr 的解码方式。
      *
-     * <p>This method is useful for cloning ShellCommandTool instances with the same configuration,
-     * or for inspecting the current charset setting.
+     * <p>可用于克隆具有相同配置的 ShellCommandTool，或检查当前字符集设置。
      *
-     * @return The charset used for decoding command output (never null)
+     * @return 输出解码字符集（永不为 null）
      */
     public Charset getCharset() {
         return charset;
     }
 
-    // ========================= AgentTool interface implementation =========================
+    // ========================= AgentTool 接口实现 =========================
 
     @Override
     public String getName() {
@@ -359,7 +340,7 @@ public class ShellCommandTool implements AgentTool {
         StringBuilder desc = new StringBuilder();
         desc.append("Execute a shell command with security validation and return the result.");
 
-        // Add base directory information if configured
+        // 若配置基目录则添加其信息
         if (baseDir != null) {
             desc.append(" WORKING DIRECTORY: The command will be executed in the directory: ");
             desc.append(baseDir.toString());
@@ -367,7 +348,7 @@ public class ShellCommandTool implements AgentTool {
                     ". All relative paths in the command will be resolved from this directory.");
         }
 
-        // Add whitelist information if configured
+        // 若配置白名单则添加其信息
         if (!allowedCommands.isEmpty()) {
             desc.append(" ALLOWED COMMANDS WHITELIST: [");
             String commandList =
@@ -443,46 +424,44 @@ public class ShellCommandTool implements AgentTool {
         return executeShellCommand(command, timeout, overrideCharset);
     }
 
-    // =============================== Execute shell command ===============================
+    // =============================== 执行 Shell 命令 ===============================
 
     /**
-     * Execute a shell command and return the return code, standard output, and
-     * standard error within tags.
+     * 执行 Shell 命令，在标签中返回退出码、标准输出和标准错误。
      *
-     * <p>Uses the default charset configured for this tool instance.
+     * <p>使用本工具实例的默认字符集。
      *
-     * <p>Security features:
+     * <p>安全特性：
      * <ul>
-     *   <li>Command whitelist validation - only whitelisted commands execute directly</li>
-     *   <li>Multiple command detection - prevents command chaining attacks (&amp;, |, ;)</li>
-     *   <li>User approval callback - requests permission for non-whitelisted commands</li>
-     *   <li>Platform-specific validation - different rules for Windows and Unix/Linux/macOS</li>
+     * <li>白名单验证：仅白名单命令直接执行</li>
+     * <li>多命令检测：防范命令链攻击（&amp;、|、;）</li>
+     * <li>批准回调：为非白名单命令请求权限</li>
+     * <li>平台特定验证：Windows 与 Unix/Linux/macOS 采用不同规则</li>
      * </ul>
      *
-     * @param command The shell command to execute
-     * @param timeout The maximum time (in seconds) allowed for the command to run (default: 300)
-     * @return A ToolResultBlock containing the formatted output with returncode, stdout, and stderr
+     * @param command 待执行 Shell 命令
+     * @param timeout 最长运行时间，单位秒（默认 300）
+     * @return 包含 returncode、stdout、stderr 格式化输出的 ToolResultBlock
      */
     public Mono<ToolResultBlock> executeShellCommand(String command, Integer timeout) {
         return executeShellCommand(command, timeout, null);
     }
 
     /**
-     * Execute a shell command and return the return code, standard output, and
-     * standard error within tags.
+     * 执行 Shell 命令，在标签中返回退出码、标准输出和标准错误。
      *
-     * <p>Security features:
+     * <p>安全特性：
      * <ul>
-     *   <li>Command whitelist validation - only whitelisted commands execute directly</li>
-     *   <li>Multiple command detection - prevents command chaining attacks (&amp;, |, ;)</li>
-     *   <li>User approval callback - requests permission for non-whitelisted commands</li>
-     *   <li>Platform-specific validation - different rules for Windows and Unix/Linux/macOS</li>
+     * <li>白名单验证：仅白名单命令直接执行</li>
+     * <li>多命令检测：防范命令链攻击（&amp;、|、;）</li>
+     * <li>批准回调：为非白名单命令请求权限</li>
+     * <li>平台特定验证：Windows 与 Unix/Linux/macOS 采用不同规则</li>
      * </ul>
      *
-     * @param command The shell command to execute
-     * @param timeout The maximum time (in seconds) allowed for the command to run (default: 300)
-     * @param overrideCharset Optional charset to use for decoding output (null to use default)
-     * @return A ToolResultBlock containing the formatted output with returncode, stdout, and stderr
+     * @param command 待执行 Shell 命令
+     * @param timeout 最长运行时间，单位秒（默认 300）
+     * @param overrideCharset 可选输出解码字符集（null 表示使用默认值）
+     * @return 包含 returncode、stdout、stderr 格式化输出的 ToolResultBlock
      */
     public Mono<ToolResultBlock> executeShellCommand(
             String command, Integer timeout, Charset overrideCharset) {
@@ -495,7 +474,7 @@ public class ShellCommandTool implements AgentTool {
                 actualTimeout,
                 effectiveCharset.name());
 
-        // Validate command before execution
+        // 执行前验证命令
         CommandValidator.ValidationResult validationResult =
                 commandValidator.validate(command, allowedCommands);
 
@@ -503,7 +482,7 @@ public class ShellCommandTool implements AgentTool {
             logger.info(
                     "Command '{}' validation failed: {}", command, validationResult.getReason());
 
-            // Request user approval
+            // 请求用户批准
             if (!requestUserApproval(command)) {
                 String errorMsg =
                         approvalCallback == null
@@ -542,18 +521,18 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Execute the command using ProcessBuilder and capture output.
+     * 使用 ProcessBuilder 执行命令并捕获输出。
      *
-     * @param command The command to execute
-     * @param timeoutSeconds The timeout in seconds
-     * @param effectiveCharset The charset to use for decoding output streams
-     * @return ToolResultBlock with formatted result
+     * @param command 待执行命令
+     * @param timeoutSeconds 超时秒数
+     * @param effectiveCharset 输出流解码字符集
+     * @return 带格式化结果的 ToolResultBlock
      */
     private ToolResultBlock executeCommand(
             String command, int timeoutSeconds, Charset effectiveCharset) {
         ProcessBuilder processBuilder;
 
-        // Determine the shell based on the operating system
+        // 根据操作系统确定 Shell
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             processBuilder = new ProcessBuilder("cmd.exe", "/c", command);
@@ -561,7 +540,7 @@ public class ShellCommandTool implements AgentTool {
             processBuilder = new ProcessBuilder("sh", "-c", command);
         }
 
-        // Set working directory if baseDir is specified
+        // 指定 baseDir 时设置工作目录
         if (baseDir != null) {
             processBuilder.directory(baseDir.toFile());
             logger.debug("Setting working directory to: {}", baseDir);
@@ -575,19 +554,19 @@ public class ShellCommandTool implements AgentTool {
             long startTime = System.currentTimeMillis();
             logger.debug("Starting command execution: {}", command);
 
-            // Start the process
+            // 启动进程
             process = processBuilder.start();
 
-            // CRITICAL FIX: Start asynchronous stream readers immediately to prevent pipe buffer
-            // deadlock
-            // When a child process writes more data than the pipe buffer can hold (typically
-            // 4-64KB),
-            // it will block waiting for the parent process to read the data. If the parent is
-            // blocked
-            // in waitFor(), this creates a deadlock. By reading streams asynchronously in
-            // background
-            // threads from the thread pool, we ensure the pipe buffers are continuously drained,
-            // preventing the deadlock.
+            // 关键修复：立即启动异步流读取器，防止管道缓冲区
+            // 死锁。
+            // 子进程写入数据超过管道缓冲区容量（通常
+            // 为 4–64 KB）时，
+            // 会阻塞并等待父进程读取。如果父进程也阻塞
+            // 等待子进程，
+            // 例如正在 waitFor() 中，就会产生死锁。通过线程池
+            // 后台线程
+            // 异步读取输出，持续排空管道缓冲区，
+            // 即可避免这种死锁。
             stdoutFuture =
                     STREAM_READER_POOL.submit(
                             new StreamReader(process.getInputStream(), "stdout", effectiveCharset));
@@ -595,7 +574,7 @@ public class ShellCommandTool implements AgentTool {
                     STREAM_READER_POOL.submit(
                             new StreamReader(process.getErrorStream(), "stderr", effectiveCharset));
 
-            // Wait for the process to complete with timeout
+            // 带超时等待进程完成
             logger.debug("Waiting for process with timeout: {} seconds", timeoutSeconds);
             boolean completed = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
             long waitElapsed = System.currentTimeMillis() - startTime;
@@ -603,17 +582,17 @@ public class ShellCommandTool implements AgentTool {
                     "process.waitFor returned: completed={}, elapsed={}ms", completed, waitElapsed);
 
             if (!completed) {
-                // Timeout occurred
+                // 发生超时
                 logger.warn(
                         "Command '{}' exceeded timeout of {} seconds (actual wait: {}ms)",
                         command,
                         timeoutSeconds,
                         waitElapsed);
 
-                // Terminate the process
+                // 终止进程
                 process.destroyForcibly();
 
-                // Get partial output from async readers with short timeout
+                // 以较短超时从异步读取器获取部分输出
                 String stdout = getOutputWithTimeout(stdoutFuture, 1, TimeUnit.SECONDS);
                 String stderr = getOutputWithTimeout(stderrFuture, 1, TimeUnit.SECONDS);
 
@@ -623,7 +602,7 @@ public class ShellCommandTool implements AgentTool {
                                         + " seconds.",
                                 timeoutSeconds);
 
-                // Append timeout message to stderr
+                // 向 stderr 追加超时消息
                 if (stderr != null && !stderr.isEmpty()) {
                     stderr = stderr + "\n" + timeoutMessage;
                 } else {
@@ -633,11 +612,11 @@ public class ShellCommandTool implements AgentTool {
                 return formatResult(-1, stdout != null ? stdout : "", stderr);
             }
 
-            // Process completed normally
+            // 进程正常完成
             int returnCode = process.exitValue();
 
-            // Get complete output from async readers
-            // Process has finished, so readers should complete quickly
+            // 从异步读取器获取完整输出
+            // 进程已结束，读取器应很快完成
             String stdout = getOutputWithTimeout(stdoutFuture, 5, TimeUnit.SECONDS);
             String stderr = getOutputWithTimeout(stderrFuture, 5, TimeUnit.SECONDS);
 
@@ -662,38 +641,36 @@ public class ShellCommandTool implements AgentTool {
             return formatResult(-1, "", "Error: " + e.getMessage());
 
         } finally {
-            // Clean up process resources
+            // 清理进程资源
             if (process != null && process.isAlive()) {
-                // Destroy the process if still alive
-                // Note: Streams are already closed by try-with-resources in StreamReader
+                // 若进程仍存活则销毁
+                // 注意：StreamReader 的 try-with-resources 已关闭流
                 process.destroyForcibly();
             }
         }
     }
 
     /**
-     * Get output from a Future with timeout.
+     * 带超时从 Future 获取输出。
      *
-     * <p>This helper method safely retrieves the output from an asynchronous stream reader,
-     * with proper timeout and error handling. If the future times out or fails, it will be
-     * cancelled and an empty string will be returned.
+     * <p>安全获取异步流读取器输出，处理超时和错误。Future 超时或失败时将其取消，并返回空字符串。
      *
-     * @param future The Future containing the output string
-     * @param timeout The timeout value
-     * @param unit The timeout unit
-     * @return The output string, or empty string if timeout or error occurs
+     * @param future 包含输出字符串的 Future
+     * @param timeout 超时值
+     * @param unit 超时单位
+     * @return 输出字符串；超时或错误时为空字符串
      */
     private String getOutputWithTimeout(Future<String> future, long timeout, TimeUnit unit) {
         try {
             return future.get(timeout, unit);
         } catch (TimeoutException e) {
             logger.warn("Timeout waiting for stream reader to complete");
-            future.cancel(true); // Cancel the task
+            future.cancel(true); // 取消任务
             return "";
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("Interrupted while waiting for stream reader");
-            future.cancel(true); // Cancel the task
+            future.cancel(true); // 取消任务
             return "";
         } catch (ExecutionException e) {
             logger.error("Error in stream reader: {}", e.getCause().getMessage(), e.getCause());
@@ -702,12 +679,12 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Format the execution result with XML-style tags.
+     * 用 XML 风格标签格式化执行结果。
      *
-     * @param returnCode The process return code
-     * @param stdout The standard output
-     * @param stderr The standard error
-     * @return ToolResultBlock with formatted result
+     * @param returnCode 进程退出码
+     * @param stdout 标准输出
+     * @param stderr 标准错误
+     * @return 带格式化结果的 ToolResultBlock
      */
     private ToolResultBlock formatResult(int returnCode, String stdout, String stderr) {
         String formattedOutput =
@@ -719,10 +696,10 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Request user approval for command execution via callback.
+     * 通过回调请求用户批准命令执行。
      *
-     * @param command The command to approve
-     * @return true if approved, false otherwise
+     * @param command 待批准命令
+     * @return 获准为 true，否则为 false
      */
     private boolean requestUserApproval(String command) {
         if (approvalCallback == null) {
@@ -750,8 +727,7 @@ public class ShellCommandTool implements AgentTool {
     }
 
     /**
-     * Callable task for reading process output streams asynchronously.
-     * This prevents pipe buffer deadlock by continuously draining stdout/stderr.
+     * 异步读取进程输出流的 Callable 任务，通过持续排空 stdout/stderr 防止管道缓冲区死锁。
      */
     private static class StreamReader implements Callable<String> {
         private final InputStream inputStream;
@@ -759,11 +735,11 @@ public class ShellCommandTool implements AgentTool {
         private final Charset charset;
 
         /**
-         * Creates a new StreamReader with the specified charset.
+         * 使用指定字符集创建 StreamReader。
          *
-         * @param inputStream The input stream to read from
-         * @param streamType A descriptive name for logging (e.g., "stdout", "stderr")
-         * @param charset The charset to use for decoding the stream
+         * @param inputStream 待读取输入流
+         * @param streamType 日志使用的描述性名称（例如 "stdout"、"stderr"）
+         * @param charset 流解码字符集
          */
         StreamReader(InputStream inputStream, String streamType, Charset charset) {
             this.inputStream = inputStream;

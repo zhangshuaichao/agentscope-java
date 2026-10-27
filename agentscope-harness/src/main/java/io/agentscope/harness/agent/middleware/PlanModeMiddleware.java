@@ -45,19 +45,21 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Enforces plan mode: while {@code AgentState.planModeContext.planActive} is {@code true}, mutating
- * tool calls are denied so the agent can only read / investigate and draft a plan.
+ * 强制执行规划模式：当 {@code AgentState.planModeContext.planActive} 为 {@code true} 时，
+ * 拒绝修改型工具调用，使智能体只能读取、调研和起草计划。
  *
- * <p>Enforcement is deterministic and happens in {@link #onActing}: each tool call is allowed iff
- * it is read-only or one of the plan-control tools ({@code plan_enter} / {@code plan_write} /
- * {@code plan_exit} / {@code todo_write}); everything else gets a synthetic {@code DENIED} tool
- * result (written to context and streamed as events) without being executed. This intentionally
- * does <em>not</em> reuse {@code PermissionMode.EXPLORE}: that mode is snapshotted immutably by the
- * {@code PermissionEngine} at construction and cannot be toggled at runtime, whereas plan mode must
- * switch dynamically.
+ * <p>规则确定地在 {@link #onActing} 中执行：仅允许只读工具或规划控制工具
+ * （{@code plan_enter} / {@code plan_write} / {@code plan_exit} / {@code todo_write}）；
+ * 其余调用不执行，而是得到写入上下文并流式发出的合成 {@code DENIED} 工具结果。
+ * 这里刻意不复用 {@code PermissionMode.EXPLORE}：该模式在
+ * {@code PermissionEngine} 构造时被不可变地快照，无法在运行时切换，
+ * 而规划模式必须支持动态切换。
  *
- * <p>{@link #onSystemPrompt} collects mode instructions for the final context builder.
- * {@link #onModelCall} refreshes them when mode changes within the same call.
+ * <p>{@link #onSystemPrompt} 为最终上下文构建器收集模式指令。
+ * {@link #onModelCall} 在同一次调用中模式发生变化时刷新指令。
+ *
+ * <p>【学习提示】提示词告诉模型应该怎么做，执行门控则决定实际能不能做。
+ * 两者职责不同；不能只靠提示词实现工具权限边界。
  */
 public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
 
@@ -116,21 +118,18 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
     private final Set<String> additionalAllowed;
 
     /**
-     * @param manager shared plan-mode state/file coordinator
-     * @param readOnlyResolver resolves whether a tool (by name) is read-only; used to decide which
-     *     calls are permitted while plan mode is active
+     * @param manager 共享的规划模式状态／文件协调器
+     * @param readOnlyResolver 按工具名称判断其是否只读；用于决定规划模式下允许哪些调用
      */
     public PlanModeMiddleware(PlanModeManager manager, Predicate<String> readOnlyResolver) {
         this(manager, readOnlyResolver, Set.of());
     }
 
     /**
-     * @param manager shared plan-mode state/file coordinator
-     * @param readOnlyResolver resolves whether a tool (by name) is read-only; used to decide which
-     *     calls are permitted while plan mode is active
-     * @param additionalAllowed extra tool names that are permitted while plan mode is active even
-     *     when not read-only (opt-in escape hatch — e.g. {@code execute} for shell-based
-     *     investigation). The model is instructed via the plan banner to use them read-only only.
+     * @param manager 共享的规划模式状态／文件协调器
+     * @param readOnlyResolver 按工具名称判断其是否只读；用于决定规划模式下允许哪些调用
+     * @param additionalAllowed 规划模式下额外允许的非只读工具名称（显式选择的例外通道，
+     *     例如用于 shell 调研的 {@code execute}）；规划提示会要求模型仅以只读方式使用这些工具
      */
     public PlanModeMiddleware(
             PlanModeManager manager,
@@ -144,7 +143,7 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
                         : new LinkedHashSet<>(additionalAllowed);
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(
@@ -169,7 +168,7 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
                 });
     }
 
-    /** Refresh mode rules at each model boundary, including transitions within one agent call. */
+    /** 在每个模型调用边界刷新模式规则，包括同一次智能体调用中的模式切换。 */
     @Override
     public Flux<AgentEvent> onModelCall(
             Agent agent,
@@ -192,8 +191,8 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
             return banner;
         }
 
-        // BUILD mode: if a plan file was previously written, surface its path so the model
-        // can re-read it after compaction without needing to remember the original tool call.
+        // BUILD 模式：如果之前写过计划文件，则显示其路径，让模型在
+        // 上下文压缩后可以重读，而不必记住最初的工具调用。
         String planFile = state != null ? state.getPlanModeContext().getCurrentPlanFile() : null;
         if (planFile != null && !planFile.isBlank()) {
             return BUILD_MODE_PLAN_HINT.formatted(planFile);
@@ -229,7 +228,7 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
         String replyId = state.getReplyId();
         String agentName = agent.getName();
 
-        // Deferred so the context mutation + events run once, at subscription time.
+        // 延迟到订阅时执行，确保上下文修改与事件只运行一次。
         Flux<AgentEvent> deniedFlux =
                 Flux.defer(
                         () -> {

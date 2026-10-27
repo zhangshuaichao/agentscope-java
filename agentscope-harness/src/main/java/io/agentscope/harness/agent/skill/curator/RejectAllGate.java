@@ -20,11 +20,9 @@ import java.time.Duration;
 import reactor.core.publisher.Mono;
 
 /**
- * Always returns {@link SkillPromotionGate.PromotionDecision.Defer} — promotion can only
- * happen via an explicit {@code HarnessAgent.promoteSkill(...)} call from outside the gate.
+ * 始终返回 {@link SkillPromotionGate.PromotionDecision.Defer}：即使显式调用 {@code HarnessAgent.promoteSkill(...)}，当前门控本身仍不会批准。实际晋级需要配置能返回批准决定的门控。
  *
- * <p>This is the most paranoid default: the agent's own actions can never put a skill on the
- * live skills root by themselves. Suitable when SRE wants to keep promotion strictly manual.
+ * <p>这是最保守的默认策略：智能体自身操作不能单独把技能放入正式技能根目录。适合 SRE 要求严格人工控制晋级的情况。
  */
 public class RejectAllGate implements SkillPromotionGate {
 

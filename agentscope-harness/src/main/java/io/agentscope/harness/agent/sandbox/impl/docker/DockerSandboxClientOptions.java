@@ -23,37 +23,50 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Configuration options for the Docker sandbox client.
+ * Docker 沙箱客户端配置选项。
  *
- * <p>Describes the Docker container configuration used when creating or resuming
- * a {@link io.agentscope.harness.agent.sandbox.impl.docker.DockerSandbox}. The Docker CLI must be
- * available on the host
- * system's {@code PATH}.
+ * <p>描述创建或恢复 {@link io.agentscope.harness.agent.sandbox.impl.docker.DockerSandbox} 时使用的 Docker 容器配置。宿主系统的 {@code PATH} 中必须存在 Docker 命令行。
  */
 public class DockerSandboxClientOptions extends SandboxClientOptions {
 
-    /** Docker image to run. Defaults to {@code ubuntu:22.04}. */
+    /**
+ * 要运行的 Docker 镜像，默认 {@code ubuntu:22.04}。
+ */
     private String image = "ubuntu:22.04";
 
-    /** Workspace root path inside the container. Defaults to {@code /workspace}. */
+    /**
+ * 容器内工作区根路径，默认 {@code /workspace}。
+ */
     private String workspaceRoot = "/workspace";
 
-    /** Environment variables to inject into the container. */
+    /**
+ * 注入容器的环境变量。
+ */
     private Map<String, String> environment = new LinkedHashMap<>();
 
-    /** Optional memory limit in bytes (e.g. {@code 512 * 1024 * 1024L} for 512 MB). */
+    /**
+ * 可选内存字节数限制（例如 {@code 512 * 1024 * 1024L} 表示 512 MB）。
+ */
     private Long memorySizeBytes;
 
-    /** Optional CPU count limit (e.g. {@code 2L} for two CPUs). */
+    /**
+ * 可选 CPU 数量限制（例如 {@code 2L} 表示两个 CPU）。
+ */
     private Long cpuCount;
 
-    /** Host ports to expose from the container ({@code hostPort:containerPort} mapping). */
+    /**
+ * 从容器暴露的宿主端口（{@code hostPort:containerPort} 映射）。
+ */
     private int[] exposedPorts = {};
 
-    /** Additional raw arguments appended to {@code docker run} before the image name. */
+    /**
+ * 在镜像名称之前追加到 {@code docker run} 的额外原始参数。
+ */
     private List<String> additionalRunArgs = new ArrayList<>();
 
-    /** Docker network mode or network name passed to {@code docker run --network}. */
+    /**
+ * 传给 {@code docker run --network} 的 Docker 网络模式或网络名称。
+ */
     private String network;
 
     @Override
@@ -62,9 +75,9 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Creates a {@link DockerSandboxClient} for these options.
+     * 为这些选项创建 {@link DockerSandboxClient}。
      *
-     * @return new Docker sandbox client
+     * @return 新 Docker 沙箱客户端
      */
     @Override
     public SandboxClient<DockerSandboxClientOptions> createClient() {
@@ -72,19 +85,19 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Returns the Docker image name.
+     * 返回 Docker 镜像名称。
      *
-     * @return Docker image
+     * @return Docker 镜像
      */
     public String getImage() {
         return image;
     }
 
     /**
-     * Sets the Docker image name.
+     * 设置 Docker 镜像名称。
      *
-     * @param image Docker image (e.g. {@code python:3.12-slim})
-     * @return this options instance
+     * @param image Docker 镜像（例如 {@code python:3.12-slim}）
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions image(String image) {
         this.image = image;
@@ -92,28 +105,28 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the Docker image name.
+     * 设置 Docker 镜像名称。
      *
-     * @param image Docker image
+     * @param image Docker 镜像
      */
     public void setImage(String image) {
         this.image = image;
     }
 
     /**
-     * Returns the workspace root path inside the container.
+     * 返回容器内工作区根路径。
      *
-     * @return workspace root
+     * @return 工作区根目录
      */
     public String getWorkspaceRoot() {
         return workspaceRoot;
     }
 
     /**
-     * Sets the workspace root path inside the container.
+     * 设置容器内工作区根路径。
      *
-     * @param workspaceRoot absolute path inside the container
-     * @return this options instance
+     * @param workspaceRoot 容器内绝对路径
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions workspaceRoot(String workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
@@ -121,46 +134,46 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the workspace root path inside the container.
+     * 设置容器内工作区根路径。
      *
-     * @param workspaceRoot absolute path inside the container
+     * @param workspaceRoot 容器内绝对路径
      */
     public void setWorkspaceRoot(String workspaceRoot) {
         this.workspaceRoot = workspaceRoot;
     }
 
     /**
-     * Returns the container environment variables.
+     * 返回容器环境变量。
      *
-     * @return environment variable map
+     * @return 环境变量映射
      */
     public Map<String, String> getEnvironment() {
         return environment;
     }
 
     /**
-     * Sets the container environment variables.
+     * 设置容器环境变量。
      *
-     * @param environment key-value pairs
+     * @param environment 键值对
      */
     public void setEnvironment(Map<String, String> environment) {
         this.environment = environment != null ? environment : new LinkedHashMap<>();
     }
 
     /**
-     * Returns the optional memory limit in bytes.
+     * 返回可选内存字节数限制。
      *
-     * @return memory limit or {@code null} if not set
+     * @return 内存限制；未设置时为 {@code null}
      */
     public Long getMemorySizeBytes() {
         return memorySizeBytes;
     }
 
     /**
-     * Sets the memory limit in bytes.
+     * 设置内存字节数限制。
      *
-     * @param memorySizeBytes memory limit (e.g. {@code 512 * 1024 * 1024L})
-     * @return this options instance
+     * @param memorySizeBytes 内存限制（例如 {@code 512 * 1024 * 1024L}）
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions memorySizeBytes(Long memorySizeBytes) {
         this.memorySizeBytes = memorySizeBytes;
@@ -168,28 +181,28 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the memory limit in bytes.
+     * 设置内存字节数限制。
      *
-     * @param memorySizeBytes memory limit in bytes
+     * @param memorySizeBytes 内存字节数限制
      */
     public void setMemorySizeBytes(Long memorySizeBytes) {
         this.memorySizeBytes = memorySizeBytes;
     }
 
     /**
-     * Returns the optional CPU count limit.
+     * 返回可选 CPU 数量限制。
      *
-     * @return CPU count or {@code null} if not set
+     * @return CPU 数量；未设置时为 {@code null}
      */
     public Long getCpuCount() {
         return cpuCount;
     }
 
     /**
-     * Sets the CPU count limit.
+     * 设置 CPU 数量限制。
      *
-     * @param cpuCount number of CPUs (e.g. {@code 2L})
-     * @return this options instance
+     * @param cpuCount CPU 数量（例如 {@code 2L}）
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions cpuCount(Long cpuCount) {
         this.cpuCount = cpuCount;
@@ -197,28 +210,28 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the CPU count limit.
+     * 设置 CPU 数量限制。
      *
-     * @param cpuCount number of CPUs
+     * @param cpuCount CPU 数量
      */
     public void setCpuCount(Long cpuCount) {
         this.cpuCount = cpuCount;
     }
 
     /**
-     * Returns the host ports to expose.
+     * 返回要暴露的宿主端口。
      *
-     * @return exposed ports array
+     * @return 暴露端口数组
      */
     public int[] getExposedPorts() {
         return exposedPorts;
     }
 
     /**
-     * Sets the host ports to expose from the container.
+     * 设置从容器暴露的宿主端口。
      *
-     * @param exposedPorts port numbers
-     * @return this options instance
+     * @param exposedPorts 端口号
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions exposedPorts(int... exposedPorts) {
         this.exposedPorts = exposedPorts;
@@ -226,28 +239,28 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the host ports to expose from the container.
+     * 设置从容器暴露的宿主端口。
      *
-     * @param exposedPorts port numbers
+     * @param exposedPorts 端口号
      */
     public void setExposedPorts(int[] exposedPorts) {
         this.exposedPorts = exposedPorts != null ? exposedPorts : new int[0];
     }
 
     /**
-     * Returns the docker network mode or network name.
+     * 返回 Docker 网络模式或网络名称。
      *
-     * @return docker network value, or {@code null} when unset
+     * @return Docker 网络值；未设置时为 {@code null}
      */
     public String getNetwork() {
         return network;
     }
 
     /**
-     * Sets the docker network mode or network name.
+     * 设置 Docker 网络模式或网络名称。
      *
-     * @param network docker network value
-     * @return this options instance
+     * @param network Docker 网络值
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions network(String network) {
         this.network = normalizeNetwork(network);
@@ -255,28 +268,28 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the docker network mode or network name.
+     * 设置 Docker 网络模式或网络名称。
      *
-     * @param network docker network value
+     * @param network Docker 网络值
      */
     public void setNetwork(String network) {
         this.network = normalizeNetwork(network);
     }
 
     /**
-     * Returns additional raw arguments appended to {@code docker run}.
+     * 返回追加到 {@code docker run} 的额外原始参数。
      *
-     * @return additional docker run arguments
+     * @return 额外 docker run 参数
      */
     public List<String> getAdditionalRunArgs() {
         return additionalRunArgs;
     }
 
     /**
-     * Appends additional raw arguments to {@code docker run} before the image name.
+     * 在镜像名称之前向 {@code docker run} 追加额外原始参数。
      *
-     * @param additionalRunArgs additional docker run arguments
-     * @return this options instance
+     * @param additionalRunArgs 额外 docker run 参数
+     * @return 当前选项实例
      */
     public DockerSandboxClientOptions additionalRunArgs(String... additionalRunArgs) {
         if (additionalRunArgs == null) {
@@ -291,10 +304,9 @@ public class DockerSandboxClientOptions extends SandboxClientOptions {
     }
 
     /**
-     * Sets the additional raw arguments appended to {@code docker run}, replacing any previously
-     * configured arguments.
+     * 设置追加到 {@code docker run} 的额外原始参数，替换先前配置的所有参数。
      *
-     * @param additionalRunArgs additional docker run arguments
+     * @param additionalRunArgs 额外 docker run 参数
      */
     public void setAdditionalRunArgs(List<String> additionalRunArgs) {
         this.additionalRunArgs = new ArrayList<>();

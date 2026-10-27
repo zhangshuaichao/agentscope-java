@@ -29,11 +29,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
-/** Explicit operator reconciliation, never automatic re-execution of an uncertain side effect. */
+/** 由操作者显式对账协调，绝不自动重新执行结果不确定的副作用。 */
 public final class SessionRecovery {
     private SessionRecovery() {}
 
-    /** Cancel an idle pending interaction without inventing success or replaying external work. */
+    /** 取消空闲状态下的待处理交互，不虚构成功，也不重放外部操作。 */
     public static void cancelPending(SessionLog log, String turnId) {
         var writer = log.acquire(UUID.randomUUID().toString(), Duration.ofMinutes(2));
         try {

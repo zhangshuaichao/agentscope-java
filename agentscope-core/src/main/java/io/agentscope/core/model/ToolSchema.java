@@ -22,8 +22,10 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Immutable tool schema definition.
- * Describes a tool's interface using JSON Schema for parameters.
+ * 不可变的工具模式定义。
+ * 使用 JSON Schema 描述工具参数及其接口。
+ *
+ * <p>【学习提示】模式是“参数应长什么样”的说明，不是某次工具调用的实际参数，也不会执行工具。
  */
 public class ToolSchema {
     private final String name;
@@ -34,9 +36,9 @@ public class ToolSchema {
     private final Boolean deferLoading;
 
     /**
-     * Creates a new ToolSchema instance using the builder pattern.
+     * 通过建造者模式创建新的 ToolSchema 实例。
      *
-     * @param builder the builder containing the schema configuration
+     * @param builder 包含模式配置的建造者
      */
     private ToolSchema(Builder builder) {
         this.name = Objects.requireNonNull(builder.name, "name is required");
@@ -54,75 +56,72 @@ public class ToolSchema {
     }
 
     /**
-     * Gets the tool name.
+     * 获取工具名称。
      *
-     * @return the tool name
+     * @return 工具名称
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Gets the tool description.
+     * 获取工具描述。
      *
-     * @return the tool description
+     * @return 工具描述
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Gets the tool parameters as a JSON Schema.
+     * 获取以 JSON Schema 表示的工具参数。
      *
-     * @return an unmodifiable map containing the parameter schema
+     * @return 包含参数模式的不可修改映射
      */
     public Map<String, Object> getParameters() {
         return parameters;
     }
 
     /**
-     * Gets the optional tool output schema as a JSON Schema.
+     * 获取以 JSON Schema 表示的可选工具输出模式。
      *
-     * @return an unmodifiable map containing the output schema, or null if unspecified
+     * @return 包含输出模式的不可修改映射；未指定时为 null
      */
     public Map<String, Object> getOutputSchema() {
         return outputSchema;
     }
 
     /**
-     * Gets the strict mode flag for schema validation.
+     * 获取模式验证的严格模式标记。
      *
-     * @return true if strict mode is enabled, false otherwise, or null if not specified
+     * @return 启用严格模式时为 true，否则为 false；未指定时为 null
      */
     public Boolean getStrict() {
         return strict;
     }
 
     /**
-     * Gets the deferred tool definition loading flag.
+     * 获取工具定义的延迟加载标记。
      *
-     * <p>Providers that support tool search can defer loading this tool's parameter schema until
-     * the model searches for it. Returns {@code null} when unspecified, which leaves the tool
-     * eagerly loaded.
+     * <p>支持工具搜索的服务商可以延迟加载此工具的参数模式，直到模型搜索它。
+     * 未指定时返回 {@code null}，此时工具保持立即加载。
      *
-     * @return true to defer loading, false otherwise, or null if not specified
+     * @return 延迟加载时为 true，否则为 false；未指定时为 null
      */
     public Boolean getDeferLoading() {
         return deferLoading;
     }
 
     /**
-     * Creates a new builder for ToolSchema.
+     * 创建新的 ToolSchema 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for creating ToolSchema instances.
-     */
+    /** 创建 ToolSchema 实例的建造者。 */
     public static class Builder {
         private String name;
         private String description;
@@ -132,10 +131,10 @@ public class ToolSchema {
         private Boolean deferLoading;
 
         /**
-         * Sets the tool name.
+         * 设置工具名称。
          *
-         * @param name the tool name
-         * @return this builder instance
+         * @param name 工具名称
+         * @return 当前建造者实例
          */
         public Builder name(String name) {
             this.name = name;
@@ -143,10 +142,10 @@ public class ToolSchema {
         }
 
         /**
-         * Sets the tool description.
+         * 设置工具描述。
          *
-         * @param description the tool description
-         * @return this builder instance
+         * @param description 工具描述
+         * @return 当前建造者实例
          */
         public Builder description(String description) {
             this.description = description;
@@ -154,10 +153,10 @@ public class ToolSchema {
         }
 
         /**
-         * Sets the tool parameters as a JSON Schema.
+         * 设置以 JSON Schema 表示的工具参数。
          *
-         * @param parameters the parameter schema
-         * @return this builder instance
+         * @param parameters 参数模式
+         * @return 当前建造者实例
          */
         public Builder parameters(Map<String, Object> parameters) {
             this.parameters = parameters;
@@ -165,10 +164,10 @@ public class ToolSchema {
         }
 
         /**
-         * Sets the optional tool output schema as a JSON Schema.
+         * 设置以 JSON Schema 表示的可选工具输出模式。
          *
-         * @param outputSchema the output schema
-         * @return this builder instance
+         * @param outputSchema 输出模式
+         * @return 当前建造者实例
          */
         public Builder outputSchema(Map<String, Object> outputSchema) {
             this.outputSchema = outputSchema;
@@ -176,10 +175,10 @@ public class ToolSchema {
         }
 
         /**
-         * Sets the strict mode for schema validation.
+         * 设置模式验证的严格模式。
          *
-         * @param strict whether to enable strict mode
-         * @return this builder instance
+         * @param strict 是否启用严格模式
+         * @return 当前建造者实例
          */
         public Builder strict(Boolean strict) {
             this.strict = strict;
@@ -187,10 +186,10 @@ public class ToolSchema {
         }
 
         /**
-         * Sets the deferred tool definition loading flag.
+         * 设置工具定义的延迟加载标记。
          *
-         * @param deferLoading whether to defer loading this tool's schema until tool search
-         * @return this builder instance
+         * @param deferLoading 是否将此工具模式的加载延迟至工具搜索时
+         * @return 当前建造者实例
          */
         public Builder deferLoading(Boolean deferLoading) {
             this.deferLoading = deferLoading;
@@ -198,9 +197,9 @@ public class ToolSchema {
         }
 
         /**
-         * Builds a new ToolSchema instance with the set values.
+         * 使用已设置的值构建新的 ToolSchema 实例。
          *
-         * @return a new ToolSchema instance
+         * @return 新的 ToolSchema 实例
          */
         public ToolSchema build() {
             return new ToolSchema(this);

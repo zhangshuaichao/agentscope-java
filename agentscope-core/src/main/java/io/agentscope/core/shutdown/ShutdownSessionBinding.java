@@ -19,10 +19,10 @@ import io.agentscope.core.state.AgentStateStore;
 import java.util.Objects;
 
 /**
- * AgentStateStore binding used for shutdown checkpoint persistence.
+ * 用于持久化关闭检查点的 AgentStateStore 绑定。
  *
- * @deprecated since 2.0.0. Use {@link ShutdownStateSaver} with
- *     {@link GracefulShutdownManager#bindStateSaver} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link ShutdownStateSaver}，并通过
+ *     {@link GracefulShutdownManager#bindStateSaver} 绑定。
  */
 @Deprecated(since = "2.0.0", forRemoval = true)
 public record ShutdownSessionBinding(AgentStateStore stateStore, String userId, String sessionId) {

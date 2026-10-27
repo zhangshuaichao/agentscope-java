@@ -27,15 +27,13 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Convenience tool that lets the agent propose a brand-new skill in one call: name +
- * description + body + optional scripts. Internally translates to
- * {@code SkillManageTool.create + skill_manage write_file*} so the standard staging /
- * validation / scanning pipeline applies.
+ * 让智能体通过一次调用提出全新技能的便捷工具：名称、描述、正文和可选脚本。
+ * 内部转换为 {@code SkillManageTool.create + skill_manage write_file*}，
+ * 因此沿用标准暂存、验证与扫描管线。
  *
- * <p>Compared to {@code skill_manage(action="create")} this tool: takes the body and frontmatter
- * separately (no need for the agent to hand-write YAML), and accepts a list of scripts to
- * upload in the same call. Useful when the agent has just discovered a reusable approach and
- * wants to commit it without authoring the full SKILL.md text.
+ * <p>与 {@code skill_manage(action="create")} 相比，此工具将正文和前置元数据
+ * 分开接收（无需智能体手写 YAML），并支持在同一次调用中上传脚本列表。
+ * 适合智能体刚发现可复用方法，希望保存它但不想编写完整 SKILL.md 文本的情况。
  */
 public class ProposeSkillTool implements AgentTool {
 
@@ -124,8 +122,8 @@ public class ProposeSkillTool implements AgentTool {
                             "name, description, and body are required for propose_skill"));
         }
         String skillMd = "---\nname: " + name + "\ndescription: " + description + "\n---\n" + body;
-        // Step 1: create the skill via the existing SkillManageTool path (validation +
-        // staging + scanner all reused).
+        // 步骤 1：通过现有 SkillManageTool 路径创建技能
+        // （复用验证、暂存及扫描器）。
         Map<String, Object> createInput = new HashMap<>();
         createInput.put("action", "create");
         createInput.put("name", name);
@@ -142,8 +140,8 @@ public class ProposeSkillTool implements AgentTool {
                             if (textOf(createResult).startsWith("Error:")) {
                                 return Mono.just(createResult);
                             }
-                            // Step 2: optional scripts. Delegate sequentially via skill_manage
-                            // write_file (same staging / scan / sidecar plumbing).
+                            // 步骤 2：可选脚本。依次委托给 skill_manage
+                            // write_file（使用相同暂存／扫描／附属元数据流程）。
                             @SuppressWarnings("unchecked")
                             List<Map<String, Object>> scripts =
                                     (List<Map<String, Object>>) input.get("scripts");
@@ -177,7 +175,7 @@ public class ProposeSkillTool implements AgentTool {
                             if (path == null || content == null) {
                                 return Mono.empty();
                             }
-                            // Default to scripts/<filename>.sh if the agent forgot the prefix.
+                            // 智能体忘记前缀时，默认使用 scripts/<filename>.sh。
                             if (!path.contains("/")) {
                                 path = "scripts/" + path;
                             }

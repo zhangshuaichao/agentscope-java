@@ -25,9 +25,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Session task aggregate carried and persisted by {@link AgentState}. Todo progress and
- * requirements share one revision; neither implies independently verified task completion.
- * Mutations should run inside the owning agent call/session transaction.
+ * 由 {@link AgentState} 携带并持久化的会话任务聚合状态。待办进度与需求
+ * 共享同一个修订版本；两者都不能单独证明任务已通过独立验证而完成。
+ * 修改操作应在所属智能体的调用／会话事务内执行。
  */
 public final class TaskContextState {
 
@@ -39,7 +39,7 @@ public final class TaskContextState {
     private String subjectVersion;
     private final List<TaskVerification> verifications;
 
-    /** Application task identity, not an automatically allocated control-plane task. */
+    /** 应用层任务标识，不是自动分配的控制面任务。 */
     public record Scope(String taskId, String objective, String sourceRef) {
         public Scope {
             TaskRequirement.requireText(taskId, "task ID", 200);
@@ -53,7 +53,7 @@ public final class TaskContextState {
         return revision;
     }
 
-    /** Construct an empty context. */
+    /** 构造空上下文。 */
     public TaskContextState() {
         this(null);
     }
@@ -116,7 +116,7 @@ public final class TaskContextState {
         return scope;
     }
 
-    /** Explicit trusted task switch. Clears the old task's progress and requirements together. */
+    /** 显式且可信的任务切换，同时清除旧任务的进度和需求。 */
     public synchronized void beginTask(Scope next, long expectedRevision) {
         checkRevision(expectedRevision);
         Objects.requireNonNull(next, "scope");
@@ -134,7 +134,7 @@ public final class TaskContextState {
         revision++;
     }
 
-    /** Atomically replaces progress without overwriting requirements. */
+    /** 原子地替换进度，但不覆盖需求。 */
     public synchronized void replaceTasks(List<Task> replacement, long expectedRevision) {
         checkRevision(expectedRevision);
         List<Task> validated = List.copyOf(replacement);
@@ -143,7 +143,7 @@ public final class TaskContextState {
         revision++;
     }
 
-    /** Source references supplied here are untrusted claims until explicitly confirmed. */
+    /** 此处提供的来源引用在明确确认前都属于不可信声明。 */
     public synchronized TaskRequirement propose(
             TaskRequirement.Kind kind, String text, String sourceRef) {
         var candidate =
@@ -166,7 +166,7 @@ public final class TaskContextState {
         return candidate;
     }
 
-    /** Trusted application API. Not registered as a model-callable tool. */
+    /** 可信应用 API，不注册为模型可调用工具。 */
     public synchronized void decide(
             String id,
             TaskRequirement.Status status,
@@ -230,7 +230,7 @@ public final class TaskContextState {
                 : new EvidenceBinding(scope.taskId(), contractVersion, subjectVersion);
     }
 
-    /** Caller must update this when the checked workspace/artifact changes, before execution. */
+    /** 被检查的工作区或产物发生变化时，调用方必须在执行前更新此值。 */
     public synchronized void setSubjectVersion(String version, long expectedRevision) {
         checkRevision(expectedRevision);
         TaskRequirement.requireText(version, "subject version", 2000);
@@ -241,7 +241,7 @@ public final class TaskContextState {
         revision++;
     }
 
-    /** Invalidate immediately when a relevant mutation starts; repin only after it settles. */
+    /** 相关修改开始时立即失效；待修改稳定后再重新固定版本。 */
     public synchronized void invalidateSubject(long expectedRevision) {
         checkRevision(expectedRevision);
         subjectVersion = null;
@@ -249,7 +249,7 @@ public final class TaskContextState {
         revision++;
     }
 
-    /** Called after durable verification storage. Does not mark todos or the task completed. */
+    /** 在验证结果持久化后调用，不会将待办或任务标记为已完成。 */
     public synchronized void recordVerification(TaskVerification report, long expectedRevision) {
         checkRevision(expectedRevision);
         Objects.requireNonNull(report, "report");

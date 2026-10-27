@@ -20,23 +20,21 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Strategy interface for handling user input from different sources.
- * Enables pluggable input implementations such as terminal console, web UI, or programmatic
- * sources. Implementations convert raw user input into UserInputData containing both content
- * blocks and optional structured data, maintaining consistency across different input channels.
+ * 处理不同来源用户输入的策略接口。
+ * 支持终端控制台、网页界面或程序化来源等可插拔输入实现。
+ * 实现将原始用户输入转换为包含内容块及可选结构化数据的 UserInputData，保持不同输入通道的一致性。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public interface UserInputBase {
 
     /**
-     * Handle user input and return the input data.
+     * 处理用户输入并返回输入数据。
      *
-     * @param agentId The agent identifier
-     * @param agentName The agent name
-     * @param contextMessages Optional messages to display before prompting (e.g., assistant
-     *     response)
-     * @param structuredModel Optional class for structured input format
-     * @return Mono containing the user input data
+     * @param agentId 智能体标识符
+     * @param agentName 智能体名称
+     * @param contextMessages 提示输入前可选展示的消息（例如助手回复）
+     * @param structuredModel 定义结构化输入格式的可选类
+     * @return 包含用户输入数据的 Mono
      */
     Mono<UserInputData> handleInput(
             String agentId, String agentName, List<Msg> contextMessages, Class<?> structuredModel);

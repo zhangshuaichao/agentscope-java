@@ -16,21 +16,15 @@
 package io.agentscope.harness.agent.sandbox.layout;
 
 /**
- * Declares a host directory (or file on Kubernetes) bind-mounted into the sandbox workspace at
- * the map key path under {@link io.agentscope.harness.agent.sandbox.WorkspaceSpec#getRoot()}.
+ * 声明绑定挂载到沙箱工作区的宿主目录（Kubernetes 下也可为文件），挂载位置为 {@link io.agentscope.harness.agent.sandbox.WorkspaceSpec#getRoot()} 下的映射键路径。
  *
- * <p>The {@link io.agentscope.harness.agent.sandbox.WorkspaceSpec} entry <strong>key</strong> is
- * the relative path inside the workspace (for example key {@code cache} →
- * {@code <workspaceRoot>/cache}). The {@link #hostPath} is an absolute path on the host (Docker)
- * or on the Kubernetes node (HostPath volume).
+ * <p>{@link io.agentscope.harness.agent.sandbox.WorkspaceSpec} 条目的<strong>键</strong>是工作区内相对路径（例如键 {@code cache} 对应 {@code <workspaceRoot>/cache}）。
+ * {@link #hostPath} 是宿主机（Docker）或 Kubernetes 节点（HostPath 卷）上的绝对路径。
  *
- * <p><strong>Backends:</strong> {@link io.agentscope.harness.agent.sandbox.impl.docker.DockerSandbox}
- * passes {@code -v host:container}; {@code kubernetes}
- * uses a HostPath volume + volumeMount. Cloud sandboxes (Daytona, E2B) ignore this entry at
- * runtime (see logs); use projection or provider-specific mounts there instead.
+ * <p><strong>后端：</strong>{@link io.agentscope.harness.agent.sandbox.impl.docker.DockerSandbox} 传入 {@code -v host:container}；{@code kubernetes} 使用 HostPath 卷和 volumeMount。
+ * 云沙箱（Daytona、E2B）运行时忽略此条目（参见日志），应改用投影或供应商专用挂载。
  *
- * <p><strong>Security:</strong> bind mounts expose host paths to sandbox workloads; only mount
- * paths you trust the model and tools to read or modify.
+ * <p><strong>安全：</strong>绑定挂载会将宿主路径暴露给沙箱工作负载；仅挂载你信任模型和工具可读取或修改的路径。
  */
 public class BindMountEntry extends WorkspaceEntry {
 

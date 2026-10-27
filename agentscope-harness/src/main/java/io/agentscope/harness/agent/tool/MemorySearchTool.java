@@ -28,11 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tool for searching through persisted memories (MEMORY.md and memory/*.md files).
+ * 搜索持久化记忆（MEMORY.md 与 memory/*.md 文件）的工具。
  *
- * <p>Uses keyword-based search through all memory files visible via the configured
- * {@link io.agentscope.harness.agent.filesystem.AbstractFilesystem} (works across Local,
- * Sandbox, and Store stores).
+ * <p>通过已配置的 {@link io.agentscope.harness.agent.filesystem.AbstractFilesystem}
+ * 对所有可见记忆文件执行关键词搜索（适用于 Local、Sandbox 和 Store 存储）。
  */
 public class MemorySearchTool {
 

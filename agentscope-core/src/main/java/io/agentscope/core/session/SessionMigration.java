@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** Offline migration/fork primitives. Source archives are retained; checkpoints never invent past facts. */
+/** 离线迁移／分叉原语。保留源归档；检查点绝不虚构过去的事实。 */
 public final class SessionMigration {
     private SessionMigration() {}
 

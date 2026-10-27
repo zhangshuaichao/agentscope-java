@@ -23,22 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Manages the lifecycle of {@link Sandbox} instances for the current call.
+ * 管理当前调用的 {@link Sandbox} 实例生命周期。
  *
- * <p>Acquire priority: {@link SandboxContext#getExternalSandbox()} &gt; {@link
- * SandboxContext#getExternalSandboxState()} &gt; persisted {@link SandboxState} &gt; {@link
- * SandboxClient#create}. When a persisted state exists but the resume fails, the fresh-create
- * fallback keeps the persisted snapshot id so the workspace restores from the previous archive
- * instead of silently resetting.
+ * <p>获取优先级：{@link SandboxContext#getExternalSandbox()} &gt; {@link SandboxContext#getExternalSandboxState()} &gt; 持久化的 {@link SandboxState} &gt; {@link SandboxClient#create}。
+ * 存在持久化状态但恢复失败时，新建回退保留持久化快照 ID，使工作区从旧归档恢复，而非悄然重置。
  *
- * <p>When a {@link SandboxExecutionGuard} is configured, the manager acquires an execution
- * {@link SandboxLease} before sandbox resume/create for isolation keys that are present. The
- * lease is carried by the {@link SandboxAcquireResult} and closed by the caller
- * ({@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware}) after {@link #release},
- * ensuring the full call window is covered.
+ * <p>配置 {@link SandboxExecutionGuard} 时，管理器在恢复／创建沙箱前，为存在的隔离键获取执行 {@link SandboxLease}。
+ * 租约通过 {@link SandboxAcquireResult} 携带，由调用方（{@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware}）在 {@link #release} 之后关闭，覆盖整个调用窗口。
  *
- * <p>Priority 1 (external sandbox) and Priority 2 (external sandbox state) bypass the guard,
- * since the caller is managing that sandbox externally.
+ * <p>优先级 1（外部沙箱）和优先级 2（外部沙箱状态）跳过保护器，因为调用方在外部管理该沙箱。
  */
 public class SandboxManager {
 
@@ -68,7 +61,7 @@ public class SandboxManager {
 
     public SandboxAcquireResult acquire(
             SandboxContext sandboxContext, RuntimeContext runtimeContext) throws Exception {
-        // Priority 1: user-supplied sandbox — guard does not apply
+        // 优先级 1：用户提供的沙箱，不应用保护器
         if (sandboxContext.getExternalSandbox() != null) {
             Sandbox external = sandboxContext.getExternalSandbox();
             log.debug(
@@ -77,7 +70,7 @@ public class SandboxManager {
             return SandboxAcquireResult.userManaged(external);
         }
 
-        // Priority 2: user-supplied state — guard does not apply
+        // 优先级 2：用户提供的状态，不应用保护器
         if (sandboxContext.getExternalSandboxState() != null) {
             Sandbox sandbox = client.resume(sandboxContext.getExternalSandboxState());
             log.debug(
@@ -86,7 +79,7 @@ public class SandboxManager {
             return SandboxAcquireResult.selfManaged(sandbox);
         }
 
-        // Priority 3 / 4: harness-managed — apply guard when a scope key is present
+        // 优先级 3 / 4：Harness 管理，存在作用域键时应用保护器
         Optional<SandboxIsolationKey> scopeKey =
                 SandboxIsolationKey.resolve(
                         sandboxContext.getIsolationScope(), runtimeContext, agentId);
@@ -109,7 +102,7 @@ public class SandboxManager {
                         SandboxState state =
                                 client.deserializeState(
                                         stateJson.get(), sandboxContext.getSnapshotSpec());
-                        // Overwrite stale WorkspaceSpec with current application config
+                        // 用当前应用配置覆盖过期的 WorkspaceSpec
                         if (sandboxContext.getWorkspaceSpec() != null) {
                             state.setWorkspaceSpec(sandboxContext.getWorkspaceSpec().copy());
                         }
@@ -148,19 +141,14 @@ public class SandboxManager {
             return SandboxAcquireResult.selfManaged(sandbox, lease);
 
         } catch (Exception e) {
-            // Guard must be released if acquire fails — the caller won't see the result
+            // 获取失败时必须释放保护器，因为调用方不会收到结果
             lease.close();
             throw e;
         }
     }
 
     /**
-     * Keeps workspace continuity when a failed resume falls through to a fresh create: points
-     * the new sandbox at the snapshot id persisted for this scope, so {@link Sandbox#start()}
-     * restores the workspace from the previous archive instead of silently resetting it, and
-     * {@link Sandbox#stop()} overwrites that same archive instead of orphaning it. The snapshot
-     * is rebuilt from the current spec, so it carries a bound client regardless of how the
-     * persisted state deserialized.
+     * 在恢复失败后回退新建时保持工作区连续性：让新沙箱指向此作用域持久化的快照 ID，使 {@link Sandbox#start()} 从旧归档恢复工作区，而非悄然重置；{@link Sandbox#stop()} 也会覆盖同一归档，而不留下孤立归档。快照根据当前规范重建，因此无论持久化状态如何反序列化，都携带已绑定客户端。
      */
     private static void carryOverPersistedSnapshotId(
             Sandbox sandbox, String persistedSnapshotId, SandboxSnapshotSpec snapshotSpec) {
@@ -190,10 +178,10 @@ public class SandboxManager {
             return;
         }
 
-        // User-managed sandboxes (Priority 1) are owned by the caller — the harness must not
-        // stop/snapshot or shutdown them, since the caller relies on the sandbox staying alive
-        // across multiple acquire/release cycles (e.g. a registry that reuses one container per
-        // user across the browser path and successive agent turns).
+        // 用户管理的沙箱（优先级 1）由调用方拥有，Harness 不得
+        // 停止、生成快照或关闭它们，因为调用方依赖沙箱跨越
+        // 多次获取／释放周期持续存活（例如注册表为每个用户复用同一容器，
+        // 供浏览器路径和后续智能体轮次使用）。
         if (!result.isSelfManaged()) {
             return;
         }
@@ -218,9 +206,9 @@ public class SandboxManager {
         if (result == null || result.getSandbox() == null) {
             return;
         }
-        // User-managed sandboxes carry their own persistence story (the registry owns the
-        // lifecycle). Writing through the harness state store would double-track state and
-        // could conflict with the caller's snapshot policy.
+        // 用户管理的沙箱自行负责持久化（注册表拥有
+        // 生命周期）。通过 Harness 状态存储写入会重复跟踪状态，
+        // 并可能与调用方的快照策略冲突。
         if (!result.isSelfManaged()) {
             return;
         }

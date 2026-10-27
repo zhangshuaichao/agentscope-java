@@ -29,22 +29,23 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Builtin web tools ({@code web_fetch}, {@code web_search}) for Managed Agents / Harness.
+ * Managed Agents／Harness 的内置 Web 工具（{@code web_fetch}、{@code web_search}）。
  *
- * <p>{@code web_search} uses the Tavily API when {@code TAVILY_API_KEY} (or vault-injected env) is
- * present; otherwise returns a clear configuration error.
+ * <p>存在 {@code TAVILY_API_KEY}（或凭据库注入的环境变量）时，
+ * {@code web_search} 使用 Tavily API；否则返回明确的配置错误。
  */
 public final class WebTools {
 
     private WebTools() {}
 
     /**
-     * Default client for the built-in web tools. Uses the JDK's default version negotiation
-     * (HTTP/2 preferred, transparently falling back to HTTP/1.1 when the server does not support
-     * it). If a target server misbehaves under HTTP/2 negotiation and returns empty responses
-     * (e.g. {@code HTTP/1.1 header parser received no bytes}, see issue #3101), inject an
-     * HTTP/1.1-only client via the {@code WebFetchTool(HttpClient)} / {@code WebSearchTool(HttpClient)}
-     * constructors or {@code HarnessAgent.Builder#webHttpClient(HttpClient)}.
+     * 内置 Web 工具的默认客户端。使用 JDK 默认版本协商
+     * （优先 HTTP/2，服务器不支持时透明回退到 HTTP/1.1）。若目标服务器
+     * 在 HTTP/2 协商时行为异常并返回空响应（例如
+     * {@code HTTP/1.1 header parser received no bytes}，参见 issue #3101），
+     * 可通过 {@code WebFetchTool(HttpClient)} / {@code WebSearchTool(HttpClient)}
+     * 构造器或 {@code HarnessAgent.Builder#webHttpClient(HttpClient)}
+     * 注入仅使用 HTTP/1.1 的客户端。
      */
     static HttpClient createDefaultHttpClient() {
         return HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build();
@@ -57,7 +58,9 @@ public final class WebTools {
             this(createDefaultHttpClient());
         }
 
-        /** Creates a tool that uses a caller-supplied client (custom proxy, SSL, HTTP version, ...). */
+        /**
+         * 创建使用调用方提供客户端的工具（自定义代理、SSL、HTTP 版本等）。
+         */
         public WebFetchTool(HttpClient client) {
             this.client = Objects.requireNonNull(client, "client");
         }
@@ -119,7 +122,9 @@ public final class WebTools {
             this(createDefaultHttpClient());
         }
 
-        /** Creates a tool that uses a caller-supplied client (custom proxy, SSL, HTTP version, ...). */
+        /**
+         * 创建使用调用方提供客户端的工具（自定义代理、SSL、HTTP 版本等）。
+         */
         public WebSearchTool(HttpClient client) {
             this.client = Objects.requireNonNull(client, "client");
         }

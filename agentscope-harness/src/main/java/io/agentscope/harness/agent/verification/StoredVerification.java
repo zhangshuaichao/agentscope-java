@@ -19,7 +19,9 @@ import io.agentscope.core.state.State;
 import io.agentscope.core.state.TaskRequirement;
 import io.agentscope.core.state.TaskVerification;
 
-/** Audit record retaining the criterion as checked, even after the active task switches. */
+/**
+ * 保留检查时验收条件的审计记录，即使活动任务已切换，也仍保留当时条件。
+ */
 public record StoredVerification(
         TaskVerification verification, TaskRequirement criterion, String actionRecordKey)
         implements State {}

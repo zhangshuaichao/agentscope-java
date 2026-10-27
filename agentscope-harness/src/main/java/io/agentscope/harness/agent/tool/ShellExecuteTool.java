@@ -25,12 +25,12 @@ import io.agentscope.harness.agent.filesystem.model.ExecuteResponse;
 import io.agentscope.harness.agent.filesystem.sandbox.AbstractSandboxFilesystem;
 
 /**
- * Shell execution tool backed by a {@link AbstractSandboxFilesystem}.
+ * 由 {@link AbstractSandboxFilesystem} 支持的 Shell 执行工具。
  */
 public class ShellExecuteTool {
 
     /**
-     * Registered tool name (derived from the {@link #execute} method name).
+     * 已注册工具名（由 {@link #execute} 方法名派生）。
      */
     public static final String NAME = "execute";
 
@@ -41,8 +41,8 @@ public class ShellExecuteTool {
     }
 
     /**
-     * @param runtimeContext per-call agent runtime injected by the framework (not an LLM argument);
-     *                       may be {@code null} when no merged context is available
+     * @param runtimeContext 框架注入的单次调用智能体运行时（不是 LLM 参数）；
+     *     没有合并上下文时可以为 {@code null}
      */
     @Tool(
             description =

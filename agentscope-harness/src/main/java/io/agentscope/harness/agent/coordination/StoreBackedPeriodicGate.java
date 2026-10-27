@@ -27,8 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Distributed {@link PeriodicGate} backed by {@link BaseStore#putIfVersion}. Enables cross-node
- * coordination of periodic background work (memory maintenance, skill curator, etc.).
+ * 基于 {@link BaseStore#putIfVersion} 的分布式 {@link PeriodicGate}。
+ * 用于跨节点协调周期性后台工作，例如记忆维护、技能整理等。
+ *
+ * <p>【学习提示】先读取时间戳与版本，再用 CAS 争抢本轮执行资格；竞争失败最多重读五次。
+ * 领取成功即写入时间戳，并不等待后台任务成功，因此这是最小间隔门控，不是任务事务或可续租锁。
+ * 实际跨节点互斥依赖存储正确实现条件写；机器时钟偏差也会影响间隔判断。
  */
 public final class StoreBackedPeriodicGate implements PeriodicGate {
 

@@ -19,7 +19,9 @@ import io.agentscope.core.state.TaskVerification;
 import io.agentscope.harness.agent.observation.StoredActionObservation;
 import java.util.Objects;
 
-/** Trusted, synchronous, bounded, side-effect-free check; never an LLM or command runner. */
+/**
+ * 可信、同步、有界且无副作用的检查；绝不是 LLM 或命令执行器。
+ */
 public interface DeterministicVerifier {
     String id();
 

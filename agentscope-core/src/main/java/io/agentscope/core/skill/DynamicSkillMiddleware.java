@@ -41,44 +41,23 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Dynamically composes skills from an ordered list of {@link AgentSkillRepository repositories}
- * on every {@code call()} via {@link #onSystemPrompt(Agent, RuntimeContext, String)}, replacing the static
- * skill prompt with a per-call view that supports per-user skill isolation and one-click
- * marketplace integration.
+ * 每次 {@code call()} 时，通过 {@link #onSystemPrompt(Agent, RuntimeContext, String)} 从有序的{@link AgentSkillRepository repositories}列表动态组合技能，以单次调用视图替换静态技能提示，支持按用户隔离技能及便捷接入技能市场。
  *
- * <p>The repository list is iterated low-priority first; when two repositories provide a skill
- * with the same {@link AgentSkill#getName()}, the later (higher-priority) entry wins.
+ * <p>仓库列表从低优先级开始遍历；若两个仓库提供相同 {@link AgentSkill#getName()} 的技能，后出现的高优先级条目胜出。
  *
- * <p>Rebuilding on every call is intentional: per-user namespaced repositories may return
- * different content under the same skill name as the {@link RuntimeContext} switches users, so
- * caching by skill id alone would mask those swaps. A content-addressed cache keyed by the
- * visible-view signature reuses an already-materialised (immutable) box when the visible content
- * is unchanged, so {@code uploadSkillFiles} only re-runs when content actually changes. No tools
- * are (re)registered on the shared toolkit.
+ * <p>有意在每次调用时重建：随着 {@link RuntimeContext} 切换用户，按用户命名空间划分的仓库可能为同名技能返回不同内容，仅按技能 ID 缓存会掩盖这些变化。以可见视图签名为键的内容寻址缓存，在可见内容不变时复用已物化的不可变 box，因此仅在内容真正变化时重新运行 {@code uploadSkillFiles}。不会随技能视图变化在共享工具包上重新注册工具。
  *
- * <p>Subclasses can plug runtime visibility logic (canary lists, environment gates, etc.) by
- * overriding {@link #filterVisible(List, RuntimeContext)} — the default implementation returns
- * the input list unchanged.
+ * <p>子类可重写 {@link #filterVisible(List, RuntimeContext)} 接入运行时可见性逻辑（灰度名单、环境限制等）；默认实现原样返回输入列表。
  *
- * <p>Contract:
+ * <p>【学习提示】这里分离了三种生命周期：仓库视图按调用重新读取，加载工具在工具包中共享，激活状态归当前会话。内容相同可复用物化目录，但目录中的执行副作用也会被后续同签名调用看到；内容寻址不等于文件系统隔离。
+ *
+ * <p>约定：
  * <ul>
- *   <li>Construction performs no registration; the shared {@code load_skill_through_path}
- *       tool is registered on the invoking agent's live toolkit at the first prompt pass —
- *       before tool schemas are enumerated, so it is visible to the model within the same
- *       call. {@link #registerSkillTools(Toolkit)} remains available for explicit manual
- *       wiring.</li>
- *   <li>Per-pass runtime objects resolve from the invoking agent: its live toolkit
- *       ({@link Agent#getToolkit()}) flows into box construction, its filter baseline and
- *       its stable work directory ({@link Agent#getSkillWorkDir()}) drive filtering and
- *       materialisation. Instances hold no per-agent runtime references.</li>
- *   <li>Same-signature cache hits share one materialised directory: skill-side modifications
- *       stay visible to later calls with the same content; changed content materialises a
- *       fresh, isolated directory.</li>
- *   <li>The framework creates a fresh {@link RuntimeContext} per call; every pass overwrites
- *       (or clears) the {@link SkillBox} binding.</li>
- *   <li>The effective filter composes the per-call context overlay on the invoking agent's
- *       baseline ({@link Agent#getSkillFilter()}), defaulting to {@link SkillFilter#all()}
- *       when the agent exposes none.</li>
+ * <li>构造时不注册工具；共享 {@code load_skill_through_path} 工具在首次提示处理时注册到调用智能体当前的工具包，早于工具模式枚举，因此模型在同次调用即可看到它。也可通过 {@link #registerSkillTools(Toolkit)} 手动配置。</li>
+ * <li>每次处理的运行时对象从调用智能体解析：当前工具包（{@link Agent#getToolkit()}）用于构建 box，过滤基线与稳定工作目录（{@link Agent#getSkillWorkDir()}）决定过滤和物化。实例不持有智能体专属运行时引用。</li>
+ * <li>同签名缓存命中共享一个物化目录：技能执行产生的修改对后续相同内容调用仍可见；内容变化则物化到新的隔离目录。</li>
+ * <li>框架为每次调用创建新的 {@link RuntimeContext}；每次处理都会覆盖或清除 {@link SkillBox} 绑定。</li>
+ * <li>生效过滤器将单次调用上下文的叠加规则应用到调用智能体的基线（{@link Agent#getSkillFilter()}）；智能体未提供时默认为 {@link SkillFilter#all()}。</li>
  * </ul>
  */
 @SuppressWarnings("deprecation")
@@ -92,38 +71,29 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
     private final boolean codeExecutionEnabled;
 
     /**
-     * JVM-wide fallback root for materialising {@link SkillBox} directories when the invoking
-     * agent provides none. Allocated once and cleaned up by a shutdown hook at JVM exit —
-     * preserving the pre-refactor dir-handling behaviour; agent-provided roots are
-     * caller-managed.
+     * 调用智能体未提供目录时，用于物化 {@link SkillBox} 目录的 JVM 全局备用根目录。只分配一次，通过关闭钩子在 JVM 退出时清理，保留重构前的目录处理行为；智能体提供的根目录由调用方管理。
      */
     private static volatile Path fallbackWorkDir;
 
-    /** Content-addressed cache of materialised {@link SkillBox}es, keyed by the visible-view
-     * signature. Boxes are immutable after build, so sharing them across sessions with identical
-     * content is safe and skips re-running {@code uploadSkillFiles}. */
+    /**
+     * 以可见视图签名为键、缓存已物化 {@link SkillBox} 的内容寻址缓存。box 构建后不可变，因此可由内容相同的会话安全共享，并避免重复运行 {@code uploadSkillFiles}。
+     */
     private final Map<String, SkillBox> boxCache = new LinkedHashMap<>();
 
     /**
-     * Convenience constructor delegating to the full constructor with code execution disabled.
+     * 便捷构造方法，委托给禁用代码执行的完整构造方法。
      *
-     * @param repositories compose-ordered list (low-to-high priority); merged by skill name
+     * @param repositories 按低到高优先级排序的仓库列表，按技能名称合并
      */
     public DynamicSkillMiddleware(List<AgentSkillRepository> repositories) {
         this(repositories, false);
     }
 
     /**
-     * Full constructor. Performs pure field initialisation; the shared load tool is registered
-     * at wiring time via {@link #registerSkillTools(Toolkit)} (called by the agent builder), or
-     * lazily before the first prompt pass when the instance is used outside agent assembly.
-     * Per-pass runtime objects — the box-construction toolkit, the filter baseline and the
-     * materialisation root — are resolved from the invoking agent.
+     * 完整构造方法，仅初始化字段。共享加载工具可在组装时通过 {@link #registerSkillTools(Toolkit)} 注册（由智能体构建器调用）；在智能体组装流程外使用时，也可延迟到首次提示处理前注册。每次处理使用的工具包、过滤基线和物化根目录均从调用智能体解析。
      *
-     * @param repositories         compose-ordered list (low-to-high priority); merged by skill name
-     * @param codeExecutionEnabled when {@code true}, toggles the prompt provider's code-execution
-     *                             block. Set this only when the agent has a shell-like tool wired
-     *                             in; otherwise the prompt asks the model to do things it cannot.
+     * @param repositories 按低到高优先级排序的仓库列表，按技能名称合并
+     * @param codeExecutionEnabled 为 {@code true} 时启用提示提供者的代码执行块；仅当智能体已接入类似 Shell 的工具时才应开启，否则提示会要求模型做无法执行的操作
      */
     public DynamicSkillMiddleware(
             List<AgentSkillRepository> repositories, boolean codeExecutionEnabled) {
@@ -132,58 +102,45 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
     }
 
     /**
-     * Registers the shared {@code load_skill_through_path} tool on the given toolkit. Invoked
-     * per prompt pass with the invoking agent's live toolkit (before tool schemas are
-     * enumerated, so the tool is visible within the same call); also callable directly for
-     * explicit manual wiring. No-op for a {@code null} toolkit or when a same-named tool
-     * already exists (never overwritten); because the guard inspects the toolkit, a removed
-     * tool is re-registered on the next call.
+     * 向给定工具包注册共享 {@code load_skill_through_path} 工具。每次提示处理时以调用智能体当前工具包调用，早于工具模式枚举，使工具在同次调用可见；也可直接调用以手动配置。工具包为 {@code null} 或已有同名工具时不操作（从不覆盖）。由于检查直接针对工具包，工具被移除后会在下次调用重新注册。
      *
-     * @param toolkit the toolkit to register the shared load tool on; may be {@code null}
+     * @param toolkit 接收共享加载工具的工具包，可以为 {@code null}
      */
     public void registerSkillTools(Toolkit toolkit) {
         if (toolkit == null || SkillToolFactory.isRuntimeLoadToolRegistered(toolkit)) {
             return;
         }
-        // The shared load tool resolves the current per-call SkillBox from the RuntimeContext,
-        // so the shared toolkit is never mutated per call.
+        // 共享加载工具从 RuntimeContext 解析当前调用的 SkillBox，
+        // 因此无需为每次调用的技能视图修改共享工具包。
         SkillToolFactory.registerRuntimeLoadTool(toolkit);
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /**
+     * 仅声明实际使用的钩子；子类若重写更多钩子，必须扩展此集合。
+     */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_SYSTEM_PROMPT);
     }
 
     /**
-     * Reloads the visible skill view and appends its rendered prompt to {@code currentPrompt}.
+     * 重新加载可见技能视图，并将渲染后的提示追加到 {@code currentPrompt}。
      *
-     * <p>The reload performs blocking I/O (repository reads, file materialization), so it runs on
-     * {@link Schedulers#boundedElastic()} rather than the subscribing thread, keeping reactive
-     * event-loop threads non-blocking. Semantics are unchanged: the reload still happens on every
-     * call, and the content-addressed box cache reuses an already-materialised box whenever the
-     * visible content is unchanged. The cache-hit fast path cannot stay on the calling thread
-     * because the cache key (the content signature) is only known after the blocking repository
-     * read, so the whole reload — including cache hits — moves to boundedElastic.
+     * <p>重载包含阻塞 I/O（仓库读取、文件物化），因此运行在 {@link Schedulers#boundedElastic()} 而不是订阅线程上，避免阻塞响应式事件循环。语义不变：每次调用仍会重载，而可见内容不变时内容寻址缓存复用已物化的 box。缓存命中的快速路径也无法留在调用线程，因为只有阻塞仓库读取之后才知道缓存键（内容签名），因此包括缓存命中在内的整个重载都移到 boundedElastic。
      *
-     * <p>Agent contract: the framework invokes this hook with a non-null {@code agent}; direct
-     * callers must supply one or accept the degraded behaviour of a null one (tolerated, not
-     * contractual).
+     * <p>智能体约定：框架调用此钩子时提供非 null 的 {@code agent}；直接调用方应提供智能体，否则只能接受 null 带来的降级行为（容忍但不承诺）。
      *
-     * @param agent the agent whose toolkit, skill-filter baseline and work dir drive this pass;
-     *     may be {@code null} for direct use outside agent assembly
-     * @param ctx the per-call {@link RuntimeContext}; {@code null} is treated as an empty context
-     * @param currentPrompt the system prompt composed so far by earlier middlewares
-     * @return the prompt with this call's skill section appended, or {@code currentPrompt}
-     *     unchanged when no skill is visible for this call
+     * @param agent 其工具包、技能过滤基线和工作目录决定此次处理的智能体；在组装流程外直接使用时可以为 {@code null}
+     * @param ctx 单次调用的 {@link RuntimeContext}；{@code null} 视为空上下文
+     * @param currentPrompt 此前中间件已组合的系统提示
+     * @return 追加本次技能部分后的提示；没有可见技能时原样返回 {@code currentPrompt}
      */
     @Override
     public Mono<String> onSystemPrompt(Agent agent, RuntimeContext ctx, String currentPrompt) {
-        // The tool follows the middleware binding: register on the invoking agent's live
-        // toolkit before the first prompt pass (idempotent — a same-named tool present
-        // means already registered). Runs before tool schemas are enumerated, so the
-        // load tool is visible to the model within the same call.
+        // 工具跟随中间件绑定：首次提示处理前注册到调用智能体当前的
+        // 工具包（幂等：存在同名工具即视为已注册）。
+        // 此操作早于工具模式枚举，因此加载工具
+        // 在同次调用中即可被模型看到。
         if (agent != null) {
             registerSkillTools(agent.getToolkit());
         }
@@ -191,17 +148,18 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
         return Mono.fromCallable(
                         () -> {
                             SkillBox box = reloadSkills(agent, rc);
-                            // Expose the current per-call SkillBox — or clear it when null — so
-                            // the shared load tool resolves this call's skill view and a reused
-                            // RuntimeContext never serves a stale box.
+                            // 暴露本次调用的 SkillBox，或在 null 时清除绑定，
+                            // 让共享加载工具解析本次技能视图，避免复用的
+                            // RuntimeContext 提供过期 box。
                             rc.put(SkillBox.class, box);
                             return appendSkillPrompt(agent, box, rc, currentPrompt);
                         })
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /** Returns {@code currentPrompt} with the box's rendered skill prompt appended, or {@code
-     * currentPrompt} unchanged when {@code box} is {@code null} or renders no prompt. */
+    /**
+     * 将 box 渲染的技能提示追加到 {@code currentPrompt} 后返回；若 {@code box} 为 {@code null} 或没有渲染出提示，则原样返回 {@code currentPrompt}。
+     */
     private String appendSkillPrompt(
             Agent agent, SkillBox box, RuntimeContext rc, String currentPrompt) {
         if (box == null) {
@@ -218,22 +176,21 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
     }
 
     /**
-     * Hook for subclasses to drop skills that should not be visible in the current request
-     * (canary releases, allow-lists, environment gates, …). Called once per {@code call()},
-     * after merging across repositories and before the {@link SkillBox} is rebuilt.
+     * 供子类移除当前请求不应看到的技能（灰度发布、允许名单、环境限制等）的钩子。每次 {@code call()} 调用一次，位于跨仓库合并之后、重建 {@link SkillBox} 之前。
      *
-     * <p>Default implementation returns {@code raw} unchanged.
+     * <p>默认实现原样返回 {@code raw}。
      *
-     * @param raw the merged, deduplicated skill list (low-to-high repository priority order)
-     * @param ctx the per-call {@link RuntimeContext}; never {@code null}
-     * @return the visible subset (must not be {@code null}; an empty list short-circuits the
-     *     prompt update for this call)
+     * @param raw 合并并去重后的技能列表（仓库优先级从低到高）
+     * @param ctx 单次调用的 {@link RuntimeContext}，不会为 {@code null}
+     * @return 可见子集（不得为 {@code null}；空列表会短路本次调用的提示更新）
      */
     protected List<AgentSkill> filterVisible(List<AgentSkill> raw, RuntimeContext ctx) {
         return raw;
     }
 
-    /** Effective filter = per-call context overlay on the invoking agent's baseline. */
+    /**
+     * 生效过滤器 = 在调用智能体基线之上叠加单次调用上下文规则。
+     */
     private SkillFilter resolveFilter(Agent agent, RuntimeContext rc) {
         SkillFilter baseline = resolveBaseline(agent);
         SkillFilter runtimeOverlay = rc != null ? rc.get(SkillFilter.class) : null;
@@ -277,8 +234,8 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
         if (skillsByName.isEmpty()) {
             return null;
         }
-        // Apply subclass visibility hook before the SkillBox is rebuilt so the prompt only
-        // sees skills the current ctx is allowed to see.
+        // 重建 SkillBox 前应用子类可见性钩子，确保提示
+        // 只包含当前 ctx 获准看到的技能。
         List<AgentSkill> visible;
         try {
             List<AgentSkill> filtered = filterVisible(new ArrayList<>(skillsByName.values()), ctx);
@@ -300,8 +257,8 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
             if (box == null) {
                 box = buildBox(agent, visible, signature);
                 if (boxCache.size() >= MAX_CACHED_BOXES) {
-                    // Only bound retained boxes. Active requests may still reference evicted
-                    // boxes and their files, so resource directories must remain available.
+                    // 仅限制保留的 box 数量。活动请求可能仍引用已淘汰的
+                    // box 及文件，因此资源目录必须保持可用。
                     boxCache.clear();
                 }
                 boxCache.put(signature, box);
@@ -312,8 +269,8 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
 
     private SkillBox buildBox(Agent agent, List<AgentSkill> visible, String signature) {
         SkillBox box = new SkillBox(agent != null ? agent.getToolkit() : null);
-        // Each materialization owns its directory. After eviction, rebuilding the same
-        // signature must not truncate files that an earlier request may still be reading.
+        // 每次物化都拥有独立目录。淘汰后重建同一签名时，
+        // 不得截断较早请求仍可能读取的文件。
         try {
             Path root = ensureStableWorkDir(agent);
             Files.createDirectories(root);
@@ -331,19 +288,16 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
                 log.warn("Failed to upload skill files: {}", e.getMessage());
             }
         }
-        // Toggle the code-execution prompt block: when codeExecutionEnabled, the prompt
-        // provider will either emit per-skill <files-root> entries (every visible skill has an
-        // originDir) or fall back to the single uploadDir template. Either way the LLM gets
-        // an addressable path instead of staring at a `load_skill_through_path` blob.
+        // 切换代码执行提示块：启用 codeExecutionEnabled 时，提示
+        // 提供者会输出每个技能的 <files-root>（所有可见技能均有
+        // originDir），或回退到单一 uploadDir 模板。两种方式都让 LLM
+        // 获得可寻址路径，而不是只有 `load_skill_through_path` 返回的内容块。
         box.getSkillPromptProvider().setCodeExecutionEnable(codeExecutionEnabled);
         return box;
     }
 
     /**
-     * Resolves the workDir for this pass: the invoking agent's stable directory when it
-     * provides one (caller-managed); otherwise the shared fallback root, lazily allocated on
-     * first call and registered for shutdown cleanup. Resource trees remain available while
-     * the JVM runs, including after cache eviction.
+     * 解析此次处理的 workDir：优先采用调用智能体提供的稳定目录（由调用方管理），否则使用首次调用时延迟分配并注册退出清理的共享备用根目录。JVM 运行期间资源树持续可用，即使对应缓存项已被淘汰。
      */
     private Path ensureStableWorkDir(Agent agent) {
         Path fromAgent = agent != null ? agent.getSkillWorkDir() : null;
@@ -396,10 +350,7 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
     }
 
     /**
-     * Build a deterministic SHA-256 over the merged visible skill view: per-skill {@code name +
-     * sha256(content) + sha256(sorted-resource-keys) + originDir}. Two reload calls with the same
-     * visible content produce the same signature, regardless of map iteration order, so the
-     * content-addressed {@link #boxCache} can reuse a box without re-uploading its files.
+     * 为合并后的可见技能视图计算确定性 SHA-256：每个技能使用 {@code name + sha256(content) + sha256(sorted-resource-keys) + originDir}。相同可见内容的两次重载生成相同签名，不受映射遍历顺序影响，因此内容寻址的 {@link #boxCache} 可复用 box，无需重新上传文件。
      */
     private static String computeSignature(List<AgentSkill> visible) {
         Set<String> sortedNames = new TreeSet<>();
@@ -451,9 +402,9 @@ public class DynamicSkillMiddleware implements MiddlewareBase {
         }
     }
 
-    /** Hashes a skill's full metadata (sorted keys, nested maps/lists recursively) so that custom
-     * fields rendered into the prompt (version/homepage/license/...) also participate in the
-     * content signature. */
+    /**
+     * 对技能的全部元数据做哈希（键排序，递归处理嵌套映射和列表），使渲染到提示中的自定义字段（version/homepage/license 等）也参与内容签名。
+     */
     private static void hashMetadata(MessageDigest md, Map<String, Object> metadata) {
         if (metadata == null) {
             return;

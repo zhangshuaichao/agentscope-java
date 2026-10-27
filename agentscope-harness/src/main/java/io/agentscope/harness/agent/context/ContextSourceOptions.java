@@ -18,7 +18,7 @@ package io.agentscope.harness.agent.context;
 import java.time.Duration;
 import java.util.Objects;
 
-/** Immutable loading settings. Default: five-second timeout and fail the request on errors. */
+/** 不可变的加载设置。默认超时为五秒，发生错误时使请求失败。 */
 public record ContextSourceOptions(Duration timeout, SourceFailurePolicy onFailure) {
     public ContextSourceOptions {
         Objects.requireNonNull(timeout);

@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-/** Shared boundary for registered tools and runtime-owned synthetic tool paths. */
+/** 注册工具与运行时管理的合成工具路径共同使用的边界。 */
 public final class ActionObservations {
     private static final Logger log = LoggerFactory.getLogger(ActionObservations.class);
 

@@ -16,14 +16,13 @@
 package io.agentscope.harness.agent.gateway.channel;
 
 /**
- * Classification of the conversation peer, used for session key construction and DM-scope
- * resolution.
+ * 对话对端分类，用于会话键构建与私聊作用域解析。
  *
  * <ul>
- *   <li>{@link #DIRECT} — one-to-one DM / private conversation
- *   <li>{@link #CHANNEL} — public or private channel / room
- *   <li>{@link #GROUP} — group chat (WhatsApp group, Telegram supergroup, etc.)
- *   <li>{@link #THREAD} — thread nested inside a {@link #CHANNEL} or {@link #GROUP} peer
+ *   <li>{@link #DIRECT} — 一对一私聊
+ *   <li>{@link #CHANNEL} — 公共或私有频道／房间
+ *   <li>{@link #GROUP} — 群聊（WhatsApp 群组、Telegram 超级群组等）
+ *   <li>{@link #THREAD} — 嵌套于 {@link #CHANNEL} 或 {@link #GROUP} 对端内的线程
  * </ul>
  */
 public enum PeerKind {
@@ -42,12 +41,16 @@ public enum PeerKind {
         return value;
     }
 
-    /** Whether this peer kind represents a direct (one-to-one) message. */
+    /**
+     * 此对端类型是否表示直接（一对一）消息。
+     */
     public boolean isDirect() {
         return this == DIRECT;
     }
 
-    /** Whether this peer kind represents a thread nested inside another peer. */
+    /**
+     * 此对端类型是否表示嵌套在其他对端内的线程。
+     */
     public boolean isThread() {
         return this == THREAD;
     }

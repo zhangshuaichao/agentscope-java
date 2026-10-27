@@ -24,31 +24,30 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory implementation of the {@link AgentStateStore} interface.
+ * {@link AgentStateStore} 接口的内存实现。
  *
- * <p>This implementation stores agent state in memory using a {@link ConcurrentHashMap}. It is
- * suitable for single-process applications where persistence across restarts is not required.
+ * <p>使用 {@link ConcurrentHashMap} 在内存中保存智能体状态，
+ * 适用于不要求跨重启持久化的单进程应用。
  *
- * <p><b>Slot key:</b> the {@code (userId, sessionId)} pair is the storage slot. {@code null}
- * userId is mapped to the literal {@code "__anon__"} bucket so anonymous sessions don't
- * collide with users actually named {@code ""}.
+ * <p><b>槽位键：</b>{@code (userId, sessionId)} 二元组标识存储槽位。
+ * {@code null} userId 映射到字面量为 {@code "__anon__"} 的分区，
+ * 避免匿名会话与实际名称为 {@code ""} 的用户冲突。
  *
- * <p><b>Thread Safety:</b> this class is thread-safe.
+ * <p><b>线程安全：</b>此类是线程安全的。
  *
- * <p><b>Limitations:</b>
- *
+ * <p><b>限制：</b>
  * <ul>
- *   <li>State is lost when the JVM exits
- *   <li>Not suitable for distributed environments
- *   <li>Memory usage grows with the number of sessions
+ *   <li>JVM 退出后状态丢失
+ *   <li>不适用于分布式环境
+ *   <li>内存使用量随会话数量增长
  * </ul>
  */
 public class InMemoryAgentStateStore implements AgentStateStore {
 
-    /** Sentinel namespace for callers that pass {@code userId == null}. */
+    /** 为传入 {@code userId == null} 的调用方保留的哨兵命名空间。 */
     private static final String ANON_USER = "__anon__";
 
-    /** users → (sessionId → SessionData) */
+    /** 用户 →（sessionId → SessionData） */
     private final Map<String, Map<String, SessionData>> users = new ConcurrentHashMap<>();
 
     @Override
@@ -90,9 +89,9 @@ public class InMemoryAgentStateStore implements AgentStateStore {
     public long saveIfVersion(
             String userId, String sessionId, String key, State value, long expectedVersion) {
         if (expectedVersion == UNVERSIONED) {
-            // Write and version read in one synchronized section — save() plus a separate
-            // lookup could leak a concurrent writer's version when one instance is shared.
-            // Does not delegate to the overridable save() (mirrors JDBC #3220).
+            // 在同一个同步区间内完成写入和版本读取；若先 save() 再单独
+            // 查询，共享实例时可能返回其他并发写入方的版本。
+            // 不委派给可重写的 save()（与 JDBC #3220 保持一致）。
             SessionData data = lookupOrCreate(userId, sessionId);
             return data.setSingleStateReturningVersion(key, value);
         }
@@ -174,12 +173,12 @@ public class InMemoryAgentStateStore implements AgentStateStore {
         return new HashSet<>(userBucket.keySet());
     }
 
-    /** Total number of {@code (userId, sessionId)} slots currently stored. */
+    /** 当前存储的 {@code (userId, sessionId)} 槽位总数。 */
     public int getSessionCount() {
         return users.values().stream().mapToInt(Map::size).sum();
     }
 
-    /** Wipe everything (useful for testing). */
+    /** 清空所有数据（便于测试）。 */
     public void clearAll() {
         users.clear();
     }
@@ -211,7 +210,7 @@ public class InMemoryAgentStateStore implements AgentStateStore {
 
     private record VersionedEntry(State value, long version) {}
 
-    /** Internal class to hold session data. */
+    /** 保存会话数据的内部类。 */
     private static class SessionData {
         private final Map<String, VersionedEntry> singleStates = new ConcurrentHashMap<>();
         private final Map<String, List<State>> listStates = new ConcurrentHashMap<>();
@@ -221,9 +220,9 @@ public class InMemoryAgentStateStore implements AgentStateStore {
         }
 
         /**
-         * Unconditional write returning the version assigned to this write, atomic with it.
-         * Used by {@code saveIfVersion(..., UNVERSIONED)} so the caller never observes a
-         * concurrent writer's version.
+         * 无条件写入，并原子地返回本次写入获得的版本。
+         * 供 {@code saveIfVersion(..., UNVERSIONED)} 使用，
+         * 确保调用方不会读到其他并发写入方的版本。
          */
         synchronized long setSingleStateReturningVersion(String key, State value) {
             VersionedEntry prev = singleStates.get(key);

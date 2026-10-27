@@ -20,12 +20,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
- * JSON Schema definition for structured outputs.
+ * 用于结构化输出的 JSON Schema 定义。
  *
- * <p>This class represents a JSON Schema that defines the structure
- * of the expected response from the model.
+ * <p>此类表示一个 JSON Schema，用来定义预期模型响应的结构。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * JsonSchema schema = JsonSchema.builder()
  *     .name("MathResponse")
@@ -46,19 +45,27 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class JsonSchema {
 
-    /** The name of the schema. */
+    /**
+     * 模式名称。
+     */
     @JsonProperty("name")
     private String name;
 
-    /** Optional description of what the schema represents. */
+    /**
+     * 对该模式含义的可选说明。
+     */
     @JsonProperty("description")
     private String description;
 
-    /** The JSON Schema definition. */
+    /**
+     * JSON Schema 定义。
+     */
     @JsonProperty("schema")
     private Map<String, Object> schema;
 
-    /** Whether to enable strict mode for schema validation. */
+    /**
+     * 是否启用模式校验的严格模式。
+     */
     @JsonProperty("strict")
     private Boolean strict;
 

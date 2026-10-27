@@ -33,19 +33,18 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * {@link ToolBase} subclass that wraps an MCP (Model Context Protocol) tool.
+ * 包装 MCP（Model Context Protocol，模型上下文协议）工具的 {@link ToolBase} 子类。
  *
- * <p>Bridges remote MCP tools to the AgentScope tool system so they participate in permission
- * evaluation and the agent's pending-confirmation flow alongside built-in and {@code @Tool} tools.
+ * <p>将远程 MCP 工具接入 AgentScope 工具体系，使其与内置工具及 {@code @Tool} 工具一样参与权限评估和智能体的待确认流程。
  *
- * <p>Features:
+ * <p>【学习提示】工具参数模式、执行权限和请求元数据是三条不同路径：模式供模型生成参数，权限由调用流程评估，元数据是否出进程受工具级与连接级开关共同限制。禁用元数据传播不等于禁止远程工具执行。
+ *
+ * <p>功能：
  * <ul>
- *   <li>Translates AgentScope tool calls into MCP protocol calls.
- *   <li>Merges caller arguments with preset arguments configured at registration time.
- *   <li>Converts MCP results into AgentScope {@link ToolResultBlock}s.
- *   <li>Surfaces permission policy via {@link #checkPermissions(Map, PermissionContextState)}: read-only
- *       MCP tools auto-allow; everything else requires explicit user authorization (matches the
- *       Python {@code MCPTool} default).
+ * <li>将 AgentScope 工具调用转换为 MCP 协议调用。
+ * <li>合并调用方参数与注册时配置的预设参数。
+ * <li>将 MCP 结果转换为 AgentScope {@link ToolResultBlock}。
+ * <li>通过 {@link #checkPermissions(Map, PermissionContextState)} 暴露权限策略：只读 MCP 工具自动放行，其余工具需要用户明确授权（与 Python {@code MCPTool} 的默认行为一致）。
  * </ul>
  */
 public class McpTool extends ToolBase {
@@ -53,9 +52,7 @@ public class McpTool extends ToolBase {
     private static final Logger logger = LoggerFactory.getLogger(McpTool.class);
 
     /**
-     * Upper bound for a server-supplied display title, matching the one-line label width already used
-     * for tool names in {@code AgentTraceMiddleware}. A truncated title spends the last three on
-     * {@link #ELLIPSIS}, so a sanitised title never exceeds this many code points.
+     * 服务端显示标题的长度上限，与 {@code AgentTraceMiddleware} 中工具名称使用的单行标签宽度一致。截断时最后三个位置用于 {@link #ELLIPSIS}，因此清理后的标题不会超过此码点数。
      */
     private static final int MAX_DISPLAY_TITLE_LENGTH = 120;
 
@@ -70,21 +67,15 @@ public class McpTool extends ToolBase {
     private final Map<String, Object> presetArguments;
 
     /**
-     * Per-tool restriction for request metadata propagation. Effective propagation requires both
-     * this flag and the connection-level {@link McpClientWrapper#isPropagateMeta()} to be {@code
-     * true} (logical AND): the wrapper flag is read live on every tool call, while this flag is
-     * fixed at registration time (from {@code McpClientManager}) and can only further restrict
-     * propagation for this specific tool.
+     * 针对单个工具的请求元数据传播限制。只有此标志与连接级 {@link McpClientWrapper#isPropagateMeta()} 均为 {@code true} 时才实际传播（逻辑与）：包装器标志在每次调用时实时读取，而此标志在注册时（由 {@code McpClientManager}）确定，只能进一步限制该工具的传播。
      *
-     * <p>Note the two switches have different memory: an explicit {@code true} recorded here at
-     * registration time is remembered, so a tool can start propagating again once the operator
-     * re-enables a connection that was built with {@code propagateMeta(false)} — whereas the
-     * connection-level switch is always the live ceiling and cannot be overruled while it is
-     * {@code false}.
+     * <p>两个开关保留的状态不同：注册时在此明确记录的 {@code true} 会被记住，因此操作方重新启用以 {@code propagateMeta(false)} 构建的连接后，工具可恢复传播；连接级开关始终是实时上限，为 {@code false} 时不能被覆盖。
      */
     private volatile boolean propagateMeta = true;
 
-    /** Preferred constructor used by {@link io.agentscope.core.tool.McpClientManager}. */
+    /**
+     * 供 {@link io.agentscope.core.tool.McpClientManager} 使用的首选构造方法。
+     */
     public McpTool(
             String name,
             String description,
@@ -106,7 +97,9 @@ public class McpTool extends ToolBase {
                 readOnly);
     }
 
-    /** Registers a namespaced model-facing name while calling the original MCP tool name. */
+    /**
+     * 注册带命名空间、面向模型的名称，实际调用仍使用原始 MCP 工具名。
+     */
     public McpTool(
             String name,
             String remoteToolName,
@@ -131,13 +124,9 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * As {@link #McpTool(String, String, String, Map, Map, McpClientWrapper, Map, String, boolean)}
-     * additionally carrying the MCP server's human-readable display title, surfaced through
-     * {@link #getTitle()}.
+     * 与 {@link #McpTool(String, String, String, Map, Map, McpClientWrapper, Map, String, boolean)} 相同，但额外携带 MCP 服务端提供的人类可读显示标题，并通过 {@link #getTitle()} 暴露。
      *
-     * @param title display name for end users, or {@code null} when the server provides none; the
-     *     value is sanitised for display, so a server cannot inject line breaks or bidi overrides
-     *     into a permission prompt
+     * @param title 面向最终用户的显示名称；服务端未提供时为 {@code null}；该值会经过显示清理，避免服务端向权限提示注入换行或双向文本覆盖字符
      */
     public McpTool(
             String name,
@@ -166,9 +155,7 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * @deprecated Use {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String,
-     *     boolean)} so the MCP server name and read-only hint are propagated. Kept for source
-     *     compatibility with callers that pre-date the {@link ToolBase} integration.
+     * @deprecated 请使用 {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String, boolean)} 以传播 MCP 服务端名称和只读提示。保留此方法以兼容 {@link ToolBase} 集成之前的调用方源码。
      */
     @Deprecated(since = "2.0.0")
     public McpTool(
@@ -188,8 +175,7 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * @deprecated Use {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String,
-     *     boolean)} so the MCP server name and read-only hint are propagated.
+     * @deprecated 请使用 {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String, boolean)} 以传播 MCP 服务端名称和只读提示。
      */
     @Deprecated(since = "2.0.0")
     public McpTool(
@@ -210,8 +196,7 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * @deprecated Use {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String,
-     *     boolean)} so the MCP server name and read-only hint are propagated.
+     * @deprecated 请使用 {@link #McpTool(String, String, Map, Map, McpClientWrapper, Map, String, boolean)} 以传播 MCP 服务端名称和只读提示。
      */
     @Deprecated(since = "2.0.0")
     public McpTool(
@@ -253,31 +238,26 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Executes this MCP tool asynchronously with the given parameters.
+     * 使用给定参数异步执行此 MCP 工具。
      *
-     * <p>This method merges any preset arguments with the input arguments (input takes precedence),
-     * calls the remote MCP tool via the client wrapper, and converts the result to a
-     * {@link ToolResultBlock}. If an error occurs, it returns an error result instead of failing.
+     * <p>合并预设参数与输入参数（输入优先），通过客户端包装器调用远程 MCP 工具，并将结果转换为 {@link ToolResultBlock}。发生错误时返回错误结果，而不是以失败信号结束。
      *
-     * <p>Request metadata (user {@link McpMeta} entries plus the framework tool-call id) is
-     * propagated to the MCP server only when both {@link #isPropagateMeta()} and the
-     * connection-level {@link McpClientWrapper#isPropagateMeta()} are {@code true} (logical AND);
-     * otherwise the {@code meta} field is omitted from the request entirely.
+     * <p>仅当 {@link #isPropagateMeta()} 和连接级 {@link McpClientWrapper#isPropagateMeta()} 均为 {@code true}（逻辑与）时，才向 MCP 服务端传播请求元数据（用户 {@link McpMeta} 条目及框架工具调用 ID）；否则请求中完全省略 {@code meta} 字段。
      *
-     * @param param The tool call parameters containing toolUseBlock, input, and agent
-     * @return a Mono that emits the tool result when the MCP call completes
+     * @param param 工具调用参数，包含 toolUseBlock、input 和 agent
+     * @return MCP 调用完成后发出工具结果的 Mono
      */
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
         logger.debug("Calling MCP tool '{}' with input: {}", getName(), param.getInput());
 
-        // Merge preset arguments with input arguments
+        // 合并预设参数与输入参数。
         Map<String, Object> mergedArgs = mergeArguments(param.getInput());
 
-        // Propagate request metadata only when both switches allow it; null omits the MCP
-        // `_meta` field entirely so no metadata (user McpMeta entries nor the tool-call id)
-        // leaves the process. The wrapper switch is read live so disabling a connection takes
-        // effect immediately, even for tools registered earlier.
+        // 仅当两个开关均允许时才传播请求元数据；null 会完全省略 MCP
+        // `_meta` 字段，使任何元数据（用户 McpMeta 条目及工具调用 ID）
+        // 都不会离开进程。包装器开关实时读取，因此禁用连接
+        // 会立即生效，即使工具早已注册。
         boolean propagate = propagateMeta && clientWrapper.isPropagateMeta();
         Map<String, Object> metaMap = propagate ? buildMetaMap(param) : null;
 
@@ -299,62 +279,54 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Checks whether this tool allows request metadata propagation.
+     * 检查此工具是否允许传播请求元数据。
      *
-     * <p>This is a per-tool restriction only: the actual decision also ANDs the connection-level
-     * {@link McpClientWrapper#isPropagateMeta()}, which is read live on every tool call.
+     * <p>这只是单工具限制：实际决策还要与每次调用实时读取的连接级 {@link McpClientWrapper#isPropagateMeta()} 做逻辑与。
      *
-     * @return true if this tool permits user {@link McpMeta} entries and the tool-call id to be
-     *     included in tool call requests, false otherwise
+     * @return 若允许工具调用请求包含用户 {@link McpMeta} 条目及工具调用 ID，则为 true，否则为 false
      */
     public boolean isPropagateMeta() {
         return propagateMeta;
     }
 
     /**
-     * Configures whether this tool allows request metadata propagation.
+     * 配置此工具是否允许传播请求元数据。
      *
-     * <p>The initial value is fixed at registration time (registration-level override, or {@code
-     * true} by default). Setting this to {@code false} permanently restricts this tool; setting it
-     * back to {@code true} only re-enables propagation if the connection-level switch on
-     * {@link McpClientWrapper} also allows it.
+     * <p>初始值在注册时确定（注册级覆盖值，默认 {@code true}）。设为 {@code false} 会持续限制此工具；重新设为 {@code true} 后，也只有 {@link McpClientWrapper} 的连接级开关允许时才恢复传播。
      *
-     * @param propagateMeta true to allow metadata propagation for this tool (default), false to
-     *     omit the {@code meta} field entirely from this tool's requests
+     * @param propagateMeta true 表示允许此工具传播元数据（默认）；false 表示在其请求中完全省略 {@code meta} 字段
      */
     public void setPropagateMeta(boolean propagateMeta) {
         this.propagateMeta = propagateMeta;
     }
 
     /**
-     * Gets the name of the MCP client that provides this tool.
+     * 获取提供此工具的 MCP 客户端名称。
      *
-     * @return the MCP client name
+     * @return MCP 客户端名称
      */
     public String getClientName() {
         return clientWrapper.getName();
     }
 
     /**
-     * Gets the preset arguments configured for this tool.
+     * 获取此工具配置的预设参数。
      *
-     * @return the preset arguments, or null if none configured
+     * @return 预设参数；未配置时为 null
      */
     public Map<String, Object> getPresetArguments() {
         return presetArguments != null ? new HashMap<>(presetArguments) : null;
     }
 
     /**
-     * Merges input arguments with preset arguments.
-     * Input arguments take precedence over preset arguments.
+     * 合并输入参数与预设参数，输入参数优先。
      *
-     * <p>Package-private for direct unit testing of the defensive {@code null} branches that
-     * {@link ToolCallParam#getInput()} cannot reach in production.
+     * <p>使用包级可见性，以便直接单元测试 {@link ToolCallParam#getInput()} 在生产环境无法到达的防御性 {@code null} 分支。
      *
-     * @param input the input arguments
-     * @return merged arguments
+     * @param input 输入参数
+     * @return 合并后的参数
      */
-    // Visible for testing; not an extension point for subclasses (see javadoc above).
+    // 为测试提供可见性，不作为子类扩展点（参见上方 Javadoc）。
     Map<String, Object> mergeArguments(Map<String, Object> input) {
         if (presetArguments == null || presetArguments.isEmpty()) {
             return input != null ? input : new HashMap<>();
@@ -368,14 +340,12 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Builds the request metadata for a tool call.
+     * 构建工具调用的请求元数据。
      *
-     * <p>Extracts MCP meta from the runtime context by the {@link McpMeta} type namespace and
-     * attaches the framework tool-call id. Transport metadata is not model input and must not
-     * alter the tool schema.
+     * <p>从运行时上下文的 {@link McpMeta} 类型命名空间提取 MCP 元数据，并附加框架工具调用 ID。传输元数据不是模型输入，不应改变工具模式。
      *
-     * @param param the tool call parameters
-     * @return the request metadata map, possibly empty but never null
+     * @param param 工具调用参数
+     * @return 请求元数据映射，可以为空但不会为 null
      */
     private Map<String, Object> buildMetaMap(ToolCallParam param) {
         Map<String, Object> meta = new HashMap<>(extractMcpMeta(param));
@@ -386,10 +356,10 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Extracts MCP meta from the given tool call parameters.
+     * 从给定工具调用参数中提取 MCP 元数据。
      *
-     * @param param the tool call parameters
-     * @return the extracted MCP meta
+     * @param param 工具调用参数
+     * @return 提取出的 MCP 元数据
      */
     private Map<String, Object> extractMcpMeta(ToolCallParam param) {
         if (param == null || param.getRuntimeContext() == null) {
@@ -403,18 +373,14 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Resolve the human-readable display title an MCP server provides for a tool.
+     * 解析 MCP 服务端为工具提供的人类可读显示标题。
      *
-     * <p>The MCP spec keeps {@code Tool.title} for display purposes and allows the same value under
-     * {@code ToolAnnotations.title}; both are optional and neither is the model-facing
-     * {@code description}. Registration uses this so a caller rendering a permission confirmation
-     * can label the operation for an end user instead of showing the programmatic name.
+     * <p>MCP 规范将 {@code Tool.title} 用于显示，也允许在 {@code ToolAnnotations.title} 中提供相同值；两者均可选，且都不是面向模型的 {@code description}。注册时使用此标题，让权限确认界面能为最终用户标注操作，而不只显示程序名称。
      *
-     * <p>Both candidates pass through {@link #sanitizeDisplayTitle(String)}: the winner is whatever
-     * the MCP server typed, and it is shown to a human who is about to approve an action.
+     * <p>两个候选值都经过 {@link #sanitizeDisplayTitle(String)}：最终采用的内容来自 MCP 服务端，并展示给即将批准操作的人。
      *
-     * @param tool the MCP tool definition, may be {@code null}
-     * @return the first non-blank sanitised title, or {@code null} when the server provides none
+     * @param tool MCP 工具定义，可以为 {@code null}
+     * @return 首个非空白且已清理的标题；服务端未提供时为 {@code null}
      */
     public static String resolveDisplayTitle(McpSchema.Tool tool) {
         if (tool == null) {
@@ -428,19 +394,12 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Normalise a server-supplied label before it reaches a human.
+     * 在向用户展示之前规范化服务端提供的标签。
      *
-     * <p>Two classes of character are removed rather than escaped, because a prompt cannot escape
-     * its way out of them: zero-width and directional-format characters ({@code Cf}, e.g. U+202E
-     * RIGHT-TO-LEFT OVERRIDE) reorder the rest of the line the reader sees, and C0/C1 controls and
-     * whitespace let the label inject extra lines into a confirmation dialog. Whitespace runs
-     * collapse to one space so the label stays on a single line, and the result is capped at {@link
-     * #MAX_DISPLAY_TITLE_LENGTH} code points (an emoji counts as one), which makes cutting a
-     * surrogate pair in half impossible.
+     * <p>两类字符直接移除而不是转义，因为仅靠转义无法消除其显示影响：零宽和方向格式字符（{@code Cf}，例如 U+202E RIGHT-TO-LEFT OVERRIDE）会重排读者看到的该行内容；C0/C1 控制字符和空白可能向确认对话框注入额外行。连续空白折叠为一个空格以保持单行，结果限制为 {@link #MAX_DISPLAY_TITLE_LENGTH} 个码点（一个 emoji 计为一个），避免截断代理项对。
      *
-     * @param title the raw server value, may be {@code null}
-     * @return the displayable form, or {@code null} when nothing printable survives (so callers fall
-     *     back to {@link #getName()} instead of showing an empty label)
+     * @param title 服务端原始值，可以为 {@code null}
+     * @return 可显示形式；没有剩余可打印内容时为 {@code null}（调用方于是回退到 {@link #getName()}，避免显示空标签）
      */
     private static String sanitizeDisplayTitle(String title) {
         if (title == null) {
@@ -464,13 +423,11 @@ public class McpTool extends ToolBase {
     }
 
     /**
-     * Converts an MCP tool inputSchema map to AgentScope parameters format.
-     * MCP SDK 2.0 represents inputSchema as a raw JSON Schema map, so this method
-     * preserves all schema keywords while normalizing the object keywords used for
-     * preset-parameter filtering.
+     * 将 MCP 工具的 inputSchema 映射转换为 AgentScope 参数格式。
+     * MCP SDK 2.0 以原始 JSON Schema 映射表示 inputSchema，因此这里保留全部模式关键字，仅规范化预设参数过滤使用的对象关键字。
      *
-     * @param inputSchema the raw input schema map (JSON Schema)
-     * @return parameters map in AgentScope format
+     * @param inputSchema 原始输入模式映射（JSON Schema）
+     * @return AgentScope 格式的参数映射
      */
     public static Map<String, Object> convertMcpSchemaToParameters(
             Map<String, Object> inputSchema, Set<String> excludeParams) {
@@ -504,7 +461,7 @@ public class McpTool extends ToolBase {
             }
         }
 
-        // Exclude preset parameters from the schema
+        // 从模式中排除预设参数。
         if (excludeParams != null) {
             required.removeAll(excludeParams);
             properties.keySet().removeAll(excludeParams);

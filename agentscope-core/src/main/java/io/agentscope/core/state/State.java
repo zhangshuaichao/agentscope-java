@@ -16,14 +16,14 @@
 package io.agentscope.core.state;
 
 /**
- * Marker interface for persistable state objects.
+ * 可持久化状态对象的标记接口。
  *
- * <p>Classes implementing this interface can be serialized and stored by {@link
- * io.agentscope.core.state.AgentStateStore} implementations. The recommended approach is to use Java
- * Records for simple state objects.
+ * <p>实现此接口的类可以由 {@link
+ * io.agentscope.core.state.AgentStateStore} 实现序列化并存储。对于简单状态对象，
+ * 建议使用 Java Record。
  *
- * <p>Existing domain objects (like {@link io.agentscope.core.message.Msg}) can implement this
- * interface directly to avoid conversion overhead.
+ * <p>现有领域对象（例如 {@link io.agentscope.core.message.Msg}）可直接实现此接口，
+ * 避免额外的转换开销。
  *
  * @see io.agentscope.core.state.AgentStateStore
  */

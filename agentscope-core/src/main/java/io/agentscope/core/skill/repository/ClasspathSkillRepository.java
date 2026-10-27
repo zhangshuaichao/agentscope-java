@@ -34,20 +34,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ClasspathSkillRepository - Loads skills from classpath resources and JAR files.
+ * ClasspathSkillRepository：从类路径资源和 JAR 文件加载技能。
  *
- * <p>This repository bridges the gap between JAR resources and file system based skill loading by:
+ * <p>此仓库通过以下步骤，衔接 JAR 资源与基于文件系统的技能加载：
  * <ol>
- *   <li>Creating a virtual file system for resources within JAR files</li>
- *   <li>Obtaining Path objects for skill directories</li>
- *   <li>Delegating skill I/O to {@link SkillFileSystemHelper}</li>
+ *   <li>为 JAR 内资源创建虚拟文件系统</li>
+ *   <li>获取技能目录的 Path 对象</li>
+ *   <li>将技能 I/O 委派给 {@link SkillFileSystemHelper}</li>
  * </ol>
  *
- * <p><b>Important:</b> Skills must be organized in a parent directory structure. You should pass
- * the parent directory name (not individual skill paths). This is required because the repository
- * scans a directory for multiple skill subdirectories.
+ * <p><b>重要：</b>技能必须组织在父目录下。应传入父目录名，而非单个技能路径，
+ * 因为仓库会扫描该目录下的多个技能子目录。
  *
- * <p><b>Directory Structure:</b>
+ * <p><b>目录结构：</b>
  * <pre>
  * resources/
  * └── skills/              ← Pass "skills" to repository
@@ -59,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *         └── SKILL.md
  * </pre>
  *
- * <p><b>Usage example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * // Load from parent directory containing multiple skills
  * try (ClasspathSkillRepository repository = new ClasspathSkillRepository("skills")) {
@@ -73,7 +72,6 @@ import org.slf4j.LoggerFactory;
  *     List<AgentSkill> allSkills = repository.getAllSkills();
  * }
  * }</pre>
- *
  */
 public class ClasspathSkillRepository implements AgentSkillRepository {
 
@@ -92,32 +90,32 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
-     * Creates a repository for loading skills from resources.
+     * 创建从资源加载技能的仓库。
      *
-     * @param resourcePath The path to the skill under resources, e.g., "writing-skills"
-     * @throws IOException if initialization fails
+     * @param resourcePath resources 下技能的路径，例如 "writing-skills"
+     * @throws IOException 初始化失败时抛出
      */
     public ClasspathSkillRepository(String resourcePath) throws IOException {
         this(resourcePath, null, ClasspathSkillRepository.class.getClassLoader());
     }
 
     /**
-     * Creates a repository for loading skills from resources with a custom source.
+     * 创建从资源加载技能、并带自定义来源的仓库。
      *
-     * @param resourcePath The path to the skill under resources, e.g., "writing-skills"
-     * @param source The custom source identifier (null to use default)
-     * @throws IOException if initialization fails
+     * @param resourcePath resources 下技能的路径，例如 "writing-skills"
+     * @param source 自定义来源标识符（null 表示使用默认值）
+     * @throws IOException 初始化失败时抛出
      */
     public ClasspathSkillRepository(String resourcePath, String source) throws IOException {
         this(resourcePath, source, ClasspathSkillRepository.class.getClassLoader());
     }
 
     /**
-     * Creates a repository for loading skills from resources using a specific ClassLoader.
+     * 创建使用指定 ClassLoader 从资源加载技能的仓库。
      *
-     * @param resourcePath The path to the skill under resources, e.g., "writing-skills"
-     * @param classLoader The ClassLoader to use for loading resources
-     * @throws IOException if initialization fails
+     * @param resourcePath resources 下技能的路径，例如 "writing-skills"
+     * @param classLoader 用于加载资源的 ClassLoader
+     * @throws IOException 初始化失败时抛出
      */
     protected ClasspathSkillRepository(String resourcePath, ClassLoader classLoader)
             throws IOException {
@@ -125,12 +123,12 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Creates a repository for loading skills from resources using a specific ClassLoader.
+     * 创建使用指定 ClassLoader 从资源加载技能的仓库。
      *
-     * @param resourcePath The path to the skill under resources, e.g., "writing-skills"
-     * @param source The custom source identifier (null to use default)
-     * @param classLoader The ClassLoader to use for loading resources
-     * @throws IOException if initialization fails
+     * @param resourcePath resources 下技能的路径，例如 "writing-skills"
+     * @param source 自定义来源标识符（null 表示使用默认值）
+     * @param classLoader 用于加载资源的 ClassLoader
+     * @throws IOException 初始化失败时抛出
      */
     protected ClasspathSkillRepository(String resourcePath, String source, ClassLoader classLoader)
             throws IOException {
@@ -169,11 +167,11 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Gets a skill by name.
+     * 按名称获取技能。
      *
-     * @param skillName The skill name (from SKILL.md metadata)
-     * @return The loaded AgentSkill object
-     * @throws IllegalStateException if the repository has been closed
+     * @param skillName 技能名称（来自 SKILL.md 元数据）
+     * @return 已加载的 AgentSkill 对象
+     * @throws IllegalStateException 仓库已关闭时抛出
      */
     @Override
     public AgentSkill getSkill(String skillName) {
@@ -182,10 +180,10 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Gets all skill names available in the repository.
+     * 获取仓库中全部可用技能名称。
      *
-     * @return A sorted list of skill names
-     * @throws IllegalStateException if the repository has been closed
+     * @return 排序后的技能名称列表
+     * @throws IllegalStateException 仓库已关闭时抛出
      */
     @Override
     public List<String> getAllSkillNames() {
@@ -194,10 +192,10 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Gets all skills available in the repository.
+     * 获取仓库中全部可用技能。
      *
-     * @return A list of all loaded AgentSkill objects
-     * @throws IllegalStateException if the repository has been closed
+     * @return 已加载的全部 AgentSkill 对象列表
+     * @throws IllegalStateException 仓库已关闭时抛出
      */
     @Override
     public List<AgentSkill> getAllSkills() {
@@ -268,9 +266,9 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Checks if running in a JAR environment.
+     * 检查是否在 JAR 环境运行。
      *
-     * @return true if running from JAR, false if in development environment
+     * @return 从 JAR 运行时为 true，开发环境中为 false
      */
     public boolean isJarEnvironment() {
         return isJar;
@@ -335,10 +333,9 @@ public class ClasspathSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Closes the file system (if in JAR environment).
+     * 关闭文件系统（如果在 JAR 环境中）。
      *
-     * <p>This method is idempotent - it can be safely called multiple times.
-     * Designed for use with try-with-resources.
+     * <p>此方法是幂等的，可以安全地重复调用，适合与 try-with-resources 一起使用。
      */
     @Override
     public void close() {

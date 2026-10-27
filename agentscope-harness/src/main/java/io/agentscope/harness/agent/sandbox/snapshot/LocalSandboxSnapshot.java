@@ -29,15 +29,14 @@ import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
 /**
- * Snapshot that persists workspace archives as tar files on the local filesystem.
+ * 将工作区归档作为 tar 文件保存在本地文件系统的快照。
  *
- * <p>Archives are written atomically: the data is first written to a temporary file
- * (prefixed with {@code .}) in the same directory, then moved to the final path using
- * {@link StandardCopyOption#ATOMIC_MOVE}. This ensures the snapshot is either fully
- * written or not present — never partially written.
+ * <p>归档采用原子写入：先写入同目录中的临时文件（前缀 {@code .}），再通过 {@link StandardCopyOption#ATOMIC_MOVE} 移动到最终路径。这样快照要么完整写入，要么不存在，不会出现部分写入的快照。
  *
- * <p>Security: {@code id} must be a single path segment with no {@code /} or {@code ..}
- * characters to prevent path traversal attacks.
+ * <p>【学习提示】同目录临时文件加 ATOMIC_MOVE 避免发布半成品；不支持原子移动时会失败，
+ * 不会悄然降级。这里没有显式 fsync，不能把原子可见性等同于断电后的持久性保证。
+ *
+ * <p>安全：{@code id} 必须是单个路径片段，不能包含 {@code /} 或 {@code ..}，以防路径遍历攻击。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LocalSandboxSnapshot implements SandboxSnapshot {
@@ -46,11 +45,11 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
     private final String id;
 
     /**
-     * Creates a local snapshot.
+     * 创建本地快照。
      *
-     * @param basePath directory where snapshot tar files are stored
-     * @param id unique identifier for this snapshot (must be a safe single path segment)
-     * @throws IllegalArgumentException if {@code id} contains unsafe characters
+     * @param basePath 保存快照 tar 文件的目录
+     * @param id 此快照的唯一标识符（必须是安全的单个路径片段）
+     * @throws IllegalArgumentException {@code id} 包含不安全字符时抛出
      */
     @JsonCreator
     public LocalSandboxSnapshot(
@@ -63,7 +62,7 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Writes the archive atomically to {@code {basePath}/{id}.tar}.
+     * <p>将归档原子写入 {@code {basePath}/{id}.tar}。
      */
     @Override
     public void persist(InputStream workspaceArchive) throws Exception {
@@ -88,7 +87,7 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (Exception ignored) {
-                // Best-effort cleanup of the temp file
+                // 尽力清理临时文件
             }
             throw new SandboxException.SnapshotException(id, "Failed to persist snapshot", e);
         }
@@ -97,7 +96,7 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Opens the snapshot tar file at {@code {basePath}/{id}.tar} for reading.
+     * <p>打开位于 {@code {basePath}/{id}.tar} 的快照 tar 文件以供读取。
      */
     @Override
     public InputStream restore() throws Exception {
@@ -115,7 +114,7 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * @return {@code true} if the snapshot tar file exists
+     * @return 快照 tar 文件存在时为 {@code true}
      */
     @Override
     public boolean isRestorable() {
@@ -133,9 +132,9 @@ public class LocalSandboxSnapshot implements SandboxSnapshot {
     }
 
     /**
-     * Returns the base directory where snapshot tar files are stored.
+     * 返回保存快照 tar 文件的基目录。
      *
-     * @return base path string
+     * @return 基路径字符串
      */
     public String getBasePath() {
         return basePath;

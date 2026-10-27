@@ -43,19 +43,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link BaseSandboxFilesystem} that delegates execution to a live {@link Sandbox}.
+ * 将执行委托给活动 {@link Sandbox} 的 {@link BaseSandboxFilesystem}。
  *
- * <p>Stable proxy created once per agent bean. The live {@link Sandbox} for a call is bound
- * <em>per-call</em> on the invocation's {@link RuntimeContext} by {@link
- * io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware} and resolved here via {@link
- * #requireSandbox(RuntimeContext)} — this per-call binding takes precedence and is what keeps
- * concurrent distinct-session calls on the same agent bean isolated (issue #2490). The legacy
- * {@code volatile sandbox} field is retained only as a best-effort fallback for context-free
- * internal callers that resolve the filesystem with a shared empty {@link RuntimeContext} (e.g.
- * {@link io.agentscope.harness.agent.bus.WorkspaceMessageBus}, which carries no per-call binding).
- * The middleware still maintains that field via {@link #setSandbox} on acquire and {@link
- * #clearSandboxIfCurrent} on release, so it remains last-writer-wins under concurrency and must not
- * be relied on for isolation.
+ * <p>每个智能体 bean 只创建一次的稳定代理。每次调用的活动 {@link Sandbox} 由 {@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware}
+ * 按<em>调用</em>绑定到该调用的 {@link RuntimeContext}，并在此通过 {@link #requireSandbox(RuntimeContext)} 解析。
+ * 每次调用的绑定优先，这保证同一智能体 bean 上不同会话的并发调用相互隔离（问题 #2490）。
+ * 旧的 {@code volatile sandbox} 字段仅作为尽力而为的回退，供无上下文、使用共享空 {@link RuntimeContext} 解析文件系统的内部调用方使用
+ * （例如不携带每次调用绑定的 {@link io.agentscope.harness.agent.bus.WorkspaceMessageBus}）。
+ * 中间件仍在获取时通过 {@link #setSandbox}、释放时通过 {@link #clearSandboxIfCurrent} 维护该字段，
+ * 所以并发下它仍是后写入者胜出，不能依赖它实现隔离。
  */
 public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements SandboxAware {
 
@@ -79,11 +75,10 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
     }
 
     /**
-     * Clears the fallback {@code sandbox} field only if it still points at {@code expected}. Used by
-     * {@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware} on release so a
-     * finishing call never nulls a concurrent sibling call's fallback binding (issue #2490).
+     * 仅当回退字段 {@code sandbox} 仍指向 {@code expected} 时才清空。
+     * {@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware} 在释放时调用它，防止结束的调用清空并发兄弟调用的回退绑定（问题 #2490）。
      *
-     * @param expected the sandbox this call bound at acquire time
+     * @param expected 此调用获取时绑定的沙箱
      */
     public synchronized void clearSandboxIfCurrent(Sandbox expected) {
         if (this.sandbox == expected) {
@@ -138,7 +133,7 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
                 try {
                     transferPath = resolveTransferPath(active, path);
                 } catch (IllegalArgumentException e) {
-                    // Same contract as the archive fallback: an invalid path fails this file.
+                    // 与归档回退使用相同契约：无效路径使当前文件失败。
                     log.warn("[sandbox-fs] uploadFiles failed for path: {}", path, e);
                     results.add(FileUploadResponse.fail(path, e.getMessage()));
                     continue;
@@ -181,8 +176,8 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
         List<FileDownloadResponse> results = new ArrayList<>(paths.size());
 
         for (String path : paths) {
-            // Reads keep the raw-path probe, unlike uploads: no shared temp state to race on,
-            // and the exec fallback below stays a single round trip.
+            // 与上传不同，读取保留原始路径探测：没有会引发竞争的共享临时状态，
+            // 而下面的执行回退仍只需一次往返。
             if (active instanceof SandboxFileTransfer transfer
                     && transfer.supportsFileTransfer(path)) {
                 try {
@@ -206,7 +201,7 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
                                         path, "File download output was truncated by the sandbox"));
                         continue;
                     }
-                    // MIME decoder tolerates wrapped base64 output from GNU `base64`.
+                    // MIME 解码器容忍 GNU `base64` 输出中的换行。
                     byte[] decoded =
                             Base64.getMimeDecoder()
                                     .decode(result.stdout() != null ? result.stdout() : "");
@@ -231,10 +226,8 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
     }
 
     /**
-     * Resolves the {@link Sandbox} bound to the current call, preferring the per-call binding
-     * carried on {@code runtimeContext} (concurrency-safe under parallel distinct-session calls,
-     * issue #2490) and falling back to the legacy {@code sandbox} field for direct
-     * {@link #setSandbox} callers that do not thread a per-call context.
+     * 解析当前调用绑定的 {@link Sandbox}，优先使用 {@code runtimeContext} 携带的每次调用绑定
+     * （不同会话并行调用时并发安全，问题 #2490）；对于直接调用 {@link #setSandbox} 且不传递每次调用上下文的调用方，回退到旧的 {@code sandbox} 字段。
      */
     private Sandbox requireSandbox(RuntimeContext runtimeContext) {
         Sandbox s = null;
@@ -262,7 +255,9 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
         return "'" + s.replace("'", "'\\''") + "'";
     }
 
-    /** Builds a single-file tar archive relative to the workspace root. */
+    /**
+     * 构建相对于工作区根目录的单文件 tar 归档。
+     */
     private byte[] buildSingleFileArchive(Sandbox active, String path, byte[] content)
             throws IOException {
         if (content == null) {
@@ -283,7 +278,9 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
         return output.toByteArray();
     }
 
-    /** Constrains an upload path to the workspace and converts it to an archive path. */
+    /**
+     * 将上传路径限制在工作区内，并转换为归档路径。
+     */
     private String resolveArchivePath(Sandbox active, String path) throws IOException {
         AbstractFilesystem.validatePath(path);
         String normalized = normalizeUploadPath(path);
@@ -304,11 +301,9 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
     }
 
     /**
-     * Normalizes an upload path and resolves it to its sandbox-absolute form so
-     * workspace-relative paths can ride the native single-file transfer
-     * ({@link SandboxFileTransfer#uploadFile}) instead of the archive-hydrate fallback. Throws
-     * {@link IllegalArgumentException} for invalid paths — the caller fails just that file,
-     * matching the archive fallback's validation contract.
+     * 规范化上传路径并解析为沙箱内绝对路径，使工作区相对路径可使用原生单文件传输
+     * （{@link SandboxFileTransfer#uploadFile}），而不是归档恢复回退。
+     * 无效路径抛出 {@link IllegalArgumentException}；调用方只让当前文件失败，与归档回退的验证契约一致。
      */
     private String resolveTransferPath(Sandbox active, String path) throws IOException {
         AbstractFilesystem.validatePath(path);
@@ -319,7 +314,9 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
         return resolveWorkspaceRoot(active) + "/" + normalized;
     }
 
-    /** Normalizes separators and strips leading {@code ./} segments. */
+    /**
+     * 规范化分隔符，并移除开头的 {@code ./} 片段。
+     */
     private static String normalizeUploadPath(String path) {
         String normalized = path.replace('\\', '/');
         while (normalized.startsWith("./")) {
@@ -328,7 +325,9 @@ public class SandboxBackedFilesystem extends BaseSandboxFilesystem implements Sa
         return normalized;
     }
 
-    /** Resolves the normalized workspace root used to convert absolute upload paths. */
+    /**
+     * 解析用于转换绝对上传路径的规范化工作区根目录。
+     */
     private String resolveWorkspaceRoot(Sandbox active) throws IOException {
         SandboxState state = active.getState();
         WorkspaceSpec workspaceSpec = state != null ? state.getWorkspaceSpec() : null;

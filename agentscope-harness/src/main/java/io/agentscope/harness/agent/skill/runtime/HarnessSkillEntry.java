@@ -19,19 +19,11 @@ import io.agentscope.core.skill.AgentSkill;
 import io.agentscope.harness.agent.skill.SkillResources;
 
 /**
- * Per-call wrapper around an {@link AgentSkill} carrying harness-only metadata that does not
- * belong on the core data type.
+ * 针对单次调用包装 {@link AgentSkill}，携带不应放入 core 数据类型的 harness 专属元数据。
  *
- * @param skill         the underlying skill (non-null)
- * @param lazyResources resource accessor when the source repository implements
- *                      {@link io.agentscope.harness.agent.skill.LazyResourceCapable};
- *                      {@code null} when only the in-memory {@code skill.resources} map is
- *                      available
- * @param filesRoot     absolute path root for shell execution of this skill's scripts; may be
- *                      {@code null} when no shell tool is available (in which case the prompt
- *                      omits {@code <files-root>}) or when the skill is sourced from a
- *                      repository whose contents are not present on any filesystem the shell
- *                      can reach
+ * @param skill 底层技能（非 null）
+ * @param lazyResources 来源仓库实现 {@link io.agentscope.harness.agent.skill.LazyResourceCapable} 时使用的资源访问器；仅有内存 {@code skill.resources} 映射时为 {@code null}
+ * @param filesRoot 通过 Shell 执行技能脚本的绝对根路径；无 Shell 工具（提示于是省略 {@code <files-root>}），或仓库内容不在 Shell 可访问的文件系统上时，可以为 {@code null}
  */
 @SuppressWarnings("deprecation")
 public record HarnessSkillEntry(AgentSkill skill, SkillResources lazyResources, String filesRoot) {
@@ -42,7 +34,9 @@ public record HarnessSkillEntry(AgentSkill skill, SkillResources lazyResources, 
         }
     }
 
-    /** Convenience for runtime layers that have no shell mode wired yet. */
+    /**
+     * 供尚未接入 Shell 模式的运行时层使用的便捷方法。
+     */
     public static HarnessSkillEntry of(AgentSkill skill, SkillResources lazyResources) {
         return new HarnessSkillEntry(skill, lazyResources, null);
     }

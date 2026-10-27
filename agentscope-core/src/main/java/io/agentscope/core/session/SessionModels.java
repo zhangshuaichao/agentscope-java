@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** Records the final adapter boundary, including auxiliary/fallback calls and cancellation. */
+/** 记录最终适配器边界，包括辅助调用、回退调用与取消。 */
 public final class SessionModels {
     private SessionModels() {}
 

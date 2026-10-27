@@ -35,21 +35,20 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Overlay variant that routes writes to the <em>project</em> directory for non-workspace paths,
- * while keeping workspace metadata (memory, sessions, skills, etc.) in the upper (workspace) layer.
+ * 覆盖层变体：把非工作区路径的写入路由到<em>项目</em>目录，
+ * 而工作区元数据（记忆、会话、技能等）仍保存在上层工作区。
  *
- * <p>Produced exclusively by {@link io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec}
- * when {@code projectWritable(true)} is set. Other filesystem specs ({@code RemoteFilesystemSpec},
- * {@code SandboxFilesystemSpec}) are not affected.
+ * <p>仅由 {@link io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec}
+ * 在设置 {@code projectWritable(true)} 时创建。其他文件系统配置
+ * （{@code RemoteFilesystemSpec}、{@code SandboxFilesystemSpec}）不受影响。
  *
- * <p>Every routed path is first normalized to its agent-visible relative form: a workspace-rooted
- * absolute path (e.g. {@code <workspace>/src/Foo.java}) has the workspace root and, when namespace
- * scoping is configured, the caller's namespace prefix stripped, so the absolute and the relative
- * spelling of the same path behave identically in every operation. Absolute paths outside the
- * workspace root pass through unchanged and are never classified as workspace metadata.
+ * <p>每个路由路径首先规范化为智能体可见的相对形式：以工作区为根的绝对路径
+ * （例如 {@code <workspace>/src/Foo.java}）会去除工作区根前缀；若配置命名空间作用域，
+ * 还会去除调用方的命名空间前缀，因此同一路径的绝对与相对写法在各操作中行为相同。
+ * 工作区根之外的绝对路径保持原样，绝不会被归类为工作区元数据。
  *
- * <p>Read operations retain standard overlay semantics: check upper (workspace) first, fall back
- * to lower (project). Shell {@code execute()} delegates to the upper layer as before.
+ * <p>读取保留标准覆盖语义：先查上层工作区，再回退到下层项目。
+ * Shell {@code execute()} 与之前一样委托给上层。
  */
 public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSandboxFilesystem {
 
@@ -75,13 +74,12 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
     private final NamespaceFactory namespaceFactory;
 
     /**
-     * @param upper shell-capable workspace filesystem (read-write, workspace root)
-     * @param lower read-only project filesystem (overlay fallback)
-     * @param projectFs writable project filesystem for non-workspace writes
-     * @param workspaceRoot absolute path of the workspace, used to classify absolute paths
-     * @param namespaceFactory namespace factory scoping the workspace and project filesystems;
-     *     used to strip the caller's namespace prefix from workspace-rooted absolute paths;
-     *     {@code null} when no namespace scoping is configured
+     * @param upper 支持 Shell 的工作区文件系统（可读写，以工作区为根）
+     * @param lower 只读项目文件系统（覆盖层的回退后端）
+     * @param projectFs 用于非工作区写入的可写项目文件系统
+     * @param workspaceRoot 工作区绝对路径，用于分类绝对路径
+     * @param namespaceFactory 限定工作区及项目文件系统作用域的命名空间工厂；
+     *     用于从工作区根下的绝对路径去除调用方命名空间前缀；未配置作用域时为 {@code null}
      */
     public ProjectAwareOverlay(
             AbstractSandboxFilesystem upper,
@@ -97,16 +95,16 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
     }
 
     /**
-     * Namespace-unaware variant: workspace-rooted absolute paths keep their namespace segment and
-     * may misroute under namespace scoping.
+     * 不感知命名空间的变体：工作区根下的绝对路径保留命名空间片段，
+     * 在启用命名空间作用域时可能被错误路由。
      *
-     * @deprecated use {@link #ProjectAwareOverlay(AbstractSandboxFilesystem, AbstractFilesystem,
-     *     LocalFilesystem, Path, NamespaceFactory)} so workspace-rooted absolute paths resolve
-     *     identically to their relative spelling under namespace scoping
-     * @param upper shell-capable workspace filesystem (read-write, workspace root)
-     * @param lower read-only project filesystem (overlay fallback)
-     * @param projectFs writable project filesystem for non-workspace writes
-     * @param workspaceRoot absolute path of the workspace, used to classify absolute paths
+     * @deprecated 请使用 {@link #ProjectAwareOverlay(AbstractSandboxFilesystem, AbstractFilesystem,
+     *     LocalFilesystem, Path, NamespaceFactory)}，使启用命名空间作用域时，
+     *     工作区根下的绝对路径与其相对写法解析一致
+     * @param upper 支持 Shell 的工作区文件系统（可读写，以工作区为根）
+     * @param lower 只读项目文件系统（覆盖层的回退后端）
+     * @param projectFs 用于非工作区写入的可写项目文件系统
+     * @param workspaceRoot 工作区绝对路径，用于分类绝对路径
      */
     @Deprecated
     public ProjectAwareOverlay(
@@ -128,7 +126,7 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
         return shellBackend.execute(runtimeContext, command, timeoutSeconds);
     }
 
-    // ==================== Write routing ====================
+    // ==================== 写入路由 ====================
 
     @Override
     public WriteResult write(RuntimeContext runtimeContext, String filePath, String content) {
@@ -153,7 +151,7 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
         if (projectFs.exists(runtimeContext, target)) {
             return projectFs.edit(runtimeContext, target, oldString, newString, replaceAll);
         }
-        // Fallback: file may exist only in upper (written before projectWritable was enabled)
+        // 回退：文件可能仅存在于上层（在启用 projectWritable 前写入）。
         return super.edit(runtimeContext, target, oldString, newString, replaceAll);
     }
 
@@ -194,7 +192,7 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
         return results;
     }
 
-    // ==================== Read / search / move routing ====================
+    // ==================== 读取／搜索／移动路由 ====================
 
     @Override
     public ReadResult read(RuntimeContext runtimeContext, String filePath, int offset, int limit) {
@@ -240,7 +238,7 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
                 toWorkspaceRelativePath(runtimeContext, toPath));
     }
 
-    // ==================== Path classification ====================
+    // ==================== 路径分类 ====================
 
     boolean isWorkspacePath(RuntimeContext runtimeContext, String filePath) {
         if (filePath == null || filePath.isBlank()) {
@@ -270,11 +268,10 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
     }
 
     /**
-     * Returns the agent-visible relative form of an absolute path that falls under {@link
-     * #workspaceRoot}: the workspace root and the caller's namespace prefix are stripped, so the
-     * absolute and the relative spelling of the same path are interchangeable. Returns {@code
-     * null} when {@code normalized} is relative, equals the workspace root, or lives outside the
-     * workspace root.
+     * 返回位于 {@link #workspaceRoot} 下的绝对路径所对应的智能体可见相对形式：
+     * 去除工作区根和调用方命名空间前缀，使同一路径的绝对和相对写法可以互换。
+     * 当 {@code normalized} 为相对路径、等于工作区根或位于工作区根之外时返回 {@code
+     * null}。
      */
     private String workspaceRelative(RuntimeContext runtimeContext, String normalized) {
         Path absolute = Path.of(normalized);
@@ -290,9 +287,8 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
     }
 
     /**
-     * Removes the caller's namespace prefix from a workspace-relative path when the path starts
-     * with it; without namespace scoping (or when the prefix does not match) the path is returned
-     * unchanged.
+     * 当工作区相对路径以调用方命名空间前缀开头时，移除该前缀；
+     * 未启用命名空间作用域或前缀不匹配时，路径保持原样。
      */
     private String stripNamespacePrefix(RuntimeContext runtimeContext, Path workspaceRelative) {
         String rel = workspaceRelative.toString().replace('\\', '/');
@@ -308,10 +304,9 @@ public class ProjectAwareOverlay extends OverlayFilesystem implements AbstractSa
     }
 
     /**
-     * Rewrites a workspace-rooted absolute path to its agent-visible relative form (see {@link
-     * #workspaceRelative}); every other path is returned unchanged. All routed operations pass
-     * their inputs through this method so that both spellings of the same path resolve identically
-     * in the workspace, project, and overlay layers.
+     * 将工作区根下的绝对路径改写为智能体可见的相对形式（见 {@link
+     * #workspaceRelative}）；其他路径保持原样。全部路由操作都通过此方法处理输入，
+     * 使同一路径的两种写法在工作区、项目和覆盖层中解析一致。
      */
     private String toWorkspaceRelativePath(RuntimeContext runtimeContext, String filePath) {
         if (filePath == null || filePath.isBlank()) {

@@ -44,38 +44,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Docker {@link io.agentscope.harness.agent.sandbox.Sandbox} that runs commands in a container.
+ * 在容器内运行命令的 Docker {@link io.agentscope.harness.agent.sandbox.Sandbox}。
  *
- * <p>Uses the {@code docker} CLI via {@link ProcessBuilder}; no docker-java library
- * dependency is required. The Docker daemon must be accessible on the host.
+ * <p>通过 {@link ProcessBuilder} 使用 {@code docker} 命令行，无需依赖 docker-java 库。宿主机必须能访问 Docker 守护进程。
  *
- * <h2>Container Lifecycle</h2>
+ * <h2>容器生命周期</h2>
  * <ul>
- *   <li>On {@link #start()}: the container is created and started if it does not exist;
- *       if the container exists but is stopped it is restarted; if it is already running
- *       the existing container is reused.</li>
- *   <li>On {@link #stop()}: the workspace snapshot is persisted (if configured).
- *       The container keeps running.</li>
- *   <li>On {@link #shutdown()}: the container is stopped and removed if self-managed.</li>
+ *   <li>{@link #start()}：容器不存在则创建并启动；已存在但停止则重启；已运行则复用。</li>
+ *   <li>{@link #stop()}：持久化工作区快照（若已配置），容器继续运行。</li>
+ *   <li>{@link #shutdown()}：若为自行管理，则停止并移除容器。</li>
  * </ul>
  *
- * <h2>Workspace Operations</h2>
+ * <h2>工作区操作</h2>
  * <ul>
- *   <li>Exec: {@code docker exec -w <root> <containerId> sh -c <command>}</li>
- *   <li>PersistWorkspace: {@code docker exec <containerId> tar -cf - -C <root> .}</li>
- *   <li>HydrateWorkspace: {@code docker exec -i <containerId> tar -xf - -C <root>}</li>
- *   <li>UploadFile / DownloadFile ({@link SandboxFileTransfer}): a host temp file round-tripped
- *       through {@code docker cp}, so file bytes never pass through exec argv or the stdout
- *       capture cap. Scoped to the workspace subtree by lexical validation; uploads land with
- *       mode 0644, matching the archive-hydrate fallback. Symlinks inside the sandbox are not
- *       resolved — the isolation boundary is the container, not the subtree.</li>
+ *   <li>执行：{@code docker exec -w <root> <containerId> sh -c <command>}</li>
+ *   <li>归档：{@code docker exec <containerId> tar -cf - -C <root> .}</li>
+ *   <li>恢复：{@code docker exec -i <containerId> tar -xf - -C <root>}</li>
+ *   <li>上传／下载（{@link SandboxFileTransfer}）：通过 {@code docker cp} 中转宿主临时文件，文件字节不经过 exec 参数或标准输出捕获上限。通过词法验证限定在工作区子树；上传文件权限为 0644，与归档恢复回退一致。不解析沙箱内符号链接，隔离边界是容器，而非该子树。</li>
  * </ul>
+ *
+ * <p>【学习提示】本类通过子进程和流执行阻塞 I/O；“沙箱”描述执行位置，并不意味着 Java 调用自动非阻塞。挂载、网络及额外 docker run 参数也会影响实际隔离边界。
  */
 public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTransfer {
 
     private static final Logger log = LoggerFactory.getLogger(DockerSandbox.class);
 
-    private static final int OUTPUT_TRUNCATE_BYTES = 512 * 1024; // 512 KB per stream
+    private static final int OUTPUT_TRUNCATE_BYTES = 512 * 1024; // 每个流 512 KB
     private static final int CONTAINER_START_TIMEOUT_SECONDS = 60;
     private static final int CONTAINER_STOP_TIMEOUT_SECONDS = 30;
     private static final int TAR_TIMEOUT_SECONDS = 120;
@@ -88,10 +82,9 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Ensures the backing Docker container is running before executing the standard
-     * 4-branch workspace start logic.
+     * 执行标准四分支工作区启动逻辑前，确保底层 Docker 容器正在运行。
      *
-     * @throws Exception if the container cannot be started
+     * @throws Exception 容器无法启动时抛出
      */
     @Override
     public void start() throws Exception {
@@ -100,9 +93,9 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Stops and removes the Docker container if self-managed.
+     * 若容器为自行管理，则停止并移除它。
      *
-     * @throws Exception if the container cannot be stopped or removed
+     * @throws Exception 无法停止或移除容器时抛出
      */
     @Override
     public void shutdown() throws Exception {
@@ -263,10 +256,10 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
         String containerId = dockerState.getContainerId();
         String workspaceRoot = dockerState.getWorkspaceRoot();
 
-        // Ensure the workspace directory exists inside the container
+        // 确保容器内工作区目录存在
         runDockerCliBlocking(30, "docker", "exec", containerId, "mkdir", "-p", workspaceRoot);
 
-        // Pipe the tar archive into the container via docker exec stdin
+        // 通过 docker exec 标准输入将 tar 归档传入容器
         ProcessBuilder pb =
                 new ProcessBuilder(
                         "docker",
@@ -293,7 +286,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
                             return t;
                         });
 
-        // Write archive to process stdin in background
+        // 在后台向进程标准输入写入归档
         Future<?> writeFuture =
                 ioExecutor.submit(
                         () -> {
@@ -466,32 +459,28 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Gives the upload temp file mode 0644 so {@code docker cp}, which preserves the source
-     * mode, matches the archive fallback's tar default instead of {@code createTempFile}'s
-     * 0600 — uploads must stay readable when the container runs as a non-root user. Skipped on
-     * filesystems without POSIX permissions (e.g. Windows), which carry no mode to preserve.
+     * 将上传临时文件权限设为 0644，使保留源权限的 {@code docker cp} 与归档回退的 tar 默认权限一致，而不是沿用 {@code createTempFile} 的 0600；容器以非 root 用户运行时仍须能读取上传文件。不支持 POSIX 权限的文件系统（如 Windows）跳过此步骤，因为没有权限模式可保留。
      */
     private static void applyUploadFileMode(Path temp) throws IOException {
         try {
             Files.setPosixFilePermissions(temp, PosixFilePermissions.fromString("rw-r--r--"));
         } catch (UnsupportedOperationException e) {
-            // No POSIX permissions on this filesystem — nothing to align.
+            // 此文件系统没有 POSIX 权限，无需对齐。
         }
     }
 
     // -----------------------------------------------------------------
-    //  Container management
+    // 容器管理
     // -----------------------------------------------------------------
 
     /**
-     * Ensures the Docker container is running.
+     * 确保 Docker 容器正在运行。
      *
-     * <p>Priority:
+     * <p>优先顺序：
      * <ol>
-     *   <li>If container exists and is running — reuse it.</li>
-     *   <li>If container exists and is stopped — restart it.</li>
-     *   <li>If container is missing or unknown — create a new container, reset
-     *       {@code workspaceRootReady} to force full workspace reinitialisation.</li>
+     *   <li>容器存在且运行中：复用。</li>
+     *   <li>容器存在但已停止：重新启动。</li>
+     *   <li>容器缺失或未知：创建新容器，重置 {@code workspaceRootReady}，强制完整重新初始化工作区。</li>
      * </ol>
      */
     private void doEnsureContainerRunning() throws Exception {
@@ -508,7 +497,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
                         CONTAINER_START_TIMEOUT_SECONDS, "docker", "start", containerId);
                 return;
             }
-            // Container not found — fall through to create a new one
+            // 未找到容器，继续创建新容器
             log.warn("[sandbox-docker] Container {} not found, creating a new one", containerId);
             dockerState.setWorkspaceRootReady(false);
         }
@@ -567,7 +556,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
                     "docker run failed (exit=" + exitCode + "): " + stderr);
         }
 
-        // stdout is the new container ID
+        // 标准输出是新容器 ID
         String newContainerId = stdout.isBlank() ? null : stdout;
         if (newContainerId == null) {
             throw new SandboxException.SandboxRuntimeException(
@@ -590,7 +579,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
         cmd.add("--name");
         cmd.add(containerName);
 
-        // Environment variables from manifest
+        // 清单中的环境变量
         Map<String, String> manifestEnv =
                 getState().getWorkspaceSpec() != null
                         ? getState().getWorkspaceSpec().getEnvironment()
@@ -602,17 +591,17 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
             }
         }
 
-        // Memory limit
+        // 内存限制
         if (dockerState.getMemorySizeBytes() != null) {
             cmd.add("--memory=" + dockerState.getMemorySizeBytes());
         }
 
-        // CPU limit
+        // CPU 限制
         if (dockerState.getCpuCount() != null) {
             cmd.add("--cpus=" + dockerState.getCpuCount());
         }
 
-        // Exposed ports (host:container mapping using same port number)
+        // 暴露端口（宿主与容器使用相同端口号映射）
         if (dockerState.getExposedPorts() != null) {
             for (int port : dockerState.getExposedPorts()) {
                 cmd.add("-p");
@@ -649,11 +638,11 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
         }
 
         cmd.add(dockerState.getImage());
-        // Keep the container alive with an idle shell loop. Install a SIGTERM trap and
-        // background the sleep with `wait`, so PID 1 (sh) exits promptly on `docker stop`
-        // instead of blocking in a foreground `sleep` until the stop timeout forces a
-        // SIGKILL. Relies only on `sh` + integer `sleep`, so it stays portable across
-        // minimal images (e.g. BusyBox/Alpine) where `sleep infinity` is unsupported.
+        // 通过空闲 Shell 循环保持容器存活。安装 SIGTERM 陷阱，
+        // 让 sleep 在后台运行并使用 `wait`，使 PID 1（sh）在 `docker stop` 时及时退出，
+        // 而不是阻塞在前台 `sleep`，直到停止超时强制发送
+        // SIGKILL。仅依赖 `sh` 与整数 `sleep`，因此兼容
+        // 不支持 `sleep infinity` 的精简镜像（例如 BusyBox/Alpine）。
         cmd.add("sh");
         cmd.add("-c");
         cmd.add("trap 'exit 0' TERM; while :; do sleep 3600 & wait $!; done");
@@ -662,7 +651,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Inspects a container and returns whether it is running, stopped, or unknown.
+     * 检查容器，返回运行中、已停止或未知状态。
      */
     private ContainerState inspectContainerState(String containerId) {
         try {
@@ -702,14 +691,14 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Runs a Docker CLI command, blocking until completion.
+     * 运行 Docker 命令行并阻塞至完成。
      *
-     * @param timeoutSeconds maximum time to wait
-     * @param command        command and arguments
-     * @throws SandboxException.SandboxRuntimeException if the command fails or times out
+     * @param timeoutSeconds 最大等待时间
+     * @param command 命令及参数
+     * @throws SandboxException.SandboxRuntimeException 命令失败或超时时抛出
      */
-    // Visible for testing so unit tests can intercept the docker CLI round trip
-    // (upload/download temp-file plumbing) without a live Docker daemon.
+    // 为测试开放，使单元测试可拦截 docker 命令行往返
+    // （上传／下载临时文件流程），无需真实 Docker 守护进程。
     void runDockerCliBlocking(int timeoutSeconds, String... command) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(command);
         Process process = pb.start();
@@ -745,7 +734,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
     }
 
     /**
-     * Reads an InputStream into a String, truncating at {@code maxBytes}.
+     * 将 InputStream 读取为 String，在 {@code maxBytes} 处截断。
      */
     private static String readStream(InputStream in, int maxBytes) {
         try {
@@ -755,7 +744,7 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
             while (total < maxBytes && (read = in.read(buf, total, maxBytes - total)) != -1) {
                 total += read;
             }
-            // Drain remaining bytes to prevent blocking
+            // 排空剩余字节，避免阻塞
             if (total == maxBytes) {
                 //noinspection ResultOfMethodCallIgnored
                 in.skip(Long.MAX_VALUE);
@@ -766,7 +755,9 @@ public class DockerSandbox extends AbstractBaseSandbox implements SandboxFileTra
         }
     }
 
-    /** Container state as determined by {@code docker inspect}. */
+    /**
+ * 由 {@code docker inspect} 确定的容器状态。
+ */
     private enum ContainerState {
         RUNNING,
         STOPPED,

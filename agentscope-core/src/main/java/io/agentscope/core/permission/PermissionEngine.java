@@ -26,23 +26,22 @@ import java.util.Objects;
 import reactor.core.publisher.Mono;
 
 /**
- * Evaluates tool execution requests against configured permission rules.
+ * 按配置的权限规则评估工具执行请求。
  *
- * <p>Evaluation order:
+ * <p>评估顺序：
  *
  * <ol>
- *   <li>Tool-level deny rules (highest priority).
- *   <li>Tool-level ask rules.
- *   <li>Tool-specific checks (bypass-immune): EXPLORE/ACCEPT_EDITS read-only handling, dangerous
- *       path checks, plus whatever the tool's own {@link ToolBase#checkPermissions} returns.
- *   <li>Tool-level allow rules.
- *   <li>{@link PermissionMode#BYPASS} fallback.
- *   <li>Default ASK (converted to DENY under {@link PermissionMode#DONT_ASK}).
+ *   <li>工具级拒绝规则（最高优先级）。
+ *   <li>工具级询问规则。
+ *   <li>工具专用检查（不受绕过模式影响）：EXPLORE／ACCEPT_EDITS 的只读处理、
+ *       危险路径检查，以及工具自身 {@link ToolBase#checkPermissions} 返回的结果。
+ *   <li>工具级允许规则。
+ *   <li>{@link PermissionMode#BYPASS} 回退。
+ *   <li>默认 ASK（在 {@link PermissionMode#DONT_ASK} 下转为 DENY）。
  * </ol>
  *
- * <p>The engine snapshots rules from the supplied {@link PermissionContextState} into its own mutable
- * tables on construction; the original context is never mutated. Use {@link #addRule} to extend
- * the engine's rule set at runtime.
+ * <p>引擎在构造时，将传入 {@link PermissionContextState} 中的规则快照复制到
+ * 自己的可变规则表；不会修改原始上下文。运行时可用 {@link #addRule} 扩展规则集。
  */
 public final class PermissionEngine {
 
@@ -52,9 +51,9 @@ public final class PermissionEngine {
     private final Map<String, List<PermissionRule>> askRules;
 
     /**
-     * Creates an engine seeded from the given context's rules and mode.
+     * 使用给定上下文的规则和模式初始化引擎。
      *
-     * @param context permission context providing mode, working directories, and initial rules
+     * @param context 提供模式、工作目录和初始规则的权限上下文
      */
     public PermissionEngine(PermissionContextState context) {
         this.context = Objects.requireNonNull(context, "context must not be null");
@@ -75,21 +74,21 @@ public final class PermissionEngine {
     }
 
     /**
-     * Returns the underlying context (mode and working directories are read from it).
+     * 返回底层上下文（模式与工作目录从中读取）。
      *
-     * @return the immutable context this engine was constructed with
+     * @return 构造此引擎时使用的不可变上下文
      */
     public PermissionContextState getContext() {
         return context;
     }
 
     /**
-     * Adds a rule to the engine's internal rule set.
+     * 向引擎内部规则集添加规则。
      *
-     * <p>The rule is routed by its {@link PermissionRule#behavior()}: ALLOW/DENY/ASK rules are
-     * appended to the engine's allow/deny/ask tables; PASSTHROUGH rules are ignored.
+     * <p>根据 {@link PermissionRule#behavior()} 分流：ALLOW／DENY／ASK 规则
+     * 分别追加到引擎的允许／拒绝／询问规则表；PASSTHROUGH 规则被忽略。
      *
-     * @param rule the rule to add; must be non-null
+     * @param rule 要添加的规则；不可为 null
      */
     public void addRule(PermissionRule rule) {
         Objects.requireNonNull(rule, "rule must not be null");
@@ -100,22 +99,22 @@ public final class PermissionEngine {
                     denyRules.computeIfAbsent(rule.toolName(), k -> new ArrayList<>()).add(rule);
             case ASK -> askRules.computeIfAbsent(rule.toolName(), k -> new ArrayList<>()).add(rule);
             case PASSTHROUGH -> {
-                // PASSTHROUGH rules are not stored; they signal "defer to engine".
+                // 不存储 PASSTHROUGH 规则；它表示“交由引擎决定”。
             }
         }
     }
 
-    /** Read-only view of the engine's current allow-rule table. */
+    /** 引擎当前允许规则表的只读视图。 */
     public Map<String, List<PermissionRule>> getAllowRules() {
         return unmodifiableSnapshot(allowRules);
     }
 
-    /** Read-only view of the engine's current deny-rule table. */
+    /** 引擎当前拒绝规则表的只读视图。 */
     public Map<String, List<PermissionRule>> getDenyRules() {
         return unmodifiableSnapshot(denyRules);
     }
 
-    /** Read-only view of the engine's current ask-rule table. */
+    /** 引擎当前询问规则表的只读视图。 */
     public Map<String, List<PermissionRule>> getAskRules() {
         return unmodifiableSnapshot(askRules);
     }
@@ -130,29 +129,31 @@ public final class PermissionEngine {
     }
 
     /**
-     * Resolves a permission decision for the given tool invocation.
+     * 为指定工具调用解析权限决定。
      *
-     * @param tool the tool being called
-     * @param toolInput the input map the tool will receive
-     * @return a Mono emitting the resolved {@link PermissionDecision}
+     * @param tool 被调用的工具
+     * @param toolInput 工具将接收的输入映射
+     * @return 发出最终 {@link PermissionDecision} 的 Mono
      */
     public Mono<PermissionDecision> checkPermission(ToolBase tool, Map<String, Object> toolInput) {
         Objects.requireNonNull(tool, "tool must not be null");
         Map<String, Object> input = toolInput == null ? Map.of() : toolInput;
 
-        // 1. Deny rules (highest priority)
+        // 【学习提示】这里是有序短路判定，不是把所有规则结果做投票。
+        // 显式拒绝、显式询问先返回，所以后面的允许规则或 BYPASS 无法覆盖它们。
+        // 1. 拒绝规则（最高优先级）
         PermissionDecision denyDecision = checkDenyRules(tool, input);
         if (denyDecision != null) {
             return Mono.just(denyDecision);
         }
 
-        // 2. Ask rules
+        // 2. 询问规则
         PermissionDecision askDecision = checkAskRules(tool, input);
         if (askDecision != null) {
             return Mono.just(askDecision.withSuggestedRules(tool.generateSuggestions(input)));
         }
 
-        // 3. Tool-specific check (bypass-immune)
+        // 3. 工具专用检查（不受绕过模式影响）
         return toolCheckPermissions(tool, input)
                 .flatMap(
                         toolDecision -> {
@@ -174,18 +175,20 @@ public final class PermissionEngine {
                             }
                             return continueAfterToolCheck(tool, input);
                         })
+                // 【学习提示】PASSTHROUGH 被转为空序列；上游未发出决定时走 switchIfEmpty。
+                // defer 避免在组装流水线时提前执行后续规则检查。
                 .switchIfEmpty(Mono.defer(() -> continueAfterToolCheck(tool, input)));
     }
 
     private Mono<PermissionDecision> continueAfterToolCheck(
             ToolBase tool, Map<String, Object> input) {
-        // 4. Allow rules
+        // 4. 允许规则
         PermissionDecision allowDecision = checkAllowRules(tool, input);
         if (allowDecision != null) {
             return Mono.just(allowDecision);
         }
 
-        // 5. BYPASS fallback
+        // 5. BYPASS 回退
         if (context.getMode() == PermissionMode.BYPASS) {
             return Mono.just(
                     PermissionDecision.builder()
@@ -195,17 +198,17 @@ public final class PermissionEngine {
                             .build());
         }
 
-        // 6. Default (ASK, or DENY under DONT_ASK)
+        // 6. 默认决定（ASK；在 DONT_ASK 下为 DENY）
         return Mono.just(
                 defaultDecisionAsk(tool.getName())
                         .withSuggestedRules(tool.generateSuggestions(input)));
     }
 
     /**
-     * Runs the tool-specific permission pipeline.
+     * 运行工具专用权限流水线。
      *
-     * <p>EXPLORE / ACCEPT_EDITS read-only handling first, then the tool's own
-     * {@link ToolBase#checkPermissions}. Emits empty when the tool returns PASSTHROUGH.
+     * <p>先处理 EXPLORE／ACCEPT_EDITS 的只读行为，再调用工具自身的
+     * {@link ToolBase#checkPermissions}。工具返回 PASSTHROUGH 时发出空序列。
      */
     private Mono<PermissionDecision> toolCheckPermissions(
             ToolBase tool, Map<String, Object> input) {

@@ -22,20 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * AgentScope version and User-Agent information.
+ * AgentScope 版本及 User-Agent 信息。
  *
- * <p>Provides a unified User-Agent string for all model requests to identify AgentScope Java
- * clients and collect usage statistics.
+ * <p>为所有模型请求提供统一 User-Agent 字符串，用于识别 AgentScope Java 客户端和收集使用统计。
  *
- * <p>The version is resolved at class-load time through a three-level fallback chain:
- *
+ * <p>类加载时按三级回退链解析版本：
  * <ol>
- *   <li>the {@code META-INF/agentscope/version.properties} classpath resource, whose
- *       {@code ${project.version}} placeholder is resolved by Maven resource filtering;
- *   <li>the {@code Implementation-Version} manifest entry of the containing jar, which is
- *       populated from {@code ${project.version}} by the Maven jar plugin;
- *   <li>the literal {@code "unknown"} as a last resort (e.g. running straight from IDE
- *       {@code target/classes} with no manifest), accompanied by a one-time warning log.
+ * <li>类路径资源 {@code META-INF/agentscope/version.properties}，其中 {@code ${project.version}}
+ * 占位符由 Maven 资源过滤解析；</li>
+ * <li>所在 jar 的 manifest 条目 {@code Implementation-Version}，由 Maven jar 插件根据
+ * {@code ${project.version}} 填充；</li>
+ * <li>最终回退为字面值 {@code "unknown"}（例如从没有 manifest 的 IDE {@code target/classes}
+ * 直接运行），并记录一次警告日志。</li>
  * </ol>
  */
 public final class Version {
@@ -44,23 +42,24 @@ public final class Version {
 
     private static final String VERSION_RESOURCE = "/META-INF/agentscope/version.properties";
 
-    /** Sentinel returned when no build-resolved version can be discovered. */
+    /**
+     * 无法找到构建时解析的版本时返回的哨兵值。
+     */
     static final String UNKNOWN = "unknown";
 
     /**
-     * AgentScope Java version.
+     * AgentScope Java 版本。
      *
-     * <p>Injected at build time by Maven resource filtering from {@code ${project.version}};
-     * see the class Javadoc for the fallback chain.
+     * <p>构建时由 Maven 资源过滤从 {@code ${project.version}} 注入；回退链见类 Javadoc。
      */
     public static final String VERSION = resolveVersion();
 
     private Version() {
-        // Utility class - prevent instantiation
+        // 工具类，禁止实例化
     }
 
     private static String resolveVersion() {
-        // 1) Maven-filtered classpath resource (normal Maven builds, tests).
+        // 1）Maven 过滤后的类路径资源（正常 Maven 构建及测试）。
         String fromResource;
         try (InputStream in = Version.class.getResourceAsStream(VERSION_RESOURCE)) {
             fromResource = resolveVersionFromResource(in);
@@ -72,8 +71,8 @@ public final class Version {
             return fromResource;
         }
 
-        // 2) jar manifest Implementation-Version (packaged jars whose META-INF/agentscope
-        //    directory may have been dropped, e.g. by shading or custom packaging).
+        // 2）jar manifest 的 Implementation-Version（打包 jar 中的 META-INF/agentscope
+        // 目录可能因 shading 或自定义打包被移除）。
         String fromManifest = resolveVersionFromManifest(getImplementationVersion());
         if (!UNKNOWN.equals(fromManifest)) {
             log.debug(
@@ -81,7 +80,7 @@ public final class Version {
             return fromManifest;
         }
 
-        // 3) Last resort: make the failure visible instead of silently using a stale value.
+        // 3）最终回退：让失败可见，而不是悄悄使用陈旧版本值。
         log.warn(
                 "Could not resolve the AgentScope version from {} or the jar manifest "
                         + "Implementation-Version; reporting '{}'. Run against a Maven-built "
@@ -92,13 +91,12 @@ public final class Version {
     }
 
     /**
-     * Load and resolve the version from the classpath resource stream.
+     * 从类路径资源流加载并解析版本。
      *
-     * <p>Package-private for unit testing.
+     * <p>包可见，便于单元测试。
      *
-     * @param in stream to {@code version.properties}, or {@code null} when the resource is absent
-     * @return the resolved version, or {@code "unknown"} when the stream is {@code null} or cannot
-     *     be read
+     * @param in {@code version.properties} 的输入流；资源不存在时为 {@code null}
+     * @return 解析出的版本；流为 {@code null} 或无法读取时为 {@code "unknown"}
      */
     static String resolveVersionFromResource(InputStream in) {
         if (in == null) {
@@ -115,21 +113,20 @@ public final class Version {
     }
 
     /**
-     * Resolve the version string from a properties object, guarding against missing, blank,
-     * and unfiltered ({@code ${...}}) values.
+     * 从 properties 对象解析版本字符串，防止缺失、空白及未过滤的 {@code ${...}} 值。
      *
-     * <p>Package-private for unit testing.
+     * <p>包可见，便于单元测试。
      *
-     * @param props properties loaded from the version resource
-     * @return trimmed version, or {@code "unknown"} when absent, blank, or unfiltered
+     * @param props 从版本资源加载的属性
+     * @return 去掉首尾空白的版本；缺失、空白或未过滤时为 {@code "unknown"}
      */
     static String resolveVersionFrom(Properties props) {
         if (props == null) {
             return UNKNOWN;
         }
         String version = props.getProperty("version");
-        // Guard against an unfiltered ${project.version} literal, e.g. when running
-        // from an IDE that does not run Maven resource filtering.
+        // 防止返回未过滤的 ${project.version} 字面量，例如
+        // 从未执行 Maven 资源过滤的 IDE 运行时。
         if (version != null && !version.isBlank() && !version.startsWith("${")) {
             return version.trim();
         }
@@ -137,12 +134,12 @@ public final class Version {
     }
 
     /**
-     * Resolve the version from the jar manifest's {@code Implementation-Version} entry.
+     * 从 jar manifest 的 {@code Implementation-Version} 条目解析版本。
      *
-     * <p>Package-private for unit testing.
+     * <p>包可见，便于单元测试。
      *
-     * @param implementationVersion manifest value, or {@code null} when absent
-     * @return the resolved version, or {@code "unknown"} when absent, blank, or unfiltered
+     * @param implementationVersion manifest 值；不存在时为 {@code null}
+     * @return 解析出的版本；缺失、空白或未过滤时为 {@code "unknown"}
      */
     static String resolveVersionFromManifest(String implementationVersion) {
         if (implementationVersion != null
@@ -159,11 +156,11 @@ public final class Version {
     }
 
     /**
-     * Generate standard User-Agent string for all models.
+     * 为所有模型生成标准 User-Agent 字符串。
      *
-     * <p>Format: {@code agentscope-java/{version}; java/{java_version}; platform/{os}}
+     * <p>格式：{@code agentscope-java/{version}; java/{java_version}; platform/{os}}
      *
-     * @return unified User-Agent string
+     * @return 统一 User-Agent 字符串
      */
     public static String getUserAgent() {
         return String.format(

@@ -19,34 +19,31 @@ import io.agentscope.core.message.ToolResultBlock;
 import io.agentscope.core.message.ToolUseBlock;
 
 /**
- * Callback for tool invocation lifecycle notifications.
+ * 工具调用生命周期通知回调。
  *
- * <p>All methods default to no-ops and may be overridden as needed.
+ * <p>所有方法默认不执行操作，可按需覆写。
  */
 public interface ToolExecutionCallback {
     /**
-     * Notify that a tool invocation is starting — fired when the executor begins the invocation
-     * (when the call's turn arrives), not when the batch is admitted.
+     * 通知工具调用即将开始：在执行器开始调用（轮到此调用执行）时触发，而非批次被接纳时。
      *
-     * @param call the tool invocation
+     * @param call 工具调用
      */
     default void onStart(ToolUseBlock call) {}
 
     /**
-     * Report intermediate progress. A tool invocation may produce multiple progress notifications.
+     * 报告中间进度。一次工具调用可产生多次进度通知。
      *
-     * @param call the tool invocation
-     * @param progress the progress content
+     * @param call 工具调用
+     * @param progress 进度内容
      */
     default void onProgress(ToolUseBlock call, ToolResultBlock progress) {}
 
     /**
-     * Report the result of a tool invocation, which may indicate success, error, or suspension.
-     * Notified at most once per invocation, as soon as the result resolves and before ordered
-     * batch aggregation.
+     * 报告工具调用结果，可能为成功、错误或挂起。每次调用最多通知一次，结果解析完成后立即通知，早于按序批次聚合。
      *
-     * @param call the tool invocation
-     * @param result the invocation result
+     * @param call 工具调用
+     * @param result 调用结果
      */
     default void onResult(ToolUseBlock call, ToolResultBlock result) {}
 }

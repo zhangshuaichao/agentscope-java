@@ -27,13 +27,9 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Single-replica HITL gate. Calls a user-supplied prompter function that returns
- * approve / reject from human input (terminal, CLI, IDE prompt, …). Defers if the prompter
- * times out.
+ * 单副本 HITL（人在回路）门控。调用用户提供的提示函数，根据人工输入（终端、CLI、IDE 提示等）返回批准或拒绝。提示函数超时则延后。
  *
- * <p>The default constructor wires a no-op prompter that always defers. Real deployments
- * should supply a prompter that bridges to whatever HITL surface is available — typically
- * via {@code RequestStopEvent} so the agent's outer loop can pause for the prompt.
+ * <p>默认构造方法接入始终延后的空操作提示器。实际部署应提供连接到可用 HITL 界面的提示器，通常可通过 {@code RequestStopEvent} 让智能体外层循环暂停等待提示。
  */
 public class LocalApprovalGate implements SkillPromotionGate {
 
@@ -79,7 +75,9 @@ public class LocalApprovalGate implements SkillPromotionGate {
                         });
     }
 
-    /** Default prompter: never approves. Suitable for tests / when no prompter is wired. */
+    /**
+     * 默认提示器：从不批准。适合测试或尚未接入提示器时使用。
+     */
     public static Prompter defaultPrompter() {
         return candidate ->
                 CompletableFuture.completedFuture(
@@ -87,7 +85,9 @@ public class LocalApprovalGate implements SkillPromotionGate {
                                 Duration.ofHours(24), "LocalApprovalGate has no prompter wired"));
     }
 
-    /** Sample prompter: stdin yes/no. Useful for CLI demos / tests. */
+    /**
+     * 示例提示器：从 stdin 读取 yes/no，适合 CLI 演示与测试。
+     */
     public static Prompter stdinPrompter(java.io.InputStream in, java.io.PrintStream out) {
         return candidate -> {
             CompletableFuture<PromotionDecision> f = new CompletableFuture<>();

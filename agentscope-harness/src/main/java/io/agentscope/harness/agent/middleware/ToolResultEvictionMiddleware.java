@@ -45,24 +45,25 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Middleware that evicts oversized tool results to the {@link AbstractFilesystem} before
- * downstream reasoning sees the bloated message list.
+ * 在下游推理看到膨胀的消息列表前，将过大的工具结果转存到 {@link AbstractFilesystem} 的中间件。
  *
- * <p>When the text content of a {@link ToolResultBlock} in canonical agent state or the current
- * reasoning view exceeds {@link ToolResultEvictionConfig#getMaxResultChars()}, this middleware:
+ * <p>当权威智能体状态或当前推理视图中的 {@link ToolResultBlock} 文本超过
+ * {@link ToolResultEvictionConfig#getMaxResultChars()} 时，此中间件会：
  * <ol>
- *   <li>Writes the full result to
- *       {@code {evictionPath}/{agentName}/{sanitized-toolCallId}-{contentHash}} in the
- *       filesystem.</li>
- *   <li>Compacts {@link AgentState#contextMutable()} first, so legacy pre-reasoning hooks cannot
- *       hide an original result from persistence cleanup.</li>
- *   <li>Rebuilds the current {@link ReasoningInput}, preserving hook deletions and rewrites while
- *       replacing results that remain visible to the immediate model call.</li>
- *   <li>Marks compacted results in metadata so they are not recursively evicted on later turns.</li>
+ *   <li>将完整结果写入文件系统的
+ *       {@code {evictionPath}/{agentName}/{sanitized-toolCallId}-{contentHash}}。</li>
+ *   <li>先压缩 {@link AgentState#contextMutable()}，避免旧版推理前钩子隐藏原始结果，
+ *       从而绕过持久化前的清理。</li>
+ *   <li>重建当前 {@link ReasoningInput}，保留钩子的删除和改写，
+ *       同时替换即将发送给模型的视图中仍可见的结果。</li>
+ *   <li>在元数据中标记压缩后的结果，防止后续轮次递归转存。</li>
  * </ol>
  *
- * <p>Tools listed in {@link ToolResultEvictionConfig#getExcludedToolNames()} are never evicted
- * (e.g. {@code readFile} — evicting would cause re-read loops).
+ * <p>{@link ToolResultEvictionConfig#getExcludedToolNames()} 列出的工具永不转存
+ * （例如 {@code readFile}，否则可能造成反复重读循环）。
+ *
+ * <p>【学习提示】转存不是丢弃结果，而是用较小引用替代大块上下文。
+ * 必须先成功写入文件再替换消息，避免模型既失去原文又无法从文件恢复。
  */
 public class ToolResultEvictionMiddleware implements HarnessRuntimeMiddleware {
 
@@ -78,7 +79,7 @@ public class ToolResultEvictionMiddleware implements HarnessRuntimeMiddleware {
         this.config = config;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_REASONING);
@@ -93,7 +94,7 @@ public class ToolResultEvictionMiddleware implements HarnessRuntimeMiddleware {
         return next.apply(prepare(agent, ctx, input));
     }
 
-    /** Reusable final-boundary offload pass. Successful writes precede replacement. */
+    /** 可复用的最终边界转存步骤。先成功写入，再执行替换。 */
     public ReasoningInput prepare(Agent agent, RuntimeContext ctx, ReasoningInput input) {
         RuntimeContext rc = ctx != null ? ctx : RuntimeContext.empty();
         AgentState state = RuntimeContext.resolveAgentState(rc, agent);
@@ -114,19 +115,19 @@ public class ToolResultEvictionMiddleware implements HarnessRuntimeMiddleware {
         }
     }
 
-    /** Offload files before producing candidates; do not replace active history here. */
+    /** 先转存文件再生成候选结果；不要在此替换活动历史。 */
     public Candidate prepareCandidate(
             Agent agent, RuntimeContext ctx, ReasoningInput input, List<Msg> history) {
         final RuntimeContext rc = ctx != null ? ctx : RuntimeContext.empty();
         Map<ToolResultFingerprint, String> replacements = new HashMap<>();
 
-        // PreReasoning hooks run before middleware and may remove or rewrite messages. Evict the
-        // canonical state first so hook behavior cannot prevent the original result from being
-        // compacted before persistence.
+        // PreReasoning 钩子先于中间件运行，可能删除或改写消息。先转存
+        // 权威状态，确保钩子行为不能阻止原始结果在持久化前
+        // 得到压缩。
         EvictionResult canonical = evictMessages(history, agent.getName(), rc, replacements);
 
-        // Preserve the hook-produced model view, compacting only results that remain (or were
-        // newly added) in that view. Reuse canonical replacements to avoid duplicate writes.
+        // 保留钩子生成的模型视图，仅压缩该视图中仍存在或新加入的结果。
+        // 复用权威状态的替换结果，避免重复写入。
         EvictionResult result = evictMessages(input.messages(), agent.getName(), rc, replacements);
         if (!result.changed()) {
             return new Candidate(input, canonical.messages());

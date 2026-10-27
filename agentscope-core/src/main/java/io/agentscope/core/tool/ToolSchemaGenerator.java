@@ -26,24 +26,19 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Generates JSON Schema for tool parameters.
- * This class handles the conversion of Java method signatures to JSON Schema
- * format
- * compatible with OpenAI's function calling API.
+ * 生成工具参数的 JSON Schema，将 Java 方法签名转换为兼容 OpenAI 函数调用 API 的 JSON Schema 格式。
  */
 class ToolSchemaGenerator {
 
     /**
-     * Generate parameter schema with additionalProperties control.
+     * 生成支持 additionalProperties 控制的参数模式。
      *
-     * <p>Internal implementation detail backing {@link Tool#strict()}: when additional
-     * properties are disallowed, {@code additionalProperties: false} is injected
-     * recursively into all object-typed nodes.
+     * <p>这是 {@link Tool#strict()} 的内部实现：不允许附加属性时，向所有对象类型节点递归注入 {@code additionalProperties: false}。
      *
-     * @param method the method to generate schema for
-     * @param excludeParams set of parameter names to exclude (may be null or empty)
-     * @param allowAdditionalProperties whether to allow additional properties in the schema
-     * @return JSON Schema map
+     * @param method 要生成模式的方法
+     * @param excludeParams 要排除的参数名称集合（可为 null 或空）
+     * @param allowAdditionalProperties 是否允许模式中出现附加属性
+     * @return JSON Schema 映射
      */
     @SuppressWarnings("unchecked")
     Map<String, Object> generateParameterSchema(
@@ -59,12 +54,12 @@ class ToolSchemaGenerator {
 
     @SuppressWarnings("unchecked")
     private void addAdditionalPropertiesFalseRecursively(Map<String, Object> schema) {
-        // Only inject additionalProperties=false on object-type nodes
+        // 仅在对象类型节点注入 additionalProperties=false
         if ("object".equals(schema.get("type")) && !schema.containsKey("additionalProperties")) {
             schema.put("additionalProperties", false);
         }
 
-        // Always recurse into children regardless of this node's type
+        // 无论当前节点类型如何，都递归处理子节点
         Object propsObj = schema.get("properties");
         if (propsObj instanceof Map) {
             Map<String, Object> props = (Map<String, Object>) propsObj;
@@ -106,17 +101,13 @@ class ToolSchemaGenerator {
     }
 
     /**
-     * Generate parameter schema for a method with excluded parameters.
+     * 为方法生成排除指定参数后的参数模式。
      *
-     * <p>
-     * This overload allows excluding certain parameters from the generated schema,
-     * which is
-     * useful for preset parameters that should not be exposed to the agent.
+     * <p>此重载允许从生成模式中排除某些参数，适合不应暴露给智能体的预设参数。
      *
-     * @param method        the method to generate schema for
-     * @param excludeParams set of parameter names to exclude from the schema (may
-     *                      be null or empty)
-     * @return JSON Schema map in OpenAI format
+     * @param method 要生成模式的方法
+     * @param excludeParams 要从模式中排除的参数名称集合（可为 null 或空）
+     * @return OpenAI 格式的 JSON Schema 映射
      */
     @SuppressWarnings("unchecked")
     Map<String, Object> generateParameterSchema(Method method, Set<String> excludeParams) {
@@ -129,7 +120,7 @@ class ToolSchemaGenerator {
 
         Parameter[] parameters = method.getParameters();
         for (Parameter param : parameters) {
-            // Only include parameters with @ToolParam annotation
+            // 仅包含带 @ToolParam 注解的参数
             ToolParam toolParam = param.getAnnotation(ToolParam.class);
             if (toolParam == null) {
                 continue;
@@ -137,13 +128,13 @@ class ToolSchemaGenerator {
 
             ParameterInfo info = extractParameterInfo(param, toolParam);
 
-            // Skip excluded parameters (e.g., preset parameters)
+            // 跳过排除参数（例如预设参数）
             if (excludeParams != null && excludeParams.contains(info.name)) {
                 continue;
             }
 
-            // Hoist $defs from per-parameter schema to the root level so that
-            // $ref pointers like "#/$defs/TypeName" resolve against the document root.
+            // 将各参数模式的 $defs 提升到根级，确保
+            // "#/$defs/TypeName" 等 $ref 指针相对于文档根解析。
             hoistDefs(info.schema, "$defs", allDefs);
             hoistDefs(info.schema, "definitions", allDefs);
 
@@ -187,16 +178,16 @@ class ToolSchemaGenerator {
     }
 
     /**
-     * Extract parameter information from a Parameter with @ToolParam annotation.
+     * 从带 @ToolParam 注解的 Parameter 提取参数信息。
      *
-     * @param param the parameter to extract info from
-     * @param toolParam the @ToolParam annotation
-     * @return ParameterInfo containing name, schema, and required flag
+     * @param param 要提取信息的参数
+     * @param toolParam @ToolParam 注解
+     * @return 包含名称、模式和必填标志的 ParameterInfo
      */
     private ParameterInfo extractParameterInfo(Parameter param, ToolParam toolParam) {
         String paramName = toolParam.name();
 
-        // Generate schema using JsonSchemaUtils with full type support (including generics)
+        // 使用 JsonSchemaUtils 生成模式，保留包括泛型在内的完整类型信息
         Map<String, Object> paramSchema =
                 JsonSchemaUtils.generateSchemaFromType(param.getParameterizedType());
 
@@ -208,7 +199,7 @@ class ToolSchemaGenerator {
     }
 
     /**
-     * Internal class to hold parameter information.
+     * 保存参数信息的内部类。
      */
     private static class ParameterInfo {
         final String name;

@@ -18,20 +18,20 @@ package io.agentscope.core.shutdown;
 import io.agentscope.core.state.AgentState;
 
 /**
- * Strategy for persisting {@link AgentState} during graceful shutdown.
+ * 在优雅关闭期间持久化 {@link AgentState} 的策略。
  *
- * <p>Implementations are registered via
+ * <p>实现通过
  * {@link GracefulShutdownManager#bindStateSaver(io.agentscope.core.agent.Agent, ShutdownStateSaver)}
- * so the shutdown manager can checkpoint agent state without depending on the legacy
- * {@link io.agentscope.core.state.AgentStateStore} API.
+ * 注册，使关闭管理器能够为智能体状态创建检查点，而不依赖旧版
+ * {@link io.agentscope.core.state.AgentStateStore} API。
  */
 @FunctionalInterface
 public interface ShutdownStateSaver {
 
     /**
-     * Persist the given agent state snapshot.
+     * 持久化给定的智能体状态快照。
      *
-     * @param state the current agent state (with {@code shutdownInterrupted} already set)
+     * @param state 当前智能体状态（{@code shutdownInterrupted} 已设置）
      */
     void save(AgentState state);
 }

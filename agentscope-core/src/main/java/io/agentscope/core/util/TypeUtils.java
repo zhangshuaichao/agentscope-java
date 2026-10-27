@@ -18,7 +18,7 @@ package io.agentscope.core.util;
 import java.util.Optional;
 
 /**
- * Utility class for type-safe operations.
+ * 类型安全操作工具类。
  */
 public final class TypeUtils {
 
@@ -27,13 +27,13 @@ public final class TypeUtils {
     }
 
     /**
-     * Safely cast an object to the specified type.
+     * 将对象安全转换为指定类型。
      *
-     * @param obj The object to cast
-     * @param clazz The target class
-     * @param <T> The target type
-     * @return The casted object
-     * @throws ClassCastException if the object is not an instance of the target class
+     * @param obj 要转换的对象
+     * @param clazz 目标类
+     * @param <T> 目标类型
+     * @return 转换后的对象
+     * @throws ClassCastException 对象不是目标类实例时抛出
      */
     public static <T> T safeCast(Object obj, Class<T> clazz) {
         if (obj == null) {
@@ -47,12 +47,12 @@ public final class TypeUtils {
     }
 
     /**
-     * Safely cast an object to the specified type, returning Optional.
+     * 将对象安全转换为指定类型，并返回 Optional。
      *
-     * @param obj The object to cast
-     * @param clazz The target class
-     * @param <T> The target type
-     * @return Optional containing the casted object, or empty if cast fails
+     * @param obj 要转换的对象
+     * @param clazz 目标类
+     * @param <T> 目标类型
+     * @return 包含转换后对象的 Optional；转换失败时为空
      */
     public static <T> Optional<T> safeCastOptional(Object obj, Class<T> clazz) {
         if (!clazz.isInstance(obj)) {

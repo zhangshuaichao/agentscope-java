@@ -18,23 +18,21 @@ package io.agentscope.harness.agent.subagent.task;
 import java.time.Instant;
 
 /**
- * Snapshot of a terminal-state subagent task awaiting (or undergoing) push delivery to the parent
- * agent's reasoning loop. Returned by {@link TaskRepository#findPendingDeliveries} so that
- * middleware can render it into a synthetic {@code <system-reminder>} message without re-querying
- * the underlying record.
+ * 已达终态、等待或正在向父级智能体推理循环推送结果的子智能体任务快照。
+ * 由 {@link TaskRepository#findPendingDeliveries} 返回，使中间件无需重新查询底层记录
+ * 即可将其渲染为合成的 {@code <system-reminder>} 消息。
  *
- * <p>Fields are denormalised from {@link TaskRecord} on purpose — the consumer
- * ({@code SubagentsMiddleware}) only needs the projection, and snapshotting up-front avoids racing
- * with a later status mutation.
+ * <p>有意将字段从 {@link TaskRecord} 反规范化提取出来：消费者
+ * （{@code SubagentsMiddleware}）只需要投影视图，预先创建快照可避免
+ * 与之后的状态变更发生竞争。
  *
- * @param taskId        task identifier
- * @param agentId       which subagent type produced this result (may be {@code null} on legacy
- *                      records)
- * @param status        terminal status — one of COMPLETED / FAILED / CANCELLED
- * @param result        completion payload; {@code null} for FAILED / CANCELLED
- * @param errorMessage  failure message; {@code null} for COMPLETED / CANCELLED
- * @param completedAt   wall-clock instant the task reached its terminal status (best-effort —
- *                      typically {@link TaskRecord#getLastUpdatedAt()})
+ * @param taskId 任务标识符
+ * @param agentId 产生此结果的子智能体类型（旧记录可以为 {@code null}）
+ * @param status 终态：COMPLETED／FAILED／CANCELLED 之一
+ * @param result 完成载荷；FAILED／CANCELLED 时为 {@code null}
+ * @param errorMessage 失败消息；COMPLETED／CANCELLED 时为 {@code null}
+ * @param completedAt 任务到达终态的墙上时钟时间点（尽力而为，
+ *     通常为 {@link TaskRecord#getLastUpdatedAt()}）
  */
 public record TaskDelivery(
         String taskId,

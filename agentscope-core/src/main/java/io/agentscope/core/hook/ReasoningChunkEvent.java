@@ -21,30 +21,30 @@ import io.agentscope.core.model.GenerateOptions;
 import java.util.Objects;
 
 /**
- * Event fired during reasoning streaming.
+ * 推理流式输出期间触发的事件。
  *
- * <p><b>Modifiable:</b> No (notification-only)
+ * <p><b>可修改：</b>否（仅通知）
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getModelName()} - The model name</li>
- *   <li>{@link #getGenerateOptions()} - The generation options</li>
- *   <li>{@link #getIncrementalChunk()} - Only the new content in this chunk</li>
- *   <li>{@link #getAccumulated()} - The full accumulated message so far</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getModelName()}：模型名称</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项</li>
+ *   <li>{@link #getIncrementalChunk()}：仅本片段新增的内容</li>
+ *   <li>{@link #getAccumulated()}：截至目前累积的完整消息</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Use {@link #getIncrementalChunk()} for incremental display (append-only)</li>
- *   <li>Use {@link #getAccumulated()} for full context display (replace entire text)</li>
- *   <li>Display streaming output in real-time</li>
- *   <li>Monitor reasoning progress</li>
- *   <li>Log streaming content</li>
+ *   <li>使用 {@link #getIncrementalChunk()} 增量显示（仅追加）</li>
+ *   <li>使用 {@link #getAccumulated()} 显示完整上下文（替换整个文本）</li>
+ *   <li>实时显示流式输出</li>
+ *   <li>监控推理进度</li>
+ *   <li>记录流式内容</li>
  * </ul>
  *
- * <p><b>Example:</b>
+ * <p><b>示例：</b>
  * <pre>{@code
  * case ReasoningChunkEvent e -> {
  *     // Incremental mode: print only new content
@@ -57,7 +57,7 @@ import java.util.Objects;
  * }
  * }</pre>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class ReasoningChunkEvent extends ReasoningEvent {
@@ -66,16 +66,16 @@ public final class ReasoningChunkEvent extends ReasoningEvent {
     private final Msg accumulated;
 
     /**
-     * Constructor for ReasoningChunkEvent.
+     * ReasoningChunkEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null)
-     * @param incrementalChunk Only the new content generated in this streaming event (must not be
-     *     null)
-     * @param accumulated The full accumulated message containing all content generated so far (must
-     *     not be null)
-     * @throws NullPointerException if agent, modelName, incrementalChunk, or accumulated is null
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（可为 null）
+     * @param incrementalChunk 仅本次流式事件新生成的内容（不可为
+     *     null）
+     * @param accumulated 包含截至目前全部生成内容的完整累积消息（不可
+     *     为 null）
+     * @throws NullPointerException 当 agent、modelName、incrementalChunk 或 accumulated 为 null 时抛出
      */
     public ReasoningChunkEvent(
             Agent agent,
@@ -90,18 +90,18 @@ public final class ReasoningChunkEvent extends ReasoningEvent {
     }
 
     /**
-     * Get only the new content generated in this streaming event.
+     * 仅获取本次流式事件新生成的内容。
      *
-     * @return The incremental chunk
+     * @return 增量片段
      */
     public Msg getIncrementalChunk() {
         return incrementalChunk;
     }
 
     /**
-     * Get the full accumulated message containing all content generated so far.
+     * 获取包含截至目前全部生成内容的完整累积消息。
      *
-     * @return The accumulated message
+     * @return 累积消息
      */
     public Msg getAccumulated() {
         return accumulated;

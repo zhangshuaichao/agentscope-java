@@ -23,64 +23,59 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One MCP server entry under {@code mcpServers.<name>} in {@code tools.json}.
+ * 位于 {@code mcpServers.<name>} 下的单个 MCP 服务器配置项，保存在 {@code tools.json} 中。
  *
- * <p>Mirrors the standard MCP client configuration shape so that workspaces can be moved between
- * AgentScope and other MCP-aware tools with minimal edits. Field semantics map directly onto
- * {@link io.agentscope.core.tool.mcp.McpClientBuilder}.
+ * <p>采用标准 MCP 客户端配置结构，使工作区可在 AgentScope 与其他支持 MCP 的工具之间迁移，
+ * 只需极少修改。字段语义直接映射到 {@link io.agentscope.core.tool.mcp.McpClientBuilder}。
  *
- * <p>{@code transport} is the discriminator:
- *
+ * <p>{@code transport} 用于区分传输方式：
  * <ul>
- *   <li>{@code stdio} — uses {@link #command} + {@link #args} + {@link #env}.
- *   <li>{@code sse} — uses {@link #url} + {@link #headers} + {@link #queryParams}.
- *   <li>{@code http} — streamable HTTP, same fields as {@code sse}.
+ * <li>{@code stdio}：使用 {@link #command}、{@link #args} 和 {@link #env}。</li>
+ * <li>{@code sse}：使用 {@link #url}、{@link #headers} 和 {@link #queryParams}。</li>
+ * <li>{@code http}：可流式 HTTP，使用与 {@code sse} 相同的字段。</li>
  * </ul>
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class McpServerConfig {
 
-    /** Transport type: {@code stdio}, {@code sse}, or {@code http}. */
+    /** 传输类型：{@code stdio}、{@code sse} 或 {@code http}。 */
     @JsonProperty("transport")
     private String transport;
 
-    /** stdio: executable command. */
+    /** stdio：可执行命令。 */
     @JsonProperty("command")
     private String command;
 
-    /** stdio: command arguments. */
+    /** stdio：命令参数。 */
     @JsonProperty("args")
     private List<String> args;
 
-    /** stdio: environment variables passed to the spawned process. */
+    /** stdio：传给新启动进程的环境变量。 */
     @JsonProperty("env")
     private Map<String, String> env;
 
-    /** sse / http: server URL. */
+    /** sse / http：服务器 URL。 */
     @JsonProperty("url")
     private String url;
 
-    /** sse / http: HTTP headers attached to every request. */
+    /** sse / http：每次请求附带的 HTTP 请求头。 */
     @JsonProperty("headers")
     private Map<String, String> headers;
 
-    /** sse / http: query parameters merged into the request URL. */
+    /** sse / http：合并到请求 URL 中的查询参数。 */
     @JsonProperty("queryParams")
     private Map<String, String> queryParams;
 
-    /**
-     * Optional allowlist of tools to import from this server. When {@code null} or empty, all
-     * tools the server advertises are registered.
-     */
+    /** 可选的服务器工具导入允许列表。为 {@code null} 或空时，注册该服务器公布的全部工具。 */
     @JsonProperty("enableTools")
     private List<String> enableTools;
 
-    /** ISO-8601 duration for per-request timeout. {@code null} keeps the builder default. */
+    /** 采用 ISO-8601 时长格式的单请求超时；{@code null} 保留构建器默认值。 */
     @JsonProperty("timeout")
     private Duration timeout;
 
-    /** ISO-8601 duration for client initialization timeout. {@code null} keeps the default. */
+    /** 采用 ISO-8601 时长格式的客户端初始化超时；{@code null} 保留默认值。 */
     @JsonProperty("initializationTimeout")
     private Duration initializationTimeout;
 

@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Optional;
 import reactor.core.publisher.Mono;
 
-/** Optional compaction policy at the existing final-request boundary. */
+/** 在既有最终请求边界执行的可选压缩策略。 */
 @FunctionalInterface
 public interface ConversationCompactionStrategy {
-    /** Empty means use the configured standard compactor; a present list is the proposed history. */
+    /** 空值表示使用配置的标准压缩器；存在的列表表示提议采用的历史。 */
     Mono<Optional<List<Msg>>> compact(Request request);
 
     record Request(

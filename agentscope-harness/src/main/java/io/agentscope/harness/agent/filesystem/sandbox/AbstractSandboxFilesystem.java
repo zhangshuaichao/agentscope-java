@@ -20,30 +20,28 @@ import io.agentscope.harness.agent.filesystem.AbstractFilesystem;
 import io.agentscope.harness.agent.filesystem.model.ExecuteResponse;
 
 /**
- * Filesystem abstraction that adds shell command execution (sandbox or remote host).
+ * 增加 Shell 命令执行能力的文件系统抽象（面向沙箱或远程宿主）。
  *
- * <p>Extends {@link AbstractFilesystem} with {@link #execute} and {@link #id()}.
+ * <p>在 {@link AbstractFilesystem} 基础上增加 {@link #execute} 和 {@link #id()}。
+ *
+ * <p>【学习提示】这是能力接口，不是隔离机制本身。命令在哪个环境执行、能访问哪些资源，仍取决于具体后端及其权限和隔离配置。
  */
 public interface AbstractSandboxFilesystem extends AbstractFilesystem {
 
     /**
-     * Unique identifier for this filesystem/sandbox instance.
+     * 此文件系统／沙箱实例的唯一标识符。
      *
-     * @return id string
+     * @return ID 字符串
      */
     String id();
 
     /**
-     * Execute a shell command in the environment backing this filesystem.
+     * 在此文件系统所依托的环境中执行 Shell 命令。
      *
-     * @param runtimeContext per-call agent context; may be {@code null} when unavailable
-     * @param command full shell command string to execute
-     * @param timeoutSeconds maximum time in seconds to wait for the command to complete;
-     *                       {@code null} uses the filesystem's default timeout
-     * @return ExecuteResponse with combined output, exit code, and truncation flag; a
-     *         non-successful response (see {@link ExecuteResponse#isSuccess()}) means the command
-     *         did not complete successfully, so {@code output} must not be parsed as normal
-     *         command output
+     * @param runtimeContext 每次调用的智能体上下文；不可用时可为 {@code null}
+     * @param command 要执行的完整 Shell 命令字符串
+     * @param timeoutSeconds 等待命令完成的最长秒数；{@code null} 表示使用文件系统默认超时
+     * @return 包含合并输出、退出码和截断标记的 ExecuteResponse；不成功的响应（参见 {@link ExecuteResponse#isSuccess()}）表示命令未成功完成，此时不得将 {@code output} 当作正常命令输出解析
      */
     ExecuteResponse execute(RuntimeContext runtimeContext, String command, Integer timeoutSeconds);
 }

@@ -21,20 +21,18 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * In-memory {@link ContextStore} using two-level Map: Class → (Key → Object).
+ * 使用两级映射 Class → (Key → Object) 的内存 {@link ContextStore}。
  *
- * <p>Supports singleton (one per type) and multi-instance (keyed) patterns. Immutable and
- * thread-safe.
+ * <p>支持单例（每类型一个）和多实例（按键区分）模式，不可变且线程安全。
  *
- * @deprecated Part of the {@link ToolExecutionContext} layer which is superseded by
- *     {@link io.agentscope.core.agent.RuntimeContext}.
+ * @deprecated 属于 {@link ToolExecutionContext} 层，已由 {@link io.agentscope.core.agent.RuntimeContext} 取代。
  */
 @Deprecated
 class DefaultContextStore implements ContextStore {
 
     private static final String DEFAULT_KEY = "";
 
-    // Two-level map: Class -> (Key -> Object)
+    // 两级映射：Class -> (Key -> Object)
     private final Map<Class<?>, Map<String, Object>> objectMap;
 
     private DefaultContextStore(Builder builder) {
@@ -52,12 +50,12 @@ class DefaultContextStore implements ContextStore {
     }
 
     /**
-     * Retrieves an object by key and type.
+     * 按键和类型检索对象。
      *
-     * @param key The key identifying the instance
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param key 标识实例的键
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -75,14 +73,13 @@ class DefaultContextStore implements ContextStore {
     }
 
     /**
-     * Retrieves an object by type only (singleton case).
+     * 仅按类型检索对象（单例场景）。
      *
-     * <p>This method returns the object stored with the default key (empty string).
-     * If no object exists with the default key, it returns null.
+     * <p>返回以默认键（空字符串）保存的对象。默认键下没有对象时返回 null。
      *
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     @Override
     public <T> T get(Class<T> type) {
@@ -90,11 +87,11 @@ class DefaultContextStore implements ContextStore {
     }
 
     /**
-     * Checks whether an object with the specified key and type exists.
+     * 检查指定键和类型的对象是否存在。
      *
-     * @param key The key identifying the instance
-     * @param type The class type to check
-     * @return true if the object exists, false otherwise
+     * @param key 标识实例的键
+     * @param type 要检查的类类型
+     * @return 存在时为 true，否则为 false
      */
     @Override
     public boolean contains(String key, Class<?> type) {
@@ -103,10 +100,10 @@ class DefaultContextStore implements ContextStore {
     }
 
     /**
-     * Checks whether any object of the specified type exists.
+     * 检查是否存在指定类型的对象。
      *
-     * @param type The class type to check
-     * @return true if at least one object of this type exists, false otherwise
+     * @param type 要检查的类类型
+     * @return 至少存在一个该类型对象时为 true，否则为 false
      */
     @Override
     public boolean contains(Class<?> type) {
@@ -115,31 +112,29 @@ class DefaultContextStore implements ContextStore {
     }
 
     /**
-     * Returns an unmodifiable view of the internal object map.
+     * 返回内部对象映射的不可修改视图。
      *
-     * <p>The map structure is: Class → (Key → Object), where the outer map is keyed by type and
-     * the inner map is keyed by instance identifier. This allows both singleton pattern (using
-     * default key "") and multi-instance pattern (using custom keys).
+     * <p>结构为 Class → (Key → Object)：外层以类型为键，内层以实例标识符为键。同时支持单例模式（默认键 ""）和多实例模式（自定义键）。
      *
-     * @return Unmodifiable map containing all stored objects, never null (may be empty)
+     * @return 包含全部已存对象的不可修改映射，永不为 null（可以为空）
      */
     public Map<Class<?>, Map<String, Object>> getObjectMap() {
         return objectMap;
     }
 
     /**
-     * Creates a new builder for DefaultContextStore.
+     * 创建 DefaultContextStore 的构建器。
      *
-     * @return A new builder
+     * @return 新的构建器
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Creates an empty DefaultContextStore.
+     * 创建空的 DefaultContextStore。
      *
-     * @return An empty store
+     * @return 空存储
      */
     public static DefaultContextStore empty() {
         return new Builder().build();
@@ -163,27 +158,28 @@ class DefaultContextStore implements ContextStore {
         return "DefaultContextStore{" + "objectMap=" + objectMap + '}';
     }
 
-    /** Builder for DefaultContextStore. */
+    /**
+     * DefaultContextStore 的构建器。
+     */
     public static class Builder {
         private Map<Class<?>, Map<String, Object>> objectMap;
 
         private Builder() {}
 
         /**
-         * Registers an object with its exact type as the key (singleton case).
+         * 以对象的精确类型为键注册对象（单例场景）。
          *
-         * <p>The object is registered with the default key (empty string), indicating a singleton
-         * instance for this type.
+         * <p>使用默认键（空字符串）注册，表示此类型的单例。
          *
-         * <p>Example:
+         * <p>示例：
          * <pre>{@code
          * DatabaseConfig config = new DatabaseConfig();
          * builder.register(config);  // Singleton - no key needed
          * }</pre>
          *
-         * @param object The object to register (must not be null)
-         * @return This builder
-         * @throws NullPointerException if object is null
+         * @param object 要注册的对象（不能为 null）
+         * @return 当前构建器
+         * @throws NullPointerException 当 object 为 null 时
          */
         @SuppressWarnings("unchecked")
         public Builder register(Object object) {
@@ -193,33 +189,33 @@ class DefaultContextStore implements ContextStore {
         }
 
         /**
-         * Registers an object with an explicit type key (singleton case).
+         * 以显式类型键注册对象（单例场景）。
          *
-         * <p>This allows registering objects by their interface or superclass type.
+         * <p>可按接口或父类类型注册对象。
          *
-         * <p>Example:
+         * <p>示例：
          * <pre>{@code
          * UserContextImpl impl = new UserContextImpl();
          * builder.register(UserContext.class, impl);  // Register by interface
          * }</pre>
          *
-         * @param type The type key (must not be null)
-         * @param object The object to register (must not be null)
-         * @param <T> The object type
-         * @return This builder
-         * @throws NullPointerException if type or object is null
-         * @throws IllegalArgumentException if object is not an instance of type
+         * @param type 类型键（不能为 null）
+         * @param object 要注册的对象（不能为 null）
+         * @param <T> 对象类型
+         * @return 当前构建器
+         * @throws NullPointerException 当 type 或 object 为 null 时
+         * @throws IllegalArgumentException 当 object 不是 type 的实例时
          */
         public <T> Builder register(Class<T> type, T object) {
             return register(DEFAULT_KEY, type, object);
         }
 
         /**
-         * Registers an object with a custom key and explicit type.
+         * 使用自定义键和显式类型注册对象。
          *
-         * <p>This allows storing multiple instances of the same type, distinguished by keys.
+         * <p>可用键区分并存储同类型的多个实例。
          *
-         * <p>Example:
+         * <p>示例：
          * <pre>{@code
          * UserContext admin = new UserContext("admin");
          * UserContext guest = new UserContext("guest");
@@ -227,13 +223,13 @@ class DefaultContextStore implements ContextStore {
          *        .register("guest", UserContext.class, guest);
          * }</pre>
          *
-         * @param key The key identifying this instance (must not be null)
-         * @param type The type key (must not be null)
-         * @param object The object to register (must not be null)
-         * @param <T> The object type
-         * @return This builder
-         * @throws NullPointerException if key, type, or object is null
-         * @throws IllegalArgumentException if object is not an instance of type
+         * @param key 标识实例的键（不能为 null）
+         * @param type 类型键（不能为 null）
+         * @param object 要注册的对象（不能为 null）
+         * @param <T> 对象类型
+         * @return 当前构建器
+         * @throws NullPointerException 当 key、type 或 object 为 null 时
+         * @throws IllegalArgumentException 当 object 不是 type 的实例时
          */
         public <T> Builder register(String key, Class<T> type, T object) {
             Objects.requireNonNull(key, "Key must not be null");
@@ -254,20 +250,20 @@ class DefaultContextStore implements ContextStore {
         }
 
         /**
-         * Registers an object with a custom key using its runtime type.
+         * 使用自定义键和对象运行时类型注册对象。
          *
-         * <p>This is a convenience method for registering keyed objects without specifying type.
+         * <p>这是无需显式指定类型即可注册带键对象的便捷方法。
          *
-         * <p>Example:
+         * <p>示例：
          * <pre>{@code
          * UserContext admin = new UserContext("admin");
          * builder.register("admin", admin);  // Type inferred from object
          * }</pre>
          *
-         * @param key The key identifying this instance (must not be null)
-         * @param object The object to register (must not be null)
-         * @return This builder
-         * @throws NullPointerException if key or object is null
+         * @param key 标识实例的键（不能为 null）
+         * @param object 要注册的对象（不能为 null）
+         * @return 当前构建器
+         * @throws NullPointerException 当 key 或 object 为 null 时
          */
         @SuppressWarnings("unchecked")
         public Builder register(String key, Object object) {
@@ -278,9 +274,9 @@ class DefaultContextStore implements ContextStore {
         }
 
         /**
-         * Builds the DefaultContextStore.
+         * 构建 DefaultContextStore。
          *
-         * @return A new DefaultContextStore
+         * @return 新的 DefaultContextStore
          */
         public DefaultContextStore build() {
             return new DefaultContextStore(this);

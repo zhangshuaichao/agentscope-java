@@ -18,23 +18,26 @@ package io.agentscope.extensions.redis.state;
 import java.util.List;
 
 /**
- * Shared optimistic-concurrency helpers for Redis-backed {@link
- * io.agentscope.core.state.AgentStateStore} implementations.
+ * 基于 Redis 的 {@link io.agentscope.core.state.AgentStateStore} 实现共享的乐观并发辅助逻辑。
  */
 public final class RedisStateVersionSupport {
 
-    /** Redis key suffix for the monotonic version counter of a single state value. */
+    /**
+     * 单个状态值的单调版本计数器对应的 Redis 键后缀。
+     */
     public static final String VERSION_SUFFIX = ":ver";
 
-    /** Lua {@code ARGV[2]} sentinel for unconditional overwrite inside {@link #SAVE_SCRIPT}. */
+    /**
+     * 在 {@link #SAVE_SCRIPT} 内表示无条件覆盖的 Lua {@code ARGV[2]} 哨兵值。
+     */
     public static final String UNCONDITIONAL = "-1";
 
     /**
-     * Atomically compare-and-set or unconditionally bump a versioned payload.
+     * 原子比较并设置载荷，或无条件覆盖并递增版本。
      *
-     * <p>KEYS: payload key, version key, session keys set. ARGV: JSON payload, expected version
-     * ({@link #UNCONDITIONAL} for bump), state-key member for the session set. Returns the new
-     * version on success, or {@code -1} on conflict.
+     * <p>KEYS 依次为载荷键、版本键、会话键集合；ARGV 依次为 JSON 载荷、预期版本
+     * （{@link #UNCONDITIONAL} 表示无条件递增）、会话集合中的状态键成员。
+     * 成功返回新版本，冲突返回 {@code -1}。
      */
     public static final String SAVE_SCRIPT =
             """

@@ -20,13 +20,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
 /**
- * Stable Protocol DTO for remote subagent event streaming.
+ * 用于远程子智能体事件流的稳定协议 DTO。
  *
- * <p>Fields are optional per event type; unknown fields are ignored for forward compatibility.
+ * <p>字段按事件类型可选；忽略未知字段以保持向前兼容。
  *
- * <p>Besides the flat per-type fields, an event may carry {@link #getPayload()} — the source {@link
- * io.agentscope.core.event.AgentEvent} serialized in full. Clients that understand it restore the
- * original event (ids, timestamps, metadata and all); older ones keep reading the flat fields.
+ * <p>除按类型展平的字段外，事件还可携带 {@link #getPayload()}，即完整序列化的
+ * 原始 {@link io.agentscope.core.event.AgentEvent}。支持该载荷的客户端可恢复
+ * 原始事件（包括 ID、时间戳、元数据等）；旧客户端继续读取展平字段。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -146,9 +146,9 @@ public class RemoteAgentEvent {
     }
 
     /**
-     * Name of the source {@link io.agentscope.core.event.AgentEventType}, e.g.
-     * {@code MODEL_CALL_END}. Lets a client filter or log events without deserializing {@link
-     * #getPayload()}.
+     * 原始 {@link io.agentscope.core.event.AgentEventType} 的名称，例如
+     * {@code MODEL_CALL_END}。客户端无需反序列化 {@link #getPayload()}
+     * 即可过滤或记录事件。
      */
     public String getEventType() {
         return eventType;
@@ -159,9 +159,9 @@ public class RemoteAgentEvent {
     }
 
     /**
-     * The source {@link io.agentscope.core.event.AgentEvent} as JSON, or {@code null} for events
-     * the server synthesizes itself ({@code STATUS}, {@code RUN_ERROR}) and for events whose
-     * serialization failed.
+     * 以 JSON 表示的原始 {@link io.agentscope.core.event.AgentEvent}。
+     * 对于服务器自行合成的事件（{@code STATUS}、{@code RUN_ERROR}）
+     * 以及序列化失败的事件，该值为 {@code null}。
      */
     public String getPayload() {
         return payload;

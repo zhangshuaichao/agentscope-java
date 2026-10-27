@@ -27,13 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Accumulates server tool results returned by a provider during one reasoning round.
+ * 累积提供方在一轮推理期间返回的服务端工具结果。
  *
- * <p>Server tool results are keyed by {@code tool_use_id} so each result can be placed
- * immediately after its matching tool call in the final assistant message. A later result may
- * replace a still-running partial result, which lets providers stream previews before the final
- * result arrives. Results without a matching call are preserved in arrival order and logged,
- * rather than silently disappearing.
+ * <p>服务端工具结果以 {@code tool_use_id} 为键，确保最终助手消息中每个结果紧邻其匹配的工具调用。
+ * 后来的结果可以替换仍在运行的部分结果，使提供方能在最终结果到达前流式输出预览。
+ * 没有匹配调用的结果按到达顺序保留并记录日志，而非静默丢失。
  *
  * @hidden
  */
@@ -45,14 +43,13 @@ final class ServerToolResultAccumulator {
     private final List<ToolResultBlock> resultsWithoutId = new ArrayList<>();
 
     /**
-     * Adds a server tool result.
+     * 添加服务端工具结果。
      *
-     * <p>Duplicate IDs keep the first terminal result. A running result may be replaced by a
-     * later running or terminal result. A non-server result is ignored because local tool results
-     * are produced in the acting phase and are not part of reasoning output.
+     * <p>重复 ID 保留首个终态结果；运行中的结果可被后续运行中或终态结果替换。
+     * 忽略非服务端结果，因为本地工具结果在行动阶段产生，不属于推理输出。
      *
      * @hidden
-     * @param result the result block returned by the provider
+     * @param result 提供方返回的结果块
      */
     void add(ToolResultBlock result) {
         if (result == null || !result.isServerTool()) {
@@ -71,20 +68,20 @@ final class ServerToolResultAccumulator {
     }
 
     /**
-     * Returns whether any server tool result has been accumulated.
+     * 返回是否已累积任何服务端工具结果。
      *
      * @hidden
-     * @return true if at least one result is present
+     * @return 至少有一个结果时为 true
      */
     boolean hasContent() {
         return !resultsById.isEmpty() || !resultsWithoutId.isEmpty();
     }
 
     /**
-     * Builds all accumulated results in arrival order.
+     * 按到达顺序构建全部已累积结果。
      *
      * @hidden
-     * @return an immutable list of server tool results
+     * @return 服务端工具结果的不可变列表
      */
     List<ToolResultBlock> buildAllToolResults() {
         List<ToolResultBlock> results = new ArrayList<>(resultsById.values());
@@ -93,12 +90,12 @@ final class ServerToolResultAccumulator {
     }
 
     /**
-     * Places each matched result immediately after its tool call. Unmatched results are appended
-     * after the tool calls so the data remains visible while still providing a diagnostic.
+     * 将每个匹配结果紧接在对应工具调用之后。未匹配结果追加在工具调用之后，
+     * 使数据保持可见，同时提供诊断信息。
      *
      * @hidden
-     * @param toolCalls the tool calls accumulated during the same reasoning round
-     * @return the tool calls with their matching server tool results inserted
+     * @param toolCalls 同一推理轮次中累积的工具调用
+     * @return 已插入匹配服务端工具结果的工具调用列表
      */
     List<ContentBlock> placeAfterToolCalls(List<ToolUseBlock> toolCalls) {
         if (toolCalls == null || toolCalls.isEmpty()) {
@@ -126,7 +123,7 @@ final class ServerToolResultAccumulator {
     }
 
     /**
-     * Clears the accumulated server tool results.
+     * 清空已累积的服务端工具结果。
      *
      * @hidden
      */

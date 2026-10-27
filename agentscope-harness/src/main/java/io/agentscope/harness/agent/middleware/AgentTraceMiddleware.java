@@ -44,17 +44,19 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Observability middleware that logs the reasoning and execution trace of an agent.
+ * 记录智能体推理与执行轨迹的可观测性中间件。
  *
- * <p>At INFO level, logs concise summaries: agent name, model, tool names/IDs, and
- * message lengths. At DEBUG level, additionally logs tool call arguments, tool result
- * content, reasoning text, and input message details.
+ * <p>INFO 级别记录简要摘要：智能体名称、模型、工具名称／ID 和消息长度。
+ * DEBUG 级别还记录工具调用参数、工具结果内容、推理文本及输入消息详情。
+ *
+ * <p>【学习提示】可观测性不等于可以无限记录原文。DEBUG 轨迹可能包含用户数据和工具参数，
+ * 生产环境应结合脱敏、访问控制与保留策略使用。
  */
 public class AgentTraceMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(AgentTraceMiddleware.class);
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(
@@ -132,9 +134,9 @@ public class AgentTraceMiddleware implements HarnessRuntimeMiddleware {
                         () -> {
                             String text = textBuf.toString();
                             boolean hasText = !text.isBlank();
-                            // Always surface the model's text, even when it accompanies tool calls
-                            // (a tool-call turn often carries a "thinking out loud" preamble that
-                            // would otherwise be silently dropped).
+                            // 始终展示模型文本，即使文本与工具调用同时出现，
+                            // 因为工具调用轮次常带有“边想边说”的开场文字，
+                            // 否则这些文字会被静默丢弃。
                             if (hasText) {
                                 log.info(
                                         "[{}] POST_REASONING | text: {}",
@@ -142,9 +144,9 @@ public class AgentTraceMiddleware implements HarnessRuntimeMiddleware {
                                         truncate(text, 120));
                             }
                             if (toolCalls.isEmpty()) {
-                                // No tool call ends the ReAct loop. If there was also no text, the
-                                // model returned an empty completion — make that explicit instead
-                                // of logging a misleading "<empty>" that looks like normal output.
+                                // 没有工具调用时 ReAct 循环结束。如果同时没有文本，则模型
+                                // 返回了空补全；应明确标出，而不是记录看似正常输出的
+                                // 误导性 "<empty>"。
                                 if (!hasText) {
                                     log.info(
                                             "[{}] POST_REASONING | empty completion (no text, no"
@@ -184,11 +186,11 @@ public class AgentTraceMiddleware implements HarnessRuntimeMiddleware {
                 }
             }
         }
-        // Derive POST_ACTING from the tool-result events flowing through the middleware stream
-        // (ToolResultStart/TextDelta/End), rather than scanning the context tail on completion.
-        // The context append happens after this stream completes, so the previous approach missed
-        // successfully-executed tools; observing the events captures every tool deterministically
-        // and keeps us off the deprecated hook path.
+        // 从流经中间件的工具结果事件（ToolResultStart/TextDelta/End）
+        // 推导 POST_ACTING，而不是完成时扫描上下文尾部。
+        // 上下文追加发生在此流完成后，因此之前的方案会遗漏
+        // 执行成功的工具；观察事件可以确定地捕获每个工具，
+        // 也避免继续依赖已弃用的钩子路径。
         Map<String, String> toolNames = new ConcurrentHashMap<>();
         Map<String, StringBuilder> toolText = new ConcurrentHashMap<>();
         return next.apply(input)
@@ -247,10 +249,10 @@ public class AgentTraceMiddleware implements HarnessRuntimeMiddleware {
             return;
         }
         String text = lastAssistant.getTextContent();
-        // A turn carrying tool calls is never a clean final reply: if it is the last
-        // assistant message, the loop ended on a tool-call turn (e.g., the model returned an
-        // empty completion right after). Surfacing its preamble as the "response" is misleading,
-        // so we flag the situation explicitly and show the preamble only as context.
+        // 包含工具调用的轮次绝不是干净的最终回复：如果它是最后一条
+        // 助手消息，说明循环停在工具调用轮次（例如随后模型返回
+        // 空补全）。把其开场文字展示为“响应”会误导读者，
+        // 因此明确标出该情况，仅将开场文字作为上下文展示。
         boolean endedOnToolCall = !lastAssistant.getContentBlocks(ToolUseBlock.class).isEmpty();
         if (endedOnToolCall) {
             log.info(

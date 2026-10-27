@@ -21,63 +21,58 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Resolves the target {@code agentId} and stable {@link MsgContext} for an {@link InboundMessage}
- * by evaluating {@link ChannelBinding} rules in deterministic priority order.
+ * 按确定的优先级顺序评估 {@link ChannelBinding} 规则，为 {@link InboundMessage}
+ * 解析目标 {@code agentId} 和稳定的 {@link MsgContext}。
  *
- * <h2>Binding evaluation tiers (highest to lowest priority)</h2>
+ * <h2>绑定评估层次（优先级从高到低）</h2>
  *
  * <ol>
- *   <li><b>explicit</b> — {@link InboundMessage#preferredAgentId()} short-circuit when the caller
- *       has already nominated a specific agent. Bindings are still consulted to determine
- *       {@code sessionScope} and outbound addressing.
- *   <li><b>peer</b> — exact {@link Peer#key()} match (e.g. {@code "direct:u_42"})
- *   <li><b>peer.parent</b> — exact match on the thread-parent peer's key
- *   <li><b>guild + roles</b> — guild id matches AND sender holds at least one of the binding's
- *       roles
- *   <li><b>guild</b> — guild id matches (no role constraint)
- *   <li><b>team</b> — team id matches
- *   <li><b>account</b> — account id matches
- *   <li><b>channel</b> — channel id matches
- *   <li><b>default</b> — {@link ChannelConfig#defaultAgentId()} or {@code globalDefaultAgentId}
+ *   <li><b>明确指定</b> — 调用方已指定智能体时，{@link InboundMessage#preferredAgentId()}
+ *       直接决定目标；仍查询绑定以确定 {@code sessionScope} 和出站地址。
+ *   <li><b>对端</b> — 精确匹配 {@link Peer#key()}（例如 {@code "direct:u_42"}）
+ *   <li><b>父对端</b> — 精确匹配线程父对端键
+ *   <li><b>社区与角色</b> — 社区 ID 匹配，且发送者持有绑定角色中的至少一个
+ *   <li><b>社区</b> — 社区 ID 匹配（无角色约束）
+ *   <li><b>团队</b> — 团队 ID 匹配
+ *   <li><b>账户</b> — 账户 ID 匹配
+ *   <li><b>渠道</b> — 渠道 ID 匹配
+ *   <li><b>默认</b> — {@link ChannelConfig#defaultAgentId()} 或 {@code globalDefaultAgentId}
  * </ol>
  *
- * <p>Within each tier the first binding in {@link ChannelConfig#bindings()} list order that
- * matches wins.
+ * <p>每层内部，按 {@link ChannelConfig#bindings()} 列表顺序第一个匹配绑定胜出。
  *
- * <h2>Session key construction ({@link MsgContext})</h2>
+ * <h2>会话键构造（{@link MsgContext}）</h2>
  *
- * After resolving {@code agentId}, the router builds a {@link MsgContext} whose {@link
- * MsgContext#canonicalKey()} produces a stable session key:
+ * 解析 {@code agentId} 后，路由器构建 {@link MsgContext}，
+ * 其 {@link MsgContext#canonicalKey()} 生成稳定会话键：
  *
  * <ul>
- *   <li>DM + {@link DmScope#MAIN} — {@code channel} field only; all DMs share one session
- *   <li>DM + other scopes — room = peerId (optionally group = accountId)
- *   <li>Thread — room = parentPeer id, threadId = peer id
- *   <li>Non-DM channel/group — room = peer id, group = guild
+ *   <li>私聊 + {@link DmScope#MAIN} — 仅 {@code channel} 字段；全部私聊共享一个会话
+ *   <li>私聊 + 其他作用域 — room = peerId（可选 group = accountId）
+ *   <li>线程 — room = parentPeer id，threadId = peer id
+ *   <li>非私聊频道／群组 — room = peer id，group = guild
  * </ul>
  *
- * The resolved {@code agentId} is always included in {@link MsgContext#extra()} under key {@code
- * "agentId"} so that the gateway can pick the correct agent from its registry.
+ * 解析出的 {@code agentId} 始终以键 {@code
+ * "agentId"} 放入 {@link MsgContext#extra()}，使网关从注册表选出正确智能体。
  */
 public final class ChannelRouter {
 
     private final String globalDefaultAgentId;
 
     /**
-     * @param globalDefaultAgentId fallback agent id when no binding and no channel-level default
-     *     match; typically the id of the agent registered via
-     *     {@link io.agentscope.harness.agent.gateway.Gateway#bindMainAgent}
+     * @param globalDefaultAgentId 既无匹配绑定也无渠道默认值时的回退智能体 ID；
+     *     通常为通过 {@link io.agentscope.harness.agent.gateway.Gateway#bindMainAgent} 注册的智能体 ID
      */
     public ChannelRouter(String globalDefaultAgentId) {
         this.globalDefaultAgentId = globalDefaultAgentId != null ? globalDefaultAgentId : "main";
     }
 
     /**
-     * Evaluates bindings in priority order and returns a {@link RouteResult} ready for gateway
-     * execution.
+     * 按优先级顺序评估绑定，返回可供网关执行的 {@link RouteResult}。
      *
-     * @param config channel-level routing config (bindings + dmScope + channel default agent)
-     * @param msg normalized inbound message
+     * @param config 渠道级路由配置（绑定、dmScope、渠道默认智能体）
+     * @param msg 规范化的入站消息
      */
     public RouteResult resolveRoute(ChannelConfig config, InboundMessage msg) {
         Objects.requireNonNull(config, "config");
@@ -118,7 +113,7 @@ public final class ChannelRouter {
     }
 
     // -----------------------------------------------------------------
-    //  Binding evaluation - 7 tiers
+    // 绑定评估：7 个层次
     // -----------------------------------------------------------------
 
     private static final List<String> TIERS =
@@ -173,7 +168,7 @@ public final class ChannelRouter {
     }
 
     // -----------------------------------------------------------------
-    //  MsgContext construction from routing result + dmScope
+    // 根据路由结果与 dmScope 构造 MsgContext
     // -----------------------------------------------------------------
 
     private MsgContext buildContext(
@@ -211,7 +206,7 @@ public final class ChannelRouter {
     }
 
     // -----------------------------------------------------------------
-    //  OutboundAddress construction
+    // 构造 OutboundAddress
     // -----------------------------------------------------------------
 
     private OutboundAddress buildOutboundAddress(InboundMessage msg) {

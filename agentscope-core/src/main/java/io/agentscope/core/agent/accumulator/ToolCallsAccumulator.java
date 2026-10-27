@@ -28,15 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tool calls accumulator for accumulating streaming tool call chunks.
+ * 用于累积流式工具调用片段的工具调用累积器。
  *
- * <p>This accumulator supports multiple parallel tool calls and handles:
- *
+ * <p>支持多个并行工具调用，负责：
  * <ul>
- *   <li>Tool name and ID accumulation
- *   <li>Incremental parameter merging
- *   <li>Raw JSON content accumulation and parsing
- *   <li>Placeholder name handling (e.g., "__fragment__")
+ * <li>累积工具名称和 ID</li>
+ * <li>增量合并参数</li>
+ * <li>累积并解析原始 JSON 内容</li>
+ * <li>处理占位名称（例如 "__fragment__"）</li>
  * </ul>
  * @hidden
  */
@@ -44,43 +43,45 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ToolCallsAccumulator.class);
 
-    // Map to support multiple parallel tool calls
-    // Key: tool identifier (ID, name, or index)
+    // 用于支持多个并行工具调用的映射
+    // 键：工具标识符（ID、名称或索引）
     private final Map<String, ToolCallBuilder> builders = new LinkedHashMap<>();
     private int nextIndex = 0;
 
-    // Track the last tool call key for streaming chunks without ID
-    // This is needed when models return fragments with placeholder names and empty IDs
+    // 跟踪最近的工具调用键，以处理不含 ID 的流式片段
+    // 模型返回占位名称且 ID 为空的片段时需要此信息
     private String lastToolCallKey = null;
 
-    /** Builder for a single tool call. */
+    /**
+     * 单个工具调用的构建器。
+     */
     private static class ToolCallBuilder {
         String toolId;
         String name;
         Map<String, Object> args = new HashMap<>();
         StringBuilder rawContent = new StringBuilder();
         Map<String, Object> metadata = new HashMap<>();
-        // Name of the exception from the last failed JSON parse of rawContent, cleared on a
-        // successful parse; only used to report the failure once at finalization
+        // 最近一次 rawContent JSON 解析失败的异常名称；解析
+        // 成功时清除，仅用于在最终构建时报告一次失败
         String parseFailure;
         boolean parseWarned;
         ToolCallState state;
 
         void merge(ToolUseBlock block) {
-            // Update ID if present
+            // 存在 ID 时更新
             if (this.toolId == null && block.getId() != null && !block.getId().isEmpty()) {
                 this.toolId = block.getId();
             }
 
-            // Update name (ignore placeholders)
+            // 更新名称（忽略占位名称）
             if (block.getName() != null
                     && !block.getName().isEmpty()
                     && !isPlaceholder(block.getName())) {
                 this.name = block.getName();
             }
 
-            // Merge parameters. Skip null values so a partial/null map from an early
-            // stream chunk cannot wipe previously accumulated non-null arguments.
+            // 合并参数，跳过 null 值，以免早期流片段中的部分／空映射
+            // 抹掉先前已累积的非空参数。
             if (block.getInput() != null) {
                 for (Map.Entry<String, Object> entry : block.getInput().entrySet()) {
                     if (entry.getValue() != null) {
@@ -91,12 +92,12 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
                 }
             }
 
-            // Accumulate raw content (for parsing complete JSON)
+            // 累积原始内容（用于解析完整 JSON）
             if (block.getContent() != null) {
                 this.rawContent.append(block.getContent());
             }
 
-            // Merge metadata (e.g., thoughtSignature for Gemini 3 Pro)
+            // 合并元数据（例如 Gemini 3 Pro 的 thoughtSignature）
             if (block.getMetadata() != null && !block.getMetadata().isEmpty()) {
                 this.metadata.putAll(block.getMetadata());
             }
@@ -112,9 +113,9 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
             Map<String, Object> finalArgs = new HashMap<>(args);
             String rawContentStr = this.rawContent.toString();
 
-            // Always attempt to parse the fully accumulated raw JSON. Early stream chunks may
-            // look like complete objects ({...}) but still contain null/incomplete values;
-            // the final raw content is the source of truth for missing or null keys.
+            // 始终尝试解析完整累积的原始 JSON。早期流片段可能
+            // 看起来是完整对象（{...}），但仍包含 null／不完整值；
+            // 最终原始内容是补全缺失键或 null 键的权威来源。
             if (!rawContentStr.isEmpty()) {
                 try {
                     @SuppressWarnings("unchecked")
@@ -133,28 +134,28 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
                         }
                     }
                 } catch (Exception e) {
-                    // Incomplete JSON prefixes are expected while streamed fragments are still
-                    // arriving, so build() stays silent here; buildAllToolCalls() reports the
-                    // failure once at finalization if the raw content never became valid JSON.
-                    // Only the exception name is kept: its message may quote raw arguments,
-                    // which can contain credentials or other sensitive data.
+                    // 流片段仍在到达时，不完整的 JSON 前缀属于正常情况，
+                    // 因此 build() 此时不发出日志；若原始内容最终仍不是合法 JSON，
+                    // buildAllToolCalls() 会在最终构建时报告一次失败。
+                    // 仅保留异常名称：异常消息可能引用原始参数，
+                    // 其中可能含有凭据或其他敏感数据。
                     parseFailure = e.getClass().getSimpleName();
                 }
             }
 
-            // Always validate rawContent is a legal JSON object before using it
-            // as content. This prevents persisting malformed JSON fragments
-            // (e.g. when streaming was interrupted mid-arguments). Non-empty but
-            // invalid raw content means the arguments were truncated or corrupt;
-            // the fact is preserved as a metadata marker so the acting phase can
-            // refuse execution instead of silently running the call with {}.
+            // 将 rawContent 用作内容前，始终验证它是合法的 JSON 对象，
+            // 防止持久化格式错误的 JSON 片段
+            // （例如流在参数中途被中断）。原始内容非空但
+            // 无效，意味着参数被截断或损坏；
+            // 该事实通过元数据标记保留，使行动阶段可以
+            // 拒绝执行，而不是悄悄使用 {} 执行调用。
             String contentStr;
             Map<String, Object> finalMetadata = metadata;
             boolean malformed;
             if (rawContentStr.isEmpty()) {
                 contentStr = "{}";
-                // Without a completed block or any parsed arguments, an output-limit stop
-                // cannot establish that an empty tool-call start was a complete no-arg call.
+                // 没有完整块或任何已解析参数时，输出达到上限而停止
+                // 不能证明一个空的工具调用起始片段就是完整的无参调用。
                 malformed = truncated && finalArgs.isEmpty();
             } else if (JsonUtils.isValidJsonObject(rawContentStr)) {
                 contentStr = rawContentStr;
@@ -179,13 +180,11 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
         }
 
         /**
-         * Emits at most one sanitized warning when the final accumulated arguments are marked
-         * malformed.
+         * 最终累积参数被标记为格式错误时，最多发出一条脱敏警告。
          *
-         * <p>Called only from the finalization boundary ({@link #buildAllToolCalls(boolean)}),
-         * not from per-fragment builds, because incomplete JSON prefixes are normal mid-stream.
-         * The warning omits the raw arguments (they may contain credentials, PII, or user
-         * documents) and carries no stack trace.
+         * <p>仅在最终构建边界（{@link #buildAllToolCalls(boolean)}）调用，不在每片段构建时调用，
+         * 因为流中途出现不完整 JSON 前缀是正常情况。
+         * 警告省略原始参数（可能包含凭据、个人身份信息或用户文档），也不携带堆栈跟踪。
          */
         private void warnIfMalformedOnce(ToolUseBlock block, boolean truncated) {
             if (!block.hasMalformedArguments() || parseWarned) {
@@ -207,7 +206,7 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
         }
 
         private boolean isPlaceholder(String name) {
-            // Common placeholder names
+            // 常见占位名称
             return "__fragment__".equals(name)
                     || "__pending__".equals(name)
                     || (name != null && name.startsWith("__"));
@@ -227,41 +226,39 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
             return;
         }
 
-        // Determine which tool call this block belongs to
+        // 确定此块属于哪个工具调用
         String key = determineKey(block);
 
-        // Get or create the corresponding builder
+        // 获取或创建对应构建器
         ToolCallBuilder builder = builders.computeIfAbsent(key, k -> new ToolCallBuilder());
 
-        // Merge the block
+        // 合并此块
         builder.merge(block);
     }
 
     /**
-     * Determine the key for a tool call (to distinguish multiple parallel calls).
+     * 确定工具调用的键（用于区分多个并行调用）。
      *
-     * <p>Priority:
-     *
+     * <p>优先顺序：
      * <ol>
-     *   <li>Use tool ID if available (non-empty)
-     *   <li>Use tool name if available (non-placeholder, non-empty)
-     *   <li>If this is a fragment (placeholder or empty continuation name) and a last tool
-     *       call key exists, reuse it
-     *   <li>Otherwise, use index for chunks without any identifier
+     * <li>存在非空工具 ID 时使用它</li>
+     * <li>存在非占位、非空工具名称时使用它</li>
+     * <li>如果是片段（占位名称或空的续传名称），且存在最近工具调用键，则复用它</li>
+     * <li>否则，对无任何标识符的片段使用索引</li>
      * </ol>
      */
     private String determineKey(ToolUseBlock block) {
-        // 1. Prefer tool ID if non-empty
+        // 1. 优先使用非空工具 ID
         if (block.getId() != null && !block.getId().isEmpty()) {
             String key = block.getId();
-            // Remember this key if it's not a placeholder
+            // 不是占位名称时记住此键
             if (block.getName() != null && !isPlaceholder(block.getName())) {
                 lastToolCallKey = key;
             }
             return key;
         }
 
-        // 2. Use tool name (non-placeholder)
+        // 2. 使用工具名称（非占位名称）
         if (block.getName() != null
                 && !block.getName().isEmpty()
                 && !isPlaceholder(block.getName())) {
@@ -270,14 +267,14 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
             return key;
         }
 
-        // 3. If this is a fragment (placeholder or empty continuation name) and we
-        //    have a last key, reuse it
+        // 3. 如果这是片段（占位名称或空的续传名称），且存在
+        // 最近使用的键，则复用它
         boolean emptyContinuationName = block.getName() != null && block.getName().isEmpty();
         if ((isPlaceholder(block.getName()) || emptyContinuationName) && lastToolCallKey != null) {
             return lastToolCallKey;
         }
 
-        // 4. Use index (for chunks without any identifier)
+        // 4. 使用索引（用于无任何标识符的片段）
         String key = "index:" + nextIndex++;
         lastToolCallKey = key;
         return key;
@@ -302,8 +299,8 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
     public ContentBlock buildAggregated() {
         List<ToolUseBlock> toolCalls = buildAllToolCalls();
 
-        // If only one tool call, return it
-        // If multiple, return the last one (or could return a special multi-call block)
+        // 只有一个工具调用时直接返回
+        // 有多个调用时返回最后一个（也可以返回特殊的多调用块）
         if (toolCalls.isEmpty()) {
             return null;
         }
@@ -312,20 +309,19 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
     }
 
     /**
-     * Build all accumulated tool calls.
+     * 构建全部已累积工具调用。
      *
      * @hidden
-     * @return List of tool calls
+     * @return 工具调用列表
      */
     public List<ToolUseBlock> buildAllToolCalls() {
         return buildAllToolCalls(false);
     }
 
     /**
-     * Builds calls, rejecting ambiguous empty starts when output stopped at its token limit.
+     * 构建调用；当输出因达到 token 上限而停止时，拒绝含义不明的空起始片段。
      *
-     * <p>This is the finalization boundary: malformed calls retain the upstream marker used to
-     * reject execution, and also emit one sanitized diagnostic warning.
+     * <p>这是最终构建边界：格式错误的调用保留用于拒绝执行的上游标记，并发出一条脱敏诊断警告。
      */
     public List<ToolUseBlock> buildAllToolCalls(boolean truncated) {
         return builders.values().stream()
@@ -339,24 +335,23 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
     }
 
     /**
-     * Get accumulated tool call by ID.
+     * 按 ID 获取已累积工具调用。
      *
-     * <p>If the ID is null or empty, or if no builder is found for the given ID,
-     * this method falls back to using the lastToolCallKey.
+     * <p>ID 为 null／空，或找不到对应构建器时，回退到 lastToolCallKey。
      *
-     * @param id The tool call ID to look up
-     * @return The accumulated ToolUseBlock, or null if not found
+     * @param id 要查找的工具调用 ID
+     * @return 已累积的 ToolUseBlock；未找到时为 null
      */
     public ToolUseBlock getAccumulatedToolCall(String id) {
         if (id != null && !id.isEmpty()) {
-            // First try to find by ID directly
+            // 首先尝试直接按 ID 查找
             ToolCallBuilder builder = builders.get(id);
             if (builder != null) {
                 return builder.build();
             }
         }
 
-        // Fallback to lastToolCallKey if ID is empty or not found
+        // ID 为空或未找到时回退到 lastToolCallKey
         if (lastToolCallKey != null) {
             ToolCallBuilder builder = builders.get(lastToolCallKey);
             if (builder != null) {
@@ -368,23 +363,22 @@ public class ToolCallsAccumulator implements ContentAccumulator<ToolUseBlock> {
     }
 
     /**
-     * Get all accumulated tool calls.
+     * 获取全部已累积工具调用。
      *
-     * <p>This is an alias for {@link #buildAllToolCalls()} for API consistency.
+     * <p>这是 {@link #buildAllToolCalls()} 的别名，用于保持 API 一致性。
      *
-     * @return List of all accumulated ToolUseBlocks
+     * @return 全部已累积 ToolUseBlock 的列表
      */
     public List<ToolUseBlock> getAllAccumulatedToolCalls() {
         return buildAllToolCalls();
     }
 
     /**
-     * Get the ID of the current (last) tool call being accumulated.
+     * 获取当前（最近）正在累积的工具调用 ID。
      *
-     * <p>This is useful for enriching fragment chunks with the correct tool call ID,
-     * allowing users to properly concatenate streaming chunks.
+     * <p>用于给片段补上正确的工具调用 ID，使用户能够正确连接流式片段。
      *
-     * @return The current tool call ID, or null if no tool call is being accumulated
+     * @return 当前工具调用 ID；没有正在累积的调用时为 null
      */
     public String getCurrentToolCallId() {
         if (lastToolCallKey == null) {

@@ -16,7 +16,7 @@
 package io.agentscope.core.shutdown;
 
 /**
- * Global framework shutdown state.
+ * 框架的全局关闭状态。
  */
 public enum ShutdownState {
     RUNNING,

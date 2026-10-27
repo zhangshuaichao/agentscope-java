@@ -22,14 +22,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Immutable allow-list of host directories that {@link LocalFsMode#ROOTED} accepts for absolute
- * paths. Each root is stored absolute-normalized so child-of checks are cheap.
+ * 不可变的主机目录允许列表，用于限定 {@link LocalFsMode#ROOTED} 接受的绝对路径。
+ * 每个根目录都保存为规范化的绝对路径，以便低成本检查子路径关系。
  *
- * <p>The Claude-Code-style two-layer Local FS uses {@code PathPolicy.of(project, workspace,
- * additionalRoots)} to bound the agent's reach without forcing it into a single hard sandbox.
+ * <p>Claude Code 风格的双层本地文件系统使用
+ * {@code PathPolicy.of(project, workspace,
+ * additionalRoots)} 限定智能体可访问范围，
+ * 但不强制将其放入单个硬沙箱。
  *
- * <p>Empty policy ({@link #empty()}) rejects every absolute path; use it only when the caller
- * intends to fall back to relative-only access.
+ * <p>空策略（{@link #empty()}）拒绝所有绝对路径；仅在调用方有意退回只允许相对路径访问时使用。
  */
 public final class PathPolicy {
 
@@ -41,15 +42,12 @@ public final class PathPolicy {
         this.roots = List.copyOf(roots);
     }
 
-    /** Returns a policy that allows no absolute paths. */
+    /** 返回不允许任何绝对路径的策略。 */
     public static PathPolicy empty() {
         return EMPTY;
     }
 
-    /**
-     * Builds a policy from one or more roots. {@code null} entries are skipped; remaining roots
-     * are absolute-normalized.
-     */
+    /** 从一个或多个根目录构建策略。跳过 {@code null} 条目，其余根目录转换为规范化绝对路径。 */
     public static PathPolicy of(Path first, Path... rest) {
         List<Path> all = new ArrayList<>();
         addNormalized(all, first);
@@ -61,9 +59,7 @@ public final class PathPolicy {
         return all.isEmpty() ? EMPTY : new PathPolicy(all);
     }
 
-    /**
-     * Builds a policy from a collection of roots. {@code null} entries are skipped.
-     */
+    /** 从根目录集合构建策略，跳过 {@code null} 条目。 */
     public static PathPolicy of(Collection<Path> roots) {
         if (roots == null || roots.isEmpty()) {
             return EMPTY;
@@ -82,19 +78,19 @@ public final class PathPolicy {
         out.add(p.toAbsolutePath().normalize());
     }
 
-    /** Returns the configured roots in insertion order. */
+    /** 按插入顺序返回配置的根目录。 */
     public List<Path> roots() {
         return roots;
     }
 
-    /** {@code true} when no roots are configured. */
+    /** 未配置根目录时为 {@code true}。 */
     public boolean isEmpty() {
         return roots.isEmpty();
     }
 
     /**
-     * {@code true} when {@code candidate} is equal to or below one of the configured roots.
-     * Caller must pass an absolute path; relative paths return {@code false}.
+     * 返回 {@code true} 表示 {@code candidate} 等于某个已配置根目录或位于其下。
+     * 调用方必须传入绝对路径；相对路径返回 {@code false}。
      */
     public boolean isAllowed(Path candidate) {
         if (candidate == null || !candidate.isAbsolute()) {

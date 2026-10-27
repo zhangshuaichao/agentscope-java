@@ -16,21 +16,18 @@
 package io.agentscope.harness.agent.sandbox.snapshot;
 
 /**
- * Snapshot spec that creates {@link RemoteSandboxSnapshot} instances backed by a
- * {@link RemoteSnapshotClient}.
+ * 创建由 {@link RemoteSnapshotClient} 支撑的 {@link RemoteSandboxSnapshot} 实例的快照规范。
  *
- * <p>The same client instance is shared across all sessions created by this spec.
- * Implement {@link RemoteSnapshotClient} to connect to your remote storage store
- * (e.g. AWS S3, Alibaba OSS, Google GCS).
+ * <p>由此规范创建的所有会话共享同一个客户端实例。实现 {@link RemoteSnapshotClient} 可连接所用远程存储（例如 AWS S3、阿里云 OSS、Google GCS）。
  */
 public class RemoteSnapshotSpec implements SandboxSnapshotSpec {
 
     private final RemoteSnapshotClient client;
 
     /**
-     * Creates a remote snapshot spec.
+     * 创建远程快照规范。
      *
-     * @param client the remote storage client implementation to use
+     * @param client 要使用的远程存储客户端实现
      */
     public RemoteSnapshotSpec(RemoteSnapshotClient client) {
         this.client = client;
@@ -43,7 +40,7 @@ public class RemoteSnapshotSpec implements SandboxSnapshotSpec {
     /**
      * {@inheritDoc}
      *
-     * @return a new {@link RemoteSandboxSnapshot} using this spec's client
+     * @return 使用此规范客户端的新 {@link RemoteSandboxSnapshot}
      */
     @Override
     public SandboxSnapshot build(String snapshotId) {

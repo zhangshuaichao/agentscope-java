@@ -22,31 +22,31 @@ import io.agentscope.core.tool.Toolkit;
 import java.util.Objects;
 
 /**
- * Event fired during tool execution streaming.
+ * 工具执行流式输出期间触发的事件。
  *
- * <p><b>Modifiable:</b> No (notification-only)
+ * <p><b>可修改：</b>否（仅通知）
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getToolkit()} - The toolkit instance</li>
- *   <li>{@link #getToolUse()} - The tool being executed</li>
- *   <li>{@link #getChunk()} - The streaming chunk from ToolEmitter</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getToolkit()}：工具集实例</li>
+ *   <li>{@link #getToolUse()}：正在执行的工具</li>
+ *   <li>{@link #getChunk()}：来自 ToolEmitter 的流式片段</li>
  * </ul>
  *
- * <p><b>Note:</b> These chunks are emitted by tools via {@link
- * io.agentscope.core.tool.ToolEmitter}. They are NOT sent to the LLM - only the final return value
- * is sent.
+ * <p><b>注意：</b>这些片段由工具通过 {@link
+ * io.agentscope.core.tool.ToolEmitter} 发出。它们不会发送给 LLM，只有最终返回值
+ * 才会发送。
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Display tool execution progress</li>
- *   <li>Log intermediate tool outputs</li>
- *   <li>Monitor long-running tool operations</li>
+ *   <li>显示工具执行进度</li>
+ *   <li>记录工具中间输出</li>
+ *   <li>监控长时间运行的工具操作</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class ActingChunkEvent extends ActingEvent {
@@ -54,13 +54,13 @@ public final class ActingChunkEvent extends ActingEvent {
     private final ToolResultBlock chunk;
 
     /**
-     * Constructor for ActingChunkEvent.
+     * ActingChunkEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param toolkit The toolkit instance (must not be null)
-     * @param toolUse The tool being executed (must not be null)
-     * @param chunk The streaming chunk from ToolEmitter (must not be null)
-     * @throws NullPointerException if agent, toolkit, toolUse, or chunk is null
+     * @param agent 智能体实例（不可为 null）
+     * @param toolkit 工具集实例（不可为 null）
+     * @param toolUse 正在执行的工具（不可为 null）
+     * @param chunk 来自 ToolEmitter 的流式片段（不可为 null）
+     * @throws NullPointerException 当 agent、toolkit、toolUse 或 chunk 为 null 时抛出
      */
     public ActingChunkEvent(
             Agent agent, Toolkit toolkit, ToolUseBlock toolUse, ToolResultBlock chunk) {
@@ -69,9 +69,9 @@ public final class ActingChunkEvent extends ActingEvent {
     }
 
     /**
-     * Get the streaming chunk from ToolEmitter.
+     * 获取来自 ToolEmitter 的流式片段。
      *
-     * @return The chunk
+     * @return 片段
      */
     public ToolResultBlock getChunk() {
         return chunk;

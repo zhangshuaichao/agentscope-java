@@ -36,22 +36,20 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Default {@link Channel} implementation for direct Chat UI interactions: no external transport,
- * no webhook, no websocket — the caller submits a {@link ChatUiRequest} programmatically and
- * receives the agent reply reactively.
+ * 面向直接聊天 UI 交互的默认 {@link Channel} 实现：没有外部传输、webhook 或 WebSocket；
+ * 调用方通过编程方式提交 {@link ChatUiRequest}，以响应式方式接收智能体回复。
  *
- * <p>Suitable for:
+ * <p>适用于：
  * <ul>
- *   <li>Embedded web chat UIs that send HTTP requests to the harness
- *   <li>CLI tools and integration tests that need a typed API to the agent
- *   <li>Single-agent single-session scenarios where the default {@link DmScope#MAIN} collapses all
- *       conversations into one session
+ *   <li>向 Harness 发送 HTTP 请求的嵌入式网页聊天 UI
+ *   <li>需要类型化智能体 API 的 CLI 工具及集成测试
+ *   <li>单智能体单会话场景，默认 {@link DmScope#MAIN} 将全部对话合并到一个会话
  * </ul>
  *
- * <h2>Obtaining an instance</h2>
+ * <h2>获取实例</h2>
  *
- * The recommended way is through {@link
- * io.agentscope.harness.agent.gateway.GatewayBootstrap#chatUiChannel()}:
+ * 推荐通过 {@link
+ * io.agentscope.harness.agent.gateway.GatewayBootstrap#chatUiChannel()} 获取：
  *
  * <pre>{@code
  * GatewayBootstrap gw = GatewayBootstrap.builder().model(model)
@@ -78,38 +76,48 @@ public final class ChatUiChannel implements Channel {
     }
 
     // -----------------------------------------------------------------
-    //  Factories
+    // 工厂方法
     // -----------------------------------------------------------------
 
-    /** Creates a Chat UI channel with the default {@link DmScope#MAIN} config. */
+    /**
+     * 创建使用默认 {@link DmScope#MAIN} 配置的聊天 UI 渠道。
+     */
     public static ChatUiChannel create() {
         return new ChatUiChannel(null, ChannelConfig.of(CHANNEL_ID));
     }
 
-    /** Creates a Chat UI channel with an explicit config. */
+    /**
+     * 创建使用明确配置的聊天 UI 渠道。
+     */
     public static ChatUiChannel create(ChannelConfig config) {
         return new ChatUiChannel(null, config);
     }
 
-    /** Creates a per-peer Chat UI channel. Each distinct peerId gets its own session. */
+    /**
+     * 创建按对端划分的聊天 UI 渠道，每个不同 peerId 获得自己的会话。
+     */
     public static ChatUiChannel perPeer() {
         ChannelConfig cfg = ChannelConfig.builder(CHANNEL_ID).dmScope(DmScope.PER_PEER).build();
         return new ChatUiChannel(null, cfg);
     }
 
-    /** Creates a Chat UI channel with a pre-wired gateway. */
+    /**
+     * 创建预先连接网关的聊天 UI 渠道。
+     */
     public static ChatUiChannel create(Gateway gateway) {
         return new ChatUiChannel(
                 Objects.requireNonNull(gateway, "gateway"), ChannelConfig.of(CHANNEL_ID));
     }
 
-    /** Creates a Chat UI channel with a pre-wired gateway and explicit config. */
+    /**
+     * 创建预先连接网关并使用明确配置的聊天 UI 渠道。
+     */
     public static ChatUiChannel create(Gateway gateway, ChannelConfig config) {
         return new ChatUiChannel(Objects.requireNonNull(gateway, "gateway"), config);
     }
 
     // -----------------------------------------------------------------
-    //  Channel lifecycle
+    // 渠道生命周期
     // -----------------------------------------------------------------
 
     @Override
@@ -159,8 +167,8 @@ public final class ChatUiChannel implements Channel {
     }
 
     /**
-     * Returns the {@link RouteResult} this channel would produce for {@code message} without
-     * dispatching it. Useful for pre-computing the session key before sending.
+     * 返回本渠道针对 {@code message} 将生成的 {@link RouteResult}，但不实际分发。
+     * 适合在发送前预计算会话键。
      */
     public RouteResult previewRoute(InboundMessage message) {
         Objects.requireNonNull(message, "message");
@@ -175,8 +183,7 @@ public final class ChatUiChannel implements Channel {
     }
 
     /**
-     * Drains and returns all buffered proactive outbound messages. Returns an empty list if no
-     * messages are pending.
+     * 排空并返回全部已缓冲的主动出站消息；没有待处理消息时返回空列表。
      */
     public List<OutboundEnvelope> pollOutbound() {
         List<OutboundEnvelope> result = new ArrayList<>();
@@ -187,22 +194,26 @@ public final class ChatUiChannel implements Channel {
         return result;
     }
 
-    /** Returns the number of buffered proactive outbound messages. */
+    /**
+     * 返回已缓冲主动出站消息的数量。
+     */
     public int outboundQueueSize() {
         return outboundQueue.size();
     }
 
     // -----------------------------------------------------------------
-    //  Convenience send APIs
+    // 便捷发送 API
     // -----------------------------------------------------------------
 
-    /** Sends a plain-text message in single-session mode (no peer id). */
+    /**
+     * 在单会话模式下发送纯文本消息（无对端 ID）。
+     */
     public Mono<Msg> send(String text) {
         return send(ChatUiRequest.of(Objects.requireNonNull(text, "text")));
     }
 
     /**
-     * Sends a pre-built {@link Msg} (text or multimodal) in single-session mode.
+     * 在单会话模式下发送预先构建的 {@link Msg}（文本或多模态）。
      *
      * <pre>{@code
      * Msg multimodal = Msg.builder()
@@ -222,36 +233,42 @@ public final class ChatUiChannel implements Channel {
     }
 
     /**
-     * Sends one or more pre-built {@link Msg}s in single-session mode. Use this for multimodal
-     * content or multi-part user turns.
+     * 在单会话模式下发送一个或多个预先构建的 {@link Msg}。
+     * 适用于多模态内容或包含多个部分的用户轮次。
      */
     public Mono<Msg> send(List<Msg> messages) {
         return send(ChatUiRequest.of(requireMessages(messages)));
     }
 
-    /** Sends a plain-text message from a specific peer. */
+    /**
+     * 发送来自指定对端的纯文本消息。
+     */
     public Mono<Msg> send(String peerId, String text) {
         Objects.requireNonNull(peerId, "peerId");
         Objects.requireNonNull(text, "text");
         return send(ChatUiRequest.withPeer(peerId, text));
     }
 
-    /** Sends a pre-built {@link Msg} from a specific peer. */
+    /**
+     * 发送来自指定对端、预先构建的 {@link Msg}。
+     */
     public Mono<Msg> send(String peerId, Msg message) {
         Objects.requireNonNull(peerId, "peerId");
         Objects.requireNonNull(message, "message");
         return send(ChatUiRequest.withPeer(peerId, List.of(message)));
     }
 
-    /** Sends one or more pre-built {@link Msg}s from a specific peer. */
+    /**
+     * 发送来自指定对端的一个或多个预先构建的 {@link Msg}。
+     */
     public Mono<Msg> send(String peerId, List<Msg> messages) {
         Objects.requireNonNull(peerId, "peerId");
         return send(ChatUiRequest.withPeer(peerId, requireMessages(messages)));
     }
 
     /**
-     * Sends a plain-text message with explicit routing identity. The {@link SendOptions} determines
-     * the user identity and session key directly — no {@link DmScope} configuration required.
+     * 使用明确路由身份发送纯文本消息。{@link SendOptions} 直接决定用户身份与会话键，
+     * 无需配置 {@link DmScope}。
      *
      * @see SendOptions#userId(String)
      * @see SendOptions#of(String, String)
@@ -264,9 +281,8 @@ public final class ChatUiChannel implements Channel {
     }
 
     /**
-     * Sends a pre-built {@link Msg} with explicit routing identity. Prefer this overload for
-     * multimodal content (images, audio, …) while still using {@link SendOptions} for session
-     * routing.
+     * 使用明确路由身份发送预先构建的 {@link Msg}。
+     * 处理图片、音频等多模态内容且仍需通过 {@link SendOptions} 路由会话时，优先使用此重载。
      */
     public Mono<Msg> send(SendOptions options, Msg message) {
         Objects.requireNonNull(options, "options");
@@ -275,15 +291,17 @@ public final class ChatUiChannel implements Channel {
     }
 
     /**
-     * Sends one or more pre-built {@link Msg}s with explicit routing identity. Useful for
-     * multimodal or multi-part user turns.
+     * 使用明确路由身份发送一个或多个预先构建的 {@link Msg}。
+     * 适用于多模态或包含多个部分的用户轮次。
      */
     public Mono<Msg> send(SendOptions options, List<Msg> messages) {
         Objects.requireNonNull(options, "options");
         return dispatchWithOptions(options, requireMessages(messages));
     }
 
-    /** Sends a message directly to an exposed subagent, bypassing normal routing. */
+    /**
+     * 直接向已公开子智能体发送消息，跳过普通路由。
+     */
     public Mono<Msg> sendToSubagent(String subagentId, String text) {
         Objects.requireNonNull(subagentId, "subagentId");
         Objects.requireNonNull(text, "text");
@@ -291,20 +309,26 @@ public final class ChatUiChannel implements Channel {
         return resolveGateway().runSubagent(subagentId, List.of(msg));
     }
 
-    /** Sends a pre-built {@link Msg} directly to an exposed subagent. */
+    /**
+     * 直接向已公开子智能体发送预先构建的 {@link Msg}。
+     */
     public Mono<Msg> sendToSubagent(String subagentId, Msg message) {
         Objects.requireNonNull(subagentId, "subagentId");
         Objects.requireNonNull(message, "message");
         return resolveGateway().runSubagent(subagentId, List.of(message));
     }
 
-    /** Sends one or more pre-built {@link Msg}s directly to an exposed subagent. */
+    /**
+     * 直接向已公开子智能体发送一个或多个预先构建的 {@link Msg}。
+     */
     public Mono<Msg> sendToSubagent(String subagentId, List<Msg> messages) {
         Objects.requireNonNull(subagentId, "subagentId");
         return resolveGateway().runSubagent(subagentId, requireMessages(messages));
     }
 
-    /** Sends a structured {@link ChatUiRequest} and returns the agent reply reactively. */
+    /**
+     * 发送结构化 {@link ChatUiRequest}，以响应式方式返回智能体回复。
+     */
     public Mono<Msg> send(ChatUiRequest request) {
         Objects.requireNonNull(request, "request");
         if (request.subagentId() != null) {
@@ -314,7 +338,7 @@ public final class ChatUiChannel implements Channel {
     }
 
     // -----------------------------------------------------------------
-    //  Streaming send APIs
+    // 流式发送 API
     // -----------------------------------------------------------------
 
     @Override
@@ -330,43 +354,57 @@ public final class ChatUiChannel implements Channel {
                         message);
     }
 
-    /** Streaming variant of {@link #send(String)}. Returns fine-grained {@link AgentEvent}s. */
+    /**
+     * {@link #send(String)} 的流式变体，返回细粒度 {@link AgentEvent}。
+     */
     public Flux<AgentEvent> sendStream(String text) {
         return sendStream(ChatUiRequest.of(Objects.requireNonNull(text, "text")));
     }
 
-    /** Streaming variant of {@link #send(Msg)}. */
+    /**
+     * {@link #send(Msg)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(Msg message) {
         Objects.requireNonNull(message, "message");
         return sendStream(ChatUiRequest.of(List.of(message)));
     }
 
-    /** Streaming variant of {@link #send(List)}. */
+    /**
+     * {@link #send(List)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(List<Msg> messages) {
         return sendStream(ChatUiRequest.of(requireMessages(messages)));
     }
 
-    /** Streaming variant of {@link #send(String, String)}. */
+    /**
+     * {@link #send(String, String)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(String peerId, String text) {
         Objects.requireNonNull(peerId, "peerId");
         Objects.requireNonNull(text, "text");
         return sendStream(ChatUiRequest.withPeer(peerId, text));
     }
 
-    /** Streaming variant of {@link #send(String, Msg)}. */
+    /**
+     * {@link #send(String, Msg)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(String peerId, Msg message) {
         Objects.requireNonNull(peerId, "peerId");
         Objects.requireNonNull(message, "message");
         return sendStream(ChatUiRequest.withPeer(peerId, List.of(message)));
     }
 
-    /** Streaming variant of {@link #send(String, List)}. */
+    /**
+     * {@link #send(String, List)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(String peerId, List<Msg> messages) {
         Objects.requireNonNull(peerId, "peerId");
         return sendStream(ChatUiRequest.withPeer(peerId, requireMessages(messages)));
     }
 
-    /** Streaming variant of {@link #send(SendOptions, String)}. */
+    /**
+     * {@link #send(SendOptions, String)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(SendOptions options, String text) {
         Objects.requireNonNull(options, "options");
         Objects.requireNonNull(text, "text");
@@ -374,20 +412,26 @@ public final class ChatUiChannel implements Channel {
         return dispatchStreamWithOptions(options, List.of(msg));
     }
 
-    /** Streaming variant of {@link #send(SendOptions, Msg)}. */
+    /**
+     * {@link #send(SendOptions, Msg)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(SendOptions options, Msg message) {
         Objects.requireNonNull(options, "options");
         Objects.requireNonNull(message, "message");
         return dispatchStreamWithOptions(options, List.of(message));
     }
 
-    /** Streaming variant of {@link #send(SendOptions, List)}. */
+    /**
+     * {@link #send(SendOptions, List)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(SendOptions options, List<Msg> messages) {
         Objects.requireNonNull(options, "options");
         return dispatchStreamWithOptions(options, requireMessages(messages));
     }
 
-    /** Streaming variant of {@link #sendToSubagent(String, String)}. */
+    /**
+     * {@link #sendToSubagent(String, String)} 的流式变体。
+     */
     public Flux<AgentEvent> sendToSubagentStream(String subagentId, String text) {
         Objects.requireNonNull(subagentId, "subagentId");
         Objects.requireNonNull(text, "text");
@@ -395,20 +439,26 @@ public final class ChatUiChannel implements Channel {
         return resolveGateway().runSubagentStream(subagentId, List.of(msg));
     }
 
-    /** Streaming variant of {@link #sendToSubagent(String, Msg)}. */
+    /**
+     * {@link #sendToSubagent(String, Msg)} 的流式变体。
+     */
     public Flux<AgentEvent> sendToSubagentStream(String subagentId, Msg message) {
         Objects.requireNonNull(subagentId, "subagentId");
         Objects.requireNonNull(message, "message");
         return resolveGateway().runSubagentStream(subagentId, List.of(message));
     }
 
-    /** Streaming variant of {@link #sendToSubagent(String, List)}. */
+    /**
+     * {@link #sendToSubagent(String, List)} 的流式变体。
+     */
     public Flux<AgentEvent> sendToSubagentStream(String subagentId, List<Msg> messages) {
         Objects.requireNonNull(subagentId, "subagentId");
         return resolveGateway().runSubagentStream(subagentId, requireMessages(messages));
     }
 
-    /** Streaming variant of {@link #send(ChatUiRequest)}. */
+    /**
+     * {@link #send(ChatUiRequest)} 的流式变体。
+     */
     public Flux<AgentEvent> sendStream(ChatUiRequest request) {
         Objects.requireNonNull(request, "request");
         if (request.subagentId() != null) {
@@ -418,7 +468,7 @@ public final class ChatUiChannel implements Channel {
     }
 
     // -----------------------------------------------------------------
-    //  Internal
+    // 内部实现
     // -----------------------------------------------------------------
 
     private static List<Msg> requireMessages(List<Msg> messages) {

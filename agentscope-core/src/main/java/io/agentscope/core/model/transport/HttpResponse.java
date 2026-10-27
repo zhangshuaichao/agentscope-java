@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * HTTP response encapsulation for the transport layer.
+ * 传输层的 HTTP 响应封装。
  *
- * <p>This class represents an HTTP response with status code, headers, and body.
+ * <p>表示包含状态码、响应头和响应体的 HTTP 响应。
  */
 public class HttpResponse {
 
@@ -37,63 +37,61 @@ public class HttpResponse {
     }
 
     /**
-     * Get the HTTP status code.
+     * 获取 HTTP 状态码。
      *
-     * @return the status code
+     * @return 状态码
      */
     public int getStatusCode() {
         return statusCode;
     }
 
     /**
-     * Get the response headers.
+     * 获取响应头。
      *
-     * @return an unmodifiable map of headers
+     * @return 响应头的不可修改映射
      */
     public Map<String, String> getHeaders() {
         return headers;
     }
 
     /**
-     * Get the response body.
+     * 获取响应体。
      *
-     * @return the body string, or null if no body
+     * @return 响应体字符串；无响应体时为 null
      */
     public String getBody() {
         return body;
     }
 
     /**
-     * Check if the response indicates success (2xx status code).
+     * 检查响应是否表示成功（2xx 状态码）。
      *
-     * @return true if status code is 2xx
+     * @return 状态码为 2xx 时返回 true
      */
     public boolean isSuccessful() {
         return statusCode >= 200 && statusCode < 300;
     }
 
     /**
-     * Create a new builder for HttpResponse.
+     * 创建新的 HttpResponse 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for HttpResponse.
-     */
+    /** HttpResponse 的建造者。 */
     public static class Builder {
         private int statusCode;
         private final Map<String, String> headers = new HashMap<>();
         private String body;
 
         /**
-         * Set the HTTP status code.
+         * 设置 HTTP 状态码。
          *
-         * @param statusCode the status code
-         * @return this builder
+         * @param statusCode 状态码
+         * @return 当前建造者
          */
         public Builder statusCode(int statusCode) {
             this.statusCode = statusCode;
@@ -101,11 +99,11 @@ public class HttpResponse {
         }
 
         /**
-         * Add a header to the response.
+         * 向响应添加一个响应头。
          *
-         * @param name the header name
-         * @param value the header value
-         * @return this builder
+         * @param name 响应头名称
+         * @param value 响应头值
+         * @return 当前建造者
          */
         public Builder header(String name, String value) {
             this.headers.put(name, value);
@@ -113,10 +111,10 @@ public class HttpResponse {
         }
 
         /**
-         * Add multiple headers to the response.
+         * 向响应添加多个响应头。
          *
-         * @param headers the headers to add
-         * @return this builder
+         * @param headers 要添加的响应头
+         * @return 当前建造者
          */
         public Builder headers(Map<String, String> headers) {
             this.headers.putAll(headers);
@@ -124,10 +122,10 @@ public class HttpResponse {
         }
 
         /**
-         * Set the response body.
+         * 设置响应体。
          *
-         * @param body the body string
-         * @return this builder
+         * @param body 响应体字符串
+         * @return 当前建造者
          */
         public Builder body(String body) {
             this.body = body;
@@ -135,9 +133,9 @@ public class HttpResponse {
         }
 
         /**
-         * Build the HttpResponse.
+         * 构建 HttpResponse。
          *
-         * @return a new HttpResponse instance
+         * @return 新的 HttpResponse 实例
          */
         public HttpResponse build() {
             return new HttpResponse(this);

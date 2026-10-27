@@ -44,38 +44,34 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Expands {@code @path} references in user messages by reading the referenced files through the
- * active {@link AbstractFilesystem} and appending an {@code <attached_file>} block at the end of
- * the message. Mirrors the Claude Code CLI's {@code @file} input syntax.
+ * 展开用户消息中的 {@code @path} 引用：通过当前 {@link AbstractFilesystem}
+ * 读取引用文件，并在消息末尾追加 {@code <attached_file>} 块。
+ * 对应 Claude Code CLI 的 {@code @file} 输入语法。
  *
- * <p>Dispatch by filesystem type (kept as in-line {@code instanceof} since there is exactly one
- * call site):
- *
+ * <p>按文件系统类型分派（只有一个调用点，因此保留内联 {@code instanceof} 判断）：
  * <ul>
- *   <li><b>Local</b> ({@link OverlayFilesystem} wrapping {@link LocalFilesystemWithShell}) —
- *       attempts {@code fs.read}; success triggers attachment, failure (typically because the
- *       path falls outside the {@code PathPolicy} allow-list) leaves the {@code @path} text
- *       untouched.
- *   <li><b>Sandbox</b> ({@link AbstractSandboxFilesystem}, not wrapped in overlay) — treats the
- *       reference as a path inside the sandbox; host-path upload is out of scope for this stage.
- *   <li><b>Remote</b> ({@link CompositeFilesystem}) — disabled. The agent is not co-located with
- *       the user so {@code @path} has no meaningful resolution; references are left as-is.
+ *   <li><b>本地</b>（{@link OverlayFilesystem} 包装 {@link LocalFilesystemWithShell}）——
+ *       尝试 {@code fs.read}；成功则附加内容，失败时（通常是路径不在
+ *       {@code PathPolicy} 允许列表中）保留原 {@code @path} 文本。
+ *   <li><b>沙箱</b>（{@link AbstractSandboxFilesystem}，不由 overlay 包装）——
+ *       将引用视为沙箱内路径；宿主机路径上传不属于此阶段职责。
+ *   <li><b>远程</b>（{@link CompositeFilesystem}）—— 禁用展开。智能体与用户不在同一机器，
+ *       {@code @path} 没有合理的本地解析语义，因此保持原样。
  * </ul>
  *
- * <p>Recognises three reference shapes: absolute ({@code @/abs/path}), relative
- * ({@code @./rel} or {@code @rel/foo}), and home-anchored ({@code @~/file}). A bare {@code @word}
- * with no path-like character (slash, dot, tilde) is ignored to avoid swallowing handles such as
- * {@code @alice}.
+ * <p>识别三类引用：绝对路径（{@code @/abs/path}）、相对路径
+ * （{@code @./rel} 或 {@code @rel/foo}）及用户主目录路径（{@code @~/file}）。
+ * 不含斜线、点或波浪号等路径特征的单独 {@code @word} 会被忽略，
+ * 避免吞掉 {@code @alice} 这样的用户标记。
  */
 public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(AtPathExpansionMiddleware.class);
 
     /**
-     * Matches an {@code @} immediately followed by a path token. Tokens must contain at least one
-     * path indicator (slash, dot, or tilde) to avoid swallowing user handles. Trailing
-     * punctuation ({@code . , ; : ! ? CJK marks}) is excluded so sentence boundaries don't end
-     * up inside the captured path.
+     * 匹配紧随路径词元的 {@code @}。词元必须至少包含斜线、点或波浪号等一种路径标记，
+     * 避免吞掉用户标记。末尾标点（{@code . , ; : ! ? CJK marks}）被排除，
+     * 防止句子边界进入捕获的路径。
      */
     private static final Pattern AT_PATH =
             Pattern.compile(
@@ -85,15 +81,15 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
                             + "|/[\\w./\\-~]+"
                             + "|[\\w\\-]+[/.][\\w./\\-~]*)");
 
-    /** Cap the bytes pulled in per attached file so a stray {@code @log} doesn't blow context. */
+    /** 限制每个附件文件读取的字节数，避免意外的 {@code @log} 引用撑大上下文。 */
     private static final int MAX_ATTACHED_LINES = 1000;
 
-    /** Closing tag of an attachment block; also the string neutralised inside attached content. */
+    /** 附件块的结束标签；附件内容中出现此字符串时也需要中和处理。 */
     private static final String ATTACHED_FILE_CLOSE_TAG = "</attached_file>";
 
     /**
-     * Lead-in for the appended preview block; states up front that previews may be truncated so
-     * the model reads the original path when completeness matters.
+     * 追加预览块的引导文本；提前说明预览可能被截断，
+     * 使模型在需要完整内容时读取原路径。
      */
     private static final String ATTACHMENT_LEAD_IN =
             "Attached file previews follow; previews may be truncated - read the original path"
@@ -105,7 +101,7 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
         this.workspaceManager = workspaceManager;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT);
@@ -145,7 +141,7 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
         if (fs == null) {
             return false;
         }
-        // Remote (CompositeFilesystem) — distributed deployment, no host paths.
+        // 远程（CompositeFilesystem）是分布式部署，没有宿主机路径。
         if (fs instanceof CompositeFilesystem) {
             return false;
         }
@@ -193,8 +189,8 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
                     .append(content.endsWith("\n") ? "" : "\n")
                     .append(ATTACHED_FILE_CLOSE_TAG);
         }
-        // Append previews as a new block instead of replacing content: image and other non-text
-        // blocks in the original message must survive expansion.
+        // 将预览作为新块追加，而不是替换内容：原始消息中的图片
+        // 和其他非文本块必须在展开后保留。
         List<ContentBlock> expandedContent = new ArrayList<>(msg.getContent());
         expandedContent.add(TextBlock.builder().text(sb.toString()).build());
         return msg.withContent(expandedContent);
@@ -206,8 +202,8 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
             ReadResult r = fs.read(rc, resolved, 0, MAX_ATTACHED_LINES);
             if (r.isSuccess() && r.fileData() != null && r.fileData().content() != null) {
                 String content = r.fileData().content();
-                // Skip binary attachments — base64 in a user message is rarely useful and just
-                // burns tokens.
+                // 跳过二进制附件：用户消息中的 base64 通常没有帮助，
+                // 只会消耗词元。
                 if ("base64".equals(r.fileData().encoding())) {
                     return null;
                 }
@@ -228,15 +224,15 @@ public class AtPathExpansionMiddleware implements HarnessRuntimeMiddleware {
         return null;
     }
 
-    /** Neutralises the closing tag inside attached content so previews cannot forge block ends. */
+    /** 中和附件内容中的结束标签，防止预览伪造块边界。 */
     private static String neutralizeCloseTag(String content) {
         return content.replace(ATTACHED_FILE_CLOSE_TAG, "<\\/attached_file>");
     }
 
     /**
-     * Probes two lines past the cap so a blank first omitted line cannot hide later content.
-     * An empty read at EOF (including a lone trailing newline in the local filesystem) does not
-     * count as truncated content; omitted blank lines still do.
+     * 在上限之外再探测两行，避免首个被省略行为空而隐藏后续内容。
+     * 在 EOF 处读到空内容（包括本地文件系统中单独的末尾换行）不算截断，
+     * 但被省略的空白行仍算截断内容。
      */
     private boolean hasMoreLines(AbstractFilesystem fs, RuntimeContext rc, String resolved) {
         try {

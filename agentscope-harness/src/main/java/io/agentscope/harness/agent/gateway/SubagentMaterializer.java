@@ -20,24 +20,23 @@ import io.agentscope.core.agent.RuntimeContext;
 import java.util.Optional;
 
 /**
- * Rebuilds a subagent {@link Agent} instance from its type id. Used by {@link HarnessGateway} to
- * recover an exposed subagent on a node that does not hold the live instance (after a restart or
- * when a request is routed to a different replica).
+ * 按类型 ID 重建子智能体 {@link Agent} 实例。
+ * {@link HarnessGateway} 用它在没有活跃实例的节点上恢复已公开子智能体
+ * （重启后，或请求路由到其他副本时）。
  *
- * <p>Typically backed by
- * {@code DefaultAgentManager::createAgentIfPresent}. The rebuilt agent is invoked with the
- * {@code sessionId} carried by the {@link SubagentRecord}, so a distributed
- * {@link io.agentscope.core.state.AgentStateStore} restores the prior conversation history.
+ * <p>通常由 {@code DefaultAgentManager::createAgentIfPresent} 支持。
+ * 调用重建智能体时传入 {@link SubagentRecord} 携带的 {@code sessionId}，
+ * 由分布式 {@link io.agentscope.core.state.AgentStateStore} 恢复之前的对话历史。
  */
 @FunctionalInterface
 public interface SubagentMaterializer {
 
     /**
-     * Materializes an agent of the given type.
+     * 重建指定类型的智能体。
      *
-     * @param agentId the subagent type identifier
-     * @param parentRc a runtime context carrying at least the target session id
-     * @return the rebuilt agent, or {@link Optional#empty()} if the type is unknown / not spawnable
+     * @param agentId 子智能体类型标识
+     * @param parentRc 至少携带目标会话 ID 的运行上下文
+     * @return 重建的智能体；类型未知或不可创建时为 {@link Optional#empty()}
      */
     Optional<Agent> materialize(String agentId, RuntimeContext parentRc);
 }

@@ -19,12 +19,11 @@ import io.agentscope.core.model.transport.ProxyConfig;
 import java.time.Duration;
 
 /**
- * Configuration for WebSocket clients.
+ * WebSocket 客户端配置。
  *
- * <p>This class holds configuration options for WebSocket client behavior such as
- * timeouts, heartbeat intervals, proxy settings, and SSL options.
+ * <p>保存 WebSocket 客户端行为选项，例如超时、心跳间隔、代理设置和 SSL 选项。
  *
- * <p>Usage example:
+ * <p>用法示例：
  *
  * <pre>{@code
  * WebSocketTransportConfig config = WebSocketTransportConfig.builder()
@@ -38,16 +37,16 @@ import java.time.Duration;
  */
 public class WebSocketTransportConfig {
 
-    /** Default connect timeout: 30 seconds. */
+    /** 默认连接超时：30 秒。 */
     public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(30);
 
-    /** Default read timeout: 0 (no timeout for WebSocket). */
+    /** 默认读取超时：0（WebSocket 不设超时）。 */
     public static final Duration DEFAULT_READ_TIMEOUT = Duration.ZERO;
 
-    /** Default write timeout: 30 seconds. */
+    /** 默认写入超时：30 秒。 */
     public static final Duration DEFAULT_WRITE_TIMEOUT = Duration.ofSeconds(30);
 
-    /** Default ping interval: 30 seconds. */
+    /** 默认 ping 间隔：30 秒。 */
     public static final Duration DEFAULT_PING_INTERVAL = Duration.ofSeconds(30);
 
     private final Duration connectTimeout;
@@ -67,84 +66,81 @@ public class WebSocketTransportConfig {
     }
 
     /**
-     * Get the connect timeout.
+     * 获取连接超时。
      *
-     * @return the connect timeout duration
+     * @return 连接超时时长
      */
     public Duration getConnectTimeout() {
         return connectTimeout;
     }
 
     /**
-     * Get the read timeout.
+     * 获取读取超时。
      *
-     * @return the read timeout duration
+     * @return 读取超时时长
      */
     public Duration getReadTimeout() {
         return readTimeout;
     }
 
     /**
-     * Get the write timeout.
+     * 获取写入超时。
      *
-     * @return the write timeout duration
+     * @return 写入超时时长
      */
     public Duration getWriteTimeout() {
         return writeTimeout;
     }
 
     /**
-     * Get the ping interval for heartbeat (OkHttp only).
+     * 获取心跳 ping 间隔（仅 OkHttp）。
      *
-     * @return the ping interval duration
+     * @return ping 间隔时长
      */
     public Duration getPingInterval() {
         return pingInterval;
     }
 
     /**
-     * Get the proxy configuration.
+     * 获取代理配置。
      *
-     * @return the proxy configuration, or null if no proxy is configured
+     * @return 代理配置；未配置代理时为 null
      */
     public ProxyConfig getProxyConfig() {
         return proxyConfig;
     }
 
     /**
-     * Get whether SSL certificate verification should be ignored.
+     * 获取是否忽略 SSL 证书验证。
      *
-     * <p><b>Warning:</b> Setting this to true disables SSL certificate verification,
-     * which makes the connection vulnerable to man-in-the-middle attacks.
-     * This should only be used for testing or with trusted self-signed certificates.
+     * <p><b>警告：</b>设为 true 会禁用 SSL 证书验证，使连接面临中间人攻击风险。
+     * 仅应在测试或使用可信自签名证书的场景中考虑此选项。
      *
-     * @return true to ignore SSL certificate verification, false otherwise
+     * @return true 表示忽略 SSL 证书验证，否则为 false
      */
     public boolean isIgnoreSsl() {
         return ignoreSsl;
     }
 
     /**
-     * Create a new builder for WebSocketTransportConfig.
+     * 创建新的 WebSocketTransportConfig 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Create a default configuration.
+     * 创建默认配置。
      *
-     * @return a default WebSocketTransportConfig instance
+     * @return 默认 WebSocketTransportConfig 实例
      */
     public static WebSocketTransportConfig defaults() {
         return builder().build();
     }
 
-    /**
-     * Builder for WebSocketTransportConfig.
-     */
+    /** WebSocketTransportConfig 的建造者。 */
     public static class Builder {
         private Duration connectTimeout = DEFAULT_CONNECT_TIMEOUT;
         private Duration readTimeout = DEFAULT_READ_TIMEOUT;
@@ -154,10 +150,10 @@ public class WebSocketTransportConfig {
         private boolean ignoreSsl = false;
 
         /**
-         * Set the connect timeout.
+         * 设置连接超时。
          *
-         * @param connectTimeout the connect timeout duration
-         * @return this builder
+         * @param connectTimeout 连接超时时长
+         * @return 当前建造者
          */
         public Builder connectTimeout(Duration connectTimeout) {
             this.connectTimeout = connectTimeout;
@@ -165,10 +161,10 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Set the read timeout.
+         * 设置读取超时。
          *
-         * @param readTimeout the read timeout duration
-         * @return this builder
+         * @param readTimeout 读取超时时长
+         * @return 当前建造者
          */
         public Builder readTimeout(Duration readTimeout) {
             this.readTimeout = readTimeout;
@@ -176,10 +172,10 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Set the write timeout.
+         * 设置写入超时。
          *
-         * @param writeTimeout the write timeout duration
-         * @return this builder
+         * @param writeTimeout 写入超时时长
+         * @return 当前建造者
          */
         public Builder writeTimeout(Duration writeTimeout) {
             this.writeTimeout = writeTimeout;
@@ -187,10 +183,10 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Set the ping interval for heartbeat (OkHttp only).
+         * 设置心跳 ping 间隔（仅 OkHttp）。
          *
-         * @param pingInterval the ping interval duration
-         * @return this builder
+         * @param pingInterval ping 间隔时长
+         * @return 当前建造者
          */
         public Builder pingInterval(Duration pingInterval) {
             this.pingInterval = pingInterval;
@@ -198,12 +194,12 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Set the proxy configuration.
+         * 设置代理配置。
          *
-         * <p>Supports HTTP and SOCKS proxies. See {@link ProxyConfig} for details.
+         * <p>支持 HTTP 和 SOCKS 代理，详情见 {@link ProxyConfig}。
          *
-         * @param proxyConfig the proxy configuration
-         * @return this builder
+         * @param proxyConfig 代理配置
+         * @return 当前建造者
          */
         public Builder proxy(ProxyConfig proxyConfig) {
             this.proxyConfig = proxyConfig;
@@ -211,14 +207,13 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Set whether to ignore SSL certificate verification.
+         * 设置是否忽略 SSL 证书验证。
          *
-         * <p><b>Warning:</b> Setting this to true disables SSL certificate verification,
-         * which makes the connection vulnerable to man-in-the-middle attacks.
-         * This should only be used for testing or with trusted self-signed certificates.
+         * <p><b>警告：</b>设为 true 会禁用 SSL 证书验证，使连接面临中间人攻击风险。
+         * 仅应在测试或使用可信自签名证书的场景中考虑此选项。
          *
-         * @param ignoreSsl true to ignore SSL certificate verification, false otherwise
-         * @return this builder
+         * @param ignoreSsl true 表示忽略 SSL 证书验证，否则为 false
+         * @return 当前建造者
          */
         public Builder ignoreSsl(boolean ignoreSsl) {
             this.ignoreSsl = ignoreSsl;
@@ -226,9 +221,9 @@ public class WebSocketTransportConfig {
         }
 
         /**
-         * Build the WebSocketTransportConfig.
+         * 构建 WebSocketTransportConfig。
          *
-         * @return a new WebSocketTransportConfig instance
+         * @return 新的 WebSocketTransportConfig 实例
          */
         public WebSocketTransportConfig build() {
             return new WebSocketTransportConfig(this);

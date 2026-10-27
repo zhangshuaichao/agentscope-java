@@ -22,16 +22,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import reactor.core.publisher.Mono;
 
 /**
- * Abstract wrapper for MCP (Model Context Protocol) clients.
- * This class manages the lifecycle of MCP client connections and provides
- * a unified interface for both asynchronous and synchronous client implementations.
+ * MCP（模型上下文协议）客户端抽象包装器，管理连接生命周期，并为同步和异步实现提供统一接口。
  *
- * <p>The wrapper handles:
+ * <p>负责：
  * <ul>
- *   <li>Client initialization and connection management</li>
- *   <li>Tool discovery and caching</li>
- *   <li>Tool invocation through the MCP protocol</li>
- *   <li>Resource cleanup on close</li>
+ * <li>客户端初始化和连接管理</li>
+ * <li>工具发现与缓存</li>
+ * <li>通过 MCP 协议调用工具</li>
+ * <li>关闭时清理资源</li>
  * </ul>
  *
  * @see McpAsyncClientWrapper
@@ -39,31 +37,32 @@ import reactor.core.publisher.Mono;
  */
 public abstract class McpClientWrapper implements AutoCloseable {
 
-    /** Unique identifier for this MCP client */
+    /**
+     * MCP 客户端唯一标识符
+     */
     protected final String name;
 
-    /** Cache of tools available from this MCP server */
+    /**
+     * MCP 服务器可用工具缓存
+     */
     protected final Map<String, McpSchema.Tool> cachedTools;
 
-    /** Flag indicating whether the client has been initialized */
+    /**
+     * 表示客户端是否已初始化的标志
+     */
     protected volatile boolean initialized = false;
 
     /**
-     * Whether request metadata (user {@link McpMeta} entries and the framework tool-call id) is
-     * propagated to the MCP server behind this connection.
+     * 是否向此连接对应的 MCP 服务器传播请求元数据，包括用户 {@link McpMeta} 条目和框架工具调用 ID。
      *
-     * <p>Defaults to {@code true} for backward compatibility. This is a live switch: it is read
-     * on every tool call, so changing it takes effect immediately for all tools of this
-     * connection, including ones registered earlier. Set it to {@code false} for MCP servers that
-     * are not fully trusted, so that internal metadata such as trace ids or callback URLs is
-     * never sent over the wire.
+     * <p>为兼容旧行为，默认为 {@code true}。这是每次工具调用都会读取的实时开关，修改会立即影响连接中所有工具，包括此前注册的工具。对于不完全可信的服务器应设为 {@code false}，避免通过网络发送追踪 ID、回调 URL 等内部元数据。
      */
     protected volatile boolean propagateMeta = true;
 
     /**
-     * Constructs a new MCP client wrapper.
+     * 构造 MCP 客户端包装器。
      *
-     * @param name unique identifier for this client
+     * @param name 客户端唯一标识符
      */
     protected McpClientWrapper(String name) {
         this.name = name;
@@ -71,100 +70,92 @@ public abstract class McpClientWrapper implements AutoCloseable {
     }
 
     /**
-     * Gets the unique name of this MCP client.
+     * 获取 MCP 客户端唯一名称。
      *
-     * @return the client name
+     * @return 客户端名称
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Checks if this client has been initialized.
+     * 检查客户端是否已初始化。
      *
-     * @return true if initialized, false otherwise
+     * @return 已初始化为 true，否则为 false
      */
     public boolean isInitialized() {
         return initialized;
     }
 
     /**
-     * Checks whether request metadata is propagated to this MCP server.
+     * 检查是否向 MCP 服务器传播请求元数据。
      *
-     * <p>This is the connection-level half of the decision: every tool call ANDs this value with
-     * the per-tool {@code McpTool.isPropagateMeta()} restriction, so {@code false} here always
-     * wins and stops metadata for the whole connection.
+     * <p>这是连接级决策：每次调用将此值与逐工具 {@code McpTool.isPropagateMeta()} 限制做逻辑与。因此此处为 {@code false} 时始终优先，停止整个连接的元数据传播。
      *
-     * @return true if metadata ({@link McpMeta} entries and the tool-call id) may be included in
-     *     tool call requests over this connection, false otherwise
+     * @return 允许在连接请求中包含 {@link McpMeta} 条目及调用 ID 时为 true，否则为 false
      */
     public boolean isPropagateMeta() {
         return propagateMeta;
     }
 
     /**
-     * Configures whether request metadata is propagated to this MCP server.
+     * 配置是否向 MCP 服务器传播请求元数据。
      *
-     * <p>This is a live switch: it takes effect immediately for every tool registered from this
-     * client, including tools registered before the call. Disable it for MCP servers that are
-     * not fully trusted to avoid leaking internal metadata over the wire.
+     * <p>实时开关，对此客户端注册的所有工具立即生效，包括此前注册的工具。不完全可信的服务器应禁用，以避免泄漏内部元数据。
      *
-     * @param propagateMeta true to propagate metadata (default), false to omit the {@code meta}
-     *     field entirely from tool call requests
+     * @param propagateMeta true 表示传播（默认），false 表示从请求中完全省略 {@code meta} 字段
      */
     public void setPropagateMeta(boolean propagateMeta) {
         this.propagateMeta = propagateMeta;
     }
 
     /**
-     * Initializes the MCP client connection and caches available tools.
-     * This method must be called before any tool operations.
+     * 初始化 MCP 连接并缓存可用工具，必须先调用此方法才能执行工具操作。
      *
-     * @return a Mono that completes when initialization is finished
+     * @return 初始化完成时完成的 Mono
      */
     public abstract Mono<Void> initialize();
 
     /**
-     * Lists all tools available from this MCP server.
+     * 列出 MCP 服务器全部可用工具。
      *
-     * @return a Mono emitting the list of available tools
+     * @return 发出工具列表的 Mono
      */
     public abstract Mono<List<McpSchema.Tool>> listTools();
 
     /**
-     * Invokes a tool on the MCP server.
+     * 调用 MCP 服务器工具。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @return a Mono emitting the tool call result
+     * @param toolName 待调用工具名称
+     * @param arguments 工具参数
+     * @return 发出调用结果的 Mono
      */
     public abstract Mono<McpSchema.CallToolResult> callTool(
             String toolName, Map<String, Object> arguments);
 
     /**
-     * Invokes a tool on the MCP server.
+     * 调用 MCP 服务器工具。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @param meta the metadata to pass to the tool
-     * @return a Mono emitting the tool call result
+     * @param toolName 待调用工具名称
+     * @param arguments 工具参数
+     * @param meta 工具元数据
+     * @return 发出调用结果的 Mono
      */
     public abstract Mono<McpSchema.CallToolResult> callTool(
             String toolName, Map<String, Object> arguments, Map<String, Object> meta);
 
     /**
-     * Gets a cached tool definition by name.
+     * 按名称获取缓存的工具定义。
      *
-     * @param toolName the name of the tool
-     * @return the tool definition, or null if not found
+     * @param toolName 工具名称
+     * @return 工具定义；未找到时为 null
      */
     public McpSchema.Tool getCachedTool(String toolName) {
         return cachedTools.get(toolName);
     }
 
     /**
-     * Closes this MCP client and releases all resources.
-     * This method is idempotent and can be called multiple times safely.
+     * 关闭 MCP 客户端并释放所有资源。方法幂等，可安全地重复调用。
      */
     @Override
     public abstract void close();

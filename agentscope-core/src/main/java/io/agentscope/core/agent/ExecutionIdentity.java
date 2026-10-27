@@ -17,7 +17,9 @@ package io.agentscope.core.agent;
 
 import java.util.Objects;
 
-/** Immutable correlation shared by a live execution and its committed session facts. */
+/**
+ * 活动执行及其已提交会话事实共享的不可变关联信息。
+ */
 public record ExecutionIdentity(String agentId, String sessionId, String turnId, String runId) {
     public static final String CONTEXT_KEY = "agentscope.execution.identity";
 

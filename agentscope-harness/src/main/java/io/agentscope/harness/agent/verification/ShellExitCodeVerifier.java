@@ -23,8 +23,8 @@ import io.agentscope.harness.agent.observation.StoredActionObservation;
 import java.util.Objects;
 
 /**
- * Checks a caller-selected shell attempt, not arbitrary task semantics.
- * The caller must authorize which action implements the acceptance criterion.
+ * 检查调用方选定的一次 shell 执行尝试，而不是判断任意任务的语义。
+ * 调用方必须授权哪个动作实现该验收标准。
  */
 public final class ShellExitCodeVerifier implements DeterministicVerifier {
     private final String toolName;

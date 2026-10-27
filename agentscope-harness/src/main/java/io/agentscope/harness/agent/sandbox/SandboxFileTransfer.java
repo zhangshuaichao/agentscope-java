@@ -16,49 +16,37 @@
 package io.agentscope.harness.agent.sandbox;
 
 /**
- * Optional capability for {@link Sandbox} backends that support native (non-exec) file
- * transfer, e.g. a dedicated HTTP upload/download API exposed by the sandbox runtime.
+ * 支持原生（非 exec）文件传输的 {@link Sandbox} 后端可选能力，例如沙箱运行时提供的专用 HTTP 上传／下载 API。
  *
- * <p>When a sandbox implements this interface, {@link
- * io.agentscope.harness.agent.filesystem.sandbox.SandboxBackedFilesystem} prefers it over the
- * default transfer strategy of embedding base64 payloads in shell commands sent through
- * {@link Sandbox#exec}. Native transfer avoids base64 inflation and per-argument command-line
- * length limits (about 128 KiB per argument on Linux), which the exec strategy hits for large
- * files.
+ * <p>沙箱实现此接口时，{@link io.agentscope.harness.agent.filesystem.sandbox.SandboxBackedFilesystem} 优先使用它，而不是默认通过 {@link Sandbox#exec} 发送内嵌 base64 载荷的 Shell 命令。原生传输避免 base64 膨胀和每个命令行参数的长度限制（Linux 上每参数约 128 KiB），默认执行策略处理大文件时会触及该限制。
  *
- * <p>Backends typically support native transfer only for a subtree of the sandbox filesystem
- * (e.g. paths under the runtime file API base directory); {@link #supportsFileTransfer} lets
- * the backend accept or decline each path, with declined paths handled by the exec strategy.
+ * <p>后端通常只支持沙箱文件系统某个子树的原生传输（例如运行时文件 API 基目录下的路径）。{@link #supportsFileTransfer} 让后端逐路径接受或拒绝；被拒绝的路径使用 exec 策略处理。
  */
 public interface SandboxFileTransfer {
 
     /**
-     * Whether this sandbox can natively transfer the given path.
+     * 此沙箱是否能原生传输给定路径。
      *
-     * @param path path to probe — absolute inside the sandbox; implementations may also
-     *     accept forms they can resolve themselves (e.g. workspace-relative paths)
-     * @return true if {@link #uploadFile} / {@link #downloadFile} accept this path
+     * @param path 要探测的路径，通常为沙箱内绝对路径；实现也可接受自行解析的形式（如工作区相对路径）
+     * @return {@link #uploadFile} / {@link #downloadFile} 接受此路径时为 true
      */
     boolean supportsFileTransfer(String path);
 
     /**
-     * Writes a file inside the sandbox, creating parent directories if needed.
+     * 在沙箱内写入文件，按需创建父目录。
      *
-     * @param path destination path inside the sandbox — absolute, or a form the
-     *     implementation resolves
-     * @param content file bytes
-     * @throws Exception when the transfer fails; unlike a declined path, a failed transfer
-     *     is not retried through the exec strategy
+     * @param path 沙箱内目标路径，可以是绝对路径或实现能够解析的形式
+     * @param content 文件字节
+     * @throws Exception 传输失败时抛出；与拒绝路径不同，传输失败不会通过 exec 策略重试
      */
     void uploadFile(String path, byte[] content) throws Exception;
 
     /**
-     * Reads a file from the sandbox.
+     * 从沙箱读取文件。
      *
-     * @param path path inside the sandbox — absolute, or a form the implementation resolves
-     * @return file bytes
-     * @throws Exception when the transfer fails; unlike a declined path, a failed transfer
-     *     is not retried through the exec strategy
+     * @param path 沙箱内路径，可以是绝对路径或实现能够解析的形式
+     * @return 文件字节
+     * @throws Exception 传输失败时抛出；与拒绝路径不同，传输失败不会通过 exec 策略重试
      */
     byte[] downloadFile(String path) throws Exception;
 }

@@ -23,13 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runtime context for a single active request.
+ * 单个活跃请求的运行上下文。
  *
- * <p>When the owning {@code call()} resolves its per-(userId, sessionId) {@link AgentState} slot,
- * it is bound here via {@link #bindState(AgentState)} so shutdown interruption and state-saving
- * target that exact session — concurrency-safe even when an agent instance serves multiple
- * sessions. Queued executions have no bound state and are cancelled without reading or saving
- * another execution's state.
+ * <p>所属 {@code call()} 解析出对应 (userId, sessionId) 的 {@link AgentState}
+ * 槽位后，通过 {@link #bindState(AgentState)} 将状态绑定到此处，使关闭中断与状态保存
+ * 精确针对该会话；即使同一智能体实例服务多个会话，也能保证并发安全。
+ * 排队中的执行尚未绑定状态，取消时不会读取或保存其他执行的状态。
  */
 final class ActiveRequestContext {
 
@@ -42,8 +41,8 @@ final class ActiveRequestContext {
     private final ShutdownStateSaver saver;
 
     /**
-     * The per-call session state this request is running against, bound once {@code call()} has
-     * resolved its slot. Null while queued: no conversation state is saved for that request.
+     * 此请求运行所使用的调用级会话状态；在 {@code call()} 解析出对应槽位后绑定。
+     * 排队时为 null：不会为该请求保存对话状态。
      */
     private volatile AgentState boundState;
 
@@ -58,9 +57,8 @@ final class ActiveRequestContext {
     }
 
     /**
-     * Bind the per-call session state resolved for this request so interrupt and save target the
-     * exact {@code (userId, sessionId)} session. Called by {@code AgentBase} once the call's slot
-     * has been activated.
+     * 绑定为此请求解析出的调用级会话状态，使中断与保存精确针对
+     * {@code (userId, sessionId)} 会话。由 {@code AgentBase} 在激活调用槽位后调用。
      */
     void bindState(AgentState state) {
         if (state != null) {
@@ -75,8 +73,8 @@ final class ActiveRequestContext {
     void saveState() {
         AgentState state = resolveState();
         if (state == null) return;
-        // Native sessions persist this flag through their owning recorder's final checkpoint.
-        // A missing standalone saver must not suppress the runtime interruption marker.
+        // 原生会话通过所属记录器的最终检查点持久化此标记。
+        // 缺少独立状态保存器时，也不能抑制运行时中断标记。
         state.setShutdownInterrupted(true);
         if (saver == null) return;
         try {

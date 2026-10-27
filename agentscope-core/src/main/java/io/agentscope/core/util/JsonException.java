@@ -17,11 +17,10 @@
 package io.agentscope.core.util;
 
 /**
- * Runtime exception for JSON processing errors.
+ * JSON 处理错误的运行时异常。
  *
- * <p>This exception wraps underlying JSON processing exceptions (such as
- * Jackson's JsonProcessingException) to provide a unified exception type
- * for JSON operations across the framework.
+ * <p>包装底层 JSON 处理异常（例如 Jackson 的 JsonProcessingException），
+ * 为框架中的 JSON 操作提供统一异常类型。
  *
  * @see JsonCodec
  * @see JsonUtils
@@ -29,28 +28,28 @@ package io.agentscope.core.util;
 public class JsonException extends RuntimeException {
 
     /**
-     * Constructs a new JSON exception with the specified detail message.
+     * 使用指定详细消息构造新的 JSON 异常。
      *
-     * @param message the detail message
+     * @param message 详细消息
      */
     public JsonException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new JSON exception with the specified detail message and cause.
+     * 使用指定详细消息和原因构造新的 JSON 异常。
      *
-     * @param message the detail message
-     * @param cause the cause of the exception
+     * @param message 详细消息
+     * @param cause 异常原因
      */
     public JsonException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * Constructs a new JSON exception with the specified cause.
+     * 使用指定原因构造新的 JSON 异常。
      *
-     * @param cause the cause of the exception
+     * @param cause 异常原因
      */
     public JsonException(Throwable cause) {
         super(cause);

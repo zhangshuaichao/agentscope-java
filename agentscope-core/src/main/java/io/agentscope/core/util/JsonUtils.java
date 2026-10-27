@@ -24,13 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for accessing the global {@link JsonCodec} instance.
+ * 访问全局 {@link JsonCodec} 实例的工具类。
  *
- * <p>This class provides a centralized way to access JSON serialization/deserialization
- * functionality throughout the framework. By default, it uses {@link JacksonJsonCodec},
- * but users can replace it with a custom implementation.
+ * <p>为框架提供集中的 JSON 序列化／反序列化访问入口。默认使用 {@link JacksonJsonCodec}，用户可替换为自定义实现。
  *
- * <p>Usage:
+ * <p>用法：
  * <pre>{@code
  * // Basic usage
  * JsonUtils.getJsonCodec().toJson(obj);
@@ -56,26 +54,25 @@ public final class JsonUtils {
     private static volatile JsonCodec codec = new JacksonJsonCodec();
 
     private JsonUtils() {
-        // Utility class, no instantiation
+        // 工具类，不允许实例化
     }
 
     /**
-     * Get the global JsonCodec instance.
+     * 获取全局 JsonCodec 实例。
      *
-     * @return the JsonCodec instance
+     * @return JsonCodec 实例
      */
     public static JsonCodec getJsonCodec() {
         return codec;
     }
 
     /**
-     * Set a custom JsonCodec implementation.
+     * 设置自定义 JsonCodec 实现。
      *
-     * <p>This allows users to replace the default Jackson-based implementation
-     * with their own implementation (e.g., Gson, Fastjson, etc.).
+     * <p>允许用自有实现（例如 Gson、Fastjson）替换默认的 Jackson 实现。
      *
-     * @param jsonCodec the custom JsonCodec implementation
-     * @throws IllegalArgumentException if jsonCodec is null
+     * @param jsonCodec 自定义 JsonCodec 实现
+     * @throws IllegalArgumentException jsonCodec 为 null 时抛出
      */
     public static void setJsonCodec(JsonCodec jsonCodec) {
         if (jsonCodec == null) {
@@ -85,23 +82,21 @@ public final class JsonUtils {
     }
 
     /**
-     * Reset to the default JacksonJsonCodec implementation.
+     * 重置为默认 JacksonJsonCodec 实现。
      *
-     * <p>This is useful for testing or when you want to restore the default behavior.
+     * <p>适用于测试或恢复默认行为。
      */
     public static void resetToDefault() {
         codec = new JacksonJsonCodec();
     }
 
     /**
-     * Check whether the entire string contains exactly one complete JSON object, allowing
-     * trailing whitespace but no additional values or malformed suffix.
+     * 检查整个字符串是否恰好包含一个完整 JSON 对象，允许尾随空白，但不允许额外值或格式错误的后缀。
      *
-     * <p>Tool call {@code arguments} must be JSON objects, so plain JSON values like
-     * {@code null}, arrays, or strings are rejected.
+     * <p>工具调用 {@code arguments} 必须是 JSON 对象，因此拒绝 {@code null}、数组、字符串等其他 JSON 值。
      *
-     * @param str the string to validate
-     * @return {@code true} if {@code str} is a non-null, parseable JSON object
+     * @param str 要校验的字符串
+     * @return {@code str} 是非 null、可解析的 JSON 对象时为 {@code true}
      */
     public static boolean isValidJsonObject(String str) {
         if (str == null || str.isEmpty()) {
@@ -111,6 +106,8 @@ public final class JsonUtils {
             if (parser.nextToken() != JsonToken.START_OBJECT) {
                 return false;
             }
+            // 【学习提示】检查首 token 为对象还不够：先完整消费对象，再确认没有下一个 token。
+            // 这样既拒绝截断 JSON，也拒绝两个对象拼接或合法对象后附带其他数据。
             parser.skipChildren();
             return parser.nextToken() == null;
         } catch (Exception e) {
@@ -119,21 +116,19 @@ public final class JsonUtils {
     }
 
     /**
-     * Resolve the arguments JSON string from a {@link ToolUseBlock}, ensuring the
-     * result is always a valid JSON object.
+     * 从 {@link ToolUseBlock} 解析参数 JSON 字符串，确保结果始终为合法 JSON 对象。
      *
-     * <p>Resolution order:
+     * <p>解析顺序：
      * <ol>
-     *   <li>Use {@link ToolUseBlock#getContent()} if it is a valid JSON object</li>
-     *   <li>Serialize {@link ToolUseBlock#getInput()} via {@link JsonCodec#toJson}</li>
-     *   <li>Fall back to {@code "{}"}</li>
+     * <li>{@link ToolUseBlock#getContent()} 是合法 JSON 对象时使用它</li>
+     * <li>通过 {@link JsonCodec#toJson} 序列化 {@link ToolUseBlock#getInput()}</li>
+     * <li>回退到 {@code "{}"}</li>
      * </ol>
      *
-     * <p>This prevents sending malformed JSON (e.g. from interrupted streaming) as
-     * tool call arguments, which would cause model APIs to reject the request.
+     * <p>避免将格式错误的 JSON（例如流式中断留下的片段）作为工具调用参数发送，导致模型 API 拒绝请求。
      *
-     * @param toolUse the tool use block
-     * @return a valid JSON object string representing the tool call arguments
+     * @param toolUse 工具调用块
+     * @return 表示工具调用参数的合法 JSON 对象字符串
      */
     public static String resolveToolCallArgsJson(ToolUseBlock toolUse) {
         String content = toolUse.getContent();

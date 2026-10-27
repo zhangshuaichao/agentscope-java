@@ -31,13 +31,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Encapsulates all legacy {@link HookEvent} construction and dispatch logic.
+ * 封装所有旧版 {@link HookEvent} 的构造与分派逻辑。
  *
- * <p>This class exists solely to keep the {@link ReActAgent} core loop clean and focused on the
- * 2.0 {@link io.agentscope.core.middleware.MiddlewareBase} / {@link io.agentscope.core.event.AgentEvent}
- * path. All methods here delegate to the agent's registered {@link Hook} list.
+ * <p>此类仅用于保持 {@link ReActAgent} 核心循环清晰，使其聚焦于
+ * 2.0 的 {@link io.agentscope.core.middleware.MiddlewareBase}／{@link io.agentscope.core.event.AgentEvent}
+ * 路径。此处所有方法都委派给智能体已注册的 {@link Hook} 列表。
  *
- * @deprecated since 2.0.0, for removal. Will be deleted together with the Hook system.
+ * @deprecated 自 2.0.0 起弃用，计划移除。将与 Hook 系统一同删除。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 @SuppressWarnings("deprecation")
@@ -49,7 +49,7 @@ public final class LegacyHookDispatcher {
         this.agent = agent;
     }
 
-    // ==================== Generic dispatch ====================
+    // ==================== 通用分派 ====================
 
     public <T extends HookEvent> Mono<T> fire(T event) {
         Mono<T> result = Mono.just(event);
@@ -59,7 +59,7 @@ public final class LegacyHookDispatcher {
         return result;
     }
 
-    // ==================== Reasoning hooks ====================
+    // ==================== 推理钩子 ====================
 
     public Mono<PreReasoningEvent> firePreReasoning(
             List<Msg> msgs, Msg systemMsg, String modelName) {
@@ -109,7 +109,7 @@ public final class LegacyHookDispatcher {
         return Mono.empty();
     }
 
-    // ==================== Acting hooks ====================
+    // ==================== 行动钩子 ====================
 
     public Mono<List<ToolUseBlock>> firePreActing(List<ToolUseBlock> toolCalls, Toolkit toolkit) {
         return Flux.fromIterable(toolCalls)
@@ -138,7 +138,7 @@ public final class LegacyHookDispatcher {
                 .then();
     }
 
-    // ==================== Summary hooks ====================
+    // ==================== 摘要钩子 ====================
 
     public Mono<PreSummaryEvent> firePreSummary(
             List<Msg> msgs,

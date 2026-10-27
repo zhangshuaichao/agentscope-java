@@ -17,10 +17,9 @@
 package io.agentscope.core.state;
 
 /**
- * Information about a session.
+ * 会话信息。
  * <p>
- * Contains metadata about stored sessions including size, modification time,
- * and the number of state components saved in the session.
+ * 包含已存储会话的元数据，例如存储大小、修改时间以及已保存的状态组件数量。
  */
 public class SessionInfo {
     private final String sessionId;
@@ -29,12 +28,12 @@ public class SessionInfo {
     private final int componentCount;
 
     /**
-     * Create a new SessionInfo instance.
+     * 创建新的 SessionInfo 实例。
      *
-     * @param sessionId      Unique identifier for the session
-     * @param size           Size of the session storage in bytes
-     * @param lastModified   Last modification timestamp in milliseconds since epoch
-     * @param componentCount Number of state components stored in the session
+     * @param sessionId 会话的唯一标识符
+     * @param size 会话存储大小，单位为字节
+     * @param lastModified 自纪元起的最后修改时间戳，单位为毫秒
+     * @param componentCount 会话中存储的状态组件数量
      */
     public SessionInfo(String sessionId, long size, long lastModified, int componentCount) {
         this.sessionId = sessionId;
@@ -44,45 +43,45 @@ public class SessionInfo {
     }
 
     /**
-     * Get the unique identifier for this session.
+     * 获取此会话的唯一标识符。
      *
-     * @return The session ID
+     * @return 会话 ID
      */
     public String getSessionId() {
         return sessionId;
     }
 
     /**
-     * Get the size of the session storage.
+     * 获取会话存储大小。
      *
-     * @return Size in bytes
+     * @return 以字节为单位的大小
      */
     public long getSize() {
         return size;
     }
 
     /**
-     * Get the last modification timestamp.
+     * 获取最后修改时间戳。
      *
-     * @return Timestamp in milliseconds since epoch
+     * @return 自纪元起的毫秒时间戳
      */
     public long getLastModified() {
         return lastModified;
     }
 
     /**
-     * Get the number of state components stored in this session.
+     * 获取此会话存储的状态组件数量。
      *
-     * @return Number of components
+     * @return 组件数量
      */
     public int getComponentCount() {
         return componentCount;
     }
 
     /**
-     * Returns a string representation of the session information.
+     * 返回会话信息的字符串表示。
      *
-     * @return Formatted string containing session ID, size, last modified time, and component count
+     * @return 包含会话 ID、大小、最后修改时间和组件数量的格式化字符串
      */
     @Override
     public String toString() {

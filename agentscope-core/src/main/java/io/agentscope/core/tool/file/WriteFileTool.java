@@ -29,38 +29,36 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Text file writing and insertion tools.
+ * 文本文件写入和插入工具。
  *
- * <p>Provides tools for manipulating text files, including:
+ * <p>提供以下文本操作：
  * <ul>
- *   <li>Inserting content at specific line numbers</li>
- *   <li>Writing/replacing content with optional line range specification</li>
+ * <li>在指定行号插入内容</li>
+ * <li>写入或替换内容，可指定行范围</li>
  * </ul>
  *
- * <p>Security: When baseDir is specified, all file operations are restricted to that directory
- * to prevent unauthorized file access.
+ * <p>安全性：指定 baseDir 时，所有文件操作限制在该目录内，避免未授权访问。
  */
 public class WriteFileTool {
 
     private static final Logger logger = LoggerFactory.getLogger(WriteFileTool.class);
 
     /**
-     * Base directory to restrict file access. If null, no restriction is applied.
-     * This prevents path traversal attacks and unauthorized file access.
+     * 限制文件访问的基目录；为 null 时不限制。用于防范路径遍历和未授权访问。
      */
     private final Path baseDir;
 
     /**
-     * Creates a WriteFileTool with no base directory restriction.
+     * 创建不限制基目录的 WriteFileTool。
      */
     public WriteFileTool() {
         this(null);
     }
 
     /**
-     * Creates a WriteFileTool with a base directory restriction.
+     * 创建限制基目录的 WriteFileTool。
      *
-     * @param baseDir The base directory to restrict file access to. If null, no restriction is applied.
+     * @param baseDir 限制文件访问的基目录；为 null 时不限制
      */
     public WriteFileTool(String baseDir) {
         this.baseDir = baseDir != null ? Paths.get(baseDir).toAbsolutePath().normalize() : null;
@@ -72,14 +70,12 @@ public class WriteFileTool {
     }
 
     /**
-     * Insert content at the specified line number in a text file.
+     * 在文本文件指定行号插入内容。
      *
-     * @param filePath The target file path
-     * @param content The content to be inserted
-     * @param lineNumber The line number at which the content should be inserted, starting
-     *                   from 1. If it exceeds the number of lines in the file, it will be
-     *                   appended to the end of the file.
-     * @return The result of the insertion operation
+     * @param filePath 目标文件路径
+     * @param content 待插入内容
+     * @param lineNumber 插入行号，从 1 开始；超过文件行数时追加到末尾
+     * @return 插入操作结果
      */
     @Tool(
             name = "insert_text_file",
@@ -107,7 +103,7 @@ public class WriteFileTool {
 
         return Mono.fromCallable(
                         () -> {
-                            // Validate line number
+                            // 验证行号
                             if (lineNumber <= 0) {
                                 logger.warn("Invalid line number: {}", lineNumber);
                                 return ToolResultBlock.error(
@@ -117,7 +113,7 @@ public class WriteFileTool {
                                                 lineNumber));
                             }
 
-                            // Validate path is within base directory
+                            // 验证路径位于基目录内
                             Path path;
                             try {
                                 path = FileToolUtils.validatePath(filePath, baseDir);
@@ -129,7 +125,7 @@ public class WriteFileTool {
                                 return ToolResultBlock.error(e.getMessage());
                             }
 
-                            // Check if file exists
+                            // 检查文件存在
                             if (!Files.exists(path)) {
                                 logger.warn("File does not exist: {}", filePath);
                                 return ToolResultBlock.error(
@@ -139,7 +135,7 @@ public class WriteFileTool {
                                                 filePath));
                             }
 
-                            // Read original lines
+                            // 读取原始行
                             List<String> originalLines =
                                     Files.readAllLines(path, StandardCharsets.UTF_8);
                             logger.debug(
@@ -147,15 +143,15 @@ public class WriteFileTool {
 
                             List<String> newLines = new ArrayList<>();
 
-                            // Insert content at the specified line
+                            // 在指定行插入内容
                             if (lineNumber == originalLines.size() + 1) {
-                                // Append to the end
+                                // 追加到末尾
                                 logger.debug(
                                         "Appending content to end of file at line {}", lineNumber);
                                 newLines.addAll(originalLines);
                                 newLines.add(content);
                             } else if (lineNumber <= originalLines.size()) {
-                                // Insert at the specified position
+                                // 在指定位置插入
                                 logger.debug("Inserting content at line {}", lineNumber);
                                 newLines.addAll(originalLines.subList(0, lineNumber - 1));
                                 newLines.add(content);
@@ -174,18 +170,18 @@ public class WriteFileTool {
                                                 lineNumber, originalLines.size() + 1));
                             }
 
-                            // Write the new content
+                            // 写入新内容
                             Files.write(path, newLines, StandardCharsets.UTF_8);
                             logger.info(
                                     "Successfully inserted content into '{}' at line {}",
                                     filePath,
                                     lineNumber);
 
-                            // Re-read to get the actual new lines
+                            // 重新读取以获取实际新行
                             List<String> updatedLines =
                                     Files.readAllLines(path, StandardCharsets.UTF_8);
 
-                            // Calculate view range
+                            // 计算展示范围
                             int[] viewRange =
                                     FileToolUtils.calculateViewRanges(
                                             originalLines.size(),
@@ -194,7 +190,7 @@ public class WriteFileTool {
                                             lineNumber,
                                             5);
 
-                            // Get the content snippet to show
+                            // 获取要展示的内容片段
                             String showContent =
                                     FileToolUtils.viewTextFile(
                                             filePath, viewRange[0], viewRange[1]);
@@ -224,15 +220,12 @@ public class WriteFileTool {
     }
 
     /**
-     * Create/Replace/Overwrite content in a text file.
-     * When ranges is provided, the content will be replaced in the specified range.
-     * Otherwise, the entire file (if exists) will be overwritten.
+     * 创建、替换或覆盖文本文件内容。提供 ranges 时替换指定范围，否则覆盖整个文件（若存在）。
      *
-     * @param filePath The target file path
-     * @param content The content to be written
-     * @param ranges The range of lines to be replaced as [start, end]. If null, the entire
-     *               file will be overwritten. Format: "[1,5]" or "1,5"
-     * @return The result of the writing operation
+     * @param filePath 目标文件路径
+     * @param content 待写入内容
+     * @param ranges 待替换行范围 [start, end]；为 null 时覆盖整个文件。格式为 "[1,5]" 或 "1,5"
+     * @return 写入操作结果
      */
     @Tool(
             name = "write_text_file",
@@ -261,7 +254,7 @@ public class WriteFileTool {
 
         return Mono.fromCallable(
                         () -> {
-                            // Validate path is within base directory
+                            // 验证路径位于基目录内
                             Path path;
                             try {
                                 path = FileToolUtils.validatePath(filePath, baseDir);
@@ -273,11 +266,11 @@ public class WriteFileTool {
                                 return ToolResultBlock.error(e.getMessage());
                             }
 
-                            // If file doesn't exist, create it
+                            // 文件不存在时创建
                             if (!Files.exists(path)) {
                                 logger.debug(
                                         "File does not exist, creating new file: {}", filePath);
-                                // Create parent directories if they don't exist
+                                // 父目录不存在时创建
                                 Path parentDir = path.getParent();
                                 if (parentDir != null && !Files.exists(parentDir)) {
                                     Files.createDirectories(parentDir);
@@ -302,7 +295,7 @@ public class WriteFileTool {
                                                 "Create and write %s successfully.", filePath));
                             }
 
-                            // Read original lines
+                            // 读取原始行
                             List<String> originalLines =
                                     Files.readAllLines(path, StandardCharsets.UTF_8);
                             logger.debug(
@@ -310,7 +303,7 @@ public class WriteFileTool {
                                     originalLines.size(),
                                     filePath);
 
-                            // If ranges is provided, replace content in the specified range
+                            // 提供 ranges 时替换指定范围内容
                             if (ranges != null && !ranges.trim().isEmpty()) {
                                 int[] rangeArray = FileToolUtils.parseRanges(ranges);
 
@@ -341,7 +334,7 @@ public class WriteFileTool {
                                                     start, originalLines.size()));
                                 }
 
-                                // Build new content
+                                // 构建新内容
                                 List<String> newContent = new ArrayList<>();
                                 if (start > 1) {
                                     newContent.addAll(originalLines.subList(0, start - 1));
@@ -352,7 +345,7 @@ public class WriteFileTool {
                                             originalLines.subList(end, originalLines.size()));
                                 }
 
-                                // Write the new content
+                                // 写入新内容
                                 String joinedContent = String.join("\n", newContent);
                                 Files.writeString(path, joinedContent, StandardCharsets.UTF_8);
                                 logger.info(
@@ -361,7 +354,7 @@ public class WriteFileTool {
                                         end,
                                         filePath);
 
-                                // Calculate view range using newContent size
+                                // 根据 newContent 大小计算展示范围
                                 int[] viewRange =
                                         FileToolUtils.calculateViewRanges(
                                                 originalLines.size(),
@@ -370,7 +363,7 @@ public class WriteFileTool {
                                                 end,
                                                 5);
 
-                                // Get content snippet
+                                // 获取内容片段
                                 String snippet =
                                         FileToolUtils.viewTextFile(
                                                 filePath, viewRange[0], viewRange[1]);
@@ -383,7 +376,7 @@ public class WriteFileTool {
                                                 filePath, snippet));
                             }
 
-                            // No ranges specified, overwrite the entire file
+                            // 未指定范围，覆盖整个文件
                             logger.debug("Overwriting entire file: {}", filePath);
                             Files.writeString(path, content, StandardCharsets.UTF_8);
                             logger.info("Successfully overwrote file: {}", filePath);

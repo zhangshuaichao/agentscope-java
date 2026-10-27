@@ -21,12 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Base class for visibility filters that should ONLY constrain agent-authored skills. User-
- * authored / hub-installed / pre-existing skills (those with {@code createdBy == null} in the
- * sidecar) pass through untouched, so a {@link CanaryFilter} doesn't accidentally hide the
- * hand-crafted skills the agent's owners shipped.
+ * 仅限制智能体编写技能的可见性过滤器基类。用户编写、技能中心安装或已有技能（旁挂记录中 {@code createdBy == null}）原样通过，避免 {@link CanaryFilter} 意外隐藏智能体拥有者发布的手工技能。
  *
- * <p>Subclasses implement {@link #shouldPassForAgentCreated} for the agent-tracked skills.
+ * <p>子类通过 {@link #shouldPassForAgentCreated} 处理智能体跟踪的技能。
  */
 @SuppressWarnings("deprecation")
 public abstract class AbstractAgentCreatedFilter implements SkillVisibilityFilter {
@@ -50,7 +47,7 @@ public abstract class AbstractAgentCreatedFilter implements SkillVisibilityFilte
             SkillUsageRecord rec =
                     usageStore != null ? usageStore.get(skill.getName()).orElse(null) : null;
             if (rec == null || !"agent".equals(rec.createdBy())) {
-                // Pass-through: external / pre-existing skill, do not gate.
+                // 直接放行外部或已有技能，不做门控。
                 out.add(skill);
                 continue;
             }
@@ -62,9 +59,7 @@ public abstract class AbstractAgentCreatedFilter implements SkillVisibilityFilte
     }
 
     /**
-     * Return {@code true} to keep an agent-authored skill visible for this context, {@code
-     * false} to filter it out. {@code rec} is guaranteed non-null with {@code createdBy ==
-     * "agent"}.
+     * 返回 {@code true} 使智能体编写的技能在当前上下文可见，返回 {@code false} 将其过滤。保证 {@code rec} 非 null，且 {@code createdBy == "agent"}。
      */
     protected abstract boolean shouldPassForAgentCreated(
             AgentSkill skill, SkillUsageRecord rec, RuntimeContext ctx);

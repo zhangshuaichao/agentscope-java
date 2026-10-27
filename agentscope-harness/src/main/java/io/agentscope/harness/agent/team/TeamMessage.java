@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.team;
 
 import java.util.Map;
 
-/** Team mailbox message. */
+/** 团队邮箱消息。 */
 public record TeamMessage(String from, String to, String content, long id) {
     static TeamMessage fromMap(Map<String, Object> m) {
         long id = 0L;

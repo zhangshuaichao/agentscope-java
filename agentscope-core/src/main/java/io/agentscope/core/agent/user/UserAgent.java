@@ -30,21 +30,20 @@ import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
 
 /**
- * UserAgent class for handling user interaction within the agent framework.
+ * 处理智能体框架内用户交互的 UserAgent 类。
  *
- * <p>Acts as a bridge between various user input sources (streams, web UI, etc.) and the message
- * system. Supports pluggable input methods through the UserInputBase interface, allowing
- * customization of how user input is collected and converted into framework messages.
+ * <p>在不同用户输入来源（流、网页界面等）与消息系统之间充当桥梁。
+ * 通过 UserInputBase 接口支持可插拔输入方式，自定义输入收集及转换为框架消息的过程。
  *
- * <p>Design Philosophy:
+ * <p>设计思想：
  * <ul>
- *   <li>UserAgent does NOT manage memory - it only captures user input</li>
- *   <li>Input is obtained via pluggable UserInputBase implementations</li>
- *   <li>Supports both simple text input and structured input with validation</li>
- *   <li>Can participate in MsgHub for multi-agent conversations</li>
+ * <li>UserAgent 不管理记忆，只负责获取用户输入</li>
+ * <li>通过可插拔 UserInputBase 实现获取输入</li>
+ * <li>支持简单文本及带校验的结构化输入</li>
+ * <li>可加入 MsgHub 参与多智能体对话</li>
  * </ul>
  *
- * <p>Usage Examples:
+ * <p>用法示例：
  * <pre>{@code
  * // Simple console input (default)
  * UserAgent user = UserAgent.builder()
@@ -72,9 +71,9 @@ public class UserAgent extends AgentBase {
     private UserInputBase inputMethod;
 
     /**
-     * Private constructor - use builder() to create instances.
+     * 私有构造方法，请通过 builder() 创建实例。
      *
-     * @param builder The builder instance
+     * @param builder 构建器实例
      */
     private UserAgent(Builder builder) {
         super(builder.name, builder.description, builder.checkRunning, builder.hooks);
@@ -82,21 +81,21 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Create a new builder for UserAgent.
+     * 创建新的 UserAgent 构建器。
      *
-     * @return A new builder instance
+     * @return 新构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Process multiple input messages and generate user input response.
-     * Displays the input messages before prompting for user input.
+     * 处理多条输入消息并生成用户输入回复。
+     * 提示用户输入前先展示传入消息。
      *
      * @hidden
-     * @param msgs Input messages to display
-     * @return User input message
+     * @param msgs 要展示的输入消息
+     * @return 用户输入消息
      */
     @Override
     protected Mono<Msg> doCall(List<Msg> msgs) {
@@ -104,13 +103,13 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Process multiple input messages with structured model and generate user input response.
-     * Displays the input messages before prompting for user input.
+     * 使用结构化模型处理多条输入消息并生成用户输入回复。
+     * 提示用户输入前先展示传入消息。
      *
      * @hidden
-     * @param msgs Input messages to display
-     * @param structuredModel Optional class defining the structure of expected input
-     * @return User input message with structured data in metadata
+     * @param msgs 要展示的输入消息
+     * @param structuredModel 定义预期输入结构的可选类
+     * @return 在元数据中携带结构化数据的用户输入消息
      */
     @Override
     public Mono<Msg> doCall(List<Msg> msgs, Class<?> structuredModel) {
@@ -118,13 +117,13 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Get user input with optional context messages and structured model.
-     * This is the core method for obtaining user input.
+     * 使用可选的上下文消息和结构化模型获取用户输入。
+     * 这是获取用户输入的核心方法。
      *
      * @hidden
-     * @param contextMessages Optional messages to display before prompting
-     * @param structuredModel Optional class defining the structure of expected input
-     * @return Mono containing the user input message
+     * @param contextMessages 提示输入前可选展示的消息
+     * @param structuredModel 定义预期输入结构的可选类
+     * @return 包含用户输入消息的 Mono
      */
     public Mono<Msg> getUserInput(List<Msg> contextMessages, Class<?> structuredModel) {
         return inputMethod
@@ -134,30 +133,29 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Create a message from user input data.
-     * Converts UserInputData containing content blocks and optional structured data into a
-     * framework Msg with USER role.
+     * 根据用户输入数据创建消息。
+     * 将包含内容块和可选结构化数据的 UserInputData 转换为框架中角色为 USER 的 Msg。
      *
-     * @param inputData The user input data to convert
-     * @return A Msg instance representing the user input
+     * @param inputData 要转换的用户输入数据
+     * @return 表示用户输入的 Msg 实例
      */
     private Msg createMessageFromInput(UserInputData inputData) {
         List<ContentBlock> blocksInput = inputData.getBlocksInput();
         Map<String, Object> structuredInput = inputData.getStructuredInput();
 
-        // Convert blocks input to content list
+        // 将块输入转换为内容列表
         List<ContentBlock> content;
         if (blocksInput != null && !blocksInput.isEmpty()) {
             content = blocksInput;
         } else {
-            // Create empty text block if no content
+            // 没有内容时创建空文本块
             content = List.of(TextBlock.builder().text("").build());
         }
 
-        // Create the message
+        // 创建消息
         Msg.Builder msgBuilder = Msg.builder().name(getName()).role(MsgRole.USER).content(content);
 
-        // Add structured input as metadata if present
+        // 存在结构化输入时将其加入元数据
         if (structuredInput != null && !structuredInput.isEmpty()) {
             msgBuilder.metadata(Map.of(MessageMetadataKeys.STRUCTURED_OUTPUT, structuredInput));
         }
@@ -166,7 +164,7 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Print the message to console.
+     * 将消息打印到控制台。
      */
     private void printMessage(Msg msg) {
         System.out.println(
@@ -174,12 +172,11 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Extract text content from a message for display purposes.
-     * Concatenates text from TextBlock and ThinkingBlock instances, joining multiple blocks
-     * with newlines. Non-text blocks are ignored.
+     * 从消息中提取文本供展示。
+     * 连接 TextBlock 和 ThinkingBlock 实例中的文本，多块之间用换行分隔，忽略非文本块。
      *
-     * @param msg The message to extract text from
-     * @return A string containing all text content, or empty string if none found
+     * @param msg 要提取文本的消息
+     * @return 全部文本内容的字符串；未找到时为空字符串
      */
     private String extractTextFromMsg(Msg msg) {
         return msg.getContent().stream()
@@ -197,11 +194,11 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Override the input method for this UserAgent instance.
+     * 覆盖此 UserAgent 实例的输入方式。
      *
      * @hidden
-     * @param inputMethod The new input method to use
-     * @throws IllegalArgumentException if inputMethod is null
+     * @param inputMethod 要使用的新输入方式
+     * @throws IllegalArgumentException inputMethod 为 null 时抛出
      */
     protected void overrideInstanceInputMethod(UserInputBase inputMethod) {
         if (inputMethod == null) {
@@ -211,12 +208,12 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Override the default input method for all new UserAgent instances.
-     * This is a class-level setting that affects instances created after this call.
+     * 覆盖所有新 UserAgent 实例的默认输入方式。
+     * 此类级设置影响本次调用之后创建的实例。
      *
      * @hidden
-     * @param inputMethod The new default input method
-     * @throws IllegalArgumentException if inputMethod is null
+     * @param inputMethod 新的默认输入方式
+     * @throws IllegalArgumentException inputMethod 为 null 时抛出
      */
     protected static void overrideClassInputMethod(UserInputBase inputMethod) {
         if (inputMethod == null) {
@@ -226,36 +223,36 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Get the current input method for this instance.
+     * 获取此实例当前的输入方式。
      *
      * @hidden
-     * @return The current input method
+     * @return 当前输入方式
      */
     protected UserInputBase getInputMethod() {
         return inputMethod;
     }
 
     /**
-     * Observe messages without generating a reply.
-     * UserAgent doesn't need to observe other agents' messages, so this is a no-op.
+     * 观察消息但不生成回复。
+     * UserAgent 无需观察其他智能体消息，因此这是空操作。
      *
      * @hidden
-     * @param msg Message to observe
-     * @return Mono that completes immediately
+     * @param msg 要观察的消息
+     * @return 立即完成的 Mono
      */
     @Override
     protected Mono<Void> doObserve(Msg msg) {
-        // UserAgent doesn't observe, just complete
+        // UserAgent 不执行观察，直接完成
         return Mono.empty();
     }
 
     /**
-     * Handle interrupt scenarios.
-     * For UserAgent, interrupts simply return an interrupted message.
+     * 处理中断场景。
+     * UserAgent 遇到中断时仅返回一条中断消息。
      *
-     * @param context The interrupt context containing metadata about the interruption
-     * @param originalArgs The original arguments passed to the call() method
-     * @return Mono containing an interrupt message
+     * @param context 包含中断元数据的中断上下文
+     * @param originalArgs 传给 call() 方法的原始参数
+     * @return 包含中断消息的 Mono
      */
     @Override
     protected Mono<Msg> handleInterrupt(InterruptContext context, Msg... originalArgs) {
@@ -270,10 +267,9 @@ public class UserAgent extends AgentBase {
     }
 
     /**
-     * Builder for UserAgent.
+     * UserAgent 的构建器。
      *
-     * <p>Provides fluent API for configuring agent name, input method, and hooks. The name is
-     * required; other properties have sensible defaults.
+     * <p>提供配置智能体名称、输入方式和钩子的流式 API。名称必填，其他属性具有合理默认值。
      */
     public static class Builder {
         private String name;
@@ -285,10 +281,10 @@ public class UserAgent extends AgentBase {
         private Builder() {}
 
         /**
-         * Set the agent name (required).
+         * 设置智能体名称（必填）。
          *
-         * @param name The agent name
-         * @return This builder
+         * @param name 智能体名称
+         * @return 当前构建器
          */
         public Builder name(String name) {
             this.name = name;
@@ -296,10 +292,10 @@ public class UserAgent extends AgentBase {
         }
 
         /**
-         * Set the agent description.
+         * 设置智能体描述。
          *
-         * @param description The agent description
-         * @return This builder
+         * @param description 智能体描述
+         * @return 当前构建器
          */
         public Builder description(String description) {
             this.description = description;
@@ -307,10 +303,10 @@ public class UserAgent extends AgentBase {
         }
 
         /**
-         * Set the checkRunning flag.
+         * 设置 checkRunning 标志。
          *
-         * @param checkRunning The checkRunning flag
-         * @return This builder
+         * @param checkRunning checkRunning 标志
+         * @return 当前构建器
          */
         public Builder checkRunning(boolean checkRunning) {
             this.checkRunning = checkRunning;
@@ -318,11 +314,10 @@ public class UserAgent extends AgentBase {
         }
 
         /**
-         * Set the input method for user interaction.
+         * 设置用户交互的输入方式。
          *
-         * @param inputMethod The input method implementation (defaults to StreamUserInput with
-         *     System.in/out)
-         * @return This builder
+         * @param inputMethod 输入方式实现（默认使用基于 System.in/out 的 StreamUserInput）
+         * @return 当前构建器
          */
         public Builder inputMethod(UserInputBase inputMethod) {
             this.inputMethod = inputMethod;
@@ -330,10 +325,10 @@ public class UserAgent extends AgentBase {
         }
 
         /**
-         * Set the hooks for monitoring agent execution.
+         * 设置用于监测智能体执行的钩子。
          *
-         * @param hooks List of hooks
-         * @return This builder
+         * @param hooks 钩子列表
+         * @return 当前构建器
          */
         public Builder hooks(List<Hook> hooks) {
             this.hooks = hooks;
@@ -341,10 +336,10 @@ public class UserAgent extends AgentBase {
         }
 
         /**
-         * Build the UserAgent instance.
+         * 构建 UserAgent 实例。
          *
-         * @return A new UserAgent instance
-         * @throws IllegalArgumentException if name is null or empty
+         * @return 新的 UserAgent 实例
+         * @throws IllegalArgumentException name 为 null 或空时抛出
          */
         public UserAgent build() {
             if (name == null || name.trim().isEmpty()) {

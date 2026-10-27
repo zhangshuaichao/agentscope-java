@@ -36,17 +36,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Loads {@link SubagentDeclaration} instances from Markdown files with YAML front matter placed
- * in the {@code subagents/} directory of a workspace.
+ * 从工作区 {@code subagents/} 目录中带 YAML 前置元数据的 Markdown 文件
+ * 加载 {@link SubagentDeclaration} 实例。
  *
- * <p><strong>File naming</strong>: the filename (without the {@code .md} extension) becomes the
- * subagent's {@code name} / agent-id. The front matter must not contain a {@code name} field.
+ * <p><strong>文件命名</strong>：文件名（不含 {@code .md} 扩展名）成为子智能体的
+ * {@code name}／智能体 ID。前置元数据不得包含 {@code name} 字段。
  *
- * <p><strong>Scan strategy</strong>: only <em>direct</em> children of the given directory are
- * scanned (non-recursive) to prevent accidentally loading files that live inside a definition
- * workspace that happens to be stored under the same parent.
+ * <p><strong>扫描策略</strong>：只扫描指定目录的<em>直接</em>子项（非递归），
+ * 避免意外加载碰巧存放在同一父目录下的定义工作区内部文件。
  *
- * <p>File format:
+ * <p>文件格式：
  *
  * <pre>
  * ---
@@ -67,13 +66,13 @@ import org.slf4j.LoggerFactory;
  * You are a code reviewer...
  * </pre>
  *
- * <p>Rules:
+ * <p>规则：
  * <ul>
- *   <li>{@code description} is required.
- *   <li>When {@code workspace.path} is present, the Markdown body must be blank; the subagent's
- *       system prompt is read from {@code &lt;workspace.path&gt;/AGENTS.md} at runtime.
- *   <li>When {@code workspace.path} is absent, the Markdown body (if any) becomes the inline
- *       {@link SubagentDeclaration#getInlineAgentsBody()}.
+ *   <li>{@code description} 为必填项。
+ *   <li>存在 {@code workspace.path} 时，Markdown 正文必须为空白；运行时从
+ *       {@code &lt;workspace.path&gt;/AGENTS.md} 读取子智能体系统提示。
+ *   <li>不存在 {@code workspace.path} 时，Markdown 正文（若有）成为内联
+ *       {@link SubagentDeclaration#getInlineAgentsBody()}。
  * </ul>
  */
 public final class AgentSpecLoader {
@@ -84,13 +83,13 @@ public final class AgentSpecLoader {
     private AgentSpecLoader() {}
 
     /**
-     * Non-recursively scans {@code subagentsDir} for {@code .md} files and parses each into a
-     * {@link SubagentDeclaration}.
+     * 非递归扫描 {@code subagentsDir} 中的 {@code .md} 文件，并逐个解析为
+     * {@link SubagentDeclaration}。
      *
-     * @param subagentsDir the {@code subagents/} directory to scan
-     * @param mainWorkspace the parent workspace used to resolve relative {@code workspace.path}
-     *     values; may be {@code null} (relative paths will remain relative)
-     * @return list of parsed declarations; never {@code null}
+     * @param subagentsDir 待扫描的 {@code subagents/} 目录
+     * @param mainWorkspace 用于解析相对 {@code workspace.path} 值的父工作区；
+     *     可以为 {@code null}（相对路径将保持为相对形式）
+     * @return 已解析的声明列表；绝不为 {@code null}
      */
     public static List<SubagentDeclaration> loadFromDirectory(
             Path subagentsDir, Path mainWorkspace) {
@@ -127,16 +126,15 @@ public final class AgentSpecLoader {
     }
 
     /**
-     * Loads subagent declarations via the {@link AbstractFilesystem} using an empty runtime
-     * context. Scans {@code subagents/} for {@code *.md} files using filesystem glob.
+     * 通过 {@link AbstractFilesystem} 使用空运行时上下文加载子智能体声明。
+     * 使用文件系统 glob 扫描 {@code subagents/} 中的 {@code *.md} 文件。
      *
-     * <p>Use {@link #loadFromFilesystem(AbstractFilesystem, RuntimeContext, Path)} when
-     * declarations are scoped to a calling user's namespace.
+     * <p>声明按调用用户命名空间隔离时，请使用
+     * {@link #loadFromFilesystem(AbstractFilesystem, RuntimeContext, Path)}。
      *
-     * @param filesystem the filesystem layer (applies namespace transparently)
-     * @param mainWorkspace the parent workspace for resolving relative workspace paths; may be
-     *     {@code null}
-     * @return list of parsed declarations; never {@code null}
+     * @param filesystem 文件系统层（透明应用命名空间）
+     * @param mainWorkspace 用于解析相对工作区路径的父工作区；可以为 {@code null}
+     * @return 已解析的声明列表；绝不为 {@code null}
      */
     public static List<SubagentDeclaration> loadFromFilesystem(
             AbstractFilesystem filesystem, Path mainWorkspace) {
@@ -144,14 +142,13 @@ public final class AgentSpecLoader {
     }
 
     /**
-     * Loads subagent declarations via the {@link AbstractFilesystem}, respecting the supplied
-     * runtime context's namespace isolation.
+     * 通过 {@link AbstractFilesystem} 加载子智能体声明，遵循所提供
+     * 运行时上下文的命名空间隔离。
      *
-     * @param filesystem the filesystem layer (applies namespace transparently)
-     * @param runtimeContext the call context used to resolve namespace-scoped declarations
-     * @param mainWorkspace the parent workspace for resolving relative workspace paths; may be
-     *     {@code null}
-     * @return list of parsed declarations; never {@code null}
+     * @param filesystem 文件系统层（透明应用命名空间）
+     * @param runtimeContext 用于解析命名空间内声明的调用上下文
+     * @param mainWorkspace 用于解析相对工作区路径的父工作区；可以为 {@code null}
+     * @return 已解析的声明列表；绝不为 {@code null}
      */
     public static List<SubagentDeclaration> loadFromFilesystem(
             AbstractFilesystem filesystem, RuntimeContext runtimeContext, Path mainWorkspace) {
@@ -194,13 +191,12 @@ public final class AgentSpecLoader {
     }
 
     /**
-     * Parses a single Markdown declaration file.
+     * 解析单个 Markdown 声明文件。
      *
-     * @param filePath the {@code .md} file to parse
-     * @param mainWorkspace workspace root used to resolve relative {@code workspace.path} values;
-     *     may be {@code null}
-     * @return parsed declaration, or {@code null} if the file is malformed / missing required
-     *     fields
+     * @param filePath 待解析的 {@code .md} 文件
+     * @param mainWorkspace 用于解析相对 {@code workspace.path} 值的工作区根目录；
+     *     可以为 {@code null}
+     * @return 已解析的声明；文件格式错误或缺少必填字段时返回 {@code null}
      */
     public static SubagentDeclaration loadFromFile(Path filePath, Path mainWorkspace)
             throws IOException {
@@ -210,13 +206,13 @@ public final class AgentSpecLoader {
     }
 
     /**
-     * Parses markdown content with YAML front matter into a {@link SubagentDeclaration}.
+     * 将带 YAML 前置元数据的 Markdown 内容解析为 {@link SubagentDeclaration}。
      *
-     * @param markdown the full file content
-     * @param name the subagent name (derived from the filename, without {@code .md})
-     * @param mainWorkspace workspace root used to resolve relative {@code workspace.path} values;
-     *     may be {@code null}
-     * @return parsed declaration, or {@code null} if the content is malformed
+     * @param markdown 完整文件内容
+     * @param name 子智能体名称（由文件名派生，不含 {@code .md}）
+     * @param mainWorkspace 用于解析相对 {@code workspace.path} 值的工作区根目录；
+     *     可以为 {@code null}
+     * @return 已解析的声明；内容格式错误时返回 {@code null}
      */
     @SuppressWarnings("unchecked")
     public static SubagentDeclaration parse(String markdown, String name, Path mainWorkspace) {
@@ -255,7 +251,7 @@ public final class AgentSpecLoader {
             return null;
         }
 
-        // ---- workspace section ----
+        // ---- workspace 部分 ----
         WorkspaceMode mode = WorkspaceMode.ISOLATED;
         Path workspacePath = null;
 
@@ -281,7 +277,7 @@ public final class AgentSpecLoader {
             }
         }
 
-        // ---- body / inline sysPrompt validation ----
+        // ---- 正文／内联系统提示验证 ----
         if (workspacePath != null && !body.isBlank()) {
             log.warn(
                     "Subagent declaration '{}' has both workspace.path and a non-empty body;"
@@ -292,10 +288,10 @@ public final class AgentSpecLoader {
             body = "";
         }
 
-        // ---- optional fields ----
+        // ---- 可选字段 ----
         String model = asString(fm.get("model"));
 
-        // steps (preferred) > maxIters (deprecated alias). Both default to 10 via the builder.
+        // steps（优先）> maxIters（已弃用别名）。两者通过构建器默认设为 10。
         int steps = 10;
         Object stepsObj = fm.get("steps");
         if (stepsObj instanceof Number sn) {
@@ -362,7 +358,7 @@ public final class AgentSpecLoader {
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    // 辅助方法
     // -------------------------------------------------------------------------
 
     private static void applyCompaction(Object value, SubagentDeclaration.Builder declaration) {
@@ -473,9 +469,8 @@ public final class AgentSpecLoader {
     }
 
     /**
-     * Parses a tri-state boolean: {@code null} when the key is absent or blank (no opinion),
-     * otherwise the parsed boolean. Used for front-matter flags that distinguish "unset" from
-     * an explicit {@code false}.
+     * 解析三态布尔值：键缺失或空白时返回 {@code null}（不指定），
+     * 否则返回解析出的布尔值。用于区分“未设置”与显式 {@code false} 的前置元数据标志。
      */
     private static Boolean asNullableBoolean(Object v) {
         if (v == null) return null;
@@ -520,7 +515,7 @@ public final class AgentSpecLoader {
         if (toolsStr == null || toolsStr.isBlank()) {
             return List.of();
         }
-        // Support both comma-separated strings and YAML list representations "[a, b, c]"
+        // 同时支持逗号分隔字符串和 YAML 列表表示形式 "[a, b, c]"
         String cleaned = toolsStr.stripLeading();
         if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
             cleaned = cleaned.substring(1, cleaned.length() - 1);

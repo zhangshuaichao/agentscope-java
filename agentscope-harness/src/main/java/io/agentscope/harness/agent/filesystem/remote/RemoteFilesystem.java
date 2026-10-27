@@ -48,13 +48,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * {@link AbstractFilesystem} backed by a {@link BaseStore} (persistent, cross-thread).
+ * 由 {@link BaseStore} 支撑的 {@link AbstractFilesystem}（持久化、可跨线程使用）。
  *
- * <p>Files are organized via namespaces and persist across threads/sessions. The namespace can be
- * static (fixed at construction time) or dynamic (resolved at every operation via a {@link
- * NamespaceFactory}).
+ * <p>文件通过命名空间组织，并跨线程／会话持久保存。命名空间可以是静态的（构造时固定），也可以是动态的（每次操作通过 {@link NamespaceFactory} 解析）。
  *
- * <p>Dynamic namespace example:
+ * <p>动态命名空间示例：
  *
  * <pre>{@code
  * RemoteFilesystem fs = new RemoteFilesystem(store,
@@ -67,18 +65,16 @@ public class RemoteFilesystem implements AbstractFilesystem {
     private final NamespaceFactory namespaceFactory;
 
     /**
-     * Optional best-effort local index. When non-null, {@code ls}, {@code glob}, {@code exists}
-     * and {@code grep} consult the index first and fall back to the remote store only when the
-     * index has no matching entries.
+     * 可选的尽力而为本地索引。非空时，{@code ls}、{@code glob}、{@code exists}
+     * 和 {@code grep} 先查索引，只有索引没有匹配条目时才回退到远程存储。
      */
     private WorkspaceIndex index;
 
     /**
-     * Creates a RemoteFilesystem with a {@link NamespaceFactory} that is called on every operation,
-     * allowing the namespace to vary based on runtime context.
+     * 创建使用 {@link NamespaceFactory} 的 RemoteFilesystem；每次操作都会调用该工厂，允许根据运行时上下文改变命名空间。
      *
-     * @param store the store to use for persistence
-     * @param namespaceFactory factory that returns the namespace tuple per operation
+     * @param store 用于持久化的存储
+     * @param namespaceFactory 每次操作返回命名空间元组的工厂
      */
     public RemoteFilesystem(BaseStore store, NamespaceFactory namespaceFactory) {
         if (store == null) {
@@ -92,43 +88,39 @@ public class RemoteFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Creates a RemoteFilesystem with a fixed namespace.
+     * 创建使用固定命名空间的 RemoteFilesystem。
      *
-     * @param store the store to use for persistence
-     * @param namespace the namespace tuple for organizing files
+     * @param store 用于持久化的存储
+     * @param namespace 用于组织文件的命名空间元组
      */
     public RemoteFilesystem(BaseStore store, List<String> namespace) {
         this(store, toFactory(namespace));
     }
 
     /**
-     * Creates a RemoteFilesystem with a default "filesystem" namespace.
+     * 创建使用默认 "filesystem" 命名空间的 RemoteFilesystem。
      *
-     * @param store the store to use for persistence
+     * @param store 用于持久化的存储
      */
     public RemoteFilesystem(BaseStore store) {
         this(store, List.of("filesystem"));
     }
 
     /**
-     * Attaches a best-effort {@link WorkspaceIndex} to accelerate list/glob/exists/grep
-     * operations. The index may be {@code null} (disabled) or become stale.
+     * 附加尽力而为的 {@link WorkspaceIndex}，以加速列表、glob、存在性检查和 grep 操作。
+     * 索引可以为 {@code null}（禁用），也可能过期。
      *
-     * <p>Fallback semantics differ per operation:
+     * <p>各操作的回退语义不同：
      *
      * <ul>
-     *   <li>{@code ls}, {@code glob}, {@code exists} — when the index has no matching prefix
-     *       the operation falls back to a full remote-store scan, so results remain correct
-     *       even if this node's index is stale.
-     *   <li>{@code grep} — when the index is non-{@code null} the operation first enumerates
-     *       candidates from the index. If the index path yields zero matches, the operation
-     *       falls back to a full remote-store scan so that sibling-node writes not yet seen by
-     *       this node's index are not silently missed. Content for each candidate is always
-     *       fetched authoritatively from the remote store.
+     *   <li>{@code ls}、{@code glob}、{@code exists}：索引没有匹配前缀时，回退到完整远程存储扫描；上游以此处理本节点索引过期的情况。
+     *   <li>{@code grep}：索引非 {@code null} 时，先从索引枚举候选项。如果索引路径没有产生匹配，则回退到完整远程存储扫描，避免遗漏本节点尚未获知的其他节点写入。每个候选项的内容始终从远程存储这一权威来源获取。
      * </ul>
      *
-     * @param index workspace index; {@code null} disables index-backed fast paths
-     * @return this instance (fluent)
+     * <p>【学习提示】这里的回退条件是“没有匹配”，而非“索引覆盖完整”。索引已有部分命中时不会自动补扫全部远程文件，因此不能把尽力而为索引误认为强一致的完整视图。
+     *
+     * @param index 工作区索引；{@code null} 禁用基于索引的快速路径
+     * @return 当前实例，支持链式调用
      */
     public RemoteFilesystem withIndex(WorkspaceIndex index) {
         this.index = index;
@@ -148,15 +140,16 @@ public class RemoteFilesystem implements AbstractFilesystem {
         return new io.agentscope.harness.agent.session.StoreSessionStorage(store, getNamespace(rc));
     }
 
-    /** Whether this backend supports compare-and-swap file updates across nodes. */
+    /**
+     * 此后端是否支持跨节点的文件比较并交换更新。
+     */
     public boolean supportsAtomicUpdates() {
         return store.supportsAtomicSessionStorage();
     }
 
     /**
-     * Registers routing metadata for host-side task maintenance. The registry is a separate
-     * store namespace, never a file visible to agent filesystem tools. Each resolved scope has
-     * its own key so concurrent registrations do not overwrite a shared list.
+     * 为宿主侧任务维护注册路由元数据。注册表使用独立的存储命名空间，绝不是智能体文件系统工具可见的文件。
+     * 每个解析出的作用域都有自己的键，因此并发注册不会覆盖同一共享列表。
      */
     public void registerTaskScope(RuntimeContext rc, String agentId) {
         List<String> namespace = getNamespace(rc);
@@ -177,8 +170,8 @@ public class RemoteFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Returns registered contexts for trusted task maintenance, including the default context.
-     * This does not change the namespace used by ordinary filesystem operations.
+     * 返回用于可信任务维护的已注册上下文，包括默认上下文。
+     * 这不会改变普通文件系统操作所使用的命名空间。
      */
     public List<RuntimeContext> taskMaintenanceContexts(String agentId) {
         List<RuntimeContext> contexts = new ArrayList<>();
@@ -193,7 +186,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
                                 .userId((String) value.get("userId"))
                                 .sessionId((String) value.get("sessionId"))
                                 .build();
-                // Ignore entries from incompatible namespace factories/configurations.
+                // 忽略来自不兼容命名空间工厂或配置的条目。
                 if (getNamespace(rc).equals(value.get("namespace"))) {
                     contexts.add(rc);
                 }
@@ -231,7 +224,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
     public LsResult ls(RuntimeContext runtimeContext, String path) {
         String normalizedPath = path.endsWith("/") ? path : path + "/";
 
-        // Fast path: index has entries for this prefix
+        // 快速路径：索引包含此前缀的条目
         if (index != null && index.hasPrefix(normalizedPath)) {
             List<String> indexPaths = index.listByPrefix(normalizedPath);
             List<FileInfo> infos = new ArrayList<>();
@@ -252,7 +245,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
             return LsResult.success(infos);
         }
 
-        // Fallback: full remote scan
+        // 回退：完整扫描远程存储
         List<StoreItem> items = searchAllItems(runtimeContext);
         List<FileInfo> infos = new ArrayList<>();
         Set<String> subdirs = new LinkedHashSet<>();
@@ -338,7 +331,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
     public WriteResult write(RuntimeContext runtimeContext, String filePath, String content) {
         List<String> ns = getNamespace(runtimeContext);
         FileData fileData = FileData.create(content);
-        // CAS create-if-absent: atomic under concurrent writers across nodes.
+        // CAS 不存在时创建：在跨节点并发写入下保持原子性。
         boolean written = store.putIfVersion(ns, filePath, fileDataToStoreValue(fileData), 0L);
         if (!written) {
             return WriteResult.fail(
@@ -350,7 +343,9 @@ public class RemoteFilesystem implements AbstractFilesystem {
         return WriteResult.ok(filePath);
     }
 
-    /** Maximum CAS retry attempts for {@link #edit} under concurrent writers. */
+    /**
+     * 并发写入时 {@link #edit} 的最大 CAS 重试次数。
+     */
     static final int EDIT_MAX_RETRIES = 5;
 
     @Override
@@ -366,9 +361,9 @@ public class RemoteFilesystem implements AbstractFilesystem {
         }
 
         List<String> ns = getNamespace(runtimeContext);
-        // Bounded CAS retry loop: re-read the current version on each attempt and retry on
-        // version mismatch. After EDIT_MAX_RETRIES failed CAS attempts we surface a conflict
-        // error rather than spinning indefinitely.
+        // 有界 CAS 重试循环：每次尝试重新读取当前版本，
+        // 版本不匹配时重试。EDIT_MAX_RETRIES 次 CAS 尝试均失败后返回冲突
+        // 错误，而不是无限循环。
         for (int attempt = 0; attempt < EDIT_MAX_RETRIES; attempt++) {
             StoreItem item = store.get(ns, filePath);
             if (item == null) {
@@ -397,7 +392,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
             if (ok) {
                 return EditResult.ok(filePath, occurrences);
             }
-            // Version mismatch — another writer raced us. Re-read and retry.
+            // 版本不匹配：其他写入者抢先更新，重新读取并重试。
         }
         return EditResult.fail(
                 "Edit conflict on '"
@@ -417,10 +412,10 @@ public class RemoteFilesystem implements AbstractFilesystem {
             globMatcher = FileSystems.getDefault().getPathMatcher("glob:" + glob);
         }
 
-        // Fast path: use the index to enumerate candidate paths under {@code normalizedPath},
-        // then fetch each file's content from the remote store and scan it line-by-line. The
-        // index only narrows the candidate set; content is always read authoritatively from
-        // the store (never from local disk), so stale/missing local copies cannot mask matches.
+        // 快速路径：使用索引枚举 {@code normalizedPath} 下的候选路径，
+        // 再从远程存储获取每个文件内容并逐行扫描。
+        // 索引仅缩小候选集合；内容始终从权威存储读取，
+        // 不会读取本地磁盘，因此本地副本过期或缺失不会掩盖匹配。
         if (index != null) {
             List<String> candidates =
                     "/".equals(normalizedPath)
@@ -453,15 +448,15 @@ public class RemoteFilesystem implements AbstractFilesystem {
                     }
                 }
             }
-            // Index returned matches — return them. Otherwise fall through to the authoritative
-            // store scan: on a multi-node deployment, this node's index may not yet know about
-            // files written via another node, and we must not silently miss them.
+            // 索引产生了匹配则返回；否则继续扫描权威存储：
+            // 在多节点部署中，本节点索引可能还不知道
+            // 其他节点写入的文件，不能悄然漏掉这些文件。
             if (!matches.isEmpty()) {
                 return GrepResult.success(matches);
             }
         }
 
-        // Fallback: full remote scan
+        // 回退：完整扫描远程存储
         List<StoreItem> items = searchAllItems(runtimeContext);
         List<GrepMatch> matches = new ArrayList<>();
         for (StoreItem item : items) {
@@ -506,9 +501,9 @@ public class RemoteFilesystem implements AbstractFilesystem {
                                         + (effectivePattern.startsWith("**")
                                                 ? effectivePattern
                                                 : "**/" + effectivePattern));
-        // Java NIO requires a path separator for patterns that start with "**/", so the
-        // recursive matcher does not match files located directly in the search root. Strip the
-        // recursive prefix for a second matcher that covers those root-level files.
+        // Java NIO 对以 "**/" 开头的模式要求存在路径分隔符，因此
+        // 递归匹配器不会匹配直接位于搜索根目录的文件。移除递归前缀，
+        // 构建第二个匹配器以覆盖根目录文件。
         String directPattern;
         if (effectivePattern.startsWith("**/")) {
             directPattern = effectivePattern.substring(3);
@@ -520,7 +515,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
         PathMatcher directMatcher =
                 FileSystems.getDefault().getPathMatcher("glob:" + directPattern);
 
-        // Fast path: index has entries for this prefix
+        // 快速路径：索引包含此前缀的条目
         if (index != null && index.hasPrefix(normalizedPath)) {
             List<String> candidates = index.listByPrefix(normalizedPath);
             List<FileInfo> results = new ArrayList<>();
@@ -543,7 +538,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
             return GlobResult.success(results);
         }
 
-        // Fallback: full remote scan
+        // 回退：完整扫描远程存储
         List<StoreItem> items = searchAllItems(runtimeContext);
         List<FileInfo> results = new ArrayList<>();
         for (StoreItem item : items) {
@@ -592,10 +587,10 @@ public class RemoteFilesystem implements AbstractFilesystem {
             }
 
             FileData fileData = FileData.create(contentStr, encoding);
-            // Last-write-wins: uploadFiles is the snapshot-push API (session mirror, audit-log
-            // rotation, WorkspaceManager.writeUtf8WorkspaceRelative). Callers needing
-            // create-if-absent semantics should use {@link #write} instead, which preserves
-            // CAS-create-if-absent for the tool-surface write path.
+            // 后写入者胜出：uploadFiles 是快照推送 API（会话镜像、审计日志
+            // 轮转、WorkspaceManager.writeUtf8WorkspaceRelative）。需要
+            // 不存在时才创建语义的调用方应使用 {@link #write}，该方法为
+            // 工具侧写入路径保留 CAS 不存在时创建语义。
             store.put(ns, filePath, fileDataToStoreValue(fileData));
             responses.add(FileUploadResponse.success(filePath));
         }
@@ -638,7 +633,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
         }
         String normalized = normalizePath(path);
 
-        // Fast path: consult index first
+        // 快速路径：优先查询索引
         if (index != null) {
             if (index.exists(normalized)) {
                 return true;
@@ -646,14 +641,14 @@ public class RemoteFilesystem implements AbstractFilesystem {
             if (index.hasPrefix(normalized + "/")) {
                 return true;
             }
-            // Index miss — fall through to remote (may not be indexed yet)
+            // 索引未命中：继续查询远程存储（可能尚未建立索引）
         }
 
         List<String> ns = getNamespace(runtimeContext);
         if (store.get(ns, normalized) != null) {
             return true;
         }
-        // Also check if any child exists (directory-like)
+        // 还检查是否存在任意子项（类似目录）
         List<StoreItem> items = searchAllItems(runtimeContext);
         for (StoreItem item : items) {
             if (item.key().startsWith(normalized + "/")) {
@@ -663,7 +658,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
         return false;
     }
 
-    // Also update index on delete/move so entries don't linger
+    // 删除或移动时也更新索引，避免残留条目
     @Override
     public WriteResult delete(RuntimeContext runtimeContext, String path) {
         AbstractFilesystem.validatePath(path);
@@ -678,7 +673,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
                 }
             }
         }
-        // idempotent — not found is still success
+        // 幂等：未找到也视为成功
         return WriteResult.ok(path);
     }
 
@@ -709,7 +704,7 @@ public class RemoteFilesystem implements AbstractFilesystem {
         return WriteResult.ok(toPath);
     }
 
-    // ==================== Internal helpers ====================
+    // ==================== 内部辅助方法 ====================
 
     private List<StoreItem> searchAllItems(RuntimeContext runtimeContext) {
         List<String> ns = getNamespace(runtimeContext);

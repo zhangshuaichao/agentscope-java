@@ -24,7 +24,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** {@link RemoteSubagentTransport} backed by the Agent Protocol HTTP client. */
+/**
+ * 由 Agent Protocol HTTP 客户端支持的 {@link RemoteSubagentTransport}。
+ */
 public final class AgentProtocolTransport implements RemoteSubagentTransport {
 
     public static final String TYPE = "agent-protocol";

@@ -18,12 +18,12 @@ package io.agentscope.core.observation;
 import io.agentscope.core.message.ToolResultBlock;
 import reactor.core.publisher.Mono;
 
-/** Acknowledged persistence boundary, not a best-effort telemetry callback. */
+/** 需要确认的持久化边界，而不是尽力而为的遥测回调。 */
 @FunctionalInterface
 public interface ActionObserver {
     String CONTEXT_KEY = "agentscope.action.observer";
     String EVENT_NAME = "action_observation";
 
-    /** The result is null for start, cancellation or an uncaught execution exception. */
+    /** 开始、取消或发生未捕获执行异常时，结果为 null。 */
     Mono<Void> record(ActionObservation observation, ToolResultBlock result);
 }

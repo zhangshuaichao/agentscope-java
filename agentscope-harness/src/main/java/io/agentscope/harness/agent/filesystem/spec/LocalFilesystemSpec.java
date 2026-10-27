@@ -34,17 +34,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Specification for the local filesystem mode (with shell execution).
+ * 本地文件系统模式（带 Shell 执行）的配置描述。
  *
- * <p>This spec produces a {@link LocalFilesystemWithShell} whose root is the agent workspace and
- * whose shell runs directly on the host as {@code sh -c <command>}. Long-term memory
- * ({@code MEMORY.md}, {@code memory/}) and session logs live on the same local disk.
+ * <p>此配置创建 {@link LocalFilesystemWithShell}，以智能体工作区为根，
+ * Shell 直接在宿主机上通过 {@code sh -c <command>} 执行。
+ * 长期记忆（{@code MEMORY.md}、{@code memory/}）和会话日志保存在同一本地磁盘。
  *
- * <p>Suitable for single-process deployments (personal assistants, CLI tools, local dev loops)
- * where distributed sharing is not required and the agent is trusted to run host shell commands.
+ * <p>适用于不需要分布式共享、且信任智能体执行宿主机 Shell 命令的单进程部署，
+ * 例如个人助手、CLI 工具和本地开发循环。
  *
- * <p>For distributed deployments where long-term memory must be shared across replicas, prefer
- * {@link RemoteFilesystemSpec} (no shell) or a sandbox filesystem spec (shell via sandbox).
+ * <p>若分布式部署需要跨副本共享长期记忆，优先使用
+ * {@link RemoteFilesystemSpec}（无 Shell）或沙箱文件系统配置（通过沙箱执行 Shell）。
  */
 public class LocalFilesystemSpec {
 
@@ -54,66 +54,60 @@ public class LocalFilesystemSpec {
     private boolean inheritEnv = false;
 
     /**
-     * Path-resolution policy for the upper {@link LocalFilesystemWithShell}. Defaults to
-     * {@link LocalFsMode#ROOTED}, so absolute paths supplied by the agent are accepted only when
-     * they fall under one of the configured roots (project + workspace + additionalRoots).
+     * 上层 {@link LocalFilesystemWithShell} 的路径解析策略。
+     * 默认使用 {@link LocalFsMode#ROOTED}，仅接受位于所配置根目录
+     * （项目、工作区及 additionalRoots）之内的智能体绝对路径。
      */
     private LocalFsMode mode = LocalFsMode.ROOTED;
 
     private IsolationScope isolationScope;
 
     /**
-     * User project root (lower layer of the resulting {@link OverlayFilesystem}). The agent reads
-     * project-authored content (e.g. {@code AGENTS.md}, {@code knowledge/}, {@code skills/}) from
-     * this directory and copies-on-write into the agent {@code workspace} when modified. Also
-     * the shell {@code pwd} for {@code execute()} so command output matches user expectation.
+     * 用户项目根目录（最终 {@link OverlayFilesystem} 的下层）。
+     * 智能体从此目录读取项目内容（例如 {@code AGENTS.md}、{@code knowledge/}、{@code skills/}），
+     * 修改时通过写时复制写入智能体 {@code workspace}。
+     * 它同时作为 {@code execute()} 的 Shell {@code pwd}，使命令输出符合用户预期。
      *
-     * <p>{@code null} until {@link #project(Path)} is called; defaults to
-     * {@link System#getProperty(String) System.getProperty("user.dir")} at
-     * {@link #toFilesystem} time.
+     * <p>调用 {@link #project(Path)} 前为 {@code null}；在 {@link #toFilesystem} 时默认使用
+     * {@link System#getProperty(String) System.getProperty("user.dir")}。
      */
     private Path project;
 
     /**
-     * Extra host directories beyond {@code project} and {@code workspace} that the agent is
-     * allowed to touch in {@link LocalFsMode#ROOTED} mode. Mirrors Claude Code CLI's
-     * {@code --add-dir} flag.
+     * 除 {@code project} 和 {@code workspace} 外，智能体在 {@link LocalFsMode#ROOTED}
+     * 模式下可访问的其他宿主机目录。对应 Claude Code CLI 的 {@code --add-dir} 标志。
      */
     private final List<Path> additionalRoots = new ArrayList<>();
 
     /**
-     * When {@code true}, the agent's file-write operations for non-workspace paths (i.e. paths
-     * that are not workspace metadata like {@code MEMORY.md}, {@code agents/}, {@code skills/})
-     * are routed to the project directory instead of the workspace. Workspace metadata paths
-     * continue to be written to the workspace.
+     * 为 {@code true} 时，非工作区路径（即不是 {@code MEMORY.md}、{@code agents/}、
+     * {@code skills/} 等工作区元数据）的文件写入操作路由到项目目录，而非工作区。
+     * 工作区元数据路径仍写入工作区。
      *
-     * <p>Defaults to {@code false}, preserving the original overlay behaviour where all writes
-     * land in the workspace.
+     * <p>默认 {@code false}，保留所有写入均落到工作区的原覆盖行为。
      */
     private boolean projectWritable = false;
 
     /**
-     * When {@code true}, the agent's file operations for non-routed paths resolve against the
-     * shared workspace root without the per-user namespace prefix. The host application and the
-     * agent then agree on physical locations: files written to the workspace root with plain
-     * {@code java.nio} (e.g. {@code uploads/}) are readable by {@code read_file} /
-     * {@code list_files}, and agent writes land where the host expects them.
+     * 为 {@code true} 时，未单独路由路径的文件操作以共享工作区根解析，
+     * 不附加按用户划分的命名空间前缀。宿主应用与智能体因而使用相同物理位置：
+     * 宿主通过普通 {@code java.nio} 写入工作区根的文件（例如 {@code uploads/}）
+     * 可由 {@code read_file}／{@code list_files} 读取，智能体写入也落在宿主预期位置。
      *
-     * <p>Defaults to {@code false}, preserving the namespaced behaviour — the same read/write
-     * asymmetry as {@link RemoteFilesystemSpec#sharedLocalWorkspace(boolean)} (#3245).
+     * <p>默认 {@code false}，保留命名空间行为；其读写不对称与
+     * {@link RemoteFilesystemSpec#sharedLocalWorkspace(boolean)} 相同（#3245）。
      *
-     * <p><b>Not safe for multi-tenant workspaces:</b> shared mode disables per-user namespace
-     * isolation at the workspace root — users/sessions configured on the same workspace
-     * directory will read and overwrite each other's files there. Intended for single-tenant
-     * host-app integrations.
+     * <p><b>不适合多租户工作区：</b>共享模式关闭工作区根的按用户命名空间隔离；
+     * 配置到同一工作区目录的用户／会话会读取并覆盖彼此文件。
+     * 此选项面向单租户宿主应用集成。
      */
     private boolean sharedLocalWorkspace = false;
 
     /**
-     * Sets the default command execution timeout in seconds.
+     * 设置默认命令执行超时，单位秒。
      *
-     * @param seconds timeout (must be positive)
-     * @return this spec
+     * @param seconds 超时（必须为正）
+     * @return 此配置对象
      */
     public LocalFilesystemSpec executeTimeoutSeconds(int seconds) {
         if (seconds <= 0) {
@@ -124,10 +118,10 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Sets the maximum number of output bytes captured from any single shell command.
+     * 设置单条 Shell 命令最多捕获的输出字节数。
      *
-     * @param bytes byte cap (must be positive)
-     * @return this spec
+     * @param bytes 字节数上限（必须为正）
+     * @return 此配置对象
      */
     public LocalFilesystemSpec maxOutputBytes(int bytes) {
         if (bytes <= 0) {
@@ -138,11 +132,11 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Adds an environment variable that will be set for every shell command.
+     * 添加每条 Shell 命令都会设置的环境变量。
      *
-     * @param name variable name
-     * @param value variable value
-     * @return this spec
+     * @param name 变量名
+     * @param value 变量值
+     * @return 此配置对象
      */
     public LocalFilesystemSpec env(String name, String value) {
         if (name == null || name.isBlank()) {
@@ -153,11 +147,11 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Controls whether the parent process environment is inherited by shell commands. When
-     * {@code false} (default), only variables added via {@link #env(String, String)} are visible.
+     * 控制 Shell 命令是否继承父进程环境。
+     * 为 {@code false}（默认）时，仅能看到通过 {@link #env(String, String)} 添加的变量。
      *
-     * @param inherit whether to inherit parent env
-     * @return this spec
+     * @param inherit 是否继承父进程环境
+     * @return 此配置对象
      */
     public LocalFilesystemSpec inheritEnv(boolean inherit) {
         this.inheritEnv = inherit;
@@ -165,13 +159,13 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Legacy: {@code true} maps to {@link LocalFsMode#SANDBOXED}, {@code false} to
-     * {@link LocalFsMode#UNRESTRICTED}. Prefer {@link #mode(LocalFsMode)} so {@link LocalFsMode#ROOTED}
-     * is also reachable.
+     * 旧选项：{@code true} 映射到 {@link LocalFsMode#SANDBOXED}，
+     * {@code false} 映射到 {@link LocalFsMode#UNRESTRICTED}。
+     * 优先使用 {@link #mode(LocalFsMode)}，以便也能选择 {@link LocalFsMode#ROOTED}。
      *
-     * @param virtual whether to enable virtual mode
-     * @return this spec
-     * @deprecated use {@link #mode(LocalFsMode)} for the full three-way selection
+     * @param virtual 是否启用虚拟模式
+     * @return 此配置对象
+     * @deprecated 使用 {@link #mode(LocalFsMode)} 选择完整的三种模式
      */
     @Deprecated
     public LocalFilesystemSpec virtualMode(boolean virtual) {
@@ -179,11 +173,11 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Sets the path-resolution policy for the upper {@link LocalFilesystemWithShell}. Defaults
-     * to {@link LocalFsMode#ROOTED}.
+     * 设置上层 {@link LocalFilesystemWithShell} 的路径解析策略。
+     * 默认 {@link LocalFsMode#ROOTED}。
      *
-     * @param mode policy mode
-     * @return this spec
+     * @param mode 策略模式
+     * @return 此配置对象
      */
     public LocalFilesystemSpec mode(LocalFsMode mode) {
         if (mode == null) {
@@ -194,29 +188,30 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Sets the isolation scope controlling how file paths are namespaced per user, session, or
-     * agent. Defaults to {@link IsolationScope#USER} (consistent with
-     * {@link RemoteFilesystemSpec} and sandbox specs).
+     * 设置隔离作用域，控制文件路径如何按用户、会话或智能体划分命名空间。
+     * 默认 {@link IsolationScope#USER}，与 {@link RemoteFilesystemSpec} 及沙箱配置一致。
      *
-     * @param scope isolation scope
-     * @return this spec
+     * @param scope 隔离作用域
+     * @return 此配置对象
      */
     public LocalFilesystemSpec isolationScope(IsolationScope scope) {
         this.isolationScope = scope;
         return this;
     }
 
-    /** Returns the configured isolation scope, or {@code null} to use the default. */
+    /**
+     * 返回已配置的隔离作用域；{@code null} 表示使用默认值。
+     */
     public IsolationScope getIsolationScope() {
         return isolationScope;
     }
 
     /**
-     * Adds an extra host directory the agent is allowed to access by absolute path under
-     * {@link LocalFsMode#ROOTED}. {@code null} entries are ignored.
+     * 添加在 {@link LocalFsMode#ROOTED} 下允许智能体通过绝对路径访问的额外宿主机目录。
+     * 忽略 {@code null} 条目。
      *
-     * @param root extra root to allow
-     * @return this spec
+     * @param root 额外允许的根目录
+     * @return 此配置对象
      */
     public LocalFilesystemSpec addRoot(Path root) {
         if (root != null) {
@@ -226,27 +221,29 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Enables or disables project-writable mode. When {@code true}, the agent's file-write
-     * operations for non-workspace paths are routed to the project directory.
+     * 启用或禁用项目可写模式。为 {@code true} 时，
+     * 智能体对非工作区路径的文件写入操作会路由到项目目录。
      *
-     * @param writable whether non-workspace writes go to the project directory
-     * @return this spec
+     * @param writable 非工作区写入是否进入项目目录
+     * @return 此配置对象
      */
     public LocalFilesystemSpec projectWritable(boolean writable) {
         this.projectWritable = writable;
         return this;
     }
 
-    /** Returns whether project-writable mode is enabled. */
+    /**
+     * 返回是否启用了项目可写模式。
+     */
     public boolean isProjectWritable() {
         return projectWritable;
     }
 
     /**
-     * Replaces the list of extra host directories. See {@link #addRoot(Path)}.
+     * 替换额外宿主机目录列表。参见 {@link #addRoot(Path)}。
      *
-     * @param roots extra roots ({@code null} clears)
-     * @return this spec
+     * @param roots 额外根目录（{@code null} 表示清空）
+     * @return 此配置对象
      */
     public LocalFilesystemSpec additionalRoots(Collection<Path> roots) {
         this.additionalRoots.clear();
@@ -261,15 +258,14 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Sets the user project root used as the lower layer of the resulting
-     * {@link OverlayFilesystem}. Reads of {@code AGENTS.md}, {@code knowledge/}, {@code skills/}
-     * etc. fall back to this directory when the agent {@code workspace} does not contain them;
-     * shell {@code execute()} runs with {@code pwd} set to this directory.
+     * 设置最终 {@link OverlayFilesystem} 下层使用的用户项目根目录。
+     * 智能体 {@code workspace} 不包含 {@code AGENTS.md}、{@code knowledge/}、{@code skills/}
+     * 等内容时，读取会回退到此目录；Shell {@code execute()} 的 {@code pwd} 也设为此目录。
      *
-     * <p>Defaults to {@code System.getProperty("user.dir")} when not set.
+     * <p>未设置时默认 {@code System.getProperty("user.dir")}。
      *
-     * @param project project root path
-     * @return this spec
+     * @param project 项目根路径
+     * @return 此配置对象
      */
     public LocalFilesystemSpec project(Path project) {
         this.project = project;
@@ -277,40 +273,48 @@ public class LocalFilesystemSpec {
     }
 
     /**
-     * Builds the effective filesystem as an {@link OverlayFilesystem} with the agent
-     * {@code workspace} as the upper (read-write, shell host) layer and the user
-     * {@link #project(Path)} as the read-only lower layer. Writes always land in
-     * {@code workspace}; reads check {@code workspace} first then fall back to {@code project},
-     * giving copy-on-write semantics for files that originate in the project tree.
+     * 构建实际 {@link OverlayFilesystem}：智能体 {@code workspace} 为上层
+     * （可读写，承载 Shell），用户 {@link #project(Path)} 为只读下层。
+     * 默认写入落到 {@code workspace}；读取先查 {@code workspace}，再回退到 {@code project}，
+     * 为来自项目树的文件提供写时复制语义。
      *
-     * @param workspace agent workspace root (becomes overlay upper)
-     * @param localNamespaceFactory optional namespace factory for per-user/session folder scoping
-     * @return an {@link OverlayFilesystem} wired with the options in this spec
+     * <p>【学习提示】上面描述的是默认分支；开启 projectWritable 时，构造的
+     * ProjectAwareOverlay 会把非工作区元数据的写入路由到项目目录。
+     * 配置对象的默认值与最终构造分支必须一起读，不能把“所有写入进工作区”理解为无条件保证。
+     *
+     * @param workspace 智能体工作区根目录（成为覆盖上层）
+     * @param localNamespaceFactory 可选的命名空间工厂，按用户／会话限定文件夹作用域
+     * @return 根据此配置选项装配的 {@link OverlayFilesystem}
      */
-    /** Project root explicitly configured, or {@code null} to fall back to {@code ${user.dir}}. */
+    /**
+     * 明确配置的项目根目录；{@code null} 时回退到 {@code ${user.dir}}。
+     */
     public Path getProject() {
         return project;
     }
 
-    /** Currently configured path-resolution policy mode. */
+    /**
+     * 当前配置的路径解析策略模式。
+     */
     public LocalFsMode getMode() {
         return mode;
     }
 
     /**
-     * Enables or disables the shared workspace root for non-routed paths; see the field
-     * javadoc. When enabled, the per-user namespace prefix is not applied to the upper or
-     * project layers.
+     * 启用或禁用未单独路由路径使用共享工作区根；参见字段 Javadoc。
+     * 启用后，上层与项目层都不附加按用户划分的命名空间前缀。
      *
-     * @param shared whether non-routed paths resolve against the shared workspace root
-     * @return this spec
+     * @param shared 未单独路由路径是否以共享工作区根解析
+     * @return 此配置对象
      */
     public LocalFilesystemSpec sharedLocalWorkspace(boolean shared) {
         this.sharedLocalWorkspace = shared;
         return this;
     }
 
-    /** Snapshot of configured extra roots. */
+    /**
+     * 已配置额外根目录的快照。
+     */
     public List<Path> getAdditionalRoots() {
         return List.copyOf(additionalRoots);
     }
@@ -318,8 +322,8 @@ public class LocalFilesystemSpec {
     public AbstractFilesystem toFilesystem(Path workspace, NamespaceFactory localNamespaceFactory) {
         Path effectiveProject =
                 project != null ? project : Paths.get(System.getProperty("user.dir"));
-        // sharedLocalWorkspace: drop the per-user prefix so host-app writes at the workspace
-        // root and agent reads/writes agree on physical locations (#3245).
+        // sharedLocalWorkspace：去掉按用户划分的前缀，使宿主应用在工作区
+        // 根的写入与智能体读写使用相同物理位置（#3245）。
         NamespaceFactory effectiveNamespaceFactory =
                 sharedLocalWorkspace ? null : localNamespaceFactory;
         List<Path> policyRoots = new ArrayList<>();

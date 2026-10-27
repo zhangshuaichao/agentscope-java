@@ -25,19 +25,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Distributed {@link SubagentRegistry} backed by a {@link BaseStore}. Because the store is supplied
- * by a {@link io.agentscope.harness.agent.DistributedStore} (Redis / OSS / MySQL), exposure
- * records become visible to every node, so any replica can resolve a {@code subagentId} and
- * re-materialize the subagent.
+ * 由 {@link BaseStore} 支持的分布式 {@link SubagentRegistry}。
+ * 存储由 {@link io.agentscope.harness.agent.DistributedStore} 提供（Redis／OSS／MySQL），
+ * 因此公开记录对每个节点可见，任意副本都能解析 {@code subagentId} 并重建子智能体。
  *
- * <p>Records are stored under the namespace {@code ["subagents", "exposed"]} keyed by
- * {@code subagentId}. TTL is enforced lazily on {@link #find}: an elapsed record is deleted and
- * reported as absent.
+ * <p>记录位于命名空间 {@code ["subagents", "exposed"]}，以 {@code subagentId} 为键。
+ * TTL 在 {@link #find} 时惰性执行：过期记录会被删除并视为不存在。
  *
- * <p>This registry deliberately stores only routing/identity metadata. Concurrency safety for the
- * subagent's mutable conversation state is the responsibility of the distributed
- * {@link io.agentscope.core.state.AgentStateStore} (and {@link BaseStore#putIfVersion} where
- * explicit optimistic guarding is desired), not of this registry.
+ * <p>此注册表有意只保存路由／身份元数据。子智能体可变对话状态的并发安全
+ * 由分布式 {@link io.agentscope.core.state.AgentStateStore} 负责，
+ * 需要显式乐观保护时使用 {@link BaseStore#putIfVersion}，而不是依赖此注册表。
  */
 public final class StoreBackedSubagentRegistry implements SubagentRegistry {
 

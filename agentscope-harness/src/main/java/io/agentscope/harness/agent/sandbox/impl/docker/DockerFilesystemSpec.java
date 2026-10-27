@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Sandbox filesystem spec for Docker store.
+ * Docker 存储的沙箱文件系统规范。
  */
 public class DockerFilesystemSpec extends SandboxFilesystemSpec {
 
@@ -77,11 +77,10 @@ public class DockerFilesystemSpec extends SandboxFilesystemSpec {
     }
 
     /**
-     * Appends raw arguments to {@code docker run}. Repeated calls accumulate in call order;
-     * {@code null} or blank entries are ignored.
+     * 向 {@code docker run} 追加原始参数。重复调用按调用顺序累积；忽略 {@code null} 或空白条目。
      *
-     * @param additionalRunArgs additional docker run arguments
-     * @return this spec
+     * @param additionalRunArgs 额外 docker run 参数
+     * @return 当前规范
      */
     public DockerFilesystemSpec additionalRunArgs(String... additionalRunArgs) {
         options.additionalRunArgs(additionalRunArgs);
@@ -89,11 +88,10 @@ public class DockerFilesystemSpec extends SandboxFilesystemSpec {
     }
 
     /**
-     * Appends raw arguments to {@code docker run}, same as {@link #additionalRunArgs(String...)}.
-     * Repeated calls accumulate in call order; a {@code null} list is a no-op.
+     * 向 {@code docker run} 追加原始参数，与 {@link #additionalRunArgs(String...)} 相同。重复调用按调用顺序累积；{@code null} 列表不执行操作。
      *
-     * @param additionalRunArgs additional docker run arguments
-     * @return this spec
+     * @param additionalRunArgs 额外 docker run 参数
+     * @return 当前规范
      */
     public DockerFilesystemSpec additionalRunArgs(List<String> additionalRunArgs) {
         if (additionalRunArgs != null) {

@@ -19,123 +19,107 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Adapter interface for Redis client operations.
+ * Redis 客户端操作的适配接口。
  *
- * <p>This interface provides a unified abstraction over different Redis client implementations
- * (Jedis, Lettuce, Redisson), allowing the RedisAgentStateStore to work with any of them without
- * modification.
+ * <p>统一 Jedis、Lettuce、Redisson 的调用差异，使 RedisAgentStateStore 无需修改即可使用不同客户端。
  *
- * <p>All method names are designed to be self-explanatory and follow a consistent naming pattern:
- * <ul>
- *   <li>String operations: {@code set}, {@code get}</li>
- *   <li>List operations: {@code rightPushList}, {@code rangeList}, {@code getListLength}</li>
- *   <li>Set operations: {@code addToSet}, {@code getSetMembers}, {@code getSetSize}</li>
- *   <li>Key operations: {@code keyExists}, {@code deleteKeys}, {@code findKeysByPattern}</li>
- * </ul>
+ * <p>方法采用一致且自解释的命名：
+ * <ul><li>字符串：{@code set}、{@code get}。</li>
+ * <li>列表：{@code rightPushList}、{@code rangeList}、{@code getListLength}。</li>
+ * <li>集合：{@code addToSet}、{@code getSetMembers}、{@code getSetSize}。</li>
+ * <li>键：{@code keyExists}、{@code deleteKeys}、{@code findKeysByPattern}。</li></ul>
  */
 public interface RedisClientAdapter {
 
     /**
-     * Set a string value.
-     *
-     * @param key the Redis key
-     * @param value the string value
+     * 设置字符串值。
+     * @param key Redis 键
+     * @param value 字符串值
      */
     void set(String key, String value);
 
     /**
-     * Get a string value.
-     *
-     * @param key the Redis key
-     * @return the string value, or null if not found
+     * 获取字符串值。
+     * @param key Redis 键
+     * @return 字符串值；不存在时为 null
      */
     String get(String key);
 
     /**
-     * Append a value to the right end of a list.
-     *
-     * @param key the Redis list key
-     * @param value the value to append
+     * 向列表右端追加值。
+     * @param key Redis 列表键
+     * @param value 待追加的值
      */
     void rightPushList(String key, String value);
 
     /**
-     * Get a range of elements from a list.
-     *
-     * @param key the Redis list key
-     * @param start the start index (inclusive)
-     * @param end the end index (inclusive, -1 for all elements)
-     * @return list of values
+     * 获取列表指定范围的元素。
+     * @param key Redis 列表键
+     * @param start 起始索引，包含端点
+     * @param end 结束索引，包含端点；-1 表示直到末尾
+     * @return 值列表
      */
     List<String> rangeList(String key, long start, long end);
 
     /**
-     * Get the length of a list.
-     *
-     * @param key the Redis list key
-     * @return the length of the list
+     * 获取列表长度。
+     * @param key Redis 列表键
+     * @return 列表长度
      */
     long getListLength(String key);
 
     /**
-     * Delete one or more keys.
-     *
-     * @param keys the keys to delete
+     * 删除一个或多个键。
+     * @param keys 待删除的键
      */
     void deleteKeys(String... keys);
 
     /**
-     * Add a member to a set.
-     *
-     * @param key the Redis set key
-     * @param member the member to add
+     * 向集合添加成员。
+     * @param key Redis 集合键
+     * @param member 待添加成员
      */
     void addToSet(String key, String member);
 
     /**
-     * Get all members of a set.
-     *
-     * @param key the Redis set key
-     * @return set of members
+     * 获取集合全部成员。
+     * @param key Redis 集合键
+     * @return 成员集合
      */
     Set<String> getSetMembers(String key);
 
     /**
-     * Get the number of members in a set.
-     *
-     * @param key the Redis set key
-     * @return the number of members
+     * 获取集合成员数量。
+     * @param key Redis 集合键
+     * @return 成员数量
      */
     long getSetSize(String key);
 
     /**
-     * Check if a key exists.
-     *
-     * @param key the Redis key
-     * @return true if the key exists
+     * 检查键是否存在。
+     * @param key Redis 键
+     * @return 存在时为 true
      */
     boolean keyExists(String key);
 
     /**
-     * Find all keys matching a pattern.
-     *
-     * @param pattern the key pattern (e.g., "prefix:*")
-     * @return set of matching keys
+     * 查找匹配模式的所有键。
+     * @param pattern 键模式，例如 "prefix:*"
+     * @return 匹配键集合
      */
     Set<String> findKeysByPattern(String pattern);
 
     /**
-     * Execute a Lua script atomically.
-     *
-     * @param script the Lua script source
-     * @param keys Redis keys passed as {@code KEYS}
-     * @param args Redis arguments passed as {@code ARGV}
-     * @return the script return value as a long
+     * 原子执行 Lua 脚本。
+     * @param script Lua 脚本源码
+     * @param keys 作为 {@code KEYS} 传入的 Redis 键
+     * @param args 作为 {@code ARGV} 传入的 Redis 参数
+     * @return 脚本返回的 long 值
      */
     long evalScript(String script, List<String> keys, List<String> args);
 
     /**
-     * Close the adapter and release resources.
+     * 关闭适配器并释放资源。
      */
     void close();
 }

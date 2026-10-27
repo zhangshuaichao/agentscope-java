@@ -22,23 +22,23 @@ import io.agentscope.harness.agent.workspace.WorkspaceManager;
 import java.util.Objects;
 
 /**
- * Coordinates plan mode for a single agent.
+ * 协调单个智能体的计划模式。
  *
- * <p>State (whether plan mode is active and which markdown file holds the current plan) lives in
- * {@link PlanModeContextState} inside the agent's {@link AgentState}, so it is persisted with the
- * session and survives restarts / cross-node hand-offs — this is the mechanism that makes dynamic
- * (runtime) plan-mode switching work in a distributed setting, where an in-process boolean would be
- * lost.
+ * <p>状态（计划模式是否开启、哪个 Markdown 文件保存当前计划）保存在
+ * {@link PlanModeContextState} 中，并归属于智能体的 {@link AgentState}，随会话持久化，能够跨重启或节点交接保留。
+ * 这使动态运行时计划模式切换可以在分布式环境中生效，而进程内布尔值在此情况下会丢失。
  *
- * <p>The plan markdown file is written exclusively through {@link WorkspaceManager}, never via
- * {@code java.nio.file.Files}, so it lands on whatever backend (local, sandbox, remote) the agent's
- * filesystem is configured with. The logical path stays {@code <planDir>/PLAN.md} for every
- * isolation scope; per-scope isolation is applied transparently by the filesystem (store namespace
- * for remote, snapshot key for sandbox) rather than by encoding it into the path.
+ * <p>计划 Markdown 文件只通过 {@link WorkspaceManager} 写入，绝不直接使用
+ * {@code java.nio.file.Files}，因此会落到智能体文件系统配置的本地、沙箱或远程后端。
+ * 每个隔离作用域的逻辑路径都保持 {@code <planDir>/PLAN.md}；隔离由文件系统透明应用
+ * （远程存储的命名空间、沙箱的快照键），而不是编码到路径中。
+ *
+ * <p>【学习提示】此类负责计划状态和文件管理；计划模式下哪些工具可调用，
+ * 还需要中间件的工具门控配合，不能仅靠状态字段或提示词保证限制生效。
  */
 public final class PlanModeManager {
 
-    /** Default workspace-relative directory for plan files. */
+    /** 计划文件的默认工作区相对目录。 */
     public static final String DEFAULT_PLAN_DIR = "plans";
 
     private final WorkspaceManager workspaceManager;
@@ -47,7 +47,7 @@ public final class PlanModeManager {
     public PlanModeManager(WorkspaceManager workspaceManager, String planDir) {
         this.workspaceManager = Objects.requireNonNull(workspaceManager, "workspaceManager");
         String dir = planDir == null || planDir.isBlank() ? DEFAULT_PLAN_DIR : planDir.trim();
-        // Normalise: strip leading/trailing slashes.
+        // 规范化：去除开头和末尾的斜杠。
         while (dir.startsWith("/")) {
             dir = dir.substring(1);
         }
@@ -62,9 +62,9 @@ public final class PlanModeManager {
     }
 
     /**
-     * Enters plan mode. Idempotent. Ensures a plan file path is recorded (default if none set).
+     * 进入计划模式，操作幂等。确保记录计划文件路径，未设置时使用默认值。
      *
-     * @return the workspace-relative plan file path
+     * @return 计划文件的工作区相对路径
      */
     public String enter(AgentState state) {
         Objects.requireNonNull(state, "state");
@@ -76,13 +76,13 @@ public final class PlanModeManager {
         return ctx.getCurrentPlanFile();
     }
 
-    /** Exits plan mode (back to BUILD). Idempotent. Keeps {@code currentPlanFile} for reference. */
+    /** 退出计划模式，回到 BUILD。操作幂等，保留 {@code currentPlanFile} 供参考。 */
     public void exit(AgentState state) {
         Objects.requireNonNull(state, "state");
         state.getPlanModeContext().setPlanActive(false);
     }
 
-    /** Workspace-relative path of the plan file currently associated with this agent. */
+    /** 当前与此智能体关联的计划文件的工作区相对路径。 */
     public String planFilePath(AgentState state) {
         if (state != null) {
             String current = state.getPlanModeContext().getCurrentPlanFile();
@@ -94,10 +94,9 @@ public final class PlanModeManager {
     }
 
     /**
-     * Writes (creates or overwrites) the plan markdown file through the workspace filesystem and
-     * records its path in state.
+     * 通过工作区文件系统写入（创建或覆盖）计划 Markdown 文件，并在状态中记录其路径。
      *
-     * @return the workspace-relative path written
+     * @return 已写入的工作区相对路径
      */
     public String writePlan(RuntimeContext rc, AgentState state, String content) {
         Objects.requireNonNull(state, "state");

@@ -31,10 +31,10 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Declarative sandbox filesystem configuration.
+ * 声明式沙箱文件系统配置。
  *
- * <p>Unlike {@code AbstractFilesystem}, this type is not a runtime filesystem implementation.
- * It only describes how to create a sandbox-backed filesystem at build time.
+ * <p>与 {@code AbstractFilesystem} 不同，此类型不是运行时文件系统实现，
+ * 只描述如何在构建阶段创建由沙箱支持的文件系统。
  */
 public abstract class SandboxFilesystemSpec {
 
@@ -74,16 +74,15 @@ public abstract class SandboxFilesystemSpec {
     }
 
     /**
-     * Sets a {@link SandboxExecutionGuard} that serialises concurrent executions on the same
-     * isolation slot.
+     * 设置 {@link SandboxExecutionGuard}，将同一隔离槽位中的并发执行串行化。
      *
-     * <p>Only relevant for {@link io.agentscope.harness.agent.IsolationScope#AGENT} and
-     * {@link io.agentscope.harness.agent.IsolationScope#GLOBAL} scopes, where multiple callers
-     * could otherwise race on the same persistent state. When {@code null} (default), no guard is
-     * applied and the existing no-lock behaviour is preserved.
+     * <p>仅适用于 {@link io.agentscope.harness.agent.IsolationScope#AGENT} 和
+     * {@link io.agentscope.harness.agent.IsolationScope#GLOBAL} 作用域，
+     * 否则多个调用方可能竞争同一持久化状态。为 {@code null}（默认）时不设置守卫，
+     * 保留现有无锁行为。
      *
-     * @param executionGuard the guard to apply, or {@code null} for no guard
-     * @return this spec
+     * @param executionGuard 要应用的守卫；{@code null} 表示不使用
+     * @return 此配置对象
      */
     public SandboxFilesystemSpec executionGuard(SandboxExecutionGuard executionGuard) {
         this.executionGuard = executionGuard;

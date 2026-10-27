@@ -16,11 +16,11 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result of a file edit (string replacement) operation.
+ * 文件编辑（字符串替换）操作的结果。
  *
- * @param path absolute path of edited file, {@code null} on failure
- * @param error error message on failure, {@code null} on success
- * @param occurrences number of replacements made, {@code null} on failure
+ * @param path 已编辑文件的绝对路径；失败时为 {@code null}
+ * @param error 失败时的错误消息；成功时为 {@code null}
+ * @param occurrences 替换次数；失败时为 {@code null}
  */
 public record EditResult(String path, String error, Integer occurrences) {
 

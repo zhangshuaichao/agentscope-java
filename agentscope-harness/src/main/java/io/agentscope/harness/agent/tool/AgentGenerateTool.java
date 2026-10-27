@@ -30,21 +30,23 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Tool that generates a new subagent spec from a natural-language description and either persists
- * it to {@code subagents/<name>.md} (where {@link io.agentscope.harness.agent.middleware.DynamicSubagentsMiddleware}
- * will pick it up on the next reasoning step) or returns the markdown for human review.
+ * 根据自然语言描述生成新子智能体规格的工具，可将其持久化到
+ * {@code subagents/<name>.md}（由 {@link io.agentscope.harness.agent.middleware.DynamicSubagentsMiddleware}
+ * 在下一推理步骤加载），或返回 Markdown 供人工审阅。
  *
- * <p>Wraps {@link SubagentSpecGenerator}; takes care of name validation, collision detection
- * against the live {@link DefaultAgentManager} registry, and dry-run handling.
+ * <p>包装 {@link SubagentSpecGenerator}，负责名称验证、与实时
+ * {@link DefaultAgentManager} 注册表的冲突检测，以及试运行处理。
  *
- * <p>Not registered by {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware} by
- * default; callers must opt in via {@code SubagentsMiddleware#enableAgentGenerateTool(...)}.
+ * <p>{@link io.agentscope.harness.agent.middleware.SubagentsMiddleware} 默认不注册此工具；
+ * 调用方必须通过 {@code SubagentsMiddleware#enableAgentGenerateTool(...)} 显式启用。
  */
 public class AgentGenerateTool {
 
     private static final Logger log = LoggerFactory.getLogger(AgentGenerateTool.class);
 
-    /** Subagent ids must be kebab-case identifiers; matches {@code AgentSpecLoader} expectations. */
+    /**
+     * 子智能体 ID 必须为 kebab-case 标识符，与 {@code AgentSpecLoader} 的要求一致。
+     */
     private static final Pattern NAME_PATTERN = Pattern.compile("[a-z][a-z0-9-]{0,62}");
 
     private final SubagentSpecGenerator generator;

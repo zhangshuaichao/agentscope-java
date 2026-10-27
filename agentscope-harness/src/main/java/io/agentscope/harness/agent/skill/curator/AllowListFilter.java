@@ -20,9 +20,7 @@ import io.agentscope.core.skill.AgentSkill;
 import java.util.Set;
 
 /**
- * Visible only when the agent-created skill's name is in the allow-list. Useful for letting
- * SRE pin a small set of agent-authored skills for an internal beta channel without
- * generally exposing every promoted skill.
+ * 仅当智能体创建的技能名称位于允许名单时可见。适合 SRE 为内部测试渠道指定少量智能体技能，而不普遍暴露全部已晋级技能。
  */
 public class AllowListFilter extends AbstractAgentCreatedFilter {
 

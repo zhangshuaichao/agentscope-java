@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.team;
 
 import java.util.Map;
 
-/** Team member roster entry. */
+/** 团队成员名册条目。 */
 public record TeamMemberInfo(
         String memberName,
         String agentRef,

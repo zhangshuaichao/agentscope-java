@@ -30,25 +30,13 @@ import org.redisson.api.options.KeysScanOptions;
 import org.redisson.client.codec.StringCodec;
 
 /**
- * Adapter for Redisson Redis client.
+ * Redisson Redis 客户端适配器。
  *
- * <p>Redisson provides a comprehensive Redis client that automatically handles different deployment
- * modes through a unified {@link RedissonClient} interface.
+ * <p>Redisson 通过统一的 {@link RedissonClient} 接口处理不同部署模式。
+ * 支持单实例、Redis Cluster 多节点、哨兵高可用以及主从复制模式。
+ * 客户端内部管理连接池、线程安全和模式特有逻辑。
  *
- * <p>This adapter supports all Redisson deployment modes:
- * <ul>
- *   <li>Standalone mode - single Redis instance</li>
- *   <li>Cluster mode - Redis Cluster with multiple nodes</li>
- *   <li>Sentinel mode - Redis with Sentinel for high availability</li>
- *   <li>Master/Slave mode - Redis with master-slave replication</li>
- * </ul>
- *
- * <p>RedissonClient manages connection pooling, thread safety, and mode-specific logic internally,
- * providing a seamless experience across all deployment modes.
- *
- * <p>Usage Examples:
- *
- * <p>Standalone Mode:
+ * <p>单机示例：
  * <pre>{@code
  * // Create standalone configuration
  * Config config = new Config();
@@ -68,8 +56,7 @@ import org.redisson.client.codec.StringCodec;
  *     .redissonClient(redissonClient)
  *     .build();
  * }</pre>
- *
- * <p>Cluster Mode:
+ * <p>集群示例：
  * <pre>{@code
  * // Create cluster configuration
  * Config config = new Config();
@@ -83,8 +70,7 @@ import org.redisson.client.codec.StringCodec;
  * // Create adapter
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  * }</pre>
- *
- * <p>Sentinel Mode:
+ * <p>哨兵示例：
  * <pre>{@code
  * // Create sentinel configuration
  * Config config = new Config();
@@ -99,8 +85,7 @@ import org.redisson.client.codec.StringCodec;
  * // Create adapter
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  * }</pre>
- *
- * <p>Master/Slave Mode:
+ * <p>主从示例：
  * <pre>{@code
  * // Create master/slave configuration
  * Config config = new Config();
@@ -125,13 +110,10 @@ public class RedissonClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Create adapter from RedissonClient.
-     *
-     * <p>The RedissonClient can be configured for any deployment mode (standalone, cluster, sentinel, master/slave),
-     * and the adapter will handle the mode-specific details transparently.
-     *
-     * @param redissonClient the RedissonClient instance
-     * @return a new RedissonClientAdapter
+     * 从 RedissonClient 创建适配器。
+     * <p>客户端可配置为单机、集群、哨兵或主从模式，适配器透明处理模式差异。
+     * @param redissonClient RedissonClient 实例
+     * @return 新建的 RedissonClientAdapter
      */
     public static RedissonClientAdapter of(RedissonClient redissonClient) {
         return new RedissonClientAdapter(redissonClient);

@@ -25,50 +25,52 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class for estimating token count in messages.
+ * 估算消息 token 数量的工具类。
  *
- * <p>This class provides methods to estimate the number of input tokens that would be
- * consumed when sending messages to an LLM. The estimation uses a character-based
- * approximation that works reasonably well for both English and Chinese text.
+ * <p>用于估计将消息发送给 LLM 时消耗的输入 token 数。采用基于字符数量的近似算法，
+ * 同时兼顾英文和中文文本。
  *
- * <p>Token estimation strategy:
+ * <p>token 估算策略：
  * <ul>
- *   <li>Text content: ~1 token per 2-4 characters (varies by language)
- *   <li>Thinking content: Uses the same character-based estimate as text content
- *   <li>Tool calls: Includes tool name, parameters, and structure overhead
- *   <li>Tool results: Includes output content and structure overhead
- *   <li>Message structure: Role, name, and formatting overhead
+ * <li>文本内容：约每 2～4 个字符计 1 个 token（随语言变化）。</li>
+ * <li>思考内容：采用与文本相同的字符近似估算。</li>
+ * <li>工具调用：包含工具名称、参数和结构开销。</li>
+ * <li>工具结果：包含输出内容和结构开销。</li>
+ * <li>消息结构：包含角色、名称和格式开销。</li>
  * </ul>
+ *
+ * <p>【学习提示】这是预算规划用的启发式估算，不是提供商分词器或计费用量；
+ * 媒体块这里只计少量结构开销，不能据此推断图像、音频的实际 token 成本。
  */
 public class TokenCounterUtil {
 
-    // Token estimation ratios
-    // For English: ~1 token per 4 characters
-    // For Chinese: ~1 token per 1-2 characters
-    // Using a conservative ratio that works for mixed content
+    // token 估算比例。
+    // 英文：约每 4 个字符计 1 个 token。
+    // 中文：约每 1～2 个字符计 1 个 token。
+    // 采用适合混合内容的保守比例。
     private static final double CHARS_PER_TOKEN = 2.5;
 
-    // Overhead tokens for message structure (role, name, formatting)
+    // 消息结构（角色、名称、格式）的 token 开销。
     private static final int MESSAGE_OVERHEAD = 5;
 
-    // Overhead tokens for tool call structure
+    // 工具调用结构的 token 开销。
     private static final int TOOL_CALL_OVERHEAD = 10;
 
-    // Overhead tokens for tool result structure
+    // 工具结果结构的 token 开销。
     private static final int TOOL_RESULT_OVERHEAD = 8;
 
     /**
-     * Calculates the estimated total input tokens for a list of messages.
+     * 计算消息列表的预计输入 token 总数。
      *
-     * <p>This method estimates tokens by:
+     * <p>估算过程：
      * <ul>
-     *   <li>Extracting all text content from messages
-     *   <li>Counting characters in tool calls and results
-     *   <li>Adding structure overhead for each message and content block
+     * <li>提取消息中的全部文本内容。</li>
+     * <li>统计工具调用和结果中的字符数。</li>
+     * <li>为每条消息及内容块加上结构开销。</li>
      * </ul>
      *
-     * @param messages the list of messages to estimate tokens for
-     * @return estimated number of input tokens
+     * @param messages 待估算 token 数量的消息列表
+     * @return 预计输入 token 数量
      */
     public static int calculateToken(List<Msg> messages) {
         if (messages == null || messages.isEmpty()) {
@@ -85,10 +87,10 @@ public class TokenCounterUtil {
     }
 
     /**
-     * Estimates tokens for a single message.
+     * 估算单条消息的 token 数量。
      *
-     * @param msg the message to estimate
-     * @return estimated number of tokens for this message
+     * @param msg 待估算的消息
+     * @return 此消息的预计 token 数量
      */
     private static int estimateMessageTokens(Msg msg) {
         if (msg == null) {
@@ -97,7 +99,7 @@ public class TokenCounterUtil {
 
         int tokens = MESSAGE_OVERHEAD;
 
-        // Add overhead for role and name
+        // 加入角色与名称的开销。
         if (msg.getRole() != null) {
             tokens += estimateTextTokens(msg.getRole().name());
         }
@@ -105,7 +107,7 @@ public class TokenCounterUtil {
             tokens += estimateTextTokens(msg.getName());
         }
 
-        // Estimate tokens for content blocks
+        // 估算内容块的 token 数量。
         List<ContentBlock> content = msg.getContent();
         if (content != null) {
             for (ContentBlock block : content) {
@@ -117,10 +119,10 @@ public class TokenCounterUtil {
     }
 
     /**
-     * Estimates tokens for a content block.
+     * 估算内容块的 token 数量。
      *
-     * @param block the content block to estimate
-     * @return estimated number of tokens for this block
+     * @param block 待估算的内容块
+     * @return 此块的预计 token 数量
      */
     private static int estimateContentBlockTokens(ContentBlock block) {
         if (block == null) {
@@ -137,38 +139,38 @@ public class TokenCounterUtil {
             return estimateToolResultBlockTokens(toolResultBlock);
         }
 
-        // For other block types (ImageBlock, AudioBlock, etc.), estimate minimal overhead
+        // 对其他块类型（ImageBlock、AudioBlock 等）估算最小结构开销。
         return 5;
     }
 
     /**
-     * Estimates tokens for a ToolUseBlock.
+     * 估算 ToolUseBlock 的 token 数量。
      *
-     * @param toolUseBlock the tool use block to estimate
-     * @return estimated number of tokens
+     * @param toolUseBlock 待估算的工具调用块
+     * @return 预计 token 数量
      */
     private static int estimateToolUseBlockTokens(ToolUseBlock toolUseBlock) {
         int tokens = TOOL_CALL_OVERHEAD;
 
-        // Tool name
+        // 工具名称。
         if (toolUseBlock.getName() != null) {
             tokens += estimateTextTokens(toolUseBlock.getName());
         }
 
-        // Tool ID
+        // 工具 ID。
         if (toolUseBlock.getId() != null) {
             tokens += estimateTextTokens(toolUseBlock.getId());
         }
 
-        // Tool input parameters
+        // 工具输入参数。
         Map<String, Object> input = toolUseBlock.getInput();
         if (input != null && !input.isEmpty()) {
-            // Estimate tokens for JSON representation of parameters
+            // 估算参数 JSON 表示的 token 数量。
             String inputJson = estimateMapAsJson(input);
             tokens += estimateTextTokens(inputJson);
         }
 
-        // Raw content (if present)
+        // 原始内容（若存在）。
         if (toolUseBlock.getContent() != null) {
             tokens += estimateTextTokens(toolUseBlock.getContent());
         }
@@ -177,25 +179,25 @@ public class TokenCounterUtil {
     }
 
     /**
-     * Estimates tokens for a ToolResultBlock.
+     * 估算 ToolResultBlock 的 token 数量。
      *
-     * @param toolResultBlock the tool result block to estimate
-     * @return estimated number of tokens
+     * @param toolResultBlock 待估算的工具结果块
+     * @return 预计 token 数量
      */
     private static int estimateToolResultBlockTokens(ToolResultBlock toolResultBlock) {
         int tokens = TOOL_RESULT_OVERHEAD;
 
-        // Tool name
+        // 工具名称。
         if (toolResultBlock.getName() != null) {
             tokens += estimateTextTokens(toolResultBlock.getName());
         }
 
-        // Tool ID
+        // 工具 ID。
         if (toolResultBlock.getId() != null) {
             tokens += estimateTextTokens(toolResultBlock.getId());
         }
 
-        // Output content blocks
+        // 输出内容块。
         List<ContentBlock> output = toolResultBlock.getOutput();
         if (output != null) {
             for (ContentBlock outputBlock : output) {
@@ -207,31 +209,30 @@ public class TokenCounterUtil {
     }
 
     /**
-     * Estimates tokens for text content.
+     * 估算文本内容的 token 数量。
      *
-     * <p>Uses a character-based approximation that works reasonably well
-     * for both English and Chinese text.
+     * <p>采用兼顾英文和中文的字符近似算法。
      *
-     * @param text the text to estimate
-     * @return estimated number of tokens
+     * @param text 待估算的文本
+     * @return 预计 token 数量
      */
     private static int estimateTextTokens(String text) {
         if (text == null || text.isEmpty()) {
             return 0;
         }
 
-        // Count characters and apply ratio
+        // 统计字符数并应用估算比例。
         int charCount = text.length();
         return (int) Math.ceil(charCount / CHARS_PER_TOKEN);
     }
 
     /**
-     * Estimates the JSON string representation of a map for token counting.
+     * 估算映射的 JSON 字符串长度，用于 token 计数。
      *
-     * <p>This is a simplified estimation that counts keys and string values.
+     * <p>这是统计键与字符串值的简化估算。
      *
-     * @param map the map to estimate
-     * @return estimated JSON string length
+     * @param map 待估算的映射
+     * @return 预计 JSON 字符串长度
      */
     private static String estimateMapAsJson(Map<String, Object> map) {
         if (map == null || map.isEmpty()) {

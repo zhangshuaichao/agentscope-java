@@ -24,34 +24,29 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Declares a subagent: its identity, workspace resolution strategy, and optional capability
- * allowlist.
+ * 声明子智能体的身份、工作区解析策略及可选的能力允许列表。
  *
- * <p>A declaration binds to exactly one of two <em>source modes</em>:
- *
+ * <p>一个声明绑定到以下两种<em>来源模式</em>之一：
  * <ol>
- *   <li><b>Definition workspace</b> — {@link #getWorkspacePath()} points to a workspace directory
- *       containing at least {@code AGENTS.md}. That file is used as the subagent's system-prompt
- *       body. Skills, knowledge, and MEMORY in the definition directory are available when the
- *       {@link WorkspaceMode} is {@link WorkspaceMode#ISOLATED}.
- *   <li><b>Remote HTTP</b> — {@link #getUrl()} points to an AgentScope task HTTP server. No local
- *       definition workspace or inline body; the subagent runs out-of-process. Mutually exclusive
- *       with definition workspace and inline body.
+ *   <li><b>定义工作区</b>：{@link #getWorkspacePath()} 指向至少包含 {@code AGENTS.md}
+ *       的工作区目录。该文件用作子智能体系统提示正文。当 {@link WorkspaceMode}
+ *       为 {@link WorkspaceMode#ISOLATED} 时，可使用定义目录中的技能、知识和 MEMORY。
+ *   <li><b>远程 HTTP</b>：{@link #getUrl()} 指向 AgentScope 任务 HTTP 服务器。
+ *       没有本地定义工作区或内联正文；子智能体在进程外运行。与定义工作区和内联正文互斥。
  * </ol>
  *
- * <p>The three source modes are mutually exclusive: at most one of {@link Builder#workspace(Path)},
- * a non-blank {@link Builder#inlineAgentsBody(String)}, or a non-blank {@link Builder#url(String)}
- * may be set.
+ * <p>三种来源模式互斥：{@link Builder#workspace(Path)}、非空白的
+ * {@link Builder#inlineAgentsBody(String)}、非空白的 {@link Builder#url(String)}
+ * 最多只能设置一项。
  *
- * <p>Workspace resolution follows the five-row decision table in {@link WorkspaceMode}.
+ * <p>工作区解析遵循 {@link WorkspaceMode} 中的五行决策表。
  *
- * <p>The {@code tools} list, when non-empty, acts as an <em>allowlist filter</em> for inherited
- * parent tools: only inherited tools whose names appear in the list are kept. Child-local tool
- * registrations may still be added by the child builder.
+ * <p>{@code tools} 列表非空时，是继承父级工具的<em>允许列表过滤器</em>：
+ * 仅保留名称出现在列表中的继承工具。子级构建器仍可添加子级本地工具注册。
  *
- * <p>Obtain instances via {@link #builder()}.
+ * <p>通过 {@link #builder()} 获取实例。
  *
- * <p>Example (programmatic):
+ * <p>编程式示例：
  *
  * <pre>{@code
  * SubagentDeclaration decl = SubagentDeclaration.builder()
@@ -67,14 +62,13 @@ import java.util.Map;
 public final class SubagentDeclaration {
 
     /**
-     * Whether a declaration can be used as a top-level primary agent, only as a delegated
-     * subagent, or both.
+     * 声明是否可作为顶层主智能体、仅作为受委派子智能体，或两者皆可。
      *
-     * <p>The {@link io.agentscope.harness.agent.subagent.DefaultAgentManager#createAgentIfPresent}
-     * path rejects spawn requests for {@link #PRIMARY}-only declarations so they can never be
-     * invoked as workers; conversely, top-level launchers may want to reject {@link #SUBAGENT}
-     * declarations as entry points (current core does not own that check — top-level launch goes
-     * through {@code HarnessAgent.builder()} directly, not through a declaration).
+     * <p>{@link io.agentscope.harness.agent.subagent.DefaultAgentManager#createAgentIfPresent}
+     * 路径会拒绝仅允许 {@link #PRIMARY} 声明的启动请求，确保它们不会作为工作者调用；
+     * 反之，顶层启动器可能需要拒绝将 {@link #SUBAGENT} 声明用作入口
+     * （当前 core 不负责此检查：顶层启动直接使用 {@code HarnessAgent.builder()}，
+     * 而不是通过声明）。
      */
     public enum Mode {
         PRIMARY,
@@ -103,29 +97,32 @@ public final class SubagentDeclaration {
     private final CompactionConfig compactionConfig;
     private final boolean disableCompaction;
 
-    /** Base URL of the remote task server (e.g. {@code http://host:8080}). */
+    /**
+     * 远程任务服务器的基础 URL（例如 {@code http://host:8080}）。
+     */
     private final String url;
 
     private final Map<String, String> headers;
 
     /**
-     * Whether remote subagent events should be streamed back into the parent's event stream.
-     * {@code null} defaults to {@code true}; see {@link #isRemoteStreaming()}.
+     * 是否将远程子智能体事件流式回传到父级事件流。
+     * {@code null} 默认视为 {@code true}；参见 {@link #isRemoteStreaming()}。
      */
     private final Boolean remoteStreaming;
 
     /**
-     * How much of the remote event stream to request. {@code null} defaults to
-     * {@link RemoteStreamDetail#FULL}; see {@link #getRemoteStreamDetail()}.
+     * 请求远程事件流的详细程度。{@code null} 默认视为
+     * {@link RemoteStreamDetail#FULL}；参见 {@link #getRemoteStreamDetail()}。
      */
     private final RemoteStreamDetail remoteStreamDetail;
 
-    /** Policy for resolving remote HITL confirmations. Defaults to {@link RemoteAskPolicy#DENY}. */
+    /**
+     * 处理远程 HITL 确认的策略。默认为 {@link RemoteAskPolicy#DENY}。
+     */
     private final RemoteAskPolicy remoteAskPolicy;
 
     /**
-     * Static attributes sent as {@code context.attributes} on every remote submission. Never empty
-     * when non-null.
+     * 每次远程提交时作为 {@code context.attributes} 发送的静态属性。非 null 时绝不为空集合。
      */
     private final Map<String, Object> remoteContextAttributes;
 
@@ -162,163 +159,165 @@ public final class SubagentDeclaration {
                         : null;
     }
 
-    /** Factory method for a new builder. */
+    /**
+     * 创建新构建器的工厂方法。
+     */
     public static Builder builder() {
         return new Builder();
     }
 
-    /** Unique name / agent-id used to reference this subagent. */
+    /**
+     * 用于引用此子智能体的唯一名称／智能体 ID。
+     */
     public String getName() {
         return name;
     }
 
-    /** Human-readable description; the main agent uses this to decide when to delegate. */
+    /**
+     * 供人阅读的描述；主智能体据此决定何时委派任务。
+     */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Workspace resolution strategy. Defaults to {@link WorkspaceMode#ISOLATED} when not
-     * specified.
+     * 工作区解析策略。未指定时默认为 {@link WorkspaceMode#ISOLATED}。
      */
     public WorkspaceMode getWorkspaceMode() {
         return workspaceMode;
     }
 
     /**
-     * Path to the definition workspace directory (contains at least {@code AGENTS.md}). When
-     * {@code null} this declaration is in inline mode and {@link #getInlineAgentsBody()} provides
-     * the system prompt.
+     * 定义工作区目录的路径（至少包含 {@code AGENTS.md}）。为 {@code null}
+     * 时此声明使用内联模式，由 {@link #getInlineAgentsBody()} 提供系统提示。
      */
     public Path getWorkspacePath() {
         return workspacePath;
     }
 
     /**
-     * Inline system-prompt body used when {@link #getWorkspacePath()} is {@code null}. May be
-     * {@code null} or blank if neither a definition workspace nor an inline body is provided.
+     * {@link #getWorkspacePath()} 为 {@code null} 时使用的内联系统提示正文。
+     * 如果既没有定义工作区，也没有内联正文，则可以为 {@code null} 或空白。
      */
     public String getInlineAgentsBody() {
         return inlineAgentsBody;
     }
 
     /**
-     * Optional model override (e.g. {@code "qwen3-max"} or {@code "openai:gpt-4o-mini"}). When
-     * {@code null} or blank, the parent model is used.
+     * 可选模型覆盖值（例如 {@code "qwen3-max"} 或 {@code "openai:gpt-4o-mini"}）。
+     * 为 {@code null} 或空白时使用父级模型。
      */
     public String getModel() {
         return model;
     }
 
     /**
-     * Maximum reasoning iterations. Defaults to 10.
+     * 最大推理迭代次数。默认为 10。
      *
-     * @deprecated since Phase A — use {@link #getSteps()}. Returns the same value; kept for source
-     *     compatibility with callers built before the {@code steps} field existed.
+     * @deprecated 自阶段 A 起弃用，请使用 {@link #getSteps()}。返回相同值；
+     *     为兼容 {@code steps} 字段出现前构建的调用方而保留。
      */
     @Deprecated
     public int getMaxIters() {
         return steps;
     }
 
-    /** Maximum reasoning iterations (default 10). Replaces the historical {@code maxIters} field. */
+    /**
+     * 最大推理迭代次数（默认 10）。替代历史上的 {@code maxIters} 字段。
+     */
     public int getSteps() {
         return steps;
     }
 
     /**
-     * Optional sampling temperature override (e.g. {@code 0.0} for deterministic compaction-like
-     * tasks, {@code 0.7} for creative generation). When {@code null}, the parent's
-     * {@link io.agentscope.core.model.GenerateOptions#getTemperature()} applies unchanged.
+     * 可选采样温度覆盖值（例如类似压缩的确定性任务使用 {@code 0.0}，
+     * 创意生成使用 {@code 0.7}）。为 {@code null} 时，直接使用父级
+     * {@link io.agentscope.core.model.GenerateOptions#getTemperature()}，不作修改。
      */
     public Double getTemperature() {
         return temperature;
     }
 
     /**
-     * Optional nucleus-sampling override. When {@code null}, the parent's
-     * {@link io.agentscope.core.model.GenerateOptions#getTopP()} applies unchanged.
+     * 可选核采样覆盖值。为 {@code null} 时，直接使用父级
+     * {@link io.agentscope.core.model.GenerateOptions#getTopP()}，不作修改。
      */
     public Double getTopP() {
         return topP;
     }
 
     /**
-     * Optional model variant identifier (e.g. {@code "thinking"} for DashScope thinking-mode
-     * variants). When {@code null} or blank, no variant transform is applied; the parent's
-     * variant — if any — is inherited via builder copy.
+     * 可选模型变体标识符（例如 DashScope 思考模式变体使用 {@code "thinking"}）。
+     * 为 {@code null} 或空白时不应用变体转换；通过复制构建器继承父级变体（若有）。
      */
     public String getVariant() {
         return variant;
     }
 
     /**
-     * The {@link Mode} of this declaration. Defaults to {@link Mode#ALL} when not specified —
-     * both spawnable and primary-capable.
+     * 此声明的 {@link Mode}。未指定时默认为 {@link Mode#ALL}，
+     * 即既可作为子智能体启动，也可作为主智能体。
      */
     public Mode getMode() {
         return mode;
     }
 
     /**
-     * Whether this declaration should be hidden from the LLM's view of available subagents.
-     * Used for internal subagents (e.g. compaction, summary, title) that the orchestrator should
-     * not directly delegate to.
+     * 是否在 LLM 可见的可用子智能体列表中隐藏此声明。
+     * 用于编排器不应直接委派的内部子智能体（例如压缩、摘要、标题）。
      */
     public boolean isHidden() {
         return hidden;
     }
 
     /**
-     * Whether the subagent's session state should persist across parent calls. When {@code true},
-     * the spawn key is derived deterministically from (userId, parentSessionId, agentId, label), enabling
-     * state recovery after process restarts. When {@code false} (default), a random UUID is used.
+     * 子智能体会话状态是否跨父级调用持久化。为 {@code true} 时，
+     * 启动键由 (userId, parentSessionId, agentId, label) 确定性派生，
+     * 支持进程重启后的状态恢复。为 {@code false}（默认）时使用随机 UUID。
      */
     public boolean isPersistSession() {
         return persistSession;
     }
 
     /**
-     * Whether the subagent inherits parent DENY permission rules. When {@code true} (default),
-     * all DENY rules from the parent's permission context are propagated to the child's permission
-     * engine at spawn time, preventing the child from circumventing parent-level restrictions.
+     * 子智能体是否继承父级 DENY 权限规则。为 {@code true}（默认）时，
+     * 启动时将父级权限上下文中的所有 DENY 规则传播到子级权限引擎，
+     * 防止子级绕过父级限制。
      */
     public boolean isInheritParentPermissions() {
         return inheritParentPermissions;
     }
 
     /**
-     * Per-type policy for exposing spawned instances of this subagent as user-addressable threads.
+     * 按子智能体类型配置的策略，决定是否将已启动实例暴露为用户可访问的线程。
      *
-     * <p>Tri-state:
-     *
+     * <p>三态：
      * <ul>
-     *   <li>{@code TRUE} — always expose, regardless of what the LLM requests on {@code agent_spawn}
-     *   <li>{@code FALSE} — never expose (hard opt-out), overriding an LLM {@code expose_to_user=true}
-     *   <li>{@code null} (default) — no opinion; defer to the per-call {@code RuntimeContext} override
-     *       and then the LLM's {@code expose_to_user} argument
+     *   <li>{@code TRUE}：始终暴露，不考虑 LLM 在 {@code agent_spawn} 上的请求
+     *   <li>{@code FALSE}：绝不暴露（强制退出），覆盖 LLM 的 {@code expose_to_user=true}
+     *   <li>{@code null}（默认）：不指定；先遵循单次调用的 {@code RuntimeContext} 覆盖值，
+     *       再遵循 LLM 的 {@code expose_to_user} 参数
      * </ul>
      *
-     * <p>This is overridden at runtime by a {@code RuntimeContext} value keyed
-     * {@code AgentSpawnTool#CTX_EXPOSE_TO_USER}. See {@code AgentSpawnTool} for the full
-     * resolution precedence.
+     * <p>运行时可由键为 {@code AgentSpawnTool#CTX_EXPOSE_TO_USER} 的
+     * {@code RuntimeContext} 值覆盖。完整解析优先级参见 {@code AgentSpawnTool}。
      */
     public Boolean getExposeToUser() {
         return exposeToUser;
     }
 
     /**
-     * Recovery policy for orphaned tool calls in an automatically constructed local subagent.
-     * {@code null} (default) inherits the parent's setting; {@code true} or {@code false}
-     * explicitly overrides it. Remote subagents configure recovery on their own server.
+     * 自动构造的本地子智能体中，孤立工具调用的恢复策略。
+     * {@code null}（默认）继承父级设置；{@code true} 或 {@code false}
+     * 显式覆盖它。远程子智能体在自己的服务器上配置恢复。
      */
     public Boolean getEnablePendingToolRecovery() {
         return enablePendingToolRecovery;
     }
 
     /**
-     * Optional tool allowlist. When non-empty, only inherited parent tools whose names are listed
-     * remain on the subagent's inherited toolkit. Empty means inherit all parent tools.
+     * 可选工具允许列表。非空时，继承工具集中只保留名称在列表中的父级工具。
+     * 空列表表示继承所有父级工具。
      */
     public List<String> getTools() {
         return tools;
@@ -329,86 +328,87 @@ public final class SubagentDeclaration {
     }
 
     /**
-     * Optional compaction configuration for this subagent.
+     * 此子智能体的可选压缩配置。
      *
-     * <p>When {@code null}, the subagent inherits the parent configuration unless
-     * {@link #isCompactionDisabled()} is {@code true}. Remote subagents manage compaction on their
-     * own server and do not consume this setting.
+     * <p>为 {@code null} 时，子智能体继承父级配置，除非
+     * {@link #isCompactionDisabled()} 为 {@code true}。远程子智能体
+     * 在自己的服务器上管理压缩，不使用此设置。
      */
     public CompactionConfig getCompactionConfig() {
         return compactionConfig;
     }
 
-    /** Whether this declaration explicitly disables compaction for the local subagent. */
+    /**
+     * 此声明是否显式禁用本地子智能体的压缩。
+     */
     public boolean isCompactionDisabled() {
         return disableCompaction;
     }
 
-    /** Returns {@code true} when this declaration targets a remote task HTTP server. */
+    /**
+     * 此声明指向远程任务 HTTP 服务器时返回 {@code true}。
+     */
     public boolean isRemote() {
         return url != null && !url.isBlank();
     }
 
     /**
-     * Base URL of the remote task server. Non-blank only in {@linkplain #isRemote() remote} mode.
+     * 远程任务服务器的基础 URL。仅在 {@linkplain #isRemote() remote} 模式下非空白。
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * Optional HTTP headers (e.g. auth) sent to the remote task server. Never empty when
-     * non-null.
+     * 发送到远程任务服务器的可选 HTTP 请求头（例如认证头）。非 null 时绝不为空集合。
      */
     public Map<String, String> getHeaders() {
         return headers;
     }
 
     /**
-     * Whether remote subagent events (text deltas, tool calls, confirmations) should be streamed
-     * back into the parent's live event stream when one is present. Defaults to {@code true}
-     * when unset.
+     * 当父级存在实时事件流时，是否将远程子智能体事件（文本增量、工具调用、确认）
+     * 流式回传到该流。未设置时默认为 {@code true}。
      */
     public boolean isRemoteStreaming() {
         return remoteStreaming == null || remoteStreaming;
     }
 
     /**
-     * How much of the remote event stream to forward. Defaults to {@link RemoteStreamDetail#FULL}
-     * (lifecycle, tool calls, text and thinking deltas). Use {@link RemoteStreamDetail#VERBOSE} to
-     * mirror a local subagent's stream in full — block boundaries, tool output deltas, model calls
-     * with token usage and every other event — at the cost of more traffic. Only relevant when
-     * {@link #isRemoteStreaming()} is true.
+     * 转发远程事件流的详细程度。默认为 {@link RemoteStreamDetail#FULL}
+     * （生命周期、工具调用、文本和思考增量）。使用 {@link RemoteStreamDetail#VERBOSE}
+     * 可完整镜像本地子智能体流：块边界、工具输出增量、带 token 用量的模型调用及其他所有事件，
+     * 代价是更多流量。仅当 {@link #isRemoteStreaming()} 为 true 时有效。
      */
     public RemoteStreamDetail getRemoteStreamDetail() {
         return remoteStreamDetail != null ? remoteStreamDetail : RemoteStreamDetail.FULL;
     }
 
     /**
-     * Policy for resolving remote HITL (tool-confirmation) requests. Defaults to
-     * {@link RemoteAskPolicy#DENY}, which auto-denies pending confirmations rather than leaving
-     * the remote task blocked indefinitely.
+     * 处理远程 HITL（工具确认）请求的策略。默认为
+     * {@link RemoteAskPolicy#DENY}，自动拒绝待确认请求，而不是让远程任务无限阻塞。
      */
     public RemoteAskPolicy getRemoteAskPolicy() {
         return remoteAskPolicy;
     }
 
     /**
-     * Static attributes sent as {@code context.attributes} with every remote submission, for the
-     * remote server to route on or expose to its agent. {@code null} when unset; never empty
-     * otherwise.
+     * 每次远程提交时通过 {@code context.attributes} 发送的静态属性，
+     * 供远程服务器路由或向其智能体暴露。未设置时为 {@code null}；否则绝不为空集合。
      */
     public Map<String, Object> getRemoteContextAttributes() {
         return remoteContextAttributes;
     }
 
-    /** Returns {@code true} when this declaration points at an external definition workspace. */
+    /**
+     * 此声明指向外部定义工作区时返回 {@code true}。
+     */
     public boolean hasDefinitionWorkspace() {
         return workspacePath != null;
     }
 
     // -------------------------------------------------------------------------
-    // Builder
+    // 构建器
     // -------------------------------------------------------------------------
 
     public static final class Builder {
@@ -442,15 +442,16 @@ public final class SubagentDeclaration {
 
         private Builder() {}
 
-        /** Sets the unique name / agent-id for this subagent (required). */
+        /**
+         * 设置此子智能体的唯一名称／智能体 ID（必填）。
+         */
         public Builder name(String name) {
             this.name = name;
             return this;
         }
 
         /**
-         * Sets the human-readable description the orchestrator uses to decide when to delegate
-         * (required).
+         * 设置供人阅读的描述，供编排器决定何时委派任务（必填）。
          */
         public Builder description(String description) {
             this.description = description;
@@ -458,9 +459,9 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Sets the workspace resolution mode. Defaults to {@link WorkspaceMode#ISOLATED}.
+         * 设置工作区解析模式。默认为 {@link WorkspaceMode#ISOLATED}。
          *
-         * @param mode workspace mode; {@code null} is treated as {@link WorkspaceMode#ISOLATED}
+         * @param mode 工作区模式；{@code null} 视为 {@link WorkspaceMode#ISOLATED}
          */
         public Builder workspaceMode(WorkspaceMode mode) {
             this.workspaceMode = mode != null ? mode : WorkspaceMode.ISOLATED;
@@ -468,13 +469,13 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Points this declaration at an external definition workspace.
+         * 将此声明指向外部定义工作区。
          *
-         * <p>Mutually exclusive with {@link #inlineAgentsBody(String)}: passing both a non-null
-         * path <em>and</em> a non-blank inline body will cause {@link #build()} to throw.
+         * <p>与 {@link #inlineAgentsBody(String)} 互斥：同时传入非 null 路径和
+         * 非空白内联正文会使 {@link #build()} 抛出异常。
          *
-         * @param workspacePath absolute path, or path relative to {@code mainWorkspace} when set
-         *     via a Markdown front matter file
+         * @param workspacePath 绝对路径，或通过 Markdown 前置元数据文件设置时
+         *     相对于 {@code mainWorkspace} 的路径
          */
         public Builder workspace(Path workspacePath) {
             this.workspacePath = workspacePath;
@@ -482,12 +483,11 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Sets the inline system-prompt body for lightweight subagents that do not need a
-         * dedicated definition workspace.
+         * 为不需要专用定义工作区的轻量级子智能体设置内联系统提示正文。
          *
-         * <p>Mutually exclusive with {@link #workspace(Path)}.
+         * <p>与 {@link #workspace(Path)} 互斥。
          *
-         * @param body the system-prompt body text (Markdown); may be {@code null} or blank
+         * @param body 系统提示正文（Markdown）；可以为 {@code null} 或空白
          */
         public Builder inlineAgentsBody(String body) {
             this.inlineAgentsBody = body;
@@ -495,8 +495,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Optional model override resolved via {@link io.agentscope.core.model.ModelRegistry}.
-         * Falls back to the parent model when blank or unresolvable.
+         * 通过 {@link io.agentscope.core.model.ModelRegistry} 解析的可选模型覆盖值。
+         * 空白或无法解析时回退到父级模型。
          */
         public Builder model(String model) {
             this.model = model;
@@ -504,9 +504,9 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Maximum reasoning iterations (default 10).
+         * 最大推理迭代次数（默认 10）。
          *
-         * @deprecated since Phase A — use {@link #steps(int)}. Equivalent in behaviour.
+         * @deprecated 自阶段 A 起弃用，请使用 {@link #steps(int)}。行为等价。
          */
         @Deprecated
         public Builder maxIters(int maxIters) {
@@ -514,15 +514,17 @@ public final class SubagentDeclaration {
             return this;
         }
 
-        /** Maximum reasoning iterations (default 10). */
+        /**
+         * 最大推理迭代次数（默认 10）。
+         */
         public Builder steps(int steps) {
             this.steps = steps;
             return this;
         }
 
         /**
-         * Optional sampling temperature override. {@code null} (default) means inherit the parent
-         * agent's value. Typical range {@code 0.0 – 2.0}.
+         * 可选采样温度覆盖值。{@code null}（默认）表示继承父级智能体的值。
+         * 典型范围为 {@code 0.0 – 2.0}。
          */
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
@@ -530,8 +532,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Optional nucleus-sampling (top-p) override. {@code null} (default) means inherit the
-         * parent. Typical range {@code 0.0 – 1.0}.
+         * 可选核采样（top-p）覆盖值。{@code null}（默认）表示继承父级。
+         * 典型范围为 {@code 0.0 – 1.0}。
          */
         public Builder topP(Double topP) {
             this.topP = topP;
@@ -539,9 +541,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Optional model-variant identifier (e.g. {@code "thinking"} for DashScope thinking-mode
-         * variants). Blank / {@code null} means no variant transform; parent variant — if any —
-         * is inherited via builder copy.
+         * 可选模型变体标识符（例如 DashScope 思考模式变体使用 {@code "thinking"}）。
+         * 空白或 {@code null} 表示不进行变体转换；通过复制构建器继承父级变体（若有）。
          */
         public Builder variant(String variant) {
             this.variant = variant;
@@ -549,7 +550,7 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Sets the {@link Mode}. {@code null} is treated as {@link Mode#ALL}.
+         * 设置 {@link Mode}。{@code null} 视为 {@link Mode#ALL}。
          */
         public Builder mode(Mode mode) {
             this.mode = mode != null ? mode : Mode.ALL;
@@ -557,7 +558,7 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Hide this declaration from the LLM's available-subagent list. Defaults to {@code false}.
+         * 在 LLM 的可用子智能体列表中隐藏此声明。默认为 {@code false}。
          */
         public Builder hidden(boolean hidden) {
             this.hidden = hidden;
@@ -565,9 +566,9 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * When {@code true}, the subagent's spawn key is derived deterministically from
-         * (userId, parentSessionId, agentId, label), enabling state recovery across parent calls and
-         * process restarts. Defaults to {@code false}.
+         * 为 {@code true} 时，子智能体启动键由
+         * (userId, parentSessionId, agentId, label) 确定性派生，
+         * 支持跨父级调用和进程重启的状态恢复。默认为 {@code false}。
          */
         public Builder persistSession(boolean persistSession) {
             this.persistSession = persistSession;
@@ -575,9 +576,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * When {@code true} (default), parent DENY permission rules are propagated to the child
-         * at spawn time. Set to {@code false} only when the child requires permissions that the
-         * parent explicitly denies (rare).
+         * 为 {@code true}（默认）时，在启动时将父级 DENY 权限规则传播给子级。
+         * 只有子级确实需要父级显式拒绝的权限时才设为 {@code false}（少见）。
          */
         public Builder inheritParentPermissions(boolean inheritParentPermissions) {
             this.inheritParentPermissions = inheritParentPermissions;
@@ -585,11 +585,11 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Per-type policy for exposing spawned instances as user-addressable threads.
+         * 按类型配置的策略，决定是否将已启动实例暴露为用户可访问的线程。
          *
-         * <p>{@code TRUE} forces exposure, {@code FALSE} forbids it (overriding an LLM request),
-         * and {@code null} (default) defers to the {@code RuntimeContext} override and then the
-         * LLM's {@code expose_to_user} argument.
+         * <p>{@code TRUE} 强制暴露，{@code FALSE} 禁止暴露（覆盖 LLM 请求），
+         * {@code null}（默认）先遵循 {@code RuntimeContext} 覆盖值，再遵循
+         * LLM 的 {@code expose_to_user} 参数。
          */
         public Builder exposeToUser(Boolean exposeToUser) {
             this.exposeToUser = exposeToUser;
@@ -597,11 +597,11 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Overrides pending-tool recovery for this local subagent. Pass {@code null} to inherit
-         * the parent setting (the default). Permission confirmations are never auto-recovered.
+         * 覆盖此本地子智能体的待处理工具恢复设置。传入 {@code null} 继承父级设置
+         * （默认行为）。权限确认绝不会自动恢复。
          *
-         * @param enable whether to enable recovery, or {@code null} to inherit
-         * @return this builder
+         * @param enable 是否启用恢复，或使用 {@code null} 继承
+         * @return 此构建器
          */
         public Builder enablePendingToolRecovery(Boolean enable) {
             this.enablePendingToolRecovery = enable;
@@ -609,8 +609,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Tool allowlist: when non-empty, only inherited parent tools with listed names are kept.
-         * Child-local tool registrations are unaffected.
+         * 工具允许列表：非空时，只保留名称在列表中的继承父级工具。
+         * 子级本地工具注册不受影响。
          */
         public Builder tools(List<String> tools) {
             this.tools = tools;
@@ -623,11 +623,10 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Sets a compaction configuration for this subagent.
+         * 为此子智能体设置压缩配置。
          *
-         * <p>An explicit declaration-level configuration takes precedence over the parent agent's
-         * compaction configuration and can enable compaction for this subagent even when the parent
-         * disables it.
+         * <p>显式声明级配置优先于父级智能体的压缩配置；
+         * 即使父级禁用压缩，也可以为此子智能体启用压缩。
          */
         public Builder compaction(CompactionConfig compactionConfig) {
             this.compactionConfig = compactionConfig;
@@ -635,7 +634,9 @@ public final class SubagentDeclaration {
             return this;
         }
 
-        /** Disables compaction for this subagent, overriding the parent's configuration. */
+        /**
+         * 禁用此子智能体的压缩，覆盖父级配置。
+         */
         public Builder disableCompaction() {
             this.compactionConfig = null;
             this.disableCompaction = true;
@@ -643,8 +644,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Remote task server base URL. Mutually exclusive with {@link #workspace(Path)} and a
-         * non-blank {@link #inlineAgentsBody(String)}.
+         * 远程任务服务器基础 URL。与 {@link #workspace(Path)} 及非空白的
+         * {@link #inlineAgentsBody(String)} 互斥。
          */
         public Builder url(String url) {
             this.url = url;
@@ -652,8 +653,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Optional HTTP headers for the remote task server (e.g. {@code Authorization}). Only used
-         * when {@link #url(String)} is set.
+         * 远程任务服务器的可选 HTTP 请求头（例如 {@code Authorization}）。
+         * 仅在设置 {@link #url(String)} 时使用。
          */
         public Builder headers(Map<String, String> headers) {
             this.headers = headers;
@@ -661,9 +662,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Whether remote subagent events should be streamed back into the parent's event stream.
-         * {@code null} (default) is treated as {@code true}. Only relevant when {@link #url(String)}
-         * is set.
+         * 是否将远程子智能体事件流式回传到父级事件流。
+         * {@code null}（默认）视为 {@code true}。仅在设置 {@link #url(String)} 时有效。
          */
         public Builder remoteStreaming(Boolean remoteStreaming) {
             this.remoteStreaming = remoteStreaming;
@@ -671,10 +671,10 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * How much of the remote event stream to forward. {@code null} (default) is treated as
-         * {@link RemoteStreamDetail#FULL}; {@link RemoteStreamDetail#VERBOSE} forwards every event
-         * the remote agent emits, matching a local subagent. Only relevant when
-         * {@link #remoteStreaming(Boolean)} is enabled.
+         * 转发远程事件流的详细程度。{@code null}（默认）视为
+         * {@link RemoteStreamDetail#FULL}；{@link RemoteStreamDetail#VERBOSE}
+         * 转发远程智能体发出的每个事件，与本地子智能体一致。
+         * 仅在启用 {@link #remoteStreaming(Boolean)} 时有效。
          */
         public Builder remoteStreamDetail(RemoteStreamDetail remoteStreamDetail) {
             this.remoteStreamDetail = remoteStreamDetail;
@@ -682,8 +682,8 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Policy for resolving remote HITL confirmations. {@code null} is treated as
-         * {@link RemoteAskPolicy#DENY}. Only relevant when {@link #url(String)} is set.
+         * 处理远程 HITL 确认的策略。{@code null} 视为
+         * {@link RemoteAskPolicy#DENY}。仅在设置 {@link #url(String)} 时有效。
          */
         public Builder remoteAskPolicy(RemoteAskPolicy remoteAskPolicy) {
             this.remoteAskPolicy = remoteAskPolicy != null ? remoteAskPolicy : RemoteAskPolicy.DENY;
@@ -691,10 +691,9 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Static attributes sent as {@code context.attributes} with every submission to this
-         * remote subagent (e.g. tenant or deployment tags). Values must be JSON-serializable. Per
-         * call attributes set on the parent's {@code RuntimeContext} are merged on top. Only
-         * relevant when {@link #url(String)} is set.
+         * 每次向此远程子智能体提交时，作为 {@code context.attributes} 发送的静态属性
+         * （例如租户或部署标签）。值必须可序列化为 JSON。父级 {@code RuntimeContext}
+         * 中设置的单次调用属性在此基础上合并覆盖。仅在设置 {@link #url(String)} 时有效。
          */
         public Builder remoteContextAttributes(Map<String, Object> remoteContextAttributes) {
             this.remoteContextAttributes = remoteContextAttributes;
@@ -702,10 +701,10 @@ public final class SubagentDeclaration {
         }
 
         /**
-         * Builds the {@link SubagentDeclaration}.
+         * 构建 {@link SubagentDeclaration}。
          *
-         * @throws IllegalArgumentException if {@code name} or {@code description} is blank, or
-         *     mutually exclusive fields are combined (workspace vs inline vs remote URL)
+         * @throws IllegalArgumentException {@code name} 或 {@code description} 为空白，
+         *     或组合了互斥字段（工作区、内联正文、远程 URL）时抛出
          */
         public SubagentDeclaration build() {
             if (name == null || name.isBlank()) {

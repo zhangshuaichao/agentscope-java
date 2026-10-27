@@ -18,29 +18,28 @@ package io.agentscope.core.model.transport;
 import java.time.Duration;
 
 /**
- * Configuration for HTTP transport layer.
+ * HTTP 传输层配置。
  *
- * <p>This class holds configuration options for HTTP client behavior such as
- * timeouts, connection pool settings, and retry policies.
+ * <p>保存 HTTP 客户端行为选项，例如超时、连接池设置与重试策略。
+ *
+ * <p>【学习提示】连接超时、首块响应超时、流空闲超时不是同一概念。
+ * 同一个配置对象在 JDK 和 OkHttp 实现中的适用字段也不同，应沿具体实现追踪。
  */
 public class HttpTransportConfig {
 
-    /** Default connect timeout: 30 seconds. */
+    /** 默认连接超时：30 秒。 */
     public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(30);
 
-    /** Default read timeout: 5 minutes. */
+    /** 默认读取超时：5 分钟。 */
     public static final Duration DEFAULT_READ_TIMEOUT = Duration.ofMinutes(5);
 
-    /**
-     * Default streaming response timeout: 5 minutes (request start to first emitted streaming
-     * chunk).
-     */
+    /** 默认流式响应超时：5 分钟（从请求开始到发出首个流式数据块）。 */
     public static final Duration DEFAULT_RESPONSE_TIMEOUT = Duration.ofMinutes(5);
 
-    /** Default streaming idle timeout: 5 minutes (maximum wait between data chunks). */
+    /** 默认流空闲超时：5 分钟（数据块之间的最长等待时间）。 */
     public static final Duration DEFAULT_STREAM_IDLE_TIMEOUT = DEFAULT_READ_TIMEOUT;
 
-    /** Default write timeout: 30 seconds. */
+    /** 默认写入超时：30 秒。 */
     public static final Duration DEFAULT_WRITE_TIMEOUT = Duration.ofSeconds(30);
 
     private final Duration connectTimeout;
@@ -68,134 +67,127 @@ public class HttpTransportConfig {
     }
 
     /**
-     * Get the connect timeout.
+     * 获取连接超时。
      *
-     * @return the connect timeout duration
+     * @return 连接超时时长
      */
     public Duration getConnectTimeout() {
         return connectTimeout;
     }
 
     /**
-     * Get the response timeout for streaming requests.
+     * 获取流式请求的响应超时。
      *
-     * <p>For {@link JdkHttpTransport} streaming requests, this bounds the time from request start
-     * until the first emitted SSE/NDJSON chunk. {@link OkHttpTransport} does not consume this
-     * option; it relies on OkHttp's {@link #getReadTimeout()} for stream reads.
+     * <p>对于 {@link JdkHttpTransport} 的流式请求，此值限制从请求开始到发出首个 SSE/NDJSON 数据块的时间。
+     * {@link OkHttpTransport} 不使用此选项，而是依赖 OkHttp 的 {@link #getReadTimeout()} 进行流读取。
      *
-     * @return the response timeout duration
+     * @return 响应超时时长
      */
     public Duration getResponseTimeout() {
         return responseTimeout;
     }
 
     /**
-     * Get the stream idle timeout.
+     * 获取流空闲超时。
      *
-     * <p>For {@link JdkHttpTransport} streaming requests, this bounds the maximum wait between two
-     * consecutive emitted SSE/NDJSON chunks. {@link OkHttpTransport} does not consume this option;
-     * it relies on OkHttp's {@link #getReadTimeout()} for stream reads.
+     * <p>对于 {@link JdkHttpTransport} 的流式请求，此值限制连续两个已发出 SSE/NDJSON 数据块之间的最长等待时间。
+     * {@link OkHttpTransport} 不使用此选项，而是依赖 OkHttp 的 {@link #getReadTimeout()} 进行流读取。
      *
-     * @return the stream idle timeout duration
+     * @return 流空闲超时时长
      */
     public Duration getStreamIdleTimeout() {
         return streamIdleTimeout;
     }
 
     /**
-     * Get the read timeout.
+     * 获取读取超时。
      *
-     * <p>{@link OkHttpTransport} applies this as OkHttp's read timeout for both standard and
-     * streaming requests. {@link JdkHttpTransport} applies this to non-streaming requests only; JDK
-     * streaming requests use {@link #getResponseTimeout()} and {@link #getStreamIdleTimeout()}
-     * instead.
+     * <p>{@link OkHttpTransport} 将此值用作普通请求和流式请求的 OkHttp 读取超时。
+     * {@link JdkHttpTransport} 仅对非流式请求应用此值；JDK 流式请求改用
+     * {@link #getResponseTimeout()} 和 {@link #getStreamIdleTimeout()}。
      *
-     * @return the read timeout duration
+     * @return 读取超时时长
      */
     public Duration getReadTimeout() {
         return readTimeout;
     }
 
     /**
-     * Get the write timeout.
+     * 获取写入超时。
      *
-     * @return the write timeout duration
+     * @return 写入超时时长
      */
     public Duration getWriteTimeout() {
         return writeTimeout;
     }
 
     /**
-     * Get the maximum number of idle connections in the pool.
+     * 获取连接池中的最大空闲连接数。
      *
-     * @return the max idle connections
+     * @return 最大空闲连接数
      */
     public int getMaxIdleConnections() {
         return maxIdleConnections;
     }
 
     /**
-     * Get the keep-alive duration for idle connections.
+     * 获取空闲连接的保活时长。
      *
-     * @return the keep-alive duration
+     * @return 保活时长
      */
     public Duration getKeepAliveDuration() {
         return keepAliveDuration;
     }
 
     /**
-     * Get whether SSL certificate verification should be ignored.
+     * 获取是否忽略 SSL 证书验证。
      *
-     * <p><b>Warning:</b> Setting this to true disables SSL certificate verification,
-     * which makes the connection vulnerable to man-in-the-middle attacks.
-     * This should only be used for testing or with trusted self-signed certificates.
+     * <p><b>警告：</b>设为 true 会禁用 SSL 证书验证，使连接面临中间人攻击风险。
+     * 仅应在测试或使用可信自签名证书的场景中考虑此选项。
      *
-     * @return true to ignore SSL certificate verification, false otherwise
+     * @return true 表示忽略 SSL 证书验证，否则为 false
      */
     public boolean isIgnoreSsl() {
         return ignoreSsl;
     }
 
     /**
-     * Get the proxy configuration.
+     * 获取代理配置。
      *
-     * @return the proxy configuration, or null if no proxy is configured
+     * @return 代理配置；未配置代理时为 null
      */
     public ProxyConfig getProxyConfig() {
         return proxyConfig;
     }
 
     /**
-     * Get the HTTP version.
+     * 获取 HTTP 版本。
      *
-     * @return the HTTP version, or null if not configured (auto: HTTP/1.1 for cleartext,
-     *     HTTP/2 for https)
+     * @return HTTP 版本；未配置时为 null（自动：明文使用 HTTP/1.1，https 使用 HTTP/2）
      */
     public HttpVersion getHttpVersion() {
         return httpVersion;
     }
 
     /**
-     * Create a new builder for HttpTransportConfig.
+     * 创建新的 HttpTransportConfig 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Create a default configuration.
+     * 创建默认配置。
      *
-     * @return a default HttpTransportConfig instance
+     * @return 默认 HttpTransportConfig 实例
      */
     public static HttpTransportConfig defaults() {
         return builder().build();
     }
 
-    /**
-     * Builder for HttpTransportConfig.
-     */
+    /** HttpTransportConfig 的建造者。 */
     public static class Builder {
         private Duration connectTimeout = DEFAULT_CONNECT_TIMEOUT;
         private Duration responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
@@ -209,10 +201,10 @@ public class HttpTransportConfig {
         private HttpVersion httpVersion = null;
 
         /**
-         * Set the connect timeout.
+         * 设置连接超时。
          *
-         * @param connectTimeout the connect timeout duration
-         * @return this builder
+         * @param connectTimeout 连接超时时长
+         * @return 当前建造者
          */
         public Builder connectTimeout(Duration connectTimeout) {
             this.connectTimeout = connectTimeout;
@@ -220,14 +212,13 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the response timeout for streaming requests.
+         * 设置流式请求的响应超时。
          *
-         * <p>For {@link JdkHttpTransport} streaming requests, this bounds the time from request
-         * start until the first emitted SSE/NDJSON chunk. {@link OkHttpTransport} does not consume
-         * this option; it relies on OkHttp's {@link #getReadTimeout()} for stream reads.
+         * <p>对于 {@link JdkHttpTransport} 的流式请求，此值限制从请求开始到发出首个 SSE/NDJSON 数据块的时间。
+         * {@link OkHttpTransport} 不使用此选项，而是依赖 OkHttp 的 {@link #getReadTimeout()} 进行流读取。
          *
-         * @param responseTimeout the response timeout duration
-         * @return this builder
+         * @param responseTimeout 响应超时时长
+         * @return 当前建造者
          */
         public Builder responseTimeout(Duration responseTimeout) {
             this.responseTimeout = responseTimeout;
@@ -235,14 +226,13 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the stream idle timeout.
+         * 设置流空闲超时。
          *
-         * <p>For {@link JdkHttpTransport} streaming requests, this bounds the maximum wait between
-         * two consecutive emitted SSE/NDJSON chunks. {@link OkHttpTransport} does not consume this
-         * option; it relies on OkHttp's {@link #getReadTimeout()} for stream reads.
+         * <p>对于 {@link JdkHttpTransport} 的流式请求，此值限制连续两个已发出 SSE/NDJSON 数据块之间的最长等待时间。
+         * {@link OkHttpTransport} 不使用此选项，而是依赖 OkHttp 的 {@link #getReadTimeout()} 进行流读取。
          *
-         * @param streamIdleTimeout the stream idle timeout duration
-         * @return this builder
+         * @param streamIdleTimeout 流空闲超时时长
+         * @return 当前建造者
          */
         public Builder streamIdleTimeout(Duration streamIdleTimeout) {
             this.streamIdleTimeout = streamIdleTimeout;
@@ -250,15 +240,14 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the read timeout.
+         * 设置读取超时。
          *
-         * <p>{@link OkHttpTransport} applies this as OkHttp's read timeout for both standard and
-         * streaming requests. {@link JdkHttpTransport} applies this to non-streaming requests only;
-         * JDK streaming requests use {@link #getResponseTimeout()} and
-         * {@link #getStreamIdleTimeout()} instead.
+         * <p>{@link OkHttpTransport} 将此值用作普通请求和流式请求的 OkHttp 读取超时。
+         * {@link JdkHttpTransport} 仅对非流式请求应用此值；JDK 流式请求改用
+         * {@link #getResponseTimeout()} 和 {@link #getStreamIdleTimeout()}。
          *
-         * @param readTimeout the read timeout duration
-         * @return this builder
+         * @param readTimeout 读取超时时长
+         * @return 当前建造者
          */
         public Builder readTimeout(Duration readTimeout) {
             this.readTimeout = readTimeout;
@@ -266,10 +255,10 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the write timeout.
+         * 设置写入超时。
          *
-         * @param writeTimeout the write timeout duration
-         * @return this builder
+         * @param writeTimeout 写入超时时长
+         * @return 当前建造者
          */
         public Builder writeTimeout(Duration writeTimeout) {
             this.writeTimeout = writeTimeout;
@@ -277,10 +266,10 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the maximum number of idle connections in the pool.
+         * 设置连接池中的最大空闲连接数。
          *
-         * @param maxIdleConnections the max idle connections
-         * @return this builder
+         * @param maxIdleConnections 最大空闲连接数
+         * @return 当前建造者
          */
         public Builder maxIdleConnections(int maxIdleConnections) {
             this.maxIdleConnections = maxIdleConnections;
@@ -288,10 +277,10 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the keep-alive duration for idle connections.
+         * 设置空闲连接的保活时长。
          *
-         * @param keepAliveDuration the keep-alive duration
-         * @return this builder
+         * @param keepAliveDuration 保活时长
+         * @return 当前建造者
          */
         public Builder keepAliveDuration(Duration keepAliveDuration) {
             this.keepAliveDuration = keepAliveDuration;
@@ -299,14 +288,13 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set whether to ignore SSL certificate verification.
+         * 设置是否忽略 SSL 证书验证。
          *
-         * <p><b>Warning:</b> Setting this to true disables SSL certificate verification,
-         * which makes the connection vulnerable to man-in-the-middle attacks.
-         * This should only be used for testing or with trusted self-signed certificates.
+         * <p><b>警告：</b>设为 true 会禁用 SSL 证书验证，使连接面临中间人攻击风险。
+         * 仅应在测试或使用可信自签名证书的场景中考虑此选项。
          *
-         * @param ignoreSsl true to ignore SSL certificate verification, false otherwise
-         * @return this builder
+         * @param ignoreSsl true 表示忽略 SSL 证书验证，否则为 false
+         * @return 当前建造者
          */
         public Builder ignoreSsl(boolean ignoreSsl) {
             this.ignoreSsl = ignoreSsl;
@@ -314,12 +302,12 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the proxy configuration.
+         * 设置代理配置。
          *
-         * <p>Supports HTTP and SOCKS proxies. See {@link ProxyConfig} for details.
+         * <p>支持 HTTP 和 SOCKS 代理，详情见 {@link ProxyConfig}。
          *
-         * @param proxyConfig the proxy configuration
-         * @return this builder
+         * @param proxyConfig 代理配置
+         * @return 当前建造者
          */
         public Builder proxy(ProxyConfig proxyConfig) {
             this.proxyConfig = proxyConfig;
@@ -327,14 +315,13 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Set the HTTP version, or null for automatic resolution (the default): cleartext
-         * requests use HTTP/1.1, https requests use HTTP/2 via ALPN. Explicit {@link
-         * HttpVersion#HTTP_2} on cleartext URLs opts in to an h2c upgrade, which some servers
-         * (e.g. vLLM/uvicorn) do not handle. Any non-https scheme counts as cleartext. Only
-         * {@link JdkHttpTransport} honors this option.
+         * 设置 HTTP 版本；null 表示自动选择（默认）：明文请求使用 HTTP/1.1，
+         * https 请求通过 ALPN 使用 HTTP/2。对明文 URL 显式设置 {@link
+         * HttpVersion#HTTP_2} 会启用 h2c 升级，某些服务端（例如 vLLM/uvicorn）无法处理。
+         * 所有非 https 协议都视为明文。仅 {@link JdkHttpTransport} 使用此选项。
          *
-         * @param httpVersion the HTTP version, or null for auto
-         * @return this builder
+         * @param httpVersion HTTP 版本；null 表示自动选择
+         * @return 当前建造者
          */
         public Builder httpVersion(HttpVersion httpVersion) {
             this.httpVersion = httpVersion;
@@ -342,9 +329,9 @@ public class HttpTransportConfig {
         }
 
         /**
-         * Build the HttpTransportConfig.
+         * 构建 HttpTransportConfig。
          *
-         * @return a new HttpTransportConfig instance
+         * @return 新的 HttpTransportConfig 实例
          */
         public HttpTransportConfig build() {
             return new HttpTransportConfig(this);

@@ -35,14 +35,12 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 /**
- * Internal hook implementation for streaming events.
+ * 流式事件的内部钩子实现。
  *
- * <p>Intercepts hook callbacks and emits {@link Event} instances to a FluxSink. Handles event
- * filtering and chunk mode processing.
+ * <p>拦截钩子回调，向 FluxSink 发出 {@link Event} 实例；负责事件过滤及分块模式处理。
  *
- * @deprecated since 2.0.0. Replaced by the {@link io.agentscope.core.middleware.MiddlewareBase}
- *     system. Use {@link io.agentscope.core.ReActAgent#streamEvents(java.util.List)} for
- *     fine-grained event streaming.
+ * @deprecated 自 2.0.0 起弃用，由 {@link io.agentscope.core.middleware.MiddlewareBase} 系统替代。
+ * 细粒度事件流请使用 {@link io.agentscope.core.ReActAgent#streamEvents(java.util.List)}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 @SuppressWarnings("deprecation")
@@ -51,14 +49,14 @@ public class StreamingHook implements Hook {
     private final FluxSink<Event> sink;
     private final StreamOptions options;
 
-    // Track previous content for incremental mode
+    // 跟踪之前的内容，供增量模式使用
     private final Map<String, List<ContentBlock>> previousContent = new HashMap<>();
 
     /**
-     * Creates a new streaming hook.
+     * 创建新的流式钩子。
      *
-     * @param sink The FluxSink to emit events to
-     * @param options Configuration options for streaming
+     * @param sink 接收事件的 FluxSink
+     * @param options 流式配置选项
      */
     public StreamingHook(FluxSink<Event> sink, StreamOptions options) {
         this.sink = sink;
@@ -69,8 +67,8 @@ public class StreamingHook implements Hook {
     public <T extends HookEvent> Mono<T> onEvent(T event) {
         if (event instanceof PostReasoningEvent) {
             PostReasoningEvent e = (PostReasoningEvent) event;
-            // postReasoning is called after streaming completes
-            // This is the last/complete message
+            // 流式处理完成后调用 postReasoning
+            // 这是最后一条／完整消息
             if (options.shouldStream(EventType.REASONING)
                     && options.shouldIncludeReasoningEmission(false)) {
                 emitEvent(EventType.REASONING, e.getReasoningMessage(), true);
@@ -78,10 +76,10 @@ public class StreamingHook implements Hook {
             return Mono.just(event);
         } else if (event instanceof ReasoningChunkEvent) {
             ReasoningChunkEvent e = (ReasoningChunkEvent) event;
-            // This is an intermediate chunk
+            // 这是中间片段
             if (options.shouldStream(EventType.REASONING)
                     && options.shouldIncludeReasoningEmission(true)) {
-                // Use incremental or accumulated based on StreamOptions
+                // 根据 StreamOptions 使用增量或累积内容
                 Msg msgToEmit =
                         options.isIncremental() ? e.getIncrementalChunk() : e.getAccumulated();
                 emitEvent(EventType.REASONING, msgToEmit, false);
@@ -89,7 +87,7 @@ public class StreamingHook implements Hook {
             return Mono.just(event);
         } else if (event instanceof PostActingEvent) {
             PostActingEvent e = (PostActingEvent) event;
-            // Tool execution completed
+            // 工具执行完成
             if (options.shouldStream(EventType.TOOL_RESULT)) {
                 Msg toolMsg = createToolMessage(e.getToolResult());
                 emitEvent(EventType.TOOL_RESULT, toolMsg, true);
@@ -97,7 +95,7 @@ public class StreamingHook implements Hook {
             return Mono.just(event);
         } else if (event instanceof ActingChunkEvent) {
             ActingChunkEvent e = (ActingChunkEvent) event;
-            // Intermediate tool chunk
+            // 工具中间片段
             if (options.shouldStream(EventType.TOOL_RESULT) && options.isIncludeActingChunk()) {
                 Msg toolMsg = createToolMessage(e.getChunk());
                 emitEvent(EventType.TOOL_RESULT, toolMsg, false);
@@ -105,7 +103,7 @@ public class StreamingHook implements Hook {
             return Mono.just(event);
         } else if (event instanceof PostSummaryEvent) {
             PostSummaryEvent e = (PostSummaryEvent) event;
-            // Summary generation completed
+            // 摘要生成完成
             if (options.shouldStream(EventType.SUMMARY)
                     && options.shouldIncludeSummaryEmission(false)) {
                 emitEvent(EventType.SUMMARY, e.getSummaryMessage(), true);
@@ -113,10 +111,10 @@ public class StreamingHook implements Hook {
             return Mono.just(event);
         } else if (event instanceof SummaryChunkEvent) {
             SummaryChunkEvent e = (SummaryChunkEvent) event;
-            // Intermediate summary chunk
+            // 摘要中间片段
             if (options.shouldStream(EventType.SUMMARY)
                     && options.shouldIncludeSummaryEmission(true)) {
-                // Use incremental or accumulated based on StreamOptions
+                // 根据 StreamOptions 使用增量或累积内容
                 Msg msgToEmit =
                         options.isIncremental() ? e.getIncrementalChunk() : e.getAccumulated();
                 emitEvent(EventType.SUMMARY, msgToEmit, false);
@@ -126,13 +124,13 @@ public class StreamingHook implements Hook {
         return Mono.just(event);
     }
 
-    // ========== Helper Methods ==========
+    // ========== 辅助方法 ==========
 
     /**
-     * Creates a tool message from a tool result block.
+     * 根据工具结果块创建工具消息。
      *
-     * @param toolResultBlock The tool result or chunk
-     * @return A message with TOOL role containing the result
+     * @param toolResultBlock 工具结果或片段
+     * @return 角色为 TOOL 且包含结果的消息
      */
     private Msg createToolMessage(ToolResultBlock toolResultBlock) {
         return Msg.builder()
@@ -143,23 +141,23 @@ public class StreamingHook implements Hook {
     }
 
     /**
-     * Emit an event to the sink.
+     * 向 sink 发出事件。
      *
-     * @param type The event type
-     * @param msg The message
-     * @param isLast Whether this is the last/complete message in the stream
+     * @param type 事件类型
+     * @param msg 消息
+     * @param isLast 是否为流中的最后一条／完整消息
      */
     private void emitEvent(EventType type, Msg msg, boolean isLast) {
         Msg processedMsg = msg;
 
-        // For incremental mode, calculate the diff (if needed in the future)
-        // Currently we directly use the incremental chunk from ReasoningChunkEvent
+        // 在增量模式下计算差异（如将来需要）
+        // 当前直接使用 ReasoningChunkEvent 的增量片段
 
-        // Create and emit the event
+        // 创建并发出事件
         Event event = new Event(type, processedMsg, isLast);
         sink.next(event);
 
-        // Update tracking
+        // 更新跟踪信息
         if (!isLast) {
             previousContent.put(msg.getId(), new ArrayList<>(msg.getContent()));
         } else {

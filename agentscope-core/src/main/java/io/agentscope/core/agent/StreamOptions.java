@@ -21,21 +21,20 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Configuration options for the {@link Agent#stream} API.
+ * {@link Agent#stream} API 的配置选项。
  *
- * <p>Controls which event types to receive and how streaming content is delivered.
+ * <p>控制接收哪些事件类型以及如何传递流式内容。
  *
- * <p><b>Reasoning filtering (Issue #265):</b>
- * Some streaming stores emit both:
+ * <p><b>推理过滤（Issue #265）：</b>某些流式存储会同时发出：
  * <ul>
- *   <li><b>Reasoning chunks</b>: incremental deltas during the reasoning process</li>
- *   <li><b>Reasoning result</b>: the final consolidated reasoning output</li>
+ * <li><b>推理片段</b>：推理过程中的增量内容</li>
+ * <li><b>推理结果</b>：最终汇总的推理输出</li>
  * </ul>
  *
- * <p>Use {@link #isIncludeReasoningChunk()} and {@link #isIncludeReasoningResult()} to filter
- * these reasoning-related emissions when {@link EventType#REASONING} is enabled.
+ * <p>启用 {@link EventType#REASONING} 时，可通过 {@link #isIncludeReasoningChunk()}
+ * 和 {@link #isIncludeReasoningResult()} 过滤这些推理相关事件。
  *
- * <p><b>Example usage:</b>
+ * <p><b>用法示例：</b>
  *
  * <pre>{@code
  * // Only reasoning events, incremental mode
@@ -65,49 +64,39 @@ public class StreamOptions {
     private final boolean incremental;
 
     /**
-     * Whether to include the incremental delta of the reasoning process during streaming.
-     * <p>
-     * If false, intermediate reasoning chunk emissions should be filtered out by the stream
-     * implementation.
+     * 流式处理时是否包含推理过程的增量片段。
+     * <p>为 false 时，流实现应过滤掉中间推理片段。
      */
     private final boolean includeReasoningChunk;
 
     /**
-     * Whether to include the final consolidated reasoning output in the response.
-     * <p>
-     * If false, final reasoning result emissions should be filtered out by the stream
-     * implementation.
+     * 回复中是否包含最终汇总的推理输出。
+     * <p>为 false 时，流实现应过滤掉最终推理结果。
      */
     private final boolean includeReasoningResult;
 
     /**
-     * Whether to include the incremental chunks from tool execution during streaming.
-     * <p>
-     * If false, intermediate acting chunk emissions should be filtered out by the stream
-     * implementation.
+     * 流式处理时是否包含工具执行的增量片段。
+     * <p>为 false 时，流实现应过滤掉中间行动片段。
      */
     private final boolean includeActingChunk;
 
     /**
-     * Whether to include the incremental chunks from summary generation during streaming.
-     * <p>
-     * If false, intermediate summary chunk emissions should be filtered out by the stream
-     * implementation.
+     * 流式处理时是否包含摘要生成的增量片段。
+     * <p>为 false 时，流实现应过滤掉中间摘要片段。
      */
     private final boolean includeSummaryChunk;
 
     /**
-     * Whether to include the final consolidated summary output in the response.
-     * <p>
-     * If false, final summary result emissions should be filtered out by the stream
-     * implementation.
+     * 回复中是否包含最终汇总的摘要输出。
+     * <p>为 false 时，流实现应过滤掉最终摘要结果。
      */
     private final boolean includeSummaryResult;
 
     /**
-     * Private constructor called by the builder.
+     * 由构建器调用的私有构造方法。
      *
-     * @param builder The builder containing configuration values
+     * @param builder 包含配置值的构建器
      */
     private StreamOptions(Builder builder) {
         this.eventTypes = builder.eventTypes;
@@ -120,142 +109,141 @@ public class StreamOptions {
     }
 
     /**
-     * Default options: All event types, incremental mode, include both reasoning chunk and reasoning result.
+     * 默认选项：所有事件类型、增量模式，同时包含推理片段与推理结果。
      *
-     * @return StreamOptions with default configuration
+     * @return 使用默认配置的 StreamOptions
      */
     public static StreamOptions defaults() {
         return builder().build();
     }
 
     /**
-     * Creates a new builder for StreamOptions.
+     * 创建新的 StreamOptions 构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Get the set of event types that should be streamed.
+     * 获取应流式发送的事件类型集合。
      *
-     * <p>If the set contains {@link EventType#ALL}, all event types will be streamed.
+     * <p>集合包含 {@link EventType#ALL} 时，将流式发送所有事件类型。
      *
-     * @return The set of event types to stream
+     * @return 要流式发送的事件类型集合
      */
     public Set<EventType> getEventTypes() {
         return eventTypes;
     }
 
     /**
-     * Check if incremental mode is enabled.
+     * 检查是否启用增量模式。
      *
-     * <p>In incremental mode, only new content is delivered in each emission. In cumulative mode,
-     * all accumulated content is delivered.
+     * <p>增量模式下，每次仅发送新增内容；累积模式下，每次发送全部已累积内容。
      *
-     * @return true if incremental mode is enabled
+     * @return 启用增量模式时为 true
      */
     public boolean isIncremental() {
         return incremental;
     }
 
     /**
-     * Whether reasoning "chunk" emissions should be included.
+     * 是否包含推理“片段”事件。
      *
-     * <p>Reasoning chunks are the incremental delta of the reasoning process during streaming.</p>
+     * <p>推理片段是流式推理过程中的增量内容。</p>
      *
-     * @return true if reasoning chunks should be included
+     * @return 应包含推理片段时为 true
      */
     public boolean isIncludeReasoningChunk() {
         return includeReasoningChunk;
     }
 
     /**
-     * Whether the final reasoning result should be included.
+     * 是否包含最终推理结果。
      *
-     * <p>The reasoning result is the final consolidated reasoning output in the response.</p>
+     * <p>推理结果是回复中最终汇总的推理输出。</p>
      *
-     * @return true if the final reasoning result should be included
+     * @return 应包含最终推理结果时为 true
      */
     public boolean isIncludeReasoningResult() {
         return includeReasoningResult;
     }
 
     /**
-     * Whether acting (tool execution) chunk emissions should be included.
+     * 是否包含行动（工具执行）片段事件。
      *
-     * <p>Acting chunks are the incremental outputs from tool execution via ToolEmitter.</p>
+     * <p>行动片段是工具执行过程中通过 ToolEmitter 发出的增量输出。</p>
      *
-     * @return true if acting chunks should be included
+     * @return 应包含行动片段时为 true
      */
     public boolean isIncludeActingChunk() {
         return includeActingChunk;
     }
 
     /**
-     * Whether summary chunk emissions should be included.
+     * 是否包含摘要片段事件。
      *
-     * <p>Summary chunks are the incremental outputs from summary generation when max iterations
-     * is reached.</p>
+     * <p>摘要片段是达到最大迭代次数后生成摘要时的增量输出。</p>
      *
-     * @return true if summary chunks should be included
+     * @return 应包含摘要片段时为 true
      */
     public boolean isIncludeSummaryChunk() {
         return includeSummaryChunk;
     }
 
     /**
-     * Whether the final summary result should be included.
+     * 是否包含最终摘要结果。
      *
-     * <p>The summary result is the final consolidated summary output when max iterations
-     * is reached.</p>
+     * <p>摘要结果是达到最大迭代次数后最终汇总的摘要输出。</p>
      *
-     * @return true if the final summary result should be included
+     * @return 应包含最终摘要结果时为 true
      */
     public boolean isIncludeSummaryResult() {
         return includeSummaryResult;
     }
 
     /**
-     * Check if a specific event type should be streamed.
+     * 检查是否应流式发送指定事件类型。
      *
-     * @param type The event type to check
-     * @return true if this type should be streamed
+     * @param type 要检查的事件类型
+     * @return 应发送此类型时为 true
      */
     public boolean shouldStream(EventType type) {
         return eventTypes.contains(EventType.ALL) || eventTypes.contains(type);
     }
 
     /**
-     * Convenience method for stream implementations to decide whether to emit a reasoning subtype.
+     * 供流实现判断是否发出某种推理子类型的便捷方法。
      *
-     * <p><b>TODO (Issue #265):</b> Thread these flags through the stream event mapping layer where
-     * reasoning events are converted into Flux emissions (e.g., when distinguishing chunk vs result).
+     * <p><b>TODO（Issue #265）：</b>将这些标志传递到流事件映射层，
+     * 即推理事件转换为 Flux 发射项的位置（例如区分片段与结果时）。
      *
-     * @param isChunk true if the reasoning emission is an incremental chunk, false if it is the final result
-     * @return true if this reasoning emission should be included
+     * @param isChunk 推理事件为增量片段时为 true，为最终结果时为 false
+     * @return 应包含此推理事件时为 true
      */
     public boolean shouldIncludeReasoningEmission(boolean isChunk) {
         return isChunk ? includeReasoningChunk : includeReasoningResult;
     }
 
     /**
-     * Convenience method for stream implementations to decide whether to emit a summary subtype.
+     * 供流实现判断是否发出某种摘要子类型的便捷方法。
      *
-     * @param isChunk true if the summary emission is an incremental chunk, false if it is the final result
-     * @return true if this summary emission should be included
+     * @param isChunk 摘要事件为增量片段时为 true，为最终结果时为 false
+     * @return 应包含此摘要事件时为 true
      */
     public boolean shouldIncludeSummaryEmission(boolean isChunk) {
         return isChunk ? includeSummaryChunk : includeSummaryResult;
     }
 
-    /** Builder for {@link StreamOptions}. */
+    /**
+     * {@link StreamOptions} 的构建器。
+     */
     public static class Builder {
         private Set<EventType> eventTypes = EnumSet.of(EventType.ALL);
         private boolean incremental = true;
 
-        // Defaults are "true" to preserve existing behavior.
+        // 默认值为 "true"，以保持现有行为。
         private boolean includeReasoningChunk = true;
         private boolean includeReasoningResult = true;
         private boolean includeActingChunk = true;
@@ -263,13 +251,12 @@ public class StreamOptions {
         private boolean includeSummaryResult = true;
 
         /**
-         * Set which event types to stream.
+         * 设置要流式发送的事件类型。
          *
-         * <p>Only events matching these types will be emitted in the Flux. Use {@link
-         * EventType#ALL} to receive all types.
+         * <p>Flux 只会发出匹配这些类型的事件。使用 {@link EventType#ALL} 接收全部类型。
          *
-         * @param types One or more event types
-         * @return this builder
+         * @param types 一个或多个事件类型
+         * @return 当前构建器
          */
         public Builder eventTypes(EventType... types) {
             this.eventTypes = EnumSet.copyOf(Arrays.asList(types));
@@ -277,16 +264,16 @@ public class StreamOptions {
         }
 
         /**
-         * Set whether to use incremental mode for streaming content.
+         * 设置流式内容是否使用增量模式。
          *
-         * <p>Controls how streaming content is delivered:
+         * <p>控制流式内容的发送方式：
          * <ul>
-         *   <li>true (incremental): Only new content in each emission</li>
-         *   <li>false (cumulative): All accumulated content in each emission</li>
+         * <li>true（增量）：每次仅发送新增内容</li>
+         * <li>false（累积）：每次发送全部已累积内容</li>
          * </ul>
          *
-         * @param incremental true for incremental mode, false for cumulative mode
-         * @return this builder
+         * @param incremental true 表示增量模式，false 表示累积模式
+         * @return 当前构建器
          */
         public Builder incremental(boolean incremental) {
             this.incremental = incremental;
@@ -294,13 +281,13 @@ public class StreamOptions {
         }
 
         /**
-         * Include or exclude incremental reasoning chunk emissions.
+         * 包含或排除增量推理片段事件。
          *
-         * <p>When {@link EventType#REASONING} is enabled, some providers emit reasoning deltas (chunks)
-         * as the model thinks. Set to false to hide these.</p>
+         * <p>启用 {@link EventType#REASONING} 时，某些提供方会在模型思考时发出推理增量（片段）。
+         * 设为 false 可隐藏这些片段。</p>
          *
-         * @param includeReasoningChunk true to include chunk emissions, false to filter them out
-         * @return this builder
+         * @param includeReasoningChunk true 表示包含片段事件，false 表示过滤掉它们
+         * @return 当前构建器
          */
         public Builder includeReasoningChunk(boolean includeReasoningChunk) {
             this.includeReasoningChunk = includeReasoningChunk;
@@ -308,13 +295,12 @@ public class StreamOptions {
         }
 
         /**
-         * Include or exclude the final consolidated reasoning result emission.
+         * 包含或排除最终汇总的推理结果事件。
          *
-         * <p>When {@link EventType#REASONING} is enabled, some providers emit a final reasoning result.
-         * Set to false to hide it.</p>
+         * <p>启用 {@link EventType#REASONING} 时，某些提供方会发出最终推理结果。设为 false 可隐藏它。</p>
          *
-         * @param includeReasoningResult true to include the final reasoning result, false to filter it out
-         * @return this builder
+         * @param includeReasoningResult true 表示包含最终推理结果，false 表示过滤掉它
+         * @return 当前构建器
          */
         public Builder includeReasoningResult(boolean includeReasoningResult) {
             this.includeReasoningResult = includeReasoningResult;
@@ -322,13 +308,13 @@ public class StreamOptions {
         }
 
         /**
-         * Include or exclude tool execution chunk emissions.
+         * 包含或排除工具执行片段事件。
          *
-         * <p>When {@link EventType#TOOL_RESULT} is enabled, tools may emit intermediate chunks via
-         * ToolEmitter. Set to false to hide these and only receive the final tool result.</p>
+         * <p>启用 {@link EventType#TOOL_RESULT} 时，工具可能通过 ToolEmitter 发出中间片段。
+         * 设为 false 可隐藏这些片段，只接收最终工具结果。</p>
          *
-         * @param includeActingChunk true to include chunk emissions, false to filter them out
-         * @return this builder
+         * @param includeActingChunk true 表示包含片段事件，false 表示过滤掉它们
+         * @return 当前构建器
          */
         public Builder includeActingChunk(boolean includeActingChunk) {
             this.includeActingChunk = includeActingChunk;
@@ -336,13 +322,13 @@ public class StreamOptions {
         }
 
         /**
-         * Include or exclude summary chunk emissions.
+         * 包含或排除摘要片段事件。
          *
-         * <p>When {@link EventType#SUMMARY} is enabled, summary generation may emit intermediate
-         * chunks. Set to false to hide these and only receive the final summary result.</p>
+         * <p>启用 {@link EventType#SUMMARY} 时，摘要生成可能发出中间片段。
+         * 设为 false 可隐藏这些片段，只接收最终摘要结果。</p>
          *
-         * @param includeSummaryChunk true to include chunk emissions, false to filter them out
-         * @return this builder
+         * @param includeSummaryChunk true 表示包含片段事件，false 表示过滤掉它们
+         * @return 当前构建器
          */
         public Builder includeSummaryChunk(boolean includeSummaryChunk) {
             this.includeSummaryChunk = includeSummaryChunk;
@@ -350,13 +336,12 @@ public class StreamOptions {
         }
 
         /**
-         * Include or exclude the final consolidated summary result emission.
+         * 包含或排除最终汇总的摘要结果事件。
          *
-         * <p>When {@link EventType#SUMMARY} is enabled, the final summary result is emitted after
-         * generation completes. Set to false to hide it.</p>
+         * <p>启用 {@link EventType#SUMMARY} 时，生成完成后会发出最终摘要结果。设为 false 可隐藏它。</p>
          *
-         * @param includeSummaryResult true to include the final summary result, false to filter it out
-         * @return this builder
+         * @param includeSummaryResult true 表示包含最终摘要结果，false 表示过滤掉它
+         * @return 当前构建器
          */
         public Builder includeSummaryResult(boolean includeSummaryResult) {
             this.includeSummaryResult = includeSummaryResult;

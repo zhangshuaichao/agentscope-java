@@ -16,40 +16,41 @@
 package io.agentscope.harness.agent.sandbox.layout;
 
 /**
- * Layout entry that copies a single file from the host filesystem into the sandbox workspace.
+ * 将宿主文件系统中的单个文件复制到沙箱工作区的布局条目。
  *
- * <p>The {@code sourcePath} is an absolute path on the host machine. It is stored as a string
- * to ensure safe JSON serialization across platforms.
+ * <p>{@code sourcePath} 是宿主机上的绝对路径，以字符串保存，确保跨平台 JSON 序列化安全。
  */
 public class LocalFileEntry extends WorkspaceEntry {
 
     private String sourcePath;
 
-    /** Creates an empty local file entry. */
+    /**
+ * 创建空本地文件条目。
+ */
     public LocalFileEntry() {}
 
     /**
-     * Creates a local file entry with the given host source path.
+     * 使用给定宿主源路径创建本地文件条目。
      *
-     * @param sourcePath absolute path on the host filesystem
+     * @param sourcePath 宿主文件系统中的绝对路径
      */
     public LocalFileEntry(String sourcePath) {
         this.sourcePath = sourcePath;
     }
 
     /**
-     * Returns the host-side source path.
+     * 返回宿主侧源路径。
      *
-     * @return absolute host path as a string
+     * @return 字符串形式的宿主绝对路径
      */
     public String getSourcePath() {
         return sourcePath;
     }
 
     /**
-     * Sets the host-side source path.
+     * 设置宿主侧源路径。
      *
-     * @param sourcePath absolute host path as a string
+     * @param sourcePath 字符串形式的宿主绝对路径
      */
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;

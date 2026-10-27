@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * WebSocket connection request configuration.
+ * WebSocket 连接请求配置。
  *
- * <p>Usage example:
+ * <p>用法示例：
  *
  * <pre>{@code
  * WebSocketRequest request = WebSocketRequest.builder("wss://api.openai.com/v1/realtime")
@@ -47,7 +47,7 @@ public final class WebSocketRequest {
     }
 
     /**
-     * Get the WebSocket URL.
+     * 获取 WebSocket URL。
      *
      * @return WebSocket URL
      */
@@ -56,34 +56,34 @@ public final class WebSocketRequest {
     }
 
     /**
-     * Get the request headers.
+     * 获取请求头。
      *
-     * @return Request headers (immutable)
+     * @return 不可变的请求头
      */
     public Map<String, String> getHeaders() {
         return headers;
     }
 
     /**
-     * Get the connection timeout.
+     * 获取连接超时。
      *
-     * @return Connection timeout
+     * @return 连接超时
      */
     public Duration getConnectTimeout() {
         return connectTimeout;
     }
 
     /**
-     * Create a new builder with the specified URL.
+     * 使用指定 URL 创建新建造者。
      *
      * @param url WebSocket URL
-     * @return Builder instance
+     * @return Builder 实例
      */
     public static Builder builder(String url) {
         return new Builder(url);
     }
 
-    /** Builder for WebSocketRequest. */
+    /** WebSocketRequest 的建造者。 */
     public static class Builder {
         private final String url;
         private final Map<String, String> headers = new LinkedHashMap<>();
@@ -94,11 +94,11 @@ public final class WebSocketRequest {
         }
 
         /**
-         * Add a header.
+         * 添加一个请求头。
          *
-         * @param name Header name
-         * @param value Header value
-         * @return this builder
+         * @param name 请求头名称
+         * @param value 请求头值
+         * @return 当前建造者
          */
         public Builder header(String name, String value) {
             this.headers.put(name, value);
@@ -106,10 +106,10 @@ public final class WebSocketRequest {
         }
 
         /**
-         * Add multiple headers.
+         * 添加多个请求头。
          *
-         * @param headers Headers to add
-         * @return this builder
+         * @param headers 要添加的请求头
+         * @return 当前建造者
          */
         public Builder headers(Map<String, String> headers) {
             this.headers.putAll(headers);
@@ -117,10 +117,10 @@ public final class WebSocketRequest {
         }
 
         /**
-         * Set the connection timeout.
+         * 设置连接超时。
          *
-         * @param timeout Connection timeout
-         * @return this builder
+         * @param timeout 连接超时
+         * @return 当前建造者
          */
         public Builder connectTimeout(Duration timeout) {
             this.connectTimeout = timeout;
@@ -128,9 +128,9 @@ public final class WebSocketRequest {
         }
 
         /**
-         * Build the WebSocketRequest.
+         * 构建 WebSocketRequest。
          *
-         * @return WebSocketRequest instance
+         * @return WebSocketRequest 实例
          */
         public WebSocketRequest build() {
             return new WebSocketRequest(this);

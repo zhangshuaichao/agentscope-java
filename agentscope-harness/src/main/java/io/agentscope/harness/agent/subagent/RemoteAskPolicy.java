@@ -16,20 +16,20 @@
 package io.agentscope.harness.agent.subagent;
 
 /**
- * Policy for resolving a remote subagent's tool-confirmation (HITL) requests when the parent
- * cannot forward the decision to an interactive human within this call.
+ * 当父级无法在本次调用中将决定转交给交互式用户时，
+ * 用于处理远程子智能体工具确认（HITL）请求的策略。
  */
 public enum RemoteAskPolicy {
 
     /**
-     * Auto-deny every pending remote confirmation (safe default). Applied whenever the parent
-     * call has no live event-stream consumer, or when this policy is explicitly configured.
+     * 自动拒绝所有待处理的远程确认（安全默认值）。父级调用没有实时事件流消费者，
+     * 或者显式配置此策略时应用。
      */
     DENY,
 
     /**
-     * Forward the confirmation request upstream (via the parent's {@code AgentEventEmitter}
-     * stream) instead of auto-denying, so an interactive consumer can decide.
+     * 通过父级 {@code AgentEventEmitter} 流向上游转发确认请求，而非自动拒绝，
+     * 使交互式消费者能够作出决定。
      */
     PROPAGATE
 }

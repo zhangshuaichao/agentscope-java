@@ -16,11 +16,11 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result of code/shell execution.
+ * 代码／Shell 执行结果。
  *
- * @param output combined stdout and stderr output of the executed command
- * @param exitCode the process exit code (0 indicates success, non-zero indicates failure)
- * @param truncated whether the output was truncated due to filesystem limitations
+ * @param output 执行命令的标准输出与标准错误合并内容
+ * @param exitCode 进程退出码（0 表示成功，非 0 表示失败）
+ * @param truncated 输出是否因文件系统限制而被截断
  */
 public record ExecuteResponse(String output, Integer exitCode, boolean truncated) {
 

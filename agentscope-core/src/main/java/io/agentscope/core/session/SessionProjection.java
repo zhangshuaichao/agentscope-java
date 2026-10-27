@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Read-only recovery view. Inspection never repairs records or invokes models/tools. */
+/** 只读恢复视图。检查绝不修复记录，也不调用模型／工具。 */
 public record SessionProjection(
         long asOfSeq, String stateJson, Set<String> uncertainToolCalls, Set<String> activeRuns) {
     public static SessionProjection read(SessionLog log) {
@@ -62,7 +62,7 @@ public record SessionProjection(
                     if (data.get("result") != null) {
                         String id = (String) data.get("toolCallId");
                         uncertain.remove(id);
-                        // Early native action payloads omitted the polymorphic discriminator.
+                        // 早期原生行动载荷省略了多态类型判别标记。
                         var result =
                                 new LinkedHashMap<Object, Object>((Map<?, ?>) data.get("result"));
                         result.putIfAbsent("type", "tool_result");

@@ -18,9 +18,9 @@ package io.agentscope.core.session;
 import java.time.Duration;
 import java.util.List;
 
-/** Blocking persistence SPI; runtime integration schedules it on boundedElastic. */
+/** 阻塞式持久化 SPI；运行时集成将其调度到 boundedElastic。 */
 public interface SessionLog {
-    /** Durable input journal, independent of the execution writer and its event sequence. */
+    /** 持久化输入日志，独立于执行写入者及其事件序列。 */
     default SessionLog inbox() {
         throw new UnsupportedOperationException(
                 "This session backend does not support a durable inbox");
@@ -38,7 +38,7 @@ public interface SessionLog {
         throw new UnsupportedOperationException("Export cursor persistence not implemented");
     }
 
-    /** Stable-prefix scan. Implementations can avoid repeatedly traversing a commit chain. */
+    /** 稳定前缀扫描。实现可避免反复遍历提交链。 */
     default Iterable<SessionEvent> scan(long after, long through) {
         return () ->
                 new java.util.Iterator<SessionEvent>() {
@@ -70,9 +70,9 @@ public interface SessionLog {
     Writer acquire(String owner, Duration lease);
 
     /**
-     * Permanently fences this writer identity, including an acquisition that has not started yet.
-     * Other writer identities may continue this session. Returns a stable prefix for the sealed
-     * writer; implementations must serialize sealing against acquisition and commit.
+     * 永久隔离此写入者身份，包括尚未开始的租约获取。
+     * 其他写入者身份可以继续此会话。返回已封存写入者的稳定前缀；
+     * 实现必须将封存与租约获取、提交操作串行化。
      */
     default Head sealWriter(String owner) {
         throw new UnsupportedOperationException("This session backend cannot seal a writer");

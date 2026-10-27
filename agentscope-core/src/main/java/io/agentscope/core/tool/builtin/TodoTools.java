@@ -32,22 +32,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Built-in task-list tool that lets the agent maintain a structured todo list for the current
- * session, mirroring opencode's {@code todowrite}.
+ * 内置任务列表工具，允许智能体维护当前会话的结构化待办列表，与 opencode 的 {@code todowrite} 对应。
  *
- * <p>The single {@code todo_write} tool uses <b>full-list-replace</b> semantics: the model passes
- * the <i>entire</i> updated list every call and the tool rebuilds
- * {@link AgentState#getTasksContext()} from it. This is intentionally simpler than a granular
- * create/update/delete surface — the model never has to reason about ids or partial diffs, and the
- * latest complete list is always the source of truth (and is re-surfaced every turn by
- * {@code TaskReminderMiddleware}).
+ * <p>【学习提示】整表替换降低了模型维护增量补丁的负担，但调用方必须带上仍需保留的项目。
+ * 待办状态表达计划进度，不应把模型写入的“完成”状态直接等同于外部任务已通过验证。
  *
- * <p>The list is persisted automatically: {@code AgentState.tasksContext} is part of the agent
- * state that {@code ReActAgent} flushes to its {@code AgentStateStore} after every call.
+ * <p>单个 {@code todo_write} 工具采用<b>整表替换</b>语义：模型每次传入更新后的<i>完整</i>列表，工具据此重建 {@link AgentState#getTasksContext()}。此设计有意比逐项增删改更简单：模型无需推理 ID 或局部差异，最新完整列表始终是唯一事实来源，并由 {@code TaskReminderMiddleware} 每轮重新呈现。
  *
- * <p>This tool is independent from the harness {@code TaskTool} ({@code task_output} /
- * {@code task_cancel} / {@code task_list}), which manages background <i>subagent</i> runs — a
- * different layer that this tool neither reads nor writes.
+ * <p>列表自动持久化：{@code AgentState.tasksContext} 属于智能体状态，{@code ReActAgent} 每次调用后将其写入 {@code AgentStateStore}。
+ *
+ * <p>此工具独立于 Harness 的 {@code TaskTool}（{@code task_output} / {@code task_cancel} / {@code task_list}）；后者管理后台<i>子智能体</i>运行，属于另一个层次，此工具既不读取也不写入它。
  */
 public class TodoTools {
 
@@ -87,10 +81,9 @@ public class TodoTools {
             """;
 
     /**
-     * Replaces the session task list with {@code todos}.
+     * 用 {@code todos} 替换会话任务列表。
      *
-     * <p>{@code state} is auto-injected by the framework ({@code stateInjected = true}) and is not
-     * part of the model-visible schema.
+     * <p>{@code state} 由框架自动注入（{@code stateInjected = true}），不属于模型可见模式。
      */
     @Tool(
             name = "todo_write",
@@ -111,8 +104,8 @@ public class TodoTools {
         }
         List<TodoItem> items = todos == null ? List.of() : todos;
 
-        // Validate the single-in_progress invariant before mutating anything (reject, don't
-        // downgrade): the model is responsible for keeping exactly one active task.
+        // 修改任何内容前，验证仅有一个 in_progress 的不变量（拒绝而不是
+        // 降级）：模型负责保证恰有一个活动任务。
         int inProgress = 0;
         for (TodoItem item : items) {
             if (item == null) return ToolResultBlock.error("todos must not contain null items.");
@@ -141,8 +134,8 @@ public class TodoTools {
 
         TaskContextState ctx = state.getTasksContext();
         TaskContextState snapshot = ctx.snapshot();
-        // Preserve ids/created_at for tasks whose content matches an existing one (best-effort),
-        // so stable identifiers survive across full-list rewrites.
+        // 对内容匹配现有任务的项目，尽力保留 id 和 created_at，
+        // 使整表重写后仍保有稳定标识符。
         Map<String, Task> byContent = new LinkedHashMap<>();
         for (Task existing : snapshot.getTasks()) {
             byContent.putIfAbsent(existing.getSubject(), existing);
@@ -186,7 +179,9 @@ public class TodoTools {
                 .withState(ToolResultState.SUCCESS);
     }
 
-    /** Compatibility entry point that renders the structured update receipt. */
+    /**
+     * 渲染结构化更新回执的兼容入口。
+     */
     public String todoWrite(List<TodoItem> todos, AgentState state) {
         return ((TextBlock) write(todos, state).getOutput().get(0)).getText();
     }
@@ -243,7 +238,9 @@ public class TodoTools {
         return s == null ? "" : s;
     }
 
-    /** A single todo item as supplied by the model. */
+    /**
+     * 模型提供的单个待办项。
+     */
     public static final class TodoItem {
         private final String content;
         private final String status;

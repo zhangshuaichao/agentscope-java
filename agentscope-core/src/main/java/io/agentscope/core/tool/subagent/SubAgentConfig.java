@@ -21,31 +21,25 @@ import io.agentscope.core.state.InMemoryAgentStateStore;
 import io.agentscope.core.state.JsonFileAgentStateStore;
 
 /**
- * Configuration for sub-agent registration.
+ * 子智能体注册配置。
  *
- * <p>This class provides configuration options for how a sub-agent is exposed as a tool. It
- * supports smart defaults that derive tool name and description from the agent itself.
+ * <p>配置子智能体如何作为工具暴露，支持从智能体自身推导工具名称和描述的智能默认值。
  *
- * <p>Sub-agents operate in conversation mode, supporting multi-turn dialogue with session
- * management. The tool exposes two parameters:
- *
+ * <p>子智能体以会话模式运行，通过会话管理支持多轮对话。工具暴露两个参数：
  * <ul>
- *   <li>{@code message} - Required. The message to send to the agent.
- *   <li>{@code conversation_id} - Optional. Omit to start a new conversation, provide to continue
- *       an existing one.
+ * <li>{@code message}：必填，发送给智能体的消息。
+ * <li>{@code conversation_id}：可选，省略时开启新会话，提供时继续已有会话。
  * </ul>
  *
- * <p><b>Default Behavior:</b>
- *
+ * <p><b>默认行为：</b>
  * <ul>
- *   <li>Tool name: derived from agent name (e.g., "ResearchAgent" → "call_researchagent")
- *   <li>Description: uses agent's description, or generates a default
- *   <li>AgentStateStore: uses {@link InMemoryAgentStateStore} for conversation state management
- *   <li>Event forwarding: enabled by default
+ * <li>工具名称：从智能体名称推导（例如 "ResearchAgent" → "call_researchagent"）。
+ * <li>描述：使用智能体描述，或生成默认描述。
+ * <li>AgentStateStore：使用 {@link InMemoryAgentStateStore} 管理会话状态。
+ * <li>事件转发：默认启用。
  * </ul>
  *
- * <p>Example usage:
- *
+ * <p>用法示例：
  * <pre>{@code
  * // Minimal configuration - uses all defaults
  * SubAgentConfig config = SubAgentConfig.defaults();
@@ -76,80 +70,79 @@ public class SubAgentConfig {
     }
 
     /**
-     * Creates a default configuration.
+     * 创建默认配置。
      *
-     * <p>Tool name and description are derived from the agent at registration time.
+     * <p>注册时从智能体推导工具名称和描述。
      *
-     * @return Default configuration
+     * @return 默认配置
      */
     public static SubAgentConfig defaults() {
         return builder().build();
     }
 
     /**
-     * Creates a new builder.
+     * 创建构建器。
      *
-     * @return New builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Gets the tool name override.
+     * 获取覆盖的工具名称。
      *
-     * @return Tool name, or null to derive from agent
+     * @return 工具名称；为 null 时从智能体推导
      */
     public String getToolName() {
         return toolName;
     }
 
     /**
-     * Gets the description override.
+     * 获取覆盖的描述。
      *
-     * @return Description, or null to derive from agent
+     * @return 描述；为 null 时从智能体推导
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Gets whether to forward sub-agent events to the parent agent.
+     * 获取是否向父智能体转发子智能体事件。
      *
-     * <p>When enabled, events from the sub-agent (reasoning chunks, tool execution chunks) are
-     * forwarded via ToolEmitter to the parent agent's hooks.
+     * <p>启用时，通过 ToolEmitter 将子智能体事件（推理分片、工具执行分片）转发到父智能体的钩子。
      *
-     * @return true if events should be forwarded (default: true)
+     * @return 是否转发事件（默认 true）
      */
     public boolean isForwardEvents() {
         return forwardEvents;
     }
 
     /**
-     * Gets the stream options for event forwarding.
+     * 获取事件转发的流选项。
      *
-     * <p>Controls which event types to forward and streaming mode (incremental vs cumulative). Only
-     * applicable when {@link #isForwardEvents()} returns true.
+     * <p>控制转发的事件类型及流模式（增量或累计）。仅在 {@link #isForwardEvents()} 返回 true 时适用。
      *
-     * @return Stream options, or null to use defaults
+     * @return 流选项；为 null 时使用默认值
      */
     public StreamOptions getStreamOptions() {
         return streamOptions;
     }
 
     /**
-     * Gets the session for conversation state management.
+     * 获取用于会话状态管理的会话对象。
      *
-     * <p>The session is used to persist and restore sub-agent state across conversation turns. By
-     * default, an {@link InMemoryAgentStateStore} is used.
+     * <p>用于跨对话轮次持久化和恢复子智能体状态。默认使用 {@link InMemoryAgentStateStore}。
      *
-     * @return The session instance (never null)
+     * @return 会话实例（不会为 null）
      */
     public AgentStateStore getStateStore() {
         return stateStore;
     }
 
-    /** Builder for SubAgentConfig. */
+    /**
+     * SubAgentConfig 的构建器。
+     */
     public static class Builder {
         private String toolName;
         private String description;
@@ -160,12 +153,12 @@ public class SubAgentConfig {
         private Builder() {}
 
         /**
-         * Sets the tool name.
+         * 设置工具名称。
          *
-         * <p>If not set, the tool name is derived from the agent's name.
+         * <p>未设置时从智能体名称推导。
          *
-         * @param toolName The tool name
-         * @return This builder
+         * @param toolName 工具名称
+         * @return 当前构建器
          */
         public Builder toolName(String toolName) {
             this.toolName = toolName;
@@ -173,12 +166,12 @@ public class SubAgentConfig {
         }
 
         /**
-         * Sets the tool description.
+         * 设置工具描述。
          *
-         * <p>If not set, the description is derived from the agent's description.
+         * <p>未设置时从智能体描述推导。
          *
-         * @param description The description
-         * @return This builder
+         * @param description 描述
+         * @return 当前构建器
          */
         public Builder description(String description) {
             this.description = description;
@@ -186,13 +179,12 @@ public class SubAgentConfig {
         }
 
         /**
-         * Sets whether to forward sub-agent events to the parent agent.
+         * 设置是否向父智能体转发子智能体事件。
          *
-         * <p>When enabled, events from the sub-agent (reasoning chunks, tool execution chunks) are
-         * forwarded via ToolEmitter to the parent agent's hooks.
+         * <p>启用时，通过 ToolEmitter 将子智能体事件（推理分片、工具执行分片）转发到父智能体的钩子。
          *
-         * @param forwardEvents true to forward events (default: true)
-         * @return This builder
+         * @param forwardEvents 是否转发事件（默认 true）
+         * @return 当前构建器
          */
         public Builder forwardEvents(boolean forwardEvents) {
             this.forwardEvents = forwardEvents;
@@ -200,13 +192,12 @@ public class SubAgentConfig {
         }
 
         /**
-         * Sets the stream options for event forwarding.
+         * 设置事件转发的流选项。
          *
-         * <p>Controls which event types to forward and streaming mode. Only applicable when {@link
-         * #forwardEvents(boolean)} is true.
+         * <p>控制转发的事件类型和流模式。仅在 {@link #forwardEvents(boolean)} 为 true 时适用。
          *
-         * @param streamOptions The stream options (null for defaults)
-         * @return This builder
+         * @param streamOptions 流选项（null 表示默认值）
+         * @return 当前构建器
          */
         public Builder streamOptions(StreamOptions streamOptions) {
             this.streamOptions = streamOptions;
@@ -214,16 +205,14 @@ public class SubAgentConfig {
         }
 
         /**
-         * Sets the session for conversation state management.
+         * 设置用于会话状态管理的会话对象。
          *
-         * <p>The session is used to persist and restore sub-agent state across conversation turns.
-         * If not set, an {@link InMemoryAgentStateStore} is used by default.
+         * <p>用于跨对话轮次持久化和恢复子智能体状态。未设置时默认使用 {@link InMemoryAgentStateStore}。
          *
-         * <p>To enable persistent conversations across process restarts, use a persistent session
-         * implementation like {@link JsonFileAgentStateStore}.
+         * <p>若需要跨进程重启保留对话，请使用 {@link JsonFileAgentStateStore} 等持久化会话实现。
          *
-         * @param stateStore The state store instance
-         * @return This builder
+         * @param stateStore 状态存储实例
+         * @return 当前构建器
          */
         public Builder stateStore(AgentStateStore stateStore) {
             this.stateStore = stateStore;
@@ -231,9 +220,9 @@ public class SubAgentConfig {
         }
 
         /**
-         * Builds the configuration.
+         * 构建配置。
          *
-         * @return New SubAgentConfig instance
+         * @return 新的 SubAgentConfig 实例
          */
         public SubAgentConfig build() {
             return new SubAgentConfig(this);

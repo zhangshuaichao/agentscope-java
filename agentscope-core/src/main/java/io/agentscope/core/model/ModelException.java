@@ -72,7 +72,7 @@ public class ModelException extends RuntimeException {
      * 使用错误消息、原因及模型信息创建 ModelException。
      *
      * <p>当需要包装引发模型错误的底层异常，
-     * 且错误与特定模型和服务商有关。
+     * 且错误与特定模型和服务商有关时，使用此构造方法。
      *
      * @param message 错误消息
      * @param cause 异常的底层原因

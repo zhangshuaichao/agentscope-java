@@ -28,18 +28,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 /**
- * Unified tool for background task lifecycle management. Combines task result retrieval,
- * cancellation, and listing into a single tool class.
- *
+ * 统一的后台任务生命周期管理工具，将结果获取、取消和列表查询组合为一个工具类。
  * <ul>
- *   <li>{@code task_output} — retrieve result (blocking or non-blocking)
- *   <li>{@code task_cancel} — cancel a running task
- *   <li>{@code task_list} — list all tracked tasks with optional status filter
+ *   <li>{@code task_output}：获取结果（阻塞或非阻塞）
+ *   <li>{@code task_cancel}：取消正在运行的任务
+ *   <li>{@code task_list}：列出所有已跟踪任务，可按状态过滤
  * </ul>
  *
- * <p>All operations are scoped to the current parent session ID via {@link RuntimeContext}. The
- * {@link TaskRepository} handles fallback to workspace-persisted records when no local future
- * exists (cross-node or post-restart scenarios).
+ * <p>所有操作通过 {@link RuntimeContext} 限定在当前父会话 ID 的作用域内。
+ * 没有本地 future（跨节点或重启后场景）时，由 {@link TaskRepository}
+ * 负责回退到工作区持久化记录。
  */
 public class TaskTool {
 
@@ -107,8 +105,8 @@ public class TaskTool {
         long timeoutMs = timeout != null ? Math.max(0, Math.min(timeout, 600_000)) : 30_000;
 
         if (shouldBlock && !bgTask.isCompleted()) {
-            // If the task has no local future (cross-node or post-restart), degrade gracefully
-            // instead of blocking indefinitely on an incomplete synthetic future.
+            // 任务没有本地 future（跨节点或重启后）时平稳降级，
+            // 而不是无限阻塞在未完成的合成 future 上。
             if (bgTask.getTaskStatus() == TaskStatus.PENDING
                     || bgTask.getTaskStatus() == TaskStatus.RUNNING) {
                 try {
@@ -118,7 +116,7 @@ public class TaskTool {
                     return ToolResultBlock.text("status: interrupted\ntask_id: " + taskId)
                             .withState(ToolResultState.INTERRUPTED);
                 }
-                // After waiting, if still not complete it may be running on another node
+                // 等待后仍未完成时，任务可能正在其他节点运行
                 if (!bgTask.isCompleted()) {
                     return ToolResultBlock.success(
                             "task_id: "
@@ -130,14 +128,14 @@ public class TaskTool {
             }
         }
 
-        // If the caller successfully retrieved a terminal result, mark this task delivered so the
-        // SubagentsMiddleware push path doesn't re-deliver the same payload on the next reasoning
-        // round. Idempotent — if already delivered, this is a no-op. (Phase B-3.)
+        // 调用方成功获取终态结果后，将此任务标记为已投递，
+        // 避免 SubagentsMiddleware 推送路径在下一推理轮次
+        // 重复投递同一载荷。幂等操作，已投递时不执行操作。（阶段 B-3。）
         if (bgTask.isCompleted() && bgTask.getTaskStatus().isTerminal()) {
             try {
                 taskRepository.markDelivered(runtimeContext, sessionId, taskId);
             } catch (RuntimeException ignore) {
-                // Marking is best-effort; failure just risks a redundant push, never wrong data.
+                // 标记操作尽力而为；失败只可能造成重复推送，不会产生错误数据。
             }
         }
         return ToolResultBlock.text(formatTaskDetail(bgTask)).withState(taskResultState(bgTask));

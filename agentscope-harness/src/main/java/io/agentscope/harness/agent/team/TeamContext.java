@@ -18,7 +18,7 @@ package io.agentscope.harness.agent.team;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
-/** Runtime context injected into a teammate session (mirrors Go TeamContext). */
+/** 注入到队友会话的运行时上下文，与 Go 的 TeamContext 对应。 */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TeamContext(
         String teamName,
@@ -41,11 +41,11 @@ public record TeamContext(
         this(teamName, namespace, objective, myRole, isLead, members, availableActions, null);
     }
 
-    /** Roster snapshot embedded in TeamContext (not the full store member row). */
+    /** 嵌入 TeamContext 的成员名册快照，不是存储中的完整成员记录。 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record MemberSnapshot(String name, String agentRef, String status) {}
 
-    /** Injected when a member session is recovering after a crash/reschedule. */
+    /** 成员会话在崩溃或重新调度后恢复时注入。 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record RecoveryContext(
             String previousSessionId,

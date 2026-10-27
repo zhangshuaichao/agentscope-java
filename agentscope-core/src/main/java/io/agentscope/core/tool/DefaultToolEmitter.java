@@ -20,10 +20,9 @@ import io.agentscope.core.message.ToolUseBlock;
 import java.util.function.BiConsumer;
 
 /**
- * Default implementation of ToolEmitter that delivers chunks to a callback.
+ * 将数据块交付给回调的 ToolEmitter 默认实现。
  *
- * <p>This class is package-private and created internally by the framework when a tool method
- * declares a ToolEmitter parameter. Each tool invocation gets its own DefaultToolEmitter instance.
+ * <p>此类为包私有，当工具方法声明 ToolEmitter 参数时由框架内部创建。每次工具调用拥有独立的 DefaultToolEmitter 实例。
  */
 class DefaultToolEmitter implements ToolEmitter {
 
@@ -31,10 +30,10 @@ class DefaultToolEmitter implements ToolEmitter {
     private final BiConsumer<ToolUseBlock, ToolResultBlock> chunkCallback;
 
     /**
-     * Create a DefaultToolEmitter.
+     * 创建 DefaultToolEmitter。
      *
-     * @param toolUseBlock The tool use block identifying the tool call
-     * @param chunkCallback Callback to deliver chunks to hooks (may be null)
+     * @param toolUseBlock 标识工具调用的工具使用块
+     * @param chunkCallback 向钩子交付数据块的回调（可为 null）
      */
     DefaultToolEmitter(
             ToolUseBlock toolUseBlock, BiConsumer<ToolUseBlock, ToolResultBlock> chunkCallback) {
@@ -43,13 +42,11 @@ class DefaultToolEmitter implements ToolEmitter {
     }
 
     /**
-     * Emits a tool result chunk to the registered callback.
+     * 向注册的回调发送工具结果数据块。
      *
-     * <p>This implementation delivers the chunk to the callback function (which typically forwards
-     * it to hooks via {@code onActingChunk()} events). If either the callback or chunk is null,
-     * this method silently does nothing.
+     * <p>将数据块传给回调函数，后者通常通过 {@code onActingChunk()} 事件转发给钩子。回调或数据块为 null 时静默不执行任何操作。
      *
-     * @param chunk The tool result chunk to emit (may be null)
+     * @param chunk 要发送的工具结果数据块（可为 null）
      */
     @Override
     public void emit(ToolResultBlock chunk) {
@@ -59,9 +56,9 @@ class DefaultToolEmitter implements ToolEmitter {
     }
 
     /**
-     * Returns the ID of the tool call associated with this emitter.
+     * 返回此发射器关联的工具调用 ID。
      *
-     * @return The tool call ID, or {@code null} if no tool call is available
+     * @return 工具调用 ID；没有可用工具调用时为 {@code null}
      */
     @Override
     public String getToolCallId() {

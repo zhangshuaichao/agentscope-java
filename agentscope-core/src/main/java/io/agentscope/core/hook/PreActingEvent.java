@@ -21,51 +21,51 @@ import io.agentscope.core.tool.Toolkit;
 import java.util.Objects;
 
 /**
- * Event fired before tool execution.
+ * 工具执行之前触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setToolUse(ToolUseBlock)}
+ * <p><b>可修改：</b>是，通过 {@link #setToolUse(ToolUseBlock)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getToolkit()} - The toolkit instance</li>
- *   <li>{@link #getToolUse()} - The tool call to execute (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getToolkit()}：工具集实例</li>
+ *   <li>{@link #getToolUse()}：待执行的工具调用（可修改）</li>
  * </ul>
  *
- * <p><b>Note:</b> This is called once per tool. If the reasoning result contains
- * multiple tool calls, this event fires multiple times.
+ * <p><b>注意：</b>每个工具调用一次。如果推理结果包含
+ * 多个工具调用，此事件会触发多次。
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Validate or modify tool parameters for each tool call</li>
- *   <li>Add authentication or context to individual tool calls</li>
- *   <li>Implement per-tool authorization checks</li>
- *   <li>Log or monitor individual tool invocations</li>
+ *   <li>验证或修改每个工具调用的参数</li>
+ *   <li>向单个工具调用添加认证或上下文</li>
+ *   <li>实现逐工具授权检查</li>
+ *   <li>记录或监控单个工具调用</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PreActingEvent extends ActingEvent {
 
     /**
-     * Constructor for PreActingEvent.
+     * PreActingEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param toolkit The toolkit instance (must not be null)
-     * @param toolUse The tool call to execute (must not be null)
-     * @throws NullPointerException if agent, toolkit, or toolUse is null
+     * @param agent 智能体实例（不可为 null）
+     * @param toolkit 工具集实例（不可为 null）
+     * @param toolUse 待执行的工具调用（不可为 null）
+     * @throws NullPointerException 当 agent、toolkit 或 toolUse 为 null 时抛出
      */
     public PreActingEvent(Agent agent, Toolkit toolkit, ToolUseBlock toolUse) {
         super(HookEventType.PRE_ACTING, agent, toolkit, toolUse);
     }
 
     /**
-     * Modify the tool call (e.g., change parameters).
+     * 修改工具调用（例如改变参数）。
      *
-     * @param toolUse The new tool use block (must not be null)
-     * @throws NullPointerException if toolUse is null
+     * @param toolUse 新的工具调用块（不可为 null）
+     * @throws NullPointerException 当 toolUse 为 null 时抛出
      */
     public void setToolUse(ToolUseBlock toolUse) {
         this.toolUse = Objects.requireNonNull(toolUse, "toolUse cannot be null");

@@ -20,26 +20,26 @@ import io.agentscope.core.message.Msg;
 import java.util.Objects;
 
 /**
- * Event fired after agent completes processing.
+ * 智能体完成处理后触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setFinalMessage(Msg)}
+ * <p><b>可修改：</b>是，通过 {@link #setFinalMessage(Msg)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory (includes final message)</li>
- *   <li>{@link #getFinalMessage()} - The final response message (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆（包含最终消息）</li>
+ *   <li>{@link #getFinalMessage()}：最终响应消息（可修改）</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Post-process the final agent response</li>
- *   <li>Add final metadata or formatting</li>
- *   <li>Filter or sanitize output</li>
- *   <li>Log outgoing responses</li>
+ *   <li>对智能体最终响应进行后处理</li>
+ *   <li>添加最终元数据或格式</li>
+ *   <li>过滤或清理输出</li>
+ *   <li>记录发出的响应</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PostCallEvent extends HookEvent {
@@ -47,11 +47,11 @@ public final class PostCallEvent extends HookEvent {
     private Msg finalMessage;
 
     /**
-     * Constructor for PostCallEvent.
+     * PostCallEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param finalMessage The final response message (must not be null)
-     * @throws NullPointerException if agent or finalMessage is null
+     * @param agent 智能体实例（不可为 null）
+     * @param finalMessage 最终响应消息（不可为 null）
+     * @throws NullPointerException 当 agent 或 finalMessage 为 null 时抛出
      */
     public PostCallEvent(Agent agent, Msg finalMessage) {
         super(HookEventType.POST_CALL, agent);
@@ -59,19 +59,19 @@ public final class PostCallEvent extends HookEvent {
     }
 
     /**
-     * Get the final response message returned by the agent.
+     * 获取智能体返回的最终响应消息。
      *
-     * @return The final message
+     * @return 最终消息
      */
     public Msg getFinalMessage() {
         return finalMessage;
     }
 
     /**
-     * Modify the final response message.
+     * 修改最终响应消息。
      *
-     * @param finalMessage The new final message (must not be null)
-     * @throws NullPointerException if finalMessage is null
+     * @param finalMessage 新的最终消息（不可为 null）
+     * @throws NullPointerException 当 finalMessage 为 null 时抛出
      */
     public void setFinalMessage(Msg finalMessage) {
         this.finalMessage = Objects.requireNonNull(finalMessage, "finalMessage cannot be null");

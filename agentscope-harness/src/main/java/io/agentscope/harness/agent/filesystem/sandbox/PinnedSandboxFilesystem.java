@@ -31,26 +31,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link SandboxBackedFilesystem} that holds a fixed {@link Sandbox} reference for the lifetime of
- * the instance.
+ * 在实例整个生命周期内持有固定 {@link Sandbox} 引用的 {@link SandboxBackedFilesystem}。
  *
- * <p>Used by asynchronous session mirrors so uploads can complete after the agent call releases
- * its per-call binding on the shared agent proxy. Unlike the agent-level {@link
- * SandboxBackedFilesystem}, {@link #clearSandboxIfCurrent} is a no-op — clearing the call proxy
- * must not unpin this mirror filesystem.
+ * <p>用于异步会话镜像，使智能体调用释放共享智能体代理上的每次调用绑定后，上传仍可完成。
+ * 与智能体级 {@link SandboxBackedFilesystem} 不同，{@link #clearSandboxIfCurrent} 不执行任何操作：清理调用代理不得解除此镜像文件系统的固定绑定。
  *
- * <p>Safe for DataAgent-style <em>user-managed</em> sandboxes that stay alive across
- * acquire/release. Self-managed sandbox release rejects new uploads and waits a bounded time for
- * active uploads. An upload still in flight when the wait expires may fail during shutdown.
+ * <p>对于 DataAgent 风格、在获取／释放之间仍存活的<em>用户管理</em>沙箱，这样使用是安全的。
+ * 自行管理的沙箱在释放时拒绝新上传，并限时等待活动上传；等待到期后仍在途的上传可能在关闭期间失败。
  */
 public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
 
     private static final Logger log = LoggerFactory.getLogger(PinnedSandboxFilesystem.class);
 
     /**
-     * JVM property controlling the synchronous wait per release in milliseconds (default 1000).
-     * Zero disables waiting. Each consecutive release has its own budget; this is not a total
-     * shutdown deadline. Invalid or negative values fall back to the default.
+     * 控制每次释放时同步等待毫秒数的 JVM 属性（默认 1000）。
+     * 零表示不等待。每次连续释放各有独立预算，不是整个关闭过程的截止时间。
+     * 无效值或负值回退到默认值。
      */
     public static final String RELEASE_GATE_TIMEOUT_PROPERTY =
             "agentscope.sandbox.mirror.release-timeout-millis";
@@ -69,14 +65,13 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
     }
 
     /**
-     * Starts a fresh mirror-gate generation for a newly acquired sandbox.
+     * 为新获取的沙箱启动新一代镜像门控。
      *
-     * <p>A manager may reuse the same {@link Sandbox} object for a later call. Replacing rather
-     * than reopening the old gate keeps mirrors from the previous call permanently released while
-     * ensuring they cannot attach themselves to the new call's lifecycle.
+     * <p>管理器可能在后续调用中复用同一个 {@link Sandbox} 对象。
+     * 替换旧门控而不是重新打开它，可使上次调用的镜像永久保持已释放状态，且无法附着到新调用的生命周期。
      *
-     * <p>The manager must serialize acquire/release for each self-managed sandbox object: only
-     * one live generation per instance is supported. Concurrent calls must use distinct instances.
+     * <p>管理器必须对每个自行管理的沙箱对象串行执行获取／释放：每个实例只支持一个活动代次。
+     * 并发调用必须使用不同实例。
      */
     public static void markSandboxAcquired(Sandbox sandbox) {
         if (sandbox == null) {
@@ -89,12 +84,11 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
     }
 
     /**
-     * Prevents new mirror uploads and briefly waits for an in-flight upload before shutdown.
+     * 阻止新的镜像上传，并在关闭前短暂等待在途上传。
      *
-     * <p>The budget is read from {@link #RELEASE_GATE_TIMEOUT_PROPERTY} on each release. Uploads
-     * hold the read lock throughout remote transfer, so even a healthy slow upload can consume
-     * the entire budget. Consecutive releases each incur their own wait; this is not a global
-     * timeout or an upload timeout. Shutdown proceeds when the budget expires.
+     * <p>每次释放都从 {@link #RELEASE_GATE_TIMEOUT_PROPERTY} 读取预算。
+     * 上传在整个远程传输期间持有读锁，因此正常但缓慢的上传也可能耗尽预算。
+     * 连续释放每次都有独立等待；这不是全局超时，也不是上传超时。预算到期后继续关闭。
      */
     public static void markSandboxReleased(Sandbox sandbox) {
         if (sandbox != null) {
@@ -103,10 +97,9 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
     }
 
     /**
-     * Whether the sandbox pinned for an asynchronous mirror is still running.
+     * 为异步镜像固定绑定的沙箱是否仍在运行。
      *
-     * <p>A self-managed sandbox is stopped as part of call release. In that case a session
-     * mirror is already best-effort and must not attempt a transfer against released resources.
+     * <p>自行管理的沙箱会在调用释放时停止。此时会话镜像本就是尽力而为，不得尝试向已释放资源传输。
      */
     public boolean isSandboxRunning() {
         mirrorGate.lock.readLock().lock();
@@ -118,10 +111,9 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
     }
 
     /**
-     * Returns whether this pinned filesystem's call generation has been released.
+     * 返回此固定绑定文件系统所属调用代次是否已释放。
      *
-     * <p>The volatile latch is published before the release wait, so this query observes release
-     * without queuing behind the writer or a stalled upload.
+     * <p>volatile 闩锁在等待释放之前发布，使此查询无需排在写锁请求或停滞的上传之后，就能观察到释放状态。
      */
     public boolean isSandboxReleased() {
         return mirrorGate.released;
@@ -147,7 +139,7 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
 
     @Override
     public synchronized void clearSandboxIfCurrent(Sandbox expected) {
-        // Keep the pin for out-of-call mirror uploads.
+        // 保留固定绑定，以便调用结束后执行镜像上传。
     }
 
     static long releaseGateTimeoutMillis() {
@@ -159,7 +151,7 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
                     return timeout;
                 }
             } catch (NumberFormatException ignored) {
-                // Invalid configuration must not interrupt sandbox cleanup.
+                // 无效配置不得中断沙箱清理。
             }
             log.warn(
                     "Invalid {} value '{}'; using {} ms",
@@ -195,8 +187,8 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
         private volatile boolean released;
 
         private void markReleased(long timeoutMillis) {
-            // Publish the latch before waiting so new uploads are rejected even if an existing
-            // remote transfer is wedged. Release remains bounded because mirrors are best-effort.
+            // 在等待之前发布闩锁，即使现有远程传输卡住，
+            // 也能拒绝新上传。镜像是尽力而为的，因此释放仍保持有界。
             released = true;
             boolean acquired = false;
             try {
@@ -217,7 +209,9 @@ public final class PinnedSandboxFilesystem extends SandboxBackedFilesystem {
         }
     }
 
-    /** Weak key whose equality follows object identity rather than {@code equals/hashCode}. */
+    /**
+     * 按对象身份而非 {@code equals/hashCode} 判断相等的弱键。
+     */
     private static final class IdentityWeakReference extends WeakReference<Sandbox> {
         private final int identityHash;
 

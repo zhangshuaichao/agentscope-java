@@ -18,34 +18,27 @@ package io.agentscope.core.agent.config;
 import io.agentscope.core.model.Model;
 
 /**
- * Observer notified when a {@link ModelConfig#fallbackModel() fallback model} takes over from a
- * failed primary model. The switch and its cause are otherwise unobservable in-process: the
- * primary's error is consumed inside the fallback wrapper the agent builds around the model,
- * below both the {@code onModelCall} middleware seam and the {@code AgentEvent} conversion — no
- * existing observer surface reaches it.
+ * 当 {@link ModelConfig#fallbackModel() fallback model} 接管失败的主模型时收到通知的观察者。
+ * 否则，进程内无法观察到切换及原因：主模型错误在智能体为模型构建的回退包装器内被消费，
+ * 该位置低于 {@code onModelCall} 中间件切入点和 {@code AgentEvent} 转换层，现有观察接口无法触及。
  *
- * <p>Contract:
- *
+ * <p>契约：
  * <ul>
- *   <li>invoked synchronously at the switch site on a reactor thread — implementations must be
- *       fast and non-blocking;
- *   <li>one listener is shared across the agent's concurrent runs — implementations must be
- *       thread-safe;
- *   <li>an {@link Exception} thrown by an implementation is logged and ignored — the switch and
- *       the fallback call proceed unaffected (errors are not contained).
+ * <li>在切换位置、Reactor 线程上同步调用；实现必须快速且非阻塞</li>
+ * <li>同一监听器由智能体的并发运行共享；实现必须线程安全</li>
+ * <li>实现抛出的 {@link Exception} 会被记录并忽略，切换和回退调用不受影响继续执行（Error 不会被拦截）</li>
  * </ul>
  *
- * <p>A {@code null} listener (the default) leaves agent behavior unchanged.
+ * <p>监听器为 {@code null}（默认）时不改变智能体行为。
  */
 @FunctionalInterface
 public interface FailoverListener {
 
     /**
-     * Called when the primary model fails and the fallback takes over.
+     * 主模型失败、回退模型接管时调用。
      *
-     * @param primary the primary model that failed
-     * @param error the error that triggered the switch, after the primary exhausted its retry
-     *     budget
+     * @param primary 失败的主模型
+     * @param error 主模型耗尽重试次数后触发切换的错误
      */
     void onFailover(Model primary, Throwable error);
 }

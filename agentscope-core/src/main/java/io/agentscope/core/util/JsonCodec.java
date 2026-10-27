@@ -20,13 +20,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.lang.reflect.Type;
 
 /**
- * Interface for JSON serialization and deserialization operations.
+ * JSON 序列化与反序列化操作接口。
  *
- * <p>This interface provides a unified abstraction for JSON processing,
- * allowing users to replace the default Jackson-based implementation
- * with custom implementations if needed.
+ * <p>为 JSON 处理提供统一抽象，允许按需用自定义实现替换默认 Jackson 实现。
  *
- * <p>Usage:
+ * <p>用法：
  * <pre>{@code
  * // Get the codec instance
  * JsonCodec codec = JsonUtils.getJsonCodec();
@@ -47,88 +45,87 @@ import java.lang.reflect.Type;
 public interface JsonCodec {
 
     /**
-     * Serialize an object to JSON string.
+     * 将对象序列化为 JSON 字符串。
      *
-     * @param obj the object to serialize
-     * @return JSON string representation
-     * @throws JsonException if serialization fails
+     * @param obj 要序列化的对象
+     * @return JSON 字符串表示
+     * @throws JsonException 序列化失败时抛出
      */
     String toJson(Object obj);
 
     /**
-     * Serialize an object to pretty-printed JSON string.
+     * 将对象序列化为美化格式的 JSON 字符串。
      *
-     * @param obj the object to serialize
-     * @return pretty-printed JSON string representation
-     * @throws JsonException if serialization fails
+     * @param obj 要序列化的对象
+     * @return 美化格式的 JSON 字符串表示
+     * @throws JsonException 序列化失败时抛出
      */
     String toPrettyJson(Object obj);
 
     /**
-     * Deserialize a JSON string to an object of the specified type.
+     * 将 JSON 字符串反序列化为指定类型的对象。
      *
-     * @param json the JSON string to deserialize
-     * @param type the target class type
-     * @param <T> the type parameter
-     * @return deserialized object
-     * @throws JsonException if deserialization fails
+     * @param json 要反序列化的 JSON 字符串
+     * @param type 目标类类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @throws JsonException 反序列化失败时抛出
      */
     <T> T fromJson(String json, Class<T> type);
 
     /**
-     * Deserialize a JSON string to an object with generic type.
+     * 将 JSON 字符串反序列化为泛型对象。
      *
-     * <p>Use this method when deserializing to generic types like {@code List<MyClass>}.
+     * <p>反序列化为 {@code List<MyClass>} 等泛型类型时使用此方法。
      *
-     * @param json the JSON string to deserialize
-     * @param typeRef the type reference for generic types
-     * @param <T> the type parameter
-     * @return deserialized object
-     * @throws JsonException if deserialization fails
+     * @param json 要反序列化的 JSON 字符串
+     * @param typeRef 泛型类型引用
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @throws JsonException 反序列化失败时抛出
      */
     <T> T fromJson(String json, TypeReference<T> typeRef);
 
     /**
-     * Convert an object to another type.
+     * 将对象转换为另一类型。
      *
-     * <p>This is useful for converting Map to typed objects or vice versa.
+     * <p>适用于 Map 与类型化对象之间的双向转换。
      *
-     * @param from the source object
-     * @param toType the target class type
-     * @param <T> the type parameter
-     * @return converted object
-     * @throws JsonException if conversion fails
+     * @param from 源对象
+     * @param toType 目标类类型
+     * @param <T> 类型参数
+     * @return 转换后的对象
+     * @throws JsonException 转换失败时抛出
      */
     <T> T convertValue(Object from, Class<T> toType);
 
     /**
-     * Convert an object to another generic type.
+     * 将对象转换为另一泛型类型。
      *
-     * @param from the source object
-     * @param toTypeRef the type reference for generic types
-     * @param <T> the type parameter
-     * @return converted object
-     * @throws JsonException if conversion fails
+     * @param from 源对象
+     * @param toTypeRef 泛型类型引用
+     * @param <T> 类型参数
+     * @return 转换后的对象
+     * @throws JsonException 转换失败时抛出
      */
     <T> T convertValue(Object from, TypeReference<T> toTypeRef);
 
     /**
-     * Convert an object to another type using Java reflection Type.
+     * 使用 Java 反射 Type 将对象转换为另一类型。
      *
-     * <p>This method preserves generic type information from parameterized types
-     * such as {@code List<MyClass>} or {@code Map<String, MyClass>}.
+     * <p>保留 {@code List<MyClass>} 或 {@code Map<String, MyClass>} 等参数化类型的泛型信息。
      *
-     * <p>Example usage:
+     * <p>用法示例：
      * <pre>{@code
      * // For a method parameter declared as List<OrderItem>
      * Type paramType = parameter.getParameterizedType();
      * List<OrderItem> items = (List<OrderItem>) codec.convertValue(value, paramType);
      * }</pre>
      *
-     * @param from the source object
-     * @param toType the target type (can be Class, ParameterizedType, etc.)
-     * @return converted object
-     * @throws JsonException if conversion fails
+     * @param from 源对象
+     * @param toType 目标类型（可以是 Class、ParameterizedType 等）
+     * @return 转换后的对象
+     * @throws JsonException 转换失败时抛出
      */
     Object convertValue(Object from, Type toType);
 }

@@ -37,7 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Explicit output-contract check; never infers a schema from a natural-language criterion. */
+/**
+ * 显式检查输出契约；绝不从自然语言验收条件中推断模式。
+ */
 public final class JsonResultSchemaVerifier implements DeterministicVerifier {
     private final String schemaJson;
     private final String id;

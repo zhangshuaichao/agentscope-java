@@ -18,27 +18,27 @@ package io.agentscope.harness.agent.sandbox.snapshot;
 import java.nio.file.Path;
 
 /**
- * Snapshot spec that creates {@link LocalSandboxSnapshot} instances stored in a local directory.
+ * 创建保存在本地目录中的 {@link LocalSandboxSnapshot} 实例的快照规范。
  *
- * <p>Each session gets its own snapshot file at {@code {basePath}/{sessionId}.tar}.
+ * <p>每个会话在 {@code {basePath}/{sessionId}.tar} 拥有独立快照文件。
  */
 public class LocalSnapshotSpec implements SandboxSnapshotSpec {
 
     private final String basePath;
 
     /**
-     * Creates a local snapshot spec.
+     * 创建本地快照规范。
      *
-     * @param basePath directory where snapshot tar files will be stored
+     * @param basePath 用于保存快照 tar 文件的目录
      */
     public LocalSnapshotSpec(Path basePath) {
         this.basePath = basePath.toString();
     }
 
     /**
-     * Creates a local snapshot spec.
+     * 创建本地快照规范。
      *
-     * @param basePath directory path string where snapshot tar files will be stored
+     * @param basePath 用于保存快照 tar 文件的目录路径字符串
      */
     public LocalSnapshotSpec(String basePath) {
         this.basePath = basePath;
@@ -47,7 +47,7 @@ public class LocalSnapshotSpec implements SandboxSnapshotSpec {
     /**
      * {@inheritDoc}
      *
-     * @return a new {@link LocalSandboxSnapshot} storing at {@code {basePath}/{snapshotId}.tar}
+     * @return 保存于 {@code {basePath}/{snapshotId}.tar} 的新 {@link LocalSandboxSnapshot}
      */
     @Override
     public SandboxSnapshot build(String snapshotId) {
@@ -55,9 +55,9 @@ public class LocalSnapshotSpec implements SandboxSnapshotSpec {
     }
 
     /**
-     * Returns the base directory used for snapshot files.
+     * 返回用于快照文件的基目录。
      *
-     * @return base path string
+     * @return 基路径字符串
      */
     public String getBasePath() {
         return basePath;

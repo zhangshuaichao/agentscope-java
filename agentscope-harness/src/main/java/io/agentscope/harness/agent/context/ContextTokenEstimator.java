@@ -23,7 +23,7 @@ import io.agentscope.core.message.ToolUseBlock;
 import io.agentscope.core.middleware.ModelCallInput;
 import io.agentscope.core.util.JsonUtils;
 
-/** Replace with an adapter-specific tokenizer when available. Estimates are not provider usage. */
+/** 可用时应替换为模型适配器专用的分词器。估算值不等于提供商报告的实际用量。 */
 @FunctionalInterface
 public interface ContextTokenEstimator {
     Estimate estimate(ModelCallInput input);
@@ -68,7 +68,7 @@ public interface ContextTokenEstimator {
             for (var output : result.getOutput()) tokens += block(output);
             return tokens;
         }
-        // Explicitly approximate: media cost depends on provider, resolution and duration.
+        // 明确采用近似值：媒体成本取决于提供商、分辨率和时长。
         return 2048;
     }
 }

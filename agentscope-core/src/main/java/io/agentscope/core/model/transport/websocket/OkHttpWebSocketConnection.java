@@ -26,11 +26,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
- * WebSocket connection implementation based on OkHttp WebSocket.
+ * 基于 OkHttp WebSocket 的连接实现。
  *
- * <p>Supports both text (String) and binary (byte[]) message types through generic type parameter.
+ * <p>通过泛型参数同时支持文本（String）和二进制（byte[]）消息。
  *
- * @param <T> Message type: String for text protocol, byte[] for binary protocol
+ * @param <T> 消息类型：文本协议为 String，二进制协议为 byte[]
  */
 public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
 
@@ -43,14 +43,14 @@ public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private volatile CloseInfo closeInfo;
 
-    // Message receive sink (unicast - single subscriber only)
+    // 消息接收汇（单播，仅允许一个订阅者）
     private final Sinks.Many<T> messageSink = Sinks.many().unicast().onBackpressureBuffer();
 
     /**
-     * Create a new OkHttpWebSocketConnection.
+     * 创建新的 OkHttpWebSocketConnection。
      *
      * @param url WebSocket URL
-     * @param messageType Message type class (String.class or byte[].class)
+     * @param messageType 消息类型类（String.class 或 byte[].class）
      */
     OkHttpWebSocketConnection(String url, Class<T> messageType) {
         this.url = url;
@@ -58,9 +58,9 @@ public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
     }
 
     /**
-     * Set the WebSocket instance (internal use).
+     * 设置 WebSocket 实例（内部使用）。
      *
-     * @param webSocket WebSocket instance
+     * @param webSocket WebSocket 实例
      */
     void setWebSocket(WebSocket webSocket) {
         this.webSocket = webSocket;
@@ -68,18 +68,18 @@ public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
     }
 
     /**
-     * Check if the connection is initialized (internal use).
+     * 检查连接是否已初始化（内部使用）。
      *
-     * @return true if initialized
+     * @return 已初始化时返回 true
      */
     boolean isInitialized() {
         return initialized.get();
     }
 
     /**
-     * Handle received message (internal use).
+     * 处理收到的消息（内部使用）。
      *
-     * @param data Message data as byte array
+     * @param data 字节数组形式的消息数据
      */
     @SuppressWarnings("unchecked")
     void onMessage(byte[] data) {
@@ -91,10 +91,10 @@ public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
     }
 
     /**
-     * Handle connection closed (internal use).
+     * 处理连接关闭（内部使用）。
      *
-     * @param code Close code
-     * @param reason Close reason
+     * @param code 关闭码
+     * @param reason 关闭原因
      */
     void onClosed(int code, String reason) {
         closed.set(true);
@@ -103,9 +103,9 @@ public class OkHttpWebSocketConnection<T> implements WebSocketConnection<T> {
     }
 
     /**
-     * Handle error (internal use).
+     * 处理错误（内部使用）。
      *
-     * @param error Error that occurred
+     * @param error 发生的错误
      */
     void onError(Throwable error) {
         closed.set(true);

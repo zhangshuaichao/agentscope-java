@@ -30,14 +30,12 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Filesystem wrapper that substitutes a fixed {@link RuntimeContext} on every delegated call,
- * ignoring whatever RC the caller supplies.
+ * 文件系统包装器：每次委托调用都使用固定的 {@link RuntimeContext}，忽略调用方传入的上下文。
  *
- * <p>Used by {@code HarnessAgent.workspaceFor(userId, sessionId)} to construct an out-of-band
- * {@link io.agentscope.harness.agent.workspace.WorkspaceManager} view bound to an explicit user
- * identity. Controllers acting on another user's namespace can pass {@link RuntimeContext#empty()}
- * downstream; this wrapper ensures the namespace factory underneath still receives the baked-in
- * identity rather than the (empty) caller context.
+ * <p>{@code HarnessAgent.workspaceFor(userId, sessionId)} 用它构建绑定明确用户身份的带外
+ * {@link io.agentscope.harness.agent.workspace.WorkspaceManager} 视图。操作其他用户命名空间的
+ * 控制器可向下游传入 {@link RuntimeContext#empty()}；此包装器确保底层命名空间工厂
+ * 仍接收绑定身份，而不是调用方的空上下文。
  */
 public final class BakedContextFilesystem implements AbstractFilesystem {
 

@@ -19,18 +19,16 @@ import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.harness.agent.gateway.MsgContext;
 
 /**
- * Inputs available to a {@link ChannelRuntimeContextResolver} when resolving caller context for a
- * Gateway turn.
+ * 为网关轮次解析调用方上下文时，{@link ChannelRuntimeContextResolver} 可用的输入。
  *
- * @param channelId originating channel id (e.g. {@code "chatui"}, {@code "dingtalk"}); may be null
- * @param inboundMessage the normalized inbound envelope when the turn came through {@link
- *     Channel#dispatch}; {@code null} for programmatic {@code SendOptions} paths that skip an
- *     inbound envelope
- * @param msgContext resolved routing context for this turn
- * @param outboundAddress delivery target for replies; may be null
- * @param callerContext context carried on {@link
- *     io.agentscope.harness.agent.gateway.channel.chatui.SendOptions} or {@link InboundMessage};
- *     may be null
+ * @param channelId 来源渠道 ID（例如 {@code "chatui"}、{@code "dingtalk"}）；可为 null
+ * @param inboundMessage 经 {@link Channel#dispatch} 进入时的规范化入站信封；
+ *     跳过入站信封的编程式 {@code SendOptions} 路径为 {@code null}
+ * @param msgContext 本轮解析后的路由上下文
+ * @param outboundAddress 回复投递目标；可为 null
+ * @param callerContext {@link
+ *     io.agentscope.harness.agent.gateway.channel.chatui.SendOptions} 或 {@link InboundMessage}
+ *     携带的上下文；可为 null
  */
 public record ChannelRuntimeContextRequest(
         String channelId,

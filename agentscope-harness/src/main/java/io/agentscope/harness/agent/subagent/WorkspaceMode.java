@@ -16,9 +16,9 @@
 package io.agentscope.harness.agent.subagent;
 
 /**
- * Controls how a declared subagent's runtime workspace root is determined.
+ * 控制声明式子智能体运行时工作区根目录的确定方式。
  *
- * <p>The five-row decision table:
+ * <p>五行决策表：
  *
  * <pre>
  * workspacePath  mode      runtime-workspace-root
@@ -30,40 +30,37 @@ package io.agentscope.harness.agent.subagent;
  * (general-purpose, always SHARED)       mainWorkspace  (fully mirrors main agent)
  * </pre>
  *
- * <p><b>Phase B-0 — persisted session bucketing:</b> ISOLATED-mode subagents bucket their
- * persisted state by parent ({@code userId},
- * {@code parentSessionId}) when the spawn-time {@link io.agentscope.core.agent.RuntimeContext}
- * carries those fields. The composed key has form
- * {@code {declarationName}[@{parentSessionId}][#{userId}]} and is applied uniformly across
- * {@link io.agentscope.core.state.AgentStateStore} stores (Workspace, Redis, InMemory, custom),
- * because all of them already partition state by {@code (userId, sessionId)}. SHARED-mode is unchanged
- * — those subagents intentionally use the parent's bucket and do not multi-tenant.
+ * <p><b>阶段 B-0：持久化会话分桶：</b>当启动时的
+ * {@link io.agentscope.core.agent.RuntimeContext} 携带 {@code userId} 和
+ * {@code parentSessionId} 时，ISOLATED 模式子智能体按父级身份划分持久化状态。
+ * 组合键的形式为 {@code {declarationName}[@{parentSessionId}][#{userId}]}，
+ * 统一应用于所有 {@link io.agentscope.core.state.AgentStateStore} 存储
+ * （Workspace、Redis、InMemory、自定义），因为它们均已按 {@code (userId, sessionId)}
+ * 划分状态。SHARED 模式保持不变：这些子智能体有意使用父级的桶，不进行多租户划分。
  */
 public enum WorkspaceMode {
 
     /**
-     * The subagent gets its own isolated workspace.
+     * 子智能体获得自己的隔离工作区。
      *
      * <ul>
-     *   <li>If {@link SubagentDeclaration#getWorkspacePath()} is set, that path is the runtime
-     *       root and also the source for the sysPrompt ({@code AGENTS.md}).
-     *   <li>Otherwise the runtime root is auto-created at
-     *       {@code mainWorkspace/agents/&lt;name&gt;/workspace/} and the inline body is used as
-     *       sysPrompt.
+     *   <li>设置 {@link SubagentDeclaration#getWorkspacePath()} 时，该路径既是运行时根目录，
+     *       也是系统提示来源（{@code AGENTS.md}）。
+     *   <li>否则在 {@code mainWorkspace/agents/&lt;name&gt;/workspace/} 自动创建
+     *       运行时根目录，并将内联正文用作系统提示。
      * </ul>
      */
     ISOLATED,
 
     /**
-     * The subagent shares the main agent's workspace.
+     * 子智能体与主智能体共享工作区。
      *
      * <ul>
-     *   <li>The runtime root is always {@code mainWorkspace}, regardless of
-     *       {@link SubagentDeclaration#getWorkspacePath()}.
-     *   <li>If {@code workspacePath} is set, its {@code AGENTS.md} is used as the sysPrompt body;
-     *       but the definition's {@code skills/}, {@code knowledge/}, and {@code MEMORY.md} are
-     *       ignored.
-     *   <li>If {@code workspacePath} is absent, the inline body is used as sysPrompt.
+     *   <li>无论 {@link SubagentDeclaration#getWorkspacePath()} 是什么，
+     *       运行时根目录始终为 {@code mainWorkspace}。
+     *   <li>设置 {@code workspacePath} 时，使用其中的 {@code AGENTS.md} 作为系统提示正文；
+     *       但忽略定义目录中的 {@code skills/}、{@code knowledge/} 和 {@code MEMORY.md}。
+     *   <li>未设置 {@code workspacePath} 时，将内联正文用作系统提示。
      * </ul>
      */
     SHARED

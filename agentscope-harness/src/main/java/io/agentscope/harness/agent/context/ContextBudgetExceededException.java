@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.context;
 
-/** Local budget rejection. Never silently discard required instructions to recover. */
+/** 本地预算拒绝。绝不能通过静默丢弃必需指令来恢复执行。 */
 public final class ContextBudgetExceededException extends IllegalStateException {
     public ContextBudgetExceededException(long tokens, long limit) {
         super("Prepared model input exceeds budget: estimated=" + tokens + ", limit=" + limit);

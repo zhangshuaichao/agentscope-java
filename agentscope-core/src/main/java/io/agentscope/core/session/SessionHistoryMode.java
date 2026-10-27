@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.session;
 
-/** Exactly one authority: standalone state-store persistence or native committed history. */
+/** 唯一权威来源：独立状态存储持久化或原生已提交历史，二者只能选其一。 */
 public enum SessionHistoryMode {
     LEGACY,
     EVENT_LOG

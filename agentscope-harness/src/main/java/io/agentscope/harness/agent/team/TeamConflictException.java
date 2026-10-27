@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.team;
 
-/** Optimistic-lock / ownership conflict on the team task board. */
+/** 团队任务看板的乐观锁或所有权冲突。 */
 public final class TeamConflictException extends RuntimeException {
     public TeamConflictException(String message) {
         super(message);

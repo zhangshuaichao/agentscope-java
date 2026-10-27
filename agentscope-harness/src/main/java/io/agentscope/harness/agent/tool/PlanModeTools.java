@@ -28,24 +28,22 @@ import java.util.Map;
 import reactor.core.publisher.Mono;
 
 /**
- * The three model-facing tools that drive plan mode, all backed by a shared {@link
- * PlanModeManager}.
- *
+ * 驱动计划模式的三个模型侧工具，共享一个 {@link PlanModeManager}。
  * <ul>
- *   <li>{@code plan_enter} — switch into read-only plan mode to investigate and design before
- *       touching anything.
- *   <li>{@code plan_write} — create / overwrite the plan markdown blueprint (allowed in plan mode).
- *   <li>{@code plan_exit} — request to leave plan mode and start executing. Gated by an {@code ASK}
- *       self-check, so the user confirms the plan (via the existing permission HITL flow) before
- *       the agent regains write access.
+ *   <li>{@code plan_enter}：切换到只读计划模式，在修改之前先调查和设计。
+ *   <li>{@code plan_write}：创建／覆盖 Markdown 计划蓝图（计划模式中允许）。
+ *   <li>{@code plan_exit}：请求离开计划模式并开始执行。由 {@code ASK} 自检控制，
+ *       用户通过现有权限 HITL 流程确认计划后，智能体才恢复写权限。
  * </ul>
  *
- * <p>{@code plan_enter} / {@code plan_write} / {@code plan_exit} are always permitted by
- * {@code PlanModeMiddleware}; every other mutating tool is denied while plan mode is active.
+ * <p>{@code PlanModeMiddleware} 始终允许 {@code plan_enter} / {@code plan_write} /
+ * {@code plan_exit}；计划模式启用时拒绝其他所有修改性工具。
  */
 public final class PlanModeTools {
 
-    /** Tool names that {@code PlanModeMiddleware} always allows, even in plan mode. */
+    /**
+     * {@code PlanModeMiddleware} 始终允许的工具名，即使在计划模式中也允许。
+     */
     public static final String PLAN_ENTER = "plan_enter";
 
     public static final String PLAN_WRITE = "plan_write";
@@ -62,7 +60,9 @@ public final class PlanModeTools {
                 .withIdAndName(param.getToolUseBlock().getId(), param.getToolUseBlock().getName());
     }
 
-    /** {@code plan_enter}: enter read-only plan mode. */
+    /**
+     * {@code plan_enter}：进入只读计划模式。
+     */
     public static final class PlanEnterTool extends ToolBase {
         private final PlanModeManager manager;
 
@@ -101,7 +101,9 @@ public final class PlanModeTools {
         }
     }
 
-    /** {@code plan_write}: create / overwrite the plan markdown file. */
+    /**
+     * {@code plan_write}：创建／覆盖 Markdown 计划文件。
+     */
     public static final class PlanWriteTool extends ToolBase {
         private final PlanModeManager manager;
 
@@ -146,7 +148,9 @@ public final class PlanModeTools {
         }
     }
 
-    /** {@code plan_exit}: request approval, then leave plan mode for BUILD. */
+    /**
+     * {@code plan_exit}：请求批准，然后离开计划模式进入 BUILD。
+     */
     public static final class PlanExitTool extends ToolBase {
         private final PlanModeManager manager;
 
@@ -178,9 +182,8 @@ public final class PlanModeTools {
         }
 
         /**
-         * Always ASK: leaving plan mode is a deliberate hand-off that the user confirms. The
-         * lightweight permission path honours an explicit ASK self-check even when no permission
-         * rules are configured, so this works out of the box.
+         * 始终返回 ASK：退出计划模式是需要用户确认的明确交接。
+         * 即使未配置权限规则，轻量级权限路径也遵循显式 ASK 自检，因此开箱即用。
          */
         @Override
         public Mono<PermissionDecision> checkPermissions(
@@ -191,13 +194,17 @@ public final class PlanModeTools {
                                     + " continue in BUILD mode, or reject to keep planning."));
         }
 
-        /** Runs only after the user approves the ASK above. */
+        /**
+         * 仅在用户批准上面的 ASK 后执行。
+         */
         @Override
         public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
             AgentState state = stateOf(param);
             if (state == null) {
                 return Mono.just(result(param, "Error: agent state unavailable."));
             }
+            // 【学习提示】写权限恢复发生在工具真正执行时；前面的 checkPermissions
+            // 负责提出 ASK，权限管线批准后才应调用此方法。不要只靠提示文本模拟审批。
             manager.exit(state);
             return Mono.just(
                     result(

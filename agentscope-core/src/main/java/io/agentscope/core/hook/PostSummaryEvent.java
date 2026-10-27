@@ -20,31 +20,31 @@ import io.agentscope.core.message.Msg;
 import io.agentscope.core.model.GenerateOptions;
 
 /**
- * Event fired after summary generation completes.
+ * 摘要生成完成后触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setSummaryMessage(Msg)}
+ * <p><b>可修改：</b>是，通过 {@link #setSummaryMessage(Msg)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getModelName()} - The model name</li>
- *   <li>{@link #getGenerateOptions()} - The generation options</li>
- *   <li>{@link #getSummaryMessage()} - The summary result (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getModelName()}：模型名称</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项</li>
+ *   <li>{@link #getSummaryMessage()}：摘要结果（可修改）</li>
  * </ul>
  *
- * <p><b>Note:</b> This event is fired after the summary has been generated, allowing hooks
- * to modify the final summary message before it's returned.
+ * <p><b>注意：</b>此事件在摘要生成之后触发，使钩子可以
+ * 在最终摘要消息返回之前修改它。
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Filter or modify the summary content</li>
- *   <li>Add metadata to the summary message</li>
- *   <li>Log the summary result</li>
- *   <li>Request to stop the agent via {@link #stopAgent()}</li>
+ *   <li>过滤或修改摘要内容</li>
+ *   <li>为摘要消息添加元数据</li>
+ *   <li>记录摘要结果</li>
+ *   <li>通过 {@link #stopAgent()} 请求停止智能体</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PostSummaryEvent extends SummaryEvent {
@@ -53,12 +53,12 @@ public final class PostSummaryEvent extends SummaryEvent {
     private boolean stopRequested = false;
 
     /**
-     * Constructor for PostSummaryEvent.
+     * PostSummaryEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null)
-     * @param summaryMessage The summary result message (may be null)
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（可为 null）
+     * @param summaryMessage 摘要结果消息（可为 null）
      */
     public PostSummaryEvent(
             Agent agent, String modelName, GenerateOptions generateOptions, Msg summaryMessage) {
@@ -67,38 +67,38 @@ public final class PostSummaryEvent extends SummaryEvent {
     }
 
     /**
-     * Get the summary result message.
+     * 获取摘要结果消息。
      *
-     * @return The summary message, may be null
+     * @return 摘要消息，可能为 null
      */
     public Msg getSummaryMessage() {
         return summaryMessage;
     }
 
     /**
-     * Modify the summary result message.
+     * 修改摘要结果消息。
      *
-     * @param summaryMessage The new summary message
+     * @param summaryMessage 新的摘要消息
      */
     public void setSummaryMessage(Msg summaryMessage) {
         this.summaryMessage = summaryMessage;
     }
 
     /**
-     * Request to stop the agent after this summary phase.
+     * 请求智能体在本次摘要阶段后停止。
      *
-     * <p>When called, the agent will return the summary message as the final result.
-     * This is primarily for consistency with other event types; since summary is typically
-     * the last phase, this mainly serves as a signal for logging or metrics purposes.
+     * <p>调用后，智能体会将摘要消息作为最终结果返回。
+     * 这主要是为了与其他事件类型保持一致；摘要通常已是
+     * 最后阶段，因此主要充当日志或指标用途的信号。
      */
     public void stopAgent() {
         this.stopRequested = true;
     }
 
     /**
-     * Check if a stop has been requested.
+     * 检查是否已请求停止。
      *
-     * @return true if {@link #stopAgent()} has been called, false otherwise
+     * @return 调用过 {@link #stopAgent()} 时为 true，否则为 false
      */
     public boolean isStopRequested() {
         return stopRequested;

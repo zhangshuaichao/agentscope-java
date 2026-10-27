@@ -38,12 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Registry for resolving {@link Model} instances from string identifiers (named instances or
- * {@code provider:model} patterns). User-registered factories take precedence over providers
- * loaded from the {@link ModelProvider} SPI.
+ * 根据字符串标识符解析 {@link Model} 实例的注册表，支持命名实例和
+ * {@code provider:model} 模式。用户注册的工厂优先于通过 {@link ModelProvider} SPI 加载的服务商。
  *
- * <p>Provider extension modules read API keys from their own standard environment
- * variables when auto-creating models.
+ * <p>服务商扩展模块自动创建模型时，从各自标准环境变量中读取 API 密钥。
  */
 public final class ModelRegistry {
 
@@ -54,14 +52,16 @@ public final class ModelRegistry {
             new CopyOnWriteArrayList<>();
 
     /**
-     * Factory-created instances. Each entry is published before creation starts, so concurrent
-     * first resolutions of the same key wait for one creation instead of each creating (and
-     * orphaning) their own instance.
+     * 工厂创建的实例。每个条目在创建开始前就发布到缓存，
+     * 因此同一个键的并发首次解析会等待同一次创建，而不是各自创建并遗留多余实例。
+     *
+     * <p>【学习提示】缓存中的条目承担“正在创建”的占位作用，不只是保存已完成对象。
+     * 这可合并并发首访，但必须同时处理创建失败与递归自解析，否则可能永久等待。
      */
     private static final ConcurrentHashMap<ModelCacheKey, CompletableFuture<Model>> resolvedCache =
             new ConcurrentHashMap<>();
 
-    /** Cache keys the current thread is creating, to fail fast on recursive self-resolution. */
+    /** 当前线程正在创建的缓存键，用于在递归解析自身时快速失败。 */
     private static final ThreadLocal<Set<ModelCacheKey>> CREATING =
             ThreadLocal.withInitial(HashSet::new);
 
@@ -70,8 +70,8 @@ public final class ModelRegistry {
     private ModelRegistry() {}
 
     /**
-     * Registers a named {@link Model} instance. {@link #resolve(String)} returns this instance for
-     * an exact {@code name} match (no caching of factory-created instances applies).
+     * 注册命名的 {@link Model} 实例。{@link #resolve(String)} 遇到精确匹配的
+     * {@code name} 时返回此实例（不适用工厂创建实例的缓存机制）。
      */
     public static void register(String name, Model model) {
         Objects.requireNonNull(name, "name");
@@ -80,13 +80,12 @@ public final class ModelRegistry {
     }
 
     /**
-     * Registers a factory matched against the full {@code modelId} string using {@link
-     * Pattern#matches}. Newly registered factories are consulted before older user registrations
-     * and before SPI providers.
+     * 注册对完整 {@code modelId} 字符串使用 {@link
+     * Pattern#matches} 匹配的工厂。
+     * 新注册的工厂优先于较早的用户注册项以及 SPI 服务商。
      *
-     * @param modelNameRegex regex with semantics of Pattern#matches(CharSequence) on the
-     *     full model id
-     * @param factory creates a {@link Model} from the full model id
+     * @param modelNameRegex 对完整模型 ID 使用 Pattern#matches(CharSequence) 语义的正则表达式
+     * @param factory 根据完整模型 ID 创建 {@link Model} 的工厂
      */
     public static void registerFactory(String modelNameRegex, ModelFactory factory) {
         Objects.requireNonNull(modelNameRegex, "modelNameRegex");
@@ -95,51 +94,47 @@ public final class ModelRegistry {
     }
 
     /**
-     * Registers a context-aware factory matched against the full {@code modelId} string using
-     * {@link Pattern#matches}. Newly registered factories are consulted before older user
-     * registrations and before SPI providers.
+     * 注册感知上下文的工厂，使用 {@code modelId} 的完整字符串与
+     * {@link Pattern#matches} 匹配。新注册的工厂优先于较早的用户注册项以及 SPI 服务商。
      *
-     * <p>Cached instances whose model id matches the new pattern are evicted, so the next
-     * {@link #resolve} of such an id is served by this factory. Evicted instances are not closed:
-     * the registry does not own them, and callers that already hold one may still be using it.
+     * <p>模型 ID 匹配新模式的缓存实例会被移除，因此下次 {@link #resolve} 该 ID 时
+     * 由此工厂处理。被移除的实例不会被关闭：注册表不拥有这些实例，
+     * 已经持有它们的调用方可能仍在使用。
      *
-     * @param modelNameRegex regex with semantics of Pattern#matches(CharSequence) on the
-     *     full model id
-     * @param factory creates a {@link Model} from the full model id and creation context
+     * @param modelNameRegex 对完整模型 ID 使用 Pattern#matches(CharSequence) 语义的正则表达式
+     * @param factory 根据完整模型 ID 和创建上下文构建 {@link Model} 的工厂
      */
     public static void registerFactory(String modelNameRegex, ContextModelFactory factory) {
         Objects.requireNonNull(modelNameRegex, "modelNameRegex");
         Objects.requireNonNull(factory, "factory");
         Pattern pattern = Pattern.compile(modelNameRegex);
-        // Add first, then evict: resolve() publishes its cache entry before it looks up a
-        // factory, so a resolution that raced past the add and picked an older factory has
-        // already published its entry by the time we evict, and that entry is removed here.
+        // 先添加再移除缓存：resolve() 会先发布缓存条目，再查找工厂；
+        // 因此，即使某次解析与新增操作竞争并选中了旧工厂，
+        // 执行移除时它也已经发布了缓存条目，该条目会在此被移除。
         userFactories.add(0, new ProviderEntry(pattern, factory));
         resolvedCache.keySet().removeIf(key -> pattern.matcher(key.modelId()).matches());
     }
 
     /**
-     * Resolves a {@link Model} for the given id: named registration first, then cached
-     * factory-created instance, then user factories (newest first), then SPI providers.
+     * 为指定 ID 解析 {@link Model}：先找命名注册项，再找缓存的工厂实例，
+     * 然后查用户工厂（最新优先），最后查 SPI 服务商。
      *
-     * @throws IllegalArgumentException if the id cannot be resolved or creation fails
+     * @throws IllegalArgumentException 无法解析 ID 或创建失败时抛出
      */
     public static Model resolve(String modelId) {
         return resolve(modelId, ModelCreationContext.empty());
     }
 
     /**
-     * Resolves a {@link Model} for the given id and creation context: named registration first,
-     * then cache when enabled, then user factories (newest first), then SPI providers.
+     * 根据指定 ID 和创建上下文解析 {@link Model}：先找命名注册项，
+     * 再在启用缓存时查缓存，然后查用户工厂（最新优先），最后查 SPI 服务商。
      *
-     * <p>Non-empty context resolution is not cached unless the context uses
-     * {@link CachePolicy#ENABLED}.
+     * <p>非空上下文的解析默认不缓存，除非上下文使用 {@link CachePolicy#ENABLED}。
      *
-     * <p>For cached resolutions, concurrent first calls with the same key share a single creation
-     * and receive the same instance. A failed creation is not cached.
+     * <p>启用缓存时，同一键的并发首次调用共享同一次创建并获得相同实例。
+     * 创建失败不会缓存。
      *
-     * @throws IllegalArgumentException if the id cannot be resolved, the context cannot be safely
-     * cached, or creation fails
+     * @throws IllegalArgumentException 无法解析 ID、上下文无法安全缓存或创建失败时抛出
      */
     public static Model resolve(String modelId, ModelCreationContext context) {
         Objects.requireNonNull(modelId, "modelId");
@@ -162,7 +157,7 @@ public final class ModelRegistry {
         CompletableFuture<Model> existing = resolvedCache.putIfAbsent(cacheKey, pending);
         if (existing != null) {
             if (!existing.isDone() && CREATING.get().contains(cacheKey)) {
-                // A factory resolving its own id would otherwise wait on itself forever.
+                // 工厂若解析自己的 ID，否则会永远等待自身完成。
                 throw new IllegalStateException(
                         "Recursive resolution of model id while it is being created: " + trimmed);
             }
@@ -175,7 +170,7 @@ public final class ModelRegistry {
             pending.complete(created);
             return created;
         } catch (RuntimeException | Error e) {
-            // Do not cache failures: waiters see this error, later callers retry creation.
+            // 不缓存失败：等待方收到本次错误，之后的调用方可重新尝试创建。
             resolvedCache.remove(cacheKey, pending);
             pending.completeExceptionally(e);
             throw e;
@@ -227,16 +222,16 @@ public final class ModelRegistry {
     }
 
     /**
-     * Returns {@code true} if {@link #resolve(String)} can find a named model or a matching factory/
-     * provider pattern (without creating an instance).
+     * 返回 {@code true} 表示 {@link #resolve(String)} 能找到命名模型或匹配的工厂／服务商模式，
+     * 此检查不会创建实例。
      */
     public static boolean canResolve(String modelId) {
         return canResolve(modelId, ModelCreationContext.empty());
     }
 
     /**
-     * Returns {@code true} if {@link #resolve(String, ModelCreationContext)} can find a named model
-     * or a matching factory/provider pattern (without creating an instance).
+     * 返回 {@code true} 表示 {@link #resolve(String, ModelCreationContext)} 能找到命名模型
+     * 或匹配的工厂／服务商模式，此检查不会创建实例。
      */
     public static boolean canResolve(String modelId, ModelCreationContext context) {
         Objects.requireNonNull(context, "context");
@@ -255,8 +250,8 @@ public final class ModelRegistry {
     }
 
     /**
-     * Clears named models, user-registered factories, the factory-resolution cache,
-     * and cached SPI providers. Intended for tests.
+     * 清除命名模型、用户注册工厂、工厂解析缓存以及已缓存的 SPI 服务商。
+     * 用于测试。
      */
     public static void reset() {
         namedModels.clear();
@@ -265,10 +260,7 @@ public final class ModelRegistry {
         reloadProviders();
     }
 
-    /**
-     * Clears the cached SPI providers so the next resolution can rediscover providers from the
-     * current classloader context.
-     */
+    /** 清除已缓存的 SPI 服务商，以便下一次解析从当前类加载器上下文中重新发现服务商。 */
     public static void reloadProviders() {
         serviceProviders = null;
     }
@@ -328,16 +320,15 @@ public final class ModelRegistry {
     }
 
     /**
-     * Builds the registry cache key for a model resolution.
+     * 构造模型解析使用的注册表缓存键。
      *
-     * <p>The rules intentionally avoid treating arbitrary context objects as comparable:
-     *
+     * <p>这些规则刻意避免假设任意上下文对象均可比较：
      * <ul>
-     *   <li>Empty contexts keep the legacy behavior and cache only by {@code modelId}.
-     *   <li>Non-empty contexts are not cached unless {@link CachePolicy#ENABLED} is selected.
-     *   <li>An explicit {@code cacheId} is the authoritative identity for complex contexts.
-     *   <li>Without {@code cacheId}, only standard simple fields are fingerprinted. Options and
-     *       components are opaque and must not rely on deep hashing or object {@code hashCode()}.
+     *   <li>空上下文保留旧版行为，仅按 {@code modelId} 缓存。
+     *   <li>非空上下文仅在选择 {@link CachePolicy#ENABLED} 时缓存。
+     *   <li>显式 {@code cacheId} 是复杂上下文的权威标识。
+     *   <li>没有 {@code cacheId} 时，仅对标准简单字段生成指纹。选项与组件保持不透明，
+     *       不得依赖深度哈希或对象的 {@code hashCode()}。
      * </ul>
      */
     private static ModelCacheKey cacheKey(String modelId, ModelCreationContext context) {
@@ -362,11 +353,10 @@ public final class ModelRegistry {
     }
 
     /**
-     * Creates a cache fingerprint from provider-neutral simple fields only.
+     * 仅根据与服务商无关的简单字段创建缓存指纹。
      *
-     * <p>API keys are never written to the key in plain text. The digest is not intended as a
-     * security boundary; it only prevents accidental secret exposure in heap dumps, logs, and test
-     * diagnostics.
+     * <p>API 密钥绝不会以明文写入键。该摘要并非安全边界，
+     * 仅用于避免密钥意外出现在堆转储、日志和测试诊断中。
      */
     private static String standardContextFingerprint(ModelCreationContext context) {
         return "apiKeySha256="
@@ -411,7 +401,7 @@ public final class ModelRegistry {
                 Collection<ModelProvider> fallback =
                         loadServiceProviders(ModelRegistry.class.getClassLoader());
                 for (ModelProvider provider : fallback) {
-                    if (!containsProvider(providers, provider)) { // deduplicate
+                    if (!containsProvider(providers, provider)) { // 去重
                         providers.add(provider);
                     }
                 }

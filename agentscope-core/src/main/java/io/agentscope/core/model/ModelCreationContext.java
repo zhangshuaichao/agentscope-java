@@ -20,25 +20,24 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Provider-neutral model creation context used by {@link ModelRegistry} and model provider SPI
- * implementations.
+ * 供 {@link ModelRegistry} 和模型服务商 SPI 实现使用的、与服务商无关的模型创建上下文。
  *
- * <p>This type has two layers:
- *
+ * <p>此类型包含两层：
  * <ul>
- *   <li>Standard fields such as {@code apiKey}, {@code baseUrl}, {@code endpointPath},
- *       {@code stream}, and {@code enableThinking}. These are common enough to be understood by
- *       multiple providers and can safely participate in automatic cache identity when
- *       {@link CachePolicy#ENABLED} is selected.
- *   <li>Provider-specific {@linkplain #option(String) options} and typed {@linkplain
- *       #component(Class) components}. These allow extension modules to consume advanced builder
- *       settings such as formatters, HTTP transports, credentials, proxies, and default generation
- *       options without adding provider types to core.
+ *   <li>标准字段，例如 {@code apiKey}、{@code baseUrl}、{@code endpointPath}、
+ *       {@code stream} 和 {@code enableThinking}。这些字段足够通用，多个服务商均可理解；
+ *       选择 {@link CachePolicy#ENABLED} 时可安全参与自动缓存标识计算。
+ *   <li>服务商专用的 {@linkplain #option(String) options} 以及带类型的 {@linkplain
+ *       #component(Class) components}。扩展模块可借此接收格式化器、HTTP 传输、凭据、代理和默认生成选项
+ *       等高级构建配置，而不必将服务商类型加入 core。
  * </ul>
  *
- * <p>Options and components are intentionally opaque to core. {@link ModelRegistry} never deep
- * hashes them or uses their {@code hashCode()} values for cache identity. When they are present and
- * caching is enabled, callers must provide an explicit {@link Builder#cacheId(String)}.
+ * <p>选项和组件对 core 刻意保持不透明。{@link ModelRegistry} 不会对它们做深度哈希，
+ * 也不会用其 {@code hashCode()} 计算缓存标识。启用缓存且这些配置存在时，
+ * 调用方必须显式提供 {@link Builder#cacheId(String)}。
+ *
+ * <p>【学习提示】可共享的基础配置与每租户／每请求的派生配置应区分开。
+ * 缓存复用是显式设计选择，不能假定任意带凭据、代理或自定义组件的配置都能自动判定为相同。
  */
 public final class ModelCreationContext {
 
@@ -75,81 +74,80 @@ public final class ModelCreationContext {
     }
 
     /**
-     * Returns a mutable builder initialized from this context.
+     * 返回用当前上下文初始化的可变建造者。
      *
-     * <p>This is useful when a caller wants to derive a tenant- or request-specific context from a
-     * shared baseline without mutating the original instance.
+     * <p>调用方可据此从共享基线派生租户或请求专属上下文，而不修改原实例。
      */
     public Builder toBuilder() {
         return new Builder(this);
     }
 
-    /** API key or token to pass to a provider. Providers may fall back to environment variables. */
+    /** 传给服务商的 API 密钥或令牌。服务商可回退为读取环境变量。 */
     public String getApiKey() {
         return apiKey;
     }
 
-    /** Provider base URL override, for self-hosted or compatible API endpoints. */
+    /** 覆盖服务商基础 URL，适用于自托管或兼容 API 端点。 */
     public String getBaseUrl() {
         return baseUrl;
     }
 
-    /** Provider endpoint path override, mainly for OpenAI-compatible APIs. */
+    /** 覆盖服务商端点路径，主要用于兼容 OpenAI 的 API。 */
     public String getEndpointPath() {
         return endpointPath;
     }
 
-    /** Whether the created model should use streaming by default. {@code null} means provider default. */
+    /** 创建的模型是否默认使用流式输出。{@code null} 表示采用服务商默认值。 */
     public Boolean getStream() {
         return stream;
     }
 
-    /** Whether provider thinking/reasoning mode should be enabled. */
+    /** 是否启用服务商的思考／推理模式。 */
     public Boolean getEnableThinking() {
         return enableThinking;
     }
 
-    /** Cache policy for {@link ModelRegistry#resolve(String, ModelCreationContext)}. */
+    /** {@link ModelRegistry#resolve(String, ModelCreationContext)} 的缓存策略。 */
     public CachePolicy getCachePolicy() {
         return cachePolicy;
     }
 
-    /** Explicit cache identity used when {@link #getCachePolicy()} is {@link CachePolicy#ENABLED}. */
+    /** 当 {@link #getCachePolicy()} 为 {@link CachePolicy#ENABLED} 时使用的显式缓存标识。 */
     public String getCacheId() {
         return cacheId;
     }
 
-    /** Provider-specific scalar or value options keyed by extension-defined names. */
+    /** 以扩展定义的名称为键的服务商专用标量或值选项。 */
     public Map<String, Object> getOptions() {
         return options;
     }
 
-    /** Returns a provider-specific option value, or {@code null}. */
+    /** 返回服务商专用选项值，或 {@code null}。 */
     public Object option(String key) {
         return options.get(key);
     }
 
-    /** Returns a provider-specific option cast to the requested type, or {@code null}. */
+    /** 返回转换为指定类型的服务商专用选项值，或 {@code null}。 */
     public <T> T option(String key, Class<T> type) {
         Object value = options.get(key);
         return value == null ? null : type.cast(value);
     }
 
-    /** Provider-specific component objects keyed by type. */
+    /** 以类型为键的服务商专用组件对象。 */
     public Map<Class<?>, Object> getComponents() {
         return components;
     }
 
-    /** Returns a provider-specific component by type, or {@code null}. */
+    /** 按类型返回服务商专用组件，或 {@code null}。 */
     public <T> T component(Class<T> type) {
         Object value = components.get(type);
         return value == null ? null : type.cast(value);
     }
 
     /**
-     * Returns whether this context has no effective settings.
+     * 返回此上下文是否没有有效设置。
      *
-     * <p>The empty context preserves legacy {@link ModelRegistry#resolve(String)} caching behavior.
+     * <p>空上下文保留旧版 {@link ModelRegistry#resolve(String)} 的缓存行为。
      */
     public boolean isEmpty() {
         return apiKey == null
@@ -163,7 +161,7 @@ public final class ModelCreationContext {
                 && components.isEmpty();
     }
 
-    /** Returns whether the context contains values that core cannot fingerprint safely. */
+    /** 返回上下文是否包含 core 无法安全生成指纹的值。 */
     public boolean hasOpaqueCacheInputs() {
         return !options.isEmpty() || !components.isEmpty();
     }

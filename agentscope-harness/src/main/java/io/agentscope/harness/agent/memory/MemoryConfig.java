@@ -22,63 +22,58 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Unified configuration for the long-term memory pipeline (flush + consolidation +
- * maintenance). Pair with {@link CompactionConfig} for the in-context summarization pipeline.
+ * 长期记忆流水线（提取写入、整合、维护）的统一配置。
+ * 配合 {@link CompactionConfig} 配置上下文内的摘要流水线。
  *
- * <p>The harness has three LLM-driven memory operations, each with its own prompt and
- * triggering rules:
- *
+ * <p>Harness 有三种由 LLM 驱动的记忆操作，各有独立的提示词和触发规则：
  * <ol>
- *   <li><b>Flush</b> — extracts long-term memories from a conversation window into today's
- *       daily ledger ({@code memory/YYYY-MM-DD.md}). Prompt: {@link #flushPrompt()},
- *       defaults to {@link MemoryFlushManager#DEFAULT_FLUSH_PROMPT}. Trigger:
- *       {@link #flushTrigger()}.</li>
- *   <li><b>Consolidation</b> — periodically merges daily ledgers into the curated
- *       {@code MEMORY.md}. Prompt: {@link #consolidationPrompt()}, defaults to
- *       {@link MemoryConsolidator#DEFAULT_CONSOLIDATION_PROMPT}. Run cadence:
- *       {@link #consolidationMinGap()}.</li>
- *   <li><b>Compaction summary</b> — distills the conversation prefix into one summary
- *       message before reasoning. Prompt lives on {@link CompactionConfig#getSummaryPrompt()};
- *       configure via {@code .compaction(CompactionConfig...)} rather than here.</li>
+ * <li><b>Flush（提取写入）</b>：从对话窗口提取长期记忆，写入当天的每日记忆账本
+ * （{@code memory/YYYY-MM-DD.md}）。提示词由 {@link #flushPrompt()} 提供，
+ * 默认使用 {@link MemoryFlushManager#DEFAULT_FLUSH_PROMPT}；触发策略为 {@link #flushTrigger()}。</li>
+ * <li><b>Consolidation（整合）</b>：定期将每日账本合并到整理后的 {@code MEMORY.md}。
+ * 提示词由 {@link #consolidationPrompt()} 提供，默认使用
+ * {@link MemoryConsolidator#DEFAULT_CONSOLIDATION_PROMPT}；执行间隔由 {@link #consolidationMinGap()} 控制。</li>
+ * <li><b>Compaction summary（压缩摘要）</b>：在推理前将对话前缀提炼为一条摘要消息。
+ * 提示词位于 {@link CompactionConfig#getSummaryPrompt()}，应通过
+ * {@code .compaction(CompactionConfig...)} 配置，而非此处。</li>
  * </ol>
  *
- * <p>Flush and consolidation use independent throttle windows. A throttled policy allows the
- * first eligible call immediately; its minimum gap applies only between subsequent runs and is
- * not an initial delay. {@link FlushTrigger#never()} disables only the per-call flush.
+ * <p>提取写入和整合使用独立的节流窗口。节流策略允许首次符合条件的调用立即执行，
+ * 最小间隔只约束后续运行之间的距离，不是首次延迟。{@link FlushTrigger#never()} 仅禁用调用级提取写入。
  *
- * <p>All fields have sensible defaults; {@link #defaults()} returns a config equivalent
- * to the harness's historical behavior so adopting this class is a no-op upgrade.
+ * <p>所有字段都有合理默认值；{@link #defaults()} 等价于 Harness 的历史行为，采用此配置不会改变默认行为。
+ *
+ * <p>【学习提示】对话压缩服务于当前模型窗口；每日账本和整理后的长期记忆服务于后续检索与复用。
+ * 三者不能互当完整、无损的会话审计记录。
  */
 public final class MemoryConfig {
 
-    /** Default {@code consolidationMaxTokens}. */
+    /** 默认的 {@code consolidationMaxTokens}。 */
     public static final int DEFAULT_CONSOLIDATION_MAX_TOKENS = 4_000;
 
-    /** Default {@code consolidationMinGap} — matches {@code MemoryMaintenanceMiddleware}. */
+    /** 默认的 {@code consolidationMinGap}，与 {@code MemoryMaintenanceMiddleware} 一致。 */
     public static final Duration DEFAULT_CONSOLIDATION_MIN_GAP = Duration.ofMinutes(30);
 
-    /** Default retention before a daily ledger is archived. */
+    /** 每日账本归档前的默认保留时间。 */
     public static final int DEFAULT_DAILY_FILE_RETENTION_DAYS = 90;
 
-    /** Strategy for the per-call flush hook. See {@link FlushTrigger}. */
+    /** 调用级提取写入钩子的策略，参见 {@link FlushTrigger}。 */
     public enum FlushMode {
-        /** Flush after every agent call. */
+        /** 每次智能体调用结束后提取并写入记忆。 */
         ALWAYS,
-        /** Disable per-call memory extraction (native session logging still runs). */
+        /** 禁用调用级记忆提取（原生会话日志仍会运行）。 */
         NEVER,
-        /** Flush at most once per {@link FlushTrigger#minGap()}. */
+        /** 每个 {@link FlushTrigger#minGap()} 间隔内最多提取写入一次。 */
         THROTTLED
     }
 
     /**
-     * Trigger policy for {@link io.agentscope.harness.agent.middleware.MemoryFlushMiddleware}.
+     * {@link io.agentscope.harness.agent.middleware.MemoryFlushMiddleware} 的触发策略。
      *
-     * <p>A throttled trigger allows the first eligible call immediately. Its minimum gap is
-     * measured between subsequent per-call flushes, independently of consolidation maintenance.
-     * {@link #never()} disables only this per-call flush path.
+     * <p>节流触发器允许首次符合条件的调用立即执行。最小间隔在后续调用级提取写入之间计量，
+     * 与整合维护相互独立。{@link #never()} 仅禁用这条调用级提取写入路径。
      *
-     * <p>{@code throttled(Duration.ZERO)} normalises to {@link #always()} so callers do not
-     * need a special branch for the degenerate case.
+     * <p>{@code throttled(Duration.ZERO)} 会规范化为 {@link #always()}，调用方不必为退化情况另写分支。
      */
     public static final class FlushTrigger {
 
@@ -163,27 +158,27 @@ public final class MemoryConfig {
     }
 
     /**
-     * Optional model override for memory operations (flush + consolidation).
-     * {@code null} means use the agent's primary model.
+     * 记忆操作（提取写入与整合）可选的专用模型。
+     * {@code null} 表示使用智能体的主模型。
      */
     public Model model() {
         return model;
     }
 
     /**
-     * Override for the flush prompt. {@code null} means use
-     * {@link MemoryFlushManager#DEFAULT_FLUSH_PROMPT}.
+     * 覆盖提取写入提示词。{@code null} 表示使用
+     * {@link MemoryFlushManager#DEFAULT_FLUSH_PROMPT}。
      */
     public String flushPrompt() {
         return flushPrompt;
     }
 
     /**
-     * Override for the consolidation prompt. {@code null} means use
-     * {@link MemoryConsolidator#DEFAULT_CONSOLIDATION_PROMPT}.
+     * 覆盖整合提示词。{@code null} 表示使用
+     * {@link MemoryConsolidator#DEFAULT_CONSOLIDATION_PROMPT}。
      *
-     * <p>Custom prompts must contain exactly two {@code %d} placeholders (max-tokens and
-     * max-chars, in that order). The Builder enforces this at construction time.
+     * <p>自定义提示词必须恰好包含两个 {@code %d} 占位符，依次表示最大 token 数和最大字符数。
+     * 构建器在创建配置时强制检查此约束。
      */
     public String consolidationPrompt() {
         return consolidationPrompt;
@@ -194,9 +189,8 @@ public final class MemoryConfig {
     }
 
     /**
-     * Minimum gap between consolidation/maintenance runs. The first eligible call runs
-     * immediately; this duration is not an initial delay and is independent of
-     * {@link #flushTrigger()}.
+     * 整合/维护运行之间的最小间隔。首次符合条件的调用立即运行；
+     * 此时长不是首次延迟，且独立于 {@link #flushTrigger()}。
      */
     public Duration consolidationMinGap() {
         return consolidationMinGap;
@@ -210,7 +204,7 @@ public final class MemoryConfig {
         return flushTrigger;
     }
 
-    /** Returns a config equivalent to the harness's historical defaults. */
+    /** 返回与 Harness 历史默认行为等价的配置。 */
     public static MemoryConfig defaults() {
         return new Builder().build();
     }
@@ -230,9 +224,8 @@ public final class MemoryConfig {
         private FlushTrigger flushTrigger = FlushTrigger.always();
 
         /**
-         * Sets a dedicated model for memory operations (flush + consolidation),
-         * allowing a lighter/cheaper model than the agent's primary reasoning model.
-         * When not set, the agent's primary model is used.
+         * 为记忆操作（提取写入与整合）设置专用模型，可选用比智能体主推理模型更轻量、成本更低的模型。
+         * 未设置时使用智能体的主模型。
          */
         public Builder model(Model model) {
             this.model = model;
@@ -240,8 +233,7 @@ public final class MemoryConfig {
         }
 
         /**
-         * Sets a dedicated model for memory operations by model id string
-         * (e.g. {@code "openai:gpt-4.1-mini"}).
+         * 通过模型 ID 字符串设置记忆操作的专用模型，例如 {@code "openai:gpt-4.1-mini"}。
          *
          * @see ModelRegistry#resolve(String)
          */
@@ -251,9 +243,8 @@ public final class MemoryConfig {
         }
 
         /**
-         * Overrides the prompt used by {@link MemoryFlushManager#flushMemories}.
-         * {@code null} restores the default. The text is passed verbatim as a SYSTEM
-         * message — it does not need any placeholders.
+         * 覆盖 {@link MemoryFlushManager#flushMemories} 使用的提示词。
+         * {@code null} 恢复默认值。文本原样作为 SYSTEM 消息传递，不需要任何占位符。
          */
         public Builder flushPrompt(String flushPrompt) {
             this.flushPrompt = flushPrompt;
@@ -261,13 +252,11 @@ public final class MemoryConfig {
         }
 
         /**
-         * Overrides the prompt used by {@link MemoryConsolidator#consolidate}. The prompt
-         * is rendered via {@link String#format} with two {@code int} arguments
-         * (max-tokens, max-chars), so a custom prompt MUST contain exactly two {@code %d}
-         * placeholders. {@code null} restores the default.
+         * 覆盖 {@link MemoryConsolidator#consolidate} 使用的提示词。
+         * 提示词通过 {@link String#format} 传入两个 {@code int} 参数（最大 token 数、最大字符数）渲染，
+         * 因此自定义提示词必须恰好包含两个 {@code %d} 占位符。{@code null} 恢复默认值。
          *
-         * @throws IllegalArgumentException if the prompt does not contain exactly two
-         *     {@code %d} placeholders
+         * @throws IllegalArgumentException 提示词未恰好包含两个 {@code %d} 占位符时抛出
          */
         public Builder consolidationPrompt(String consolidationPrompt) {
             if (consolidationPrompt != null) {
@@ -283,7 +272,7 @@ public final class MemoryConfig {
             return this;
         }
 
-        /** Token budget passed to the consolidation prompt. Must be positive. */
+        /** 传给整合提示词的 token 预算，必须为正数。 */
         public Builder consolidationMaxTokens(int consolidationMaxTokens) {
             if (consolidationMaxTokens <= 0) {
                 throw new IllegalArgumentException(
@@ -294,9 +283,8 @@ public final class MemoryConfig {
         }
 
         /**
-         * Minimum gap between consolidation/maintenance runs. The first eligible call runs
-         * immediately; this duration is not an initial delay and is independent of
-         * {@link MemoryConfig#flushTrigger()}. Must not be null.
+         * 整合/维护运行之间的最小间隔。首次符合条件的调用立即运行；
+         * 此时长不是首次延迟，且独立于 {@link MemoryConfig#flushTrigger()}。不得为 null。
          */
         public Builder consolidationMinGap(Duration consolidationMinGap) {
             if (consolidationMinGap == null) {
@@ -309,7 +297,7 @@ public final class MemoryConfig {
             return this;
         }
 
-        /** Days before a daily ledger is moved to {@code memory/archive/}. */
+        /** 每日账本移至 {@code memory/archive/} 前的保留天数。 */
         public Builder dailyFileRetentionDays(int dailyFileRetentionDays) {
             if (dailyFileRetentionDays <= 0) {
                 throw new IllegalArgumentException(
@@ -319,7 +307,7 @@ public final class MemoryConfig {
             return this;
         }
 
-        /** Trigger policy for the per-call flush hook. Must not be null. */
+        /** 调用级提取写入钩子的触发策略，不得为 null。 */
         public Builder flushTrigger(FlushTrigger flushTrigger) {
             if (flushTrigger == null) {
                 throw new IllegalArgumentException("flushTrigger must not be null");

@@ -23,21 +23,23 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 /**
- * Immutable generation options for LLM models.
- * Use the builder pattern to construct instances.
+ * LLM 模型不可变的生成选项，使用建造者模式创建实例。
  *
- * <p>This class holds both per-request generation parameters (temperature, maxTokens, etc.)
- * and connection-level configuration (apiKey, baseUrl, modelName, stream).
+ * <p>同时保存请求级生成参数（temperature、maxTokens 等）和连接级配置
+ * （apiKey、baseUrl、modelName、stream）。
+ *
+ * <p>【学习提示】null 往往表示“由下层或默认配置决定”，不等同于 false、0 或空字符串。
+ * 配置合并必须逐字段理解；某个参数有通用字段，也不代表所有服务商都支持它。
  */
 public class GenerateOptions {
-    // Connection-level configuration
+    // 连接级配置
     private final String apiKey;
     private final String baseUrl;
     private final String endpointPath;
     private final String modelName;
     private final Boolean stream;
 
-    // Generation parameters
+    // 生成参数
     private final Double temperature;
     private final Double topP;
     private final Integer maxTokens;
@@ -58,9 +60,9 @@ public class GenerateOptions {
     private final Map<String, String> additionalQueryParams;
 
     /**
-     * Creates a new GenerateOptions instance using the builder pattern.
+     * 通过建造者模式创建新的 GenerateOptions 实例。
      *
-     * @param builder the builder containing the generation options configuration
+     * @param builder 包含生成选项配置的建造者
      */
     private GenerateOptions(Builder builder) {
         this.apiKey = builder.apiKey;
@@ -98,184 +100,177 @@ public class GenerateOptions {
     }
 
     /**
-     * Gets the API key for authentication.
+     * 获取用于认证的 API 密钥。
      *
-     * <p>This is the API key used to authenticate with the LLM provider.
-     * When null, the model's default API key will be used (if configured).
+     * <p>此密钥用于向 LLM 服务商进行认证。为 null 时，
+     * 使用模型配置的默认 API 密钥（如果已配置）。
      *
-     * @return the API key, or null if not set
+     * @return API 密钥；未设置时为 null
      */
     public String getApiKey() {
         return apiKey;
     }
 
     /**
-     * Gets the base URL for the API endpoint.
+     * 获取 API 端点的基础 URL。
      *
-     * <p>This is the base URL of the LLM provider's API.
-     * When null, the model's default base URL will be used (if configured).
+     * <p>这是 LLM 服务商 API 的基础 URL。为 null 时，
+     * 使用模型配置的默认基础 URL（如果已配置）。
      *
-     * @return the base URL, or null if not set
+     * @return 基础 URL；未设置时为 null
      */
     public String getBaseUrl() {
         return baseUrl;
     }
 
     /**
-     * Gets the endpoint path for the API request.
+     * 获取 API 请求的端点路径。
      *
-     * <p>This is the API endpoint path (e.g., "/v1/chat/completions").
-     * When null, the model's default endpoint path will be used.
+     * <p>这是 API 端点路径（例如 "/v1/chat/completions"）。
+     * 为 null 时，使用模型的默认端点路径。
      *
-     * <p>This allows customization for OpenAI-compatible APIs that use different
-     * endpoint paths than the standard OpenAI API.
+     * <p>允许为采用不同于标准 OpenAI 路径的兼容 API 自定义端点。
      *
-     * @return the endpoint path, or null if not set
+     * @return 端点路径；未设置时为 null
      */
     public String getEndpointPath() {
         return endpointPath;
     }
 
     /**
-     * Gets the model name to use for generation.
+     * 获取生成时使用的模型名称。
      *
-     * <p>This specifies which model to use (e.g., "gpt-4", "gpt-3.5-turbo").
-     * When null, the model's default model name will be used (if configured).
+     * <p>指定要使用的模型（例如 "gpt-4"、"gpt-3.5-turbo"）。
+     * 为 null 时，使用模型配置的默认名称（如果已配置）。
      *
-     * @return the model name, or null if not set
+     * @return 模型名称；未设置时为 null
      */
     public String getModelName() {
         return modelName;
     }
 
     /**
-     * Gets whether streaming mode is enabled.
+     * 获取是否启用流式模式。
      *
-     * <p>When true, responses will be streamed as they are generated.
-     * When false, the full response will be returned when complete.
-     * When null, the model's default streaming mode will be used (if configured).
+     * <p>为 true 时，响应随生成过程流式返回；为 false 时，生成完成后返回完整响应。
+     * 为 null 时，使用模型配置的默认流式模式（如果已配置）。
      *
-     * @return true for streaming, false for non-streaming, null if not set
+     * @return true 表示流式，false 表示非流式，未设置时为 null
      */
     public Boolean getStream() {
         return stream;
     }
 
     /**
-     * Gets the temperature for text generation.
+     * 获取文本生成的温度参数。
      *
-     * <p>Higher values (e.g., 0.8) make output more random, while lower values
-     * (e.g., 0.2) make it more focused and deterministic.
+     * <p>较高值（例如 0.8）使输出更随机；较低值（例如 0.2）使输出更集中、更确定。
      *
-     * @return the temperature value between 0 and 2, or null if not set
+     * @return 0 到 2 之间的温度值；未设置时为 null
      */
     public Double getTemperature() {
         return temperature;
     }
 
     /**
-     * Gets the top-p (nucleus sampling) parameter.
+     * 获取 top-p（核采样）参数。
      *
-     * <p>Controls diversity via nucleus sampling: considers the smallest set of tokens
-     * whose cumulative probability exceeds the top_p value.
+     * <p>通过核采样控制多样性：考虑累计概率超过 top_p 的最小词元集合。
      *
-     * @return the top-p value between 0 and 1, or null if not set
+     * @return 0 到 1 之间的 top-p 值；未设置时为 null
      */
     public Double getTopP() {
         return topP;
     }
 
     /**
-     * Gets the maximum number of tokens to generate.
+     * 获取要生成的最大词元数量。
      *
-     * @return the maximum tokens limit, or null if not set
+     * @return 最大词元限制；未设置时为 null
      */
     public Integer getMaxTokens() {
         return maxTokens;
     }
 
     /**
-     * Gets the maximum number of completion tokens to generate.
+     * 获取要生成的最大补全词元数量。
      *
-     * <p>This is an alternative to {@link #getMaxTokens()} for OpenAI-compatible APIs that support
-     * {@code max_completion_tokens}. Some providers/models treat {@code max_tokens} and
-     * {@code max_completion_tokens} as mutually exclusive; this SDK does not enforce exclusivity
-     * and will forward exactly what the caller sets.
+     * <p>这是 {@link #getMaxTokens()} 的替代选项，适用于支持
+     * {@code max_completion_tokens} 的兼容 OpenAI API。部分服务商／模型将 {@code max_tokens} 与
+     * {@code max_completion_tokens} 视为互斥；SDK 不强制这种互斥关系，而是原样转发调用方的设置。
      *
-     * @return the maximum completion tokens limit, or null if not set
+     * @return 最大补全词元限制；未设置时为 null
      */
     public Integer getMaxCompletionTokens() {
         return maxCompletionTokens;
     }
 
     /**
-     * Gets the frequency penalty.
+     * 获取频率惩罚。
      *
-     * <p>Reduces repetition by penalizing tokens based on their frequency in the text so far.
-     * Higher values decrease repetition more strongly.
+     * <p>根据词元在已生成文本中的出现频率施加惩罚，减少重复。
+     * 值越高，抑制重复的作用越强。
      *
-     * @return the frequency penalty between -2 and 2, or null if not set
+     * @return -2 到 2 之间的频率惩罚；未设置时为 null
      */
     public Double getFrequencyPenalty() {
         return frequencyPenalty;
     }
 
     /**
-     * Gets the presence penalty.
+     * 获取存在惩罚。
      *
-     * <p>Reduces repetition by penalizing tokens that have already appeared in the text.
-     * Higher values decrease repetition more strongly.
+     * <p>对已在文本中出现的词元施加惩罚，减少重复。
+     * 值越高，抑制重复的作用越强。
      *
-     * @return the presence penalty between -2 and 2, or null if not set
+     * @return -2 到 2 之间的存在惩罚；未设置时为 null
      */
     public Double getPresencePenalty() {
         return presencePenalty;
     }
 
     /**
-     * Gets the maximum number of tokens for reasoning/thinking content.
+     * 获取推理／思考内容的最大词元数量。
      *
-     * <p>This parameter is specific to models that support thinking mode (e.g., DashScope).
-     * When set, it enables the model to show its reasoning process before generating the final
-     * answer.
+     * <p>此参数适用于支持思考模式的模型（例如 DashScope）。
+     * 设置后允许模型在生成最终答案前展示推理过程。
      *
-     * @return the thinking budget in tokens, or null if not set
+     * @return 以词元为单位的思考预算；未设置时为 null
      */
     public Integer getThinkingBudget() {
         return thinkingBudget;
     }
 
     /**
-     * Gets the reasoning effort level for o1 models.
+     * 获取 o1 模型的推理努力级别。
      *
-     * <p>This parameter controls how much effort the model spends on reasoning.
-     * Valid values are "low", "medium", and "high".
+     * <p>控制模型投入推理的程度。有效值为 "low"、"medium" 和 "high"。
      *
-     * @return the reasoning effort level, or null if not set
+     * @return 推理努力级别；未设置时为 null
      */
     public String getReasoningEffort() {
         return reasoningEffort;
     }
 
     /**
-     * Gets the execution configuration for timeout and retry behavior.
+     * 获取超时与重试行为的执行配置。
      *
-     * <p>When set, the model will apply timeout and retry logic according to the
-     * configured execution config (timeout duration, max attempts, backoff, error filtering).
+     * <p>设置后，模型按照执行配置应用超时和重试逻辑，包括超时时长、
+     * 最大尝试次数、退避和错误过滤。
      *
-     * @return the execution configuration, or null if not configured
+     * @return 执行配置；未配置时为 null
      */
     public ExecutionConfig getExecutionConfig() {
         return executionConfig;
     }
 
     /**
-     * Gets the tool choice configuration for controlling how the model uses tools.
+     * 获取控制模型如何使用工具的工具选择配置。
      *
-     * <p>When set, this controls whether the model can call tools, must call tools,
-     * or must call a specific tool. When null, the default behavior (auto) is used.
+     * <p>控制模型可以调用工具、必须调用工具还是必须调用指定工具。
+     * 为 null 时使用默认行为（auto）。
      *
-     * @return the tool choice configuration, or null if not set (defaults to auto)
+     * @return 工具选择配置；未设置时为 null（默认为 auto）
      * @see ToolChoice
      */
     public ToolChoice getToolChoice() {
@@ -283,132 +278,127 @@ public class GenerateOptions {
     }
 
     /**
-     * Gets the top-k sampling parameter.
+     * 获取 top-k 采样参数。
      *
-     * <p>Limits the model to only consider the top K most probable tokens at each step.
-     * Lower values make output more focused, higher values allow more diversity.
+     * <p>限制模型每一步仅考虑概率最高的 K 个词元。
+     * 较低值使输出更集中，较高值允许更丰富的变化。
      *
-     * @return the top-k value, or null if not set
+     * @return top-k 值；未设置时为 null
      */
     public Integer getTopK() {
         return topK;
     }
 
     /**
-     * Gets the random seed for deterministic generation.
+     * 获取用于确定性生成的随机种子。
      *
-     * <p>When set, the model will attempt to generate the same output for the same
-     * input and seed value, enabling reproducible results.
+     * <p>设置后，模型会尝试对相同输入和种子生成相同输出，从而支持结果复现。
      *
-     * @return the seed value, or null if not set
+     * @return 种子值；未设置时为 null
      */
     public Long getSeed() {
         return seed;
     }
 
     /**
-     * Gets whether cache control is enabled for prompt caching.
+     * 获取是否为提示缓存启用缓存控制。
      *
-     * <p>When true, the formatter will automatically add <code>cache_control:
-     * {"type": "ephemeral"}</code> to system messages and the last message in the request. This
-     * enables prompt
-     * caching on supported providers (e.g., Anthropic, DashScope, OpenAI-compatible APIs) to reduce
-     * latency and cost.
+     * <p>为 true 时，格式化器会自动将 <code>cache_control:
+     * {"type": "ephemeral"}</code> 添加到系统消息和请求中的最后一条消息。
+     * 在支持的服务商（例如 Anthropic、DashScope、兼容 OpenAI 的 API）上启用提示缓存，
+     * 以降低延迟和成本。
      *
-     * <p>Users can also manually mark individual messages for caching via {@link
-     * io.agentscope.core.message.MessageMetadataKeys#CACHE_CONTROL} metadata. Manually marked
-     * messages take priority over the automatic strategy.
+     * <p>用户也可通过 {@link
+     * io.agentscope.core.message.MessageMetadataKeys#CACHE_CONTROL} 元数据手动标记单条消息。
+     * 手动标记优先于自动策略。
      *
-     * @return true if cache control is enabled, false or null if not set
+     * @return 启用缓存控制时为 true；未设置时为 false 或 null
      */
     public Boolean getCacheControl() {
         return cacheControl;
     }
 
     /**
-     * Gets whether parallel tool calls are enabled.
+     * 获取是否启用并行工具调用。
      *
-     * <p>When true, enable parallel function calling during tool use.
+     * <p>为 true 时，在工具使用阶段启用并行函数调用。
      *
-     * @return true if parallel tool calls are enabled, false or null if not set
+     * @return 启用并行工具调用时为 true；未设置时为 false 或 null
      */
     public Boolean getParallelToolCalls() {
         return parallelToolCalls;
     }
 
     /**
-     * Gets the response format for structured output.
+     * 获取结构化输出的响应格式。
      *
-     * <p>When set, the model will return a response conforming to the specified format
-     * (e.g., JSON schema). This enables native structured output without requiring a
-     * synthetic tool like {@code generate_response}.
+     * <p>设置后，模型返回符合指定格式（例如 JSON schema）的响应，
+     * 从而支持原生结构化输出，无需 {@code generate_response} 这类合成工具。
      *
-     * @return the response format, or null if not set
+     * @return 响应格式；未设置时为 null
      */
     public ResponseFormat getResponseFormat() {
         return responseFormat;
     }
 
     /**
-     * Gets the additional HTTP headers to include in API requests.
+     * 获取要加入 API 请求的附加 HTTP 请求头。
      *
-     * <p>These headers will be merged with the default headers when making API calls.
-     * Useful for passing custom authentication, tracing, or provider-specific headers.
+     * <p>调用 API 时将这些请求头与默认请求头合并，
+     * 可用于传递自定义认证、追踪或服务商专用请求头。
      *
-     * @return an unmodifiable map of additional headers, empty if none set
+     * @return 附加请求头的不可修改映射；未设置时为空
      */
     public Map<String, String> getAdditionalHeaders() {
         return additionalHeaders;
     }
 
     /**
-     * Gets the additional parameters to include in the request body.
+     * 获取要加入请求体的附加参数。
      *
-     * <p>These parameters will be merged into the API request body, allowing
-     * provider-specific options not covered by the standard fields.
+     * <p>这些参数会合并到 API 请求体，支持标准字段未覆盖的服务商专用选项。
      *
-     * @return an unmodifiable map of additional body parameters, empty if none set
+     * @return 附加请求体参数的不可修改映射；未设置时为空
      */
     public Map<String, Object> getAdditionalBodyParams() {
         return additionalBodyParams;
     }
 
     /**
-     * Gets the additional query parameters to include in API requests.
+     * 获取要加入 API 请求的附加查询参数。
      *
-     * <p>These parameters will be appended to the API request URL as query string.
+     * <p>这些参数以查询字符串形式追加到 API 请求 URL。
      *
-     * @return an unmodifiable map of additional query parameters, empty if none set
+     * @return 附加查询参数的不可修改映射；未设置时为空
      */
     public Map<String, String> getAdditionalQueryParams() {
         return additionalQueryParams;
     }
 
     /**
-     * Creates a new builder for GenerateOptions.
+     * 创建新的 GenerateOptions 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Merges two GenerateOptions instances, with primary options taking precedence.
+     * 合并两个 GenerateOptions 实例，优先使用主选项。
      *
-     * <p>This method performs parameter-by-parameter merging: for each parameter, if the primary
-     * value is non-null, it is used; otherwise, the fallback value is used. This allows proper
-     * layering of options from different sources (e.g., per-request options over default options).
+     * <p>逐参数合并：主选项中该值非 null 时使用主值，否则使用回退值。
+     * 这样可以正确叠加不同来源的选项，例如让请求级选项覆盖默认选项。
      *
-     * <p><b>Merge Behavior:</b>
+     * <p><b>合并行为：</b>
      * <ul>
-     *   <li>Primitive fields (temperature, topP, etc.): primary != null ? primary : fallback</li>
-     *   <li>Map fields (additionalHeaders, etc.): merges both maps, with primary values overriding fallback</li>
-     *   <li>If primary is null, returns fallback directly</li>
-     *   <li>If fallback is null, returns primary directly</li>
+     *   <li>普通字段（temperature、topP 等）：primary != null ? primary : fallback</li>
+     *   <li>映射字段（additionalHeaders 等）：合并两个映射，主选项值覆盖回退值</li>
+     *   <li>primary 为 null 时直接返回 fallback</li>
+     *   <li>fallback 为 null 时直接返回 primary</li>
      * </ul>
      *
-     * <p><b>Example:</b>
+     * <p><b>示例：</b>
      * <pre>{@code
      * ExecutionConfig defaultExecConfig = ExecutionConfig.builder()
      *     .timeout(Duration.ofMinutes(5))
@@ -432,9 +422,9 @@ public class GenerateOptions {
      * GenerateOptions merged = GenerateOptions.mergeOptions(perRequest, defaults);
      * }</pre>
      *
-     * @param primary the primary options (higher priority)
-     * @param fallback the fallback options (lower priority)
-     * @return merged options, or null if both are null
+     * @param primary 主选项（较高优先级）
+     * @param fallback 回退选项（较低优先级）
+     * @return 合并后的选项；两者均为 null 时返回 null
      */
     public static GenerateOptions mergeOptions(GenerateOptions primary, GenerateOptions fallback) {
         if (primary == null) {
@@ -487,7 +477,7 @@ public class GenerateOptions {
         builder.responseFormat(
                 primary.responseFormat != null ? primary.responseFormat : fallback.responseFormat);
 
-        // Merge map fields: fallback first, then override with primary
+        // 合并映射字段：先放入回退值，再用主选项值覆盖
         mergeMaps(fallback.additionalHeaders, primary.additionalHeaders, builder::additionalHeader);
         mergeMaps(
                 fallback.additionalBodyParams,
@@ -516,14 +506,14 @@ public class GenerateOptions {
     }
 
     public static class Builder {
-        // Connection-level configuration
+        // 连接级配置
         private String apiKey;
         private String baseUrl;
         private String endpointPath;
         private String modelName;
         private Boolean stream;
 
-        // Generation parameters
+        // 生成参数
         private Double temperature;
         private Double topP;
         private Integer maxTokens;
@@ -544,10 +534,10 @@ public class GenerateOptions {
         private Map<String, String> additionalQueryParams;
 
         /**
-         * Sets the API key for authentication.
+         * 设置用于认证的 API 密钥。
          *
-         * @param apiKey the API key
-         * @return this builder instance
+         * @param apiKey API 密钥
+         * @return 当前建造者实例
          */
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
@@ -555,10 +545,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the base URL for the API endpoint.
+         * 设置 API 端点的基础 URL。
          *
-         * @param baseUrl the base URL
-         * @return this builder instance
+         * @param baseUrl 基础 URL
+         * @return 当前建造者实例
          */
         public Builder baseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -566,14 +556,14 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the endpoint path for the API request.
+         * 设置 API 请求的端点路径。
          *
-         * <p>This allows customization for OpenAI-compatible APIs that use different
-         * endpoint paths than the standard OpenAI API (e.g., "/v4/chat/completions",
-         * "/api/v1/llm/chat", etc.). When null, the default endpoint path will be used.
+         * <p>允许为使用不同于标准 OpenAI 路径的兼容 API 自定义端点，
+         * 例如 "/v4/chat/completions"、"/api/v1/llm/chat" 等。
+         * 为 null 时使用默认端点路径。
          *
-         * @param endpointPath the endpoint path (e.g., "/v1/chat/completions")
-         * @return this builder instance
+         * @param endpointPath 端点路径（例如 "/v1/chat/completions"）
+         * @return 当前建造者实例
          */
         public Builder endpointPath(String endpointPath) {
             this.endpointPath = endpointPath;
@@ -581,10 +571,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the model name to use for generation.
+         * 设置生成时使用的模型名称。
          *
-         * @param modelName the model name (e.g., "gpt-4", "gpt-3.5-turbo")
-         * @return this builder instance
+         * @param modelName 模型名称（例如 "gpt-4"、"gpt-3.5-turbo"）
+         * @return 当前建造者实例
          */
         public Builder modelName(String modelName) {
             this.modelName = modelName;
@@ -592,10 +582,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets whether streaming mode is enabled.
+         * 设置是否启用流式模式。
          *
-         * @param stream true for streaming, false for non-streaming
-         * @return this builder instance
+         * @param stream true 表示流式，false 表示非流式
+         * @return 当前建造者实例
          */
         public Builder stream(Boolean stream) {
             this.stream = stream;
@@ -603,13 +593,12 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the temperature for text generation.
+         * 设置文本生成的温度参数。
          *
-         * <p>Higher values (e.g., 0.8) make output more random, while lower values
-         * (e.g., 0.2) make it more focused and deterministic.
+         * <p>较高值（例如 0.8）使输出更随机；较低值（例如 0.2）使输出更集中、更确定。
          *
-         * @param temperature the temperature value between 0 and 2
-         * @return this builder instance
+         * @param temperature 0 到 2 之间的温度值
+         * @return 当前建造者实例
          */
         public Builder temperature(Double temperature) {
             this.temperature = temperature;
@@ -617,13 +606,12 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the top-p (nucleus sampling) parameter.
+         * 设置 top-p（核采样）参数。
          *
-         * <p>Controls diversity via nucleus sampling: considers the smallest set of tokens
-         * whose cumulative probability exceeds the top_p value.
+         * <p>通过核采样控制多样性：考虑累计概率超过 top_p 的最小词元集合。
          *
-         * @param topP the top-p value between 0 and 1
-         * @return this builder instance
+         * @param topP 0 到 1 之间的 top-p 值
+         * @return 当前建造者实例
          */
         public Builder topP(Double topP) {
             this.topP = topP;
@@ -631,10 +619,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the maximum number of tokens to generate.
+         * 设置要生成的最大词元数量。
          *
-         * @param maxTokens the maximum tokens limit
-         * @return this builder instance
+         * @param maxTokens 最大词元限制
+         * @return 当前建造者实例
          */
         public Builder maxTokens(Integer maxTokens) {
             this.maxTokens = maxTokens;
@@ -642,15 +630,14 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the maximum number of completion tokens to generate.
+         * 设置要生成的最大补全词元数量。
          *
-         * <p>This is an alternative to {@link #maxTokens(Integer)} for OpenAI-compatible APIs that
-         * support {@code max_completion_tokens}. This builder does not enforce exclusivity with
-         * {@code maxTokens}; both may be set and will be forwarded as-is by formatters that support
-         * both fields.
+         * <p>这是 {@link #maxTokens(Integer)} 的替代选项，适用于支持
+         * {@code max_completion_tokens} 的兼容 OpenAI API。此建造者不强制它与
+         * {@code maxTokens} 互斥；可以同时设置，支持两个字段的格式化器会原样转发。
          *
-         * @param maxCompletionTokens the maximum completion tokens limit
-         * @return this builder instance
+         * @param maxCompletionTokens 最大补全词元限制
+         * @return 当前建造者实例
          */
         public Builder maxCompletionTokens(Integer maxCompletionTokens) {
             this.maxCompletionTokens = maxCompletionTokens;
@@ -658,13 +645,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the frequency penalty.
+         * 设置频率惩罚。
          *
-         * <p>Reduces repetition by penalizing tokens based on their frequency in the text so far.
-         * Higher values decrease repetition more strongly.
+         * <p>根据词元在已生成文本中的出现频率施加惩罚，减少重复。
+         * 值越高，抑制重复的作用越强。
          *
-         * @param frequencyPenalty the frequency penalty between -2 and 2
-         * @return this builder instance
+         * @param frequencyPenalty -2 到 2 之间的频率惩罚
+         * @return 当前建造者实例
          */
         public Builder frequencyPenalty(Double frequencyPenalty) {
             this.frequencyPenalty = frequencyPenalty;
@@ -672,13 +659,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the presence penalty.
+         * 设置存在惩罚。
          *
-         * <p>Reduces repetition by penalizing tokens that have already appeared in the text.
-         * Higher values decrease repetition more strongly.
+         * <p>对已在文本中出现的词元施加惩罚，减少重复。
+         * 值越高，抑制重复的作用越强。
          *
-         * @param presencePenalty the presence penalty between -2 and 2
-         * @return this builder instance
+         * @param presencePenalty -2 到 2 之间的存在惩罚
+         * @return 当前建造者实例
          */
         public Builder presencePenalty(Double presencePenalty) {
             this.presencePenalty = presencePenalty;
@@ -686,14 +673,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the thinking budget (maximum tokens for reasoning/thinking content).
+         * 设置思考预算（推理／思考内容的最大词元数量）。
          *
-         * <p>This parameter is specific to models that support thinking mode. When set, the model
-         * will show its reasoning process before generating the final answer. Setting this
-         * parameter may automatically enable thinking mode in some models.
+         * <p>此参数适用于支持思考模式的模型。设置后模型会在最终答案之前展示推理过程；
+         * 部分模型可能因设置此参数而自动启用思考模式。
          *
-         * @param thinkingBudget the maximum tokens for thinking content
-         * @return this builder
+         * @param thinkingBudget 思考内容的最大词元数量
+         * @return 当前建造者
          */
         public Builder thinkingBudget(Integer thinkingBudget) {
             this.thinkingBudget = thinkingBudget;
@@ -701,13 +687,12 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the reasoning effort level for o1 models.
+         * 设置 o1 模型的推理努力级别。
          *
-         * <p>This parameter controls how much effort the model spends on reasoning.
-         * Valid values are "low", "medium", and "high".
+         * <p>控制模型投入推理的程度。有效值为 "low"、"medium" 和 "high"。
          *
-         * @param reasoningEffort the reasoning effort level
-         * @return this builder
+         * @param reasoningEffort 推理努力级别
+         * @return 当前建造者
          */
         public Builder reasoningEffort(String reasoningEffort) {
             this.reasoningEffort = reasoningEffort;
@@ -715,13 +700,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the execution configuration for timeout and retry behavior.
+         * 设置超时与重试行为的执行配置。
          *
-         * <p>When configured, model API calls will apply timeout and retry logic according
-         * to the execution config (timeout duration, max attempts, backoff, error filtering).
+         * <p>配置后，模型 API 调用会按照执行配置应用超时和重试逻辑，
+         * 包括超时时长、最大尝试次数、退避和错误过滤。
          *
-         * @param executionConfig the execution configuration, or null to disable
-         * @return this builder instance
+         * @param executionConfig 执行配置；null 表示不设置
+         * @return 当前建造者实例
          */
         public Builder executionConfig(ExecutionConfig executionConfig) {
             this.executionConfig = executionConfig;
@@ -729,19 +714,18 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the tool choice configuration for controlling how the model uses tools.
+         * 设置控制模型如何使用工具的工具选择配置。
          *
-         * <p>This setting controls whether the model can call tools, must call tools,
-         * or must call a specific tool:
+         * <p>控制模型可以调用工具、必须调用工具还是必须调用指定工具：
          * <ul>
-         *   <li>{@link ToolChoice.Auto} - Let model decide (default when null)</li>
-         *   <li>{@link ToolChoice.None} - Prevent tool calling</li>
-         *   <li>{@link ToolChoice.Required} - Force at least one tool call</li>
-         *   <li>{@link ToolChoice.Specific} - Force specific tool call</li>
+         *   <li>{@link ToolChoice.Auto} — 由模型决定（null 时的默认值）</li>
+         *   <li>{@link ToolChoice.None} — 禁止工具调用</li>
+         *   <li>{@link ToolChoice.Required} — 至少调用一个工具</li>
+         *   <li>{@link ToolChoice.Specific} — 强制调用指定工具</li>
          * </ul>
          *
-         * @param toolChoice the tool choice configuration, or null for default (auto)
-         * @return this builder instance
+         * @param toolChoice 工具选择配置；null 表示默认值（auto）
+         * @return 当前建造者实例
          * @see ToolChoice
          */
         public Builder toolChoice(ToolChoice toolChoice) {
@@ -750,13 +734,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the top-k sampling parameter.
+         * 设置 top-k 采样参数。
          *
-         * <p>Limits the model to only consider the top K most probable tokens at each step.
-         * Lower values make output more focused, higher values allow more diversity.
+         * <p>限制模型每一步仅考虑概率最高的 K 个词元。
+         * 较低值使输出更集中，较高值允许更丰富的变化。
          *
-         * @param topK the top-k value
-         * @return this builder instance
+         * @param topK top-k 值
+         * @return 当前建造者实例
          */
         public Builder topK(Integer topK) {
             this.topK = topK;
@@ -764,13 +748,12 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the random seed for deterministic generation.
+         * 设置用于确定性生成的随机种子。
          *
-         * <p>When set, the model will attempt to generate the same output for the same
-         * input and seed value, enabling reproducible results.
+         * <p>设置后，模型会尝试对相同输入和种子生成相同输出，从而支持结果复现。
          *
-         * @param seed the seed value
-         * @return this builder instance
+         * @param seed 种子值
+         * @return 当前建造者实例
          */
         public Builder seed(Long seed) {
             this.seed = seed;
@@ -778,13 +761,13 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets whether cache control is enabled for prompt caching.
+         * 设置是否为提示缓存启用缓存控制。
          *
-         * <p>When true, the formatter will automatically add <code>cache_control:
-         * {"type": "ephemeral"}</code> to system messages and the last message in the request.
+         * <p>为 true 时，格式化器会自动将 <code>cache_control:
+         * {"type": "ephemeral"}</code> 添加到系统消息和请求中的最后一条消息。
          *
-         * @param cacheControl true to enable cache control, false to disable
-         * @return this builder instance
+         * @param cacheControl true 表示启用缓存控制，false 表示禁用
+         * @return 当前建造者实例
          */
         public Builder cacheControl(Boolean cacheControl) {
             this.cacheControl = cacheControl;
@@ -792,10 +775,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets whether to enable parallel function calling during tool use.
+         * 设置是否在工具使用阶段启用并行函数调用。
          *
-         * @param parallelToolCalls true to enable parallel tool calls, false to disable
-         * @return this builder instance
+         * @param parallelToolCalls true 表示启用并行工具调用，false 表示禁用
+         * @return 当前建造者实例
          */
         public Builder parallelToolCalls(Boolean parallelToolCalls) {
             this.parallelToolCalls = parallelToolCalls;
@@ -803,10 +786,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets the response format for structured output.
+         * 设置结构化输出的响应格式。
          *
-         * @param responseFormat the response format configuration
-         * @return this builder instance
+         * @param responseFormat 响应格式配置
+         * @return 当前建造者实例
          */
         public Builder responseFormat(ResponseFormat responseFormat) {
             this.responseFormat = responseFormat;
@@ -814,11 +797,11 @@ public class GenerateOptions {
         }
 
         /**
-         * Adds an additional HTTP header to include in API requests.
+         * 添加要加入 API 请求的附加 HTTP 请求头。
          *
-         * @param key the header name
-         * @param value the header value
-         * @return this builder instance
+         * @param key 请求头名称
+         * @param value 请求头值
+         * @return 当前建造者实例
          */
         public Builder additionalHeader(String key, String value) {
             if (this.additionalHeaders == null) {
@@ -829,10 +812,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets all additional HTTP headers to include in API requests.
+         * 设置要加入 API 请求的全部附加 HTTP 请求头。
          *
-         * @param headers the headers map
-         * @return this builder instance
+         * @param headers 请求头映射
+         * @return 当前建造者实例
          */
         public Builder additionalHeaders(Map<String, String> headers) {
             this.additionalHeaders = headers != null ? new HashMap<>(headers) : null;
@@ -840,11 +823,11 @@ public class GenerateOptions {
         }
 
         /**
-         * Adds an additional parameter to include in the request body.
+         * 添加要加入请求体的附加参数。
          *
-         * @param key the parameter name
-         * @param value the parameter value
-         * @return this builder instance
+         * @param key 参数名称
+         * @param value 参数值
+         * @return 当前建造者实例
          */
         public Builder additionalBodyParam(String key, Object value) {
             if (this.additionalBodyParams == null) {
@@ -855,10 +838,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets all additional parameters to include in the request body.
+         * 设置要加入请求体的全部附加参数。
          *
-         * @param params the parameters map
-         * @return this builder instance
+         * @param params 参数映射
+         * @return 当前建造者实例
          */
         public Builder additionalBodyParams(Map<String, Object> params) {
             this.additionalBodyParams = params != null ? new HashMap<>(params) : null;
@@ -866,11 +849,11 @@ public class GenerateOptions {
         }
 
         /**
-         * Adds an additional query parameter to include in API requests.
+         * 添加要加入 API 请求的附加查询参数。
          *
-         * @param key the parameter name
-         * @param value the parameter value
-         * @return this builder instance
+         * @param key 参数名称
+         * @param value 参数值
+         * @return 当前建造者实例
          */
         public Builder additionalQueryParam(String key, String value) {
             if (this.additionalQueryParams == null) {
@@ -881,10 +864,10 @@ public class GenerateOptions {
         }
 
         /**
-         * Sets all additional query parameters to include in API requests.
+         * 设置要加入 API 请求的全部附加查询参数。
          *
-         * @param params the parameters map
-         * @return this builder instance
+         * @param params 参数映射
+         * @return 当前建造者实例
          */
         public Builder additionalQueryParams(Map<String, String> params) {
             this.additionalQueryParams = params != null ? new HashMap<>(params) : null;
@@ -892,9 +875,9 @@ public class GenerateOptions {
         }
 
         /**
-         * Builds a new GenerateOptions instance with the set values.
+         * 使用已设置的值构建新的 GenerateOptions 实例。
          *
-         * @return a new GenerateOptions instance
+         * @return 新的 GenerateOptions 实例
          */
         public GenerateOptions build() {
             return new GenerateOptions(this);

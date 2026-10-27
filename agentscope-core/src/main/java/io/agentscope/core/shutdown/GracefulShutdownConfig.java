@@ -19,46 +19,44 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Configuration for graceful shutdown behavior of the agent system.
+ * 智能体系统优雅关闭行为的配置。
  *
- * <p>This record defines how the system should behave during shutdown, including:
+ * <p>此记录定义系统在关闭时的行为，包括：
  * <ul>
- *   <li>Maximum time to wait for ongoing operations to complete</li>
- *   <li>Policy for handling partial reasoning results</li>
+ *   <li>等待正在进行的操作完成的最长时间</li>
+ *   <li>处理部分推理结果的策略</li>
  * </ul>
  *
- * @param shutdownTimeout       maximum duration to wait for shutdown completion;
- *                              if null, the system will wait indefinitely for all operations
- *                              to complete; if specified, must be a positive duration
- * @param partialReasoningPolicy policy for handling incomplete reasoning results during shutdown;
- *                              cannot be null
+ * @param shutdownTimeout       等待关闭完成的最长时长；为 null 时无限等待所有操作完成；
+ *                              指定时必须为正时长
+ * @param partialReasoningPolicy 关闭期间处理未完成推理结果的策略；不可为 null
  */
 public record GracefulShutdownConfig(
         Duration shutdownTimeout, PartialReasoningPolicy partialReasoningPolicy) {
 
     /**
-     * Default configuration instance.
+     * 默认配置实例。
      *
-     * <p>Uses the following settings:
+     * <p>使用以下设置：
      * <ul>
-     *   <li>Shutdown timeout: null (wait indefinitely)</li>
-     *   <li>Partial reasoning policy: {@link PartialReasoningPolicy#SAVE}</li>
+     *   <li>关闭超时：null（无限等待）</li>
+     *   <li>部分推理策略：{@link PartialReasoningPolicy#SAVE}</li>
      * </ul>
      */
     public static final GracefulShutdownConfig DEFAULT =
             new GracefulShutdownConfig(null, PartialReasoningPolicy.SAVE);
 
     /**
-     * Compact constructor for validation.
+     * 用于验证的紧凑构造器。
      *
-     * <p>Validates that:
+     * <p>验证以下条件：
      * <ul>
-     *   <li>{@code partialReasoningPolicy} is not null</li>
-     *   <li>{@code shutdownTimeout}, if specified, is a positive duration</li>
+     *   <li>{@code partialReasoningPolicy} 不为 null</li>
+     *   <li>{@code shutdownTimeout} 若已指定，必须为正时长</li>
      * </ul>
      *
-     * @throws NullPointerException     if partialReasoningPolicy is null
-     * @throws IllegalArgumentException if shutdownTimeout is non-positive
+     * @throws NullPointerException     当 partialReasoningPolicy 为 null 时抛出
+     * @throws IllegalArgumentException 当 shutdownTimeout 不是正时长时抛出
      */
     public GracefulShutdownConfig {
         Objects.requireNonNull(partialReasoningPolicy, "partialReasoningPolicy cannot be null");

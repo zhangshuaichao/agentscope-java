@@ -26,11 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Per-call metadata for an agent run: session-scoped fields plus a thread-safe attribute bag and
- * an optional {@link ToolExecutionContext} (tool-POJO / DI layer).
+ * 智能体运行的单次调用元数据：会话作用域字段、线程安全的属性容器，
+ * 以及可选的 {@link ToolExecutionContext}（工具 POJO／依赖注入层）。
  *
- * <p>Attributes are not persisted. Hooks and tools may read and update the same instance for the
- * duration of a single {@code call}.
+ * <p>属性不会持久化。在单次 {@code call} 期间，钩子和工具可以读取、更新同一个实例。
  */
 public class RuntimeContext {
 
@@ -40,42 +39,41 @@ public class RuntimeContext {
     private final String userId;
 
     /**
-     * Per-call correlation id: explicit via {@link Builder#runId(String)} (uniqueness is the
-     * caller's) or auto-generated; copied by {@link Builder#from} so derived contexts (subagent
-     * chains) stay correlated. Never {@code null}.
+     * 单次调用关联 ID：可通过 {@link Builder#runId(String)} 显式设置（唯一性由调用方负责），
+     * 也可自动生成；{@link Builder#from} 会复制它，使派生上下文（子智能体链）保持关联。绝不为 {@code null}。
      */
     private final String runId;
 
     /**
-     * Call-scoped {@link AgentState} for the active {@code (userId, sessionId)} slot. Set once at
-     * call entry by the agent and read by middlewares / tools that need the live conversational
-     * state during the call (instead of {@code agent.getAgentState()}, which is not call-scoped
-     * under concurrency). {@code null} outside of a call.
+     * 活动 {@code (userId, sessionId)} 槽位对应的调用作用域 {@link AgentState}。
+     * 由智能体在调用入口设置一次，供调用期间需要实时会话状态的中间件／工具读取，
+     * 而非使用并发场景下不具备调用作用域的 {@code agent.getAgentState()}。
+     * 调用之外为 {@code null}。
      */
     private volatile AgentState agentState;
 
-    /** String-keyed extras (legacy and generic extension). */
+    /**
+     * 以字符串为键的额外属性（兼容旧接口及通用扩展）。
+     */
     private final ConcurrentMap<String, Object> stringAttributes;
 
     /**
-     * Typed layer: class -&gt; (key -&gt; value). For singleton-typed access, use {@link
-     * #TYPED_DEFAULT_KEY}.
+     * 类型化层：class -&gt; (key -&gt; value)。单例类型访问请使用 {@link #TYPED_DEFAULT_KEY}。
      */
     private final ConcurrentMap<Class<?>, ConcurrentMap<String, Object>> typedAttributes;
 
     private final ToolExecutionContext toolExecutionContext;
 
     /**
-     * Per-call tool request config (immutable). Carries the per-call tool difference — externally
-     * injected (schema-only) tools + merge mode — composed with the agent's shared toolkit to
-     * produce the tool surface for one call. {@code null} means use the shared toolkit as-is.
+     * 单次调用的工具请求配置（不可变）。携带本次调用的工具差异：外部注入的工具（仅 schema）及合并模式。
+     * 与智能体共享工具集组合，形成一次调用可见的工具集合。{@code null} 表示原样使用共享工具集。
      */
     private ToolRequestConfig toolRequestConfig;
 
     private RuntimeContext(Builder builder) {
         this.sessionId = builder.sessionId;
         this.userId = builder.userId;
-        // Generated here (not cached on the builder) so reusing one Builder yields distinct ids.
+        // 在此生成（不缓存在构建器中），以便复用同一 Builder 时得到不同 ID。
         this.runId =
                 builder.runId == null || builder.runId.isBlank() ? generateRunId() : builder.runId;
         this.stringAttributes = new ConcurrentHashMap<>();
@@ -104,7 +102,7 @@ public class RuntimeContext {
     }
 
     /**
-     * Shallow, mutable empty context (null session fields, empty attribute maps, no tool context).
+     * 浅层、可变的空上下文（会话字段为 null、属性映射为空、不含工具上下文）。
      */
     public static RuntimeContext empty() {
         return new Builder().build();
@@ -119,45 +117,44 @@ public class RuntimeContext {
     }
 
     /**
-     * Returns the stable per-call correlation id for logs, events, and tracing — including
-     * subagent chains derived from this context — aligned with {@link AgentRun#runId()} for
-     * handles created via {@code prepareRun}/{@code prepareCall}. Never {@code null}.
+     * 返回日志、事件和追踪使用的稳定单次调用关联 ID，也覆盖由此上下文派生的子智能体链。
+     * 通过 {@code prepareRun}／{@code prepareCall} 创建句柄时，与 {@link AgentRun#runId()} 对齐。
+     * 绝不为 {@code null}。
      */
     public String getRunId() {
         return runId;
     }
 
-    /** Generates a fresh opaque runId (32-char hex); the single source for default ids. */
+    /**
+     * 生成新的不透明 runId（32 位十六进制字符串）；默认 ID 的唯一生成入口。
+     */
     public static String generateRunId() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
-     * Returns the call-scoped {@link AgentState} for this run, or {@code null} when accessed
-     * outside of an active {@code call()}. Prefer this over {@code agent.getAgentState()} from
-     * middlewares and tools so the correct session's state is used under concurrency.
+     * 返回本次运行调用作用域的 {@link AgentState}；不在活动 {@code call()} 内时为 {@code null}。
+     * 中间件和工具应优先使用此方法而非 {@code agent.getAgentState()}，确保并发时使用正确会话的状态。
      */
     public AgentState getAgentState() {
         return agentState;
     }
 
     /**
-     * Installs the call-scoped {@link AgentState}. Called by the agent at call entry; not part of
-     * the public tool/middleware contract.
+     * 安装调用作用域的 {@link AgentState}。由智能体在调用入口调用，不属于公共工具／中间件契约。
      */
     public void setAgentState(AgentState agentState) {
         this.agentState = agentState;
     }
 
     /**
-     * Resolves the live {@link AgentState} for the current call, preferring the call-scoped state
-     * carried on {@code ctx} (concurrency-safe) and falling back to {@code fallbackAgent}'s state
-     * only when the context carries none. Middlewares and tools should use this instead of calling
-     * {@code agent.getAgentState()} directly, which is not call-scoped under concurrency.
+     * 解析当前调用的实时 {@link AgentState}，优先使用 {@code ctx} 携带的调用作用域状态（并发安全），
+     * 只有上下文未携带状态时才回退到 {@code fallbackAgent} 的状态。
+     * 中间件和工具应使用此方法，而非直接调用并发下不具备调用作用域的 {@code agent.getAgentState()}。
      *
-     * @param ctx the per-call runtime context (may be {@code null})
-     * @param fallbackAgent the agent to fall back to (may be {@code null})
-     * @return the resolved {@link AgentState}, or {@code null} if neither source provides one
+     * @param ctx 单次调用的运行时上下文（可以为 {@code null}）
+     * @param fallbackAgent 用于回退的智能体（可以为 {@code null}）
+     * @return 解析出的 {@link AgentState}；两个来源均未提供时为 {@code null}
      */
     public static AgentState resolveAgentState(RuntimeContext ctx, Agent fallbackAgent) {
         AgentState s = ctx != null ? ctx.getAgentState() : null;
@@ -168,26 +165,24 @@ public class RuntimeContext {
     }
 
     /**
-     * Returns the tool execution context provided at build time, if any.
+     * 返回构建时提供的工具执行上下文（如果存在）。
      *
-     * <p>Does not include runtime attribute projections; use {@link #asToolExecutionContext()}.
+     * <p>不包含运行时属性投影；请使用 {@link #asToolExecutionContext()}。
      */
     public ToolExecutionContext getToolExecutionContext() {
         return toolExecutionContext;
     }
 
     /**
-     * Returns the per-call tool request config, or {@code null} when none was provided (the
-     * execution engine then uses the agent's shared toolkit as-is).
+     * 返回单次调用的工具请求配置；未提供时为 {@code null}（执行引擎随后原样使用智能体共享工具集）。
      */
     public ToolRequestConfig getToolRequestConfig() {
         return toolRequestConfig;
     }
 
     /**
-     * Installs the per-call tool request config. Intended for callers that need to vary the tool
-     * surface per call without mutating the agent's shared toolkit (concurrency-safe). Set to
-     * {@code null} to use the shared toolkit as-is.
+     * 安装单次调用的工具请求配置。适用于需要按调用改变工具集合、又不修改智能体共享工具集的调用方（并发安全）。
+     * 设为 {@code null} 则原样使用共享工具集。
      */
     public void setToolRequestConfig(ToolRequestConfig toolRequestConfig) {
         this.toolRequestConfig = toolRequestConfig;
@@ -221,7 +216,7 @@ public class RuntimeContext {
         if (v != null) {
             return v;
         }
-        // Allow accessing this RuntimeContext itself
+        // 允许访问当前 RuntimeContext 自身
         if (type == RuntimeContext.class) {
             return (T) this;
         }
@@ -278,9 +273,9 @@ public class RuntimeContext {
     }
 
     /**
-     * View of string-keyed attributes; mutating the returned map affects this context.
+     * 以字符串为键的属性视图；修改返回的映射会影响此上下文。
      *
-     * <p>Typed {@link #get(Class)} values are not included; use type-based accessors.
+     * <p>不包含类型化的 {@link #get(Class)} 值；请使用基于类型的访问方法。
      */
     public Map<String, Object> getExtra() {
         return stringAttributes;
@@ -350,11 +345,11 @@ public class RuntimeContext {
     }
 
     /**
-     * Merges this context's data into a {@link ToolExecutionContext} for tool invocations.
+     * 将此上下文的数据合并为供工具调用使用的 {@link ToolExecutionContext}。
      *
-     * <p>Order: this instance is registered and exposed first (highest priority in {@link
-     * ToolExecutionContext#merge}, then a {@link ContextStore} for typed and string attributes,
-     * then stores from the nested {@link #getToolExecutionContext()} (if any).
+     * <p>顺序：首先注册并暴露当前实例（在 {@link ToolExecutionContext#merge} 中优先级最高），
+     * 然后是用于类型化和字符串属性的 {@link ContextStore}，最后是嵌套
+     * {@link #getToolExecutionContext()} 中的存储（如果存在）。
      */
     public ToolExecutionContext asToolExecutionContext() {
         ToolExecutionContext.Builder b = ToolExecutionContext.builder();
@@ -394,9 +389,8 @@ public class RuntimeContext {
         }
 
         /**
-         * Sets an explicit per-call correlation id (e.g. an orchestration trace id); uniqueness
-         * is the caller's. Overrides a value copied by {@link #from(RuntimeContext)}. Unset or
-         * blank generates one at {@code build()} time.
+         * 显式设置单次调用关联 ID（例如编排追踪 ID）；唯一性由调用方负责。
+         * 覆盖 {@link #from(RuntimeContext)} 复制的值。未设置或为空白时在 {@code build()} 时生成。
          */
         public Builder runId(String runId) {
             this.runId = runId;
@@ -445,8 +439,8 @@ public class RuntimeContext {
             }
             this.sessionId = source.sessionId;
             this.userId = source.userId;
-            // Derived contexts intentionally share the source's runId (agent_spawn chains); a
-            // later runId(x) overrides it.
+            // 派生上下文有意共享来源的 runId（agent_spawn 调用链）；
+            // 后续 runId(x) 调用可以覆盖它。
             this.runId = source.runId;
             this.agentState = source.agentState;
             this.toolExecutionContext = source.toolExecutionContext;
@@ -465,8 +459,8 @@ public class RuntimeContext {
         }
 
         /**
-         * Nests a {@link ToolExecutionContext} (e.g. agent builder-level tool DI) that will be
-         * visible at lower priority than runtime attributes in {@link #asToolExecutionContext()}.
+         * 嵌套 {@link ToolExecutionContext}（例如智能体构建器级工具依赖注入），
+         * 它在 {@link #asToolExecutionContext()} 中的可见优先级低于运行时属性。
          */
         public Builder toolExecutionContext(ToolExecutionContext toolExecutionContext) {
             this.toolExecutionContext = toolExecutionContext;
@@ -474,9 +468,8 @@ public class RuntimeContext {
         }
 
         /**
-         * Installs a per-call tool request config. When set, the agent's execution engine composes
-         * this immutable tool difference with the shared toolkit for the duration of the call
-         * (concurrency-safe). {@code null} (the default) means use the shared toolkit as-is.
+         * 安装单次调用的工具请求配置。设置后，执行引擎在本次调用期间将该不可变工具差异与共享工具集组合（并发安全）。
+         * {@code null}（默认值）表示原样使用共享工具集。
          */
         public Builder toolRequestConfig(ToolRequestConfig toolRequestConfig) {
             this.toolRequestConfig = toolRequestConfig;
@@ -489,8 +482,8 @@ public class RuntimeContext {
     }
 
     /**
-     * Merged view of this {@link RuntimeContext} for the tool stack: first checks typed, then
-     * string map for legacy {@link #get(String)} keys, then defers to delegate stores.
+     * 供工具调用链使用的 {@link RuntimeContext} 合并视图：先检查类型化属性，
+     * 再为旧式 {@link #get(String)} 键检查字符串映射，最后委托给底层存储。
      */
     private static final class DefaultMutableContextStore implements ContextStore {
 

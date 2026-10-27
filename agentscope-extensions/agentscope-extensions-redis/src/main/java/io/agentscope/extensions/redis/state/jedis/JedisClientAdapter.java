@@ -25,22 +25,14 @@ import redis.clients.jedis.RedisSentinelClient;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * Adapter for Jedis Redis client.
+ * Jedis Redis 客户端适配器。
  *
- * <p>This adapter supports all Jedis client types:
- * <ul>
- *   <li>{@link RedisClient} - Standalone client</li>
- *   <li>{@link RedisClusterClient} - Cluster client</li>
- *   <li>{@link RedisSentinelClient} - Sentinel client</li>
- *   <li>{@link UnifiedJedis} - Base unified interface</li>
- * </ul>
+ * <p>支持以下类型：
+ * <ul><li>{@link RedisClient}：单机。</li><li>{@link RedisClusterClient}：集群。</li>
+ * <li>{@link RedisSentinelClient}：哨兵。</li><li>{@link UnifiedJedis}：统一基础接口。</li></ul>
+ * <p>这些新客户端类型继承 {@link UnifiedJedis}，以统一接口处理不同部署模式。
  *
- * <p>All new client types extend {@link UnifiedJedis}, providing a unified interface that
- * handles different Redis deployment modes transparently.
- *
- * <p>Usage examples:
- *
- * <p>Using RedisClient (Standalone):
+ * <p>单机 RedisClient 示例：
  * <pre>{@code
  * // Create standalone client
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
@@ -48,8 +40,7 @@ import redis.clients.jedis.UnifiedJedis;
  * // Create adapter
  * JedisClientAdapter adapter = JedisClientAdapter.of(redisClient);
  * }</pre>
- *
- * <p>Using RedisClusterClient (Cluster):
+ * <p>集群 RedisClusterClient 示例：
  * <pre>{@code
  * // Create cluster client
  * Set<HostAndPort> nodes = new HashSet<>();
@@ -60,8 +51,7 @@ import redis.clients.jedis.UnifiedJedis;
  * // Create adapter
  * JedisClientAdapter adapter = JedisClientAdapter.of(clusterClient);
  * }</pre>
- *
- * <p>Using RedisSentinelClient (Sentinel):
+ * <p>哨兵 RedisSentinelClient 示例：
  * <pre>{@code
  * // Create sentinel client
  * Set<String> sentinels = new HashSet<>();
@@ -71,8 +61,7 @@ import redis.clients.jedis.UnifiedJedis;
  * // Create adapter
  * JedisClientAdapter adapter = JedisClientAdapter.of(sentinelClient);
  * }</pre>
- *
- * <p>Using UnifiedJedis (Direct):
+ * <p>直接使用 UnifiedJedis：
  * <pre>{@code
  * // Create any client type that extends UnifiedJedis
  * UnifiedJedis unifiedJedis = new RedisClient("redis://localhost:6379");
@@ -90,10 +79,9 @@ public class JedisClientAdapter implements RedisClientAdapter {
     }
 
     /**
-     * Create adapter from UnifiedJedis.
-     *
-     * @param unifiedJedis the UnifiedJedis instance (any subclass)
-     * @return a new JedisClientAdapter
+     * 从 UnifiedJedis 创建适配器。
+     * @param unifiedJedis UnifiedJedis 实例，可为任意子类
+     * @return 新建的 JedisClientAdapter
      */
     public static JedisClientAdapter of(UnifiedJedis unifiedJedis) {
         return new JedisClientAdapter(unifiedJedis);
@@ -152,7 +140,7 @@ public class JedisClientAdapter implements RedisClientAdapter {
     @Override
     public Set<String> findKeysByPattern(String pattern) {
         Set<String> matchingKeys = new HashSet<>();
-        // Unlike a single-node SCAN, Jedis' iteration traverses every master in cluster mode.
+        // 与单节点 SCAN 不同，Jedis 的迭代在集群模式遍历每个主节点。
         unifiedJedis.scanIteration(1000, pattern).collect(matchingKeys);
         return matchingKeys;
     }

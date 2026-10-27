@@ -17,21 +17,16 @@ package io.agentscope.core.model.transport;
 
 import java.net.http.HttpClient;
 
-/**
- * HTTP version.
- */
+/** HTTP 版本。 */
 public enum HttpVersion {
 
-    /**
-     * HTTP version 1.1. Forces HTTP/1.1 for all requests, including {@code https://} URLs.
-     */
+    /** HTTP 1.1。强制所有请求使用 HTTP/1.1，包括 {@code https://} URL。 */
     HTTP_1_1,
 
     /**
-     * HTTP version 2. Negotiated via ALPN on {@code https://} URLs; on cleartext URLs it
-     * attempts an h2c upgrade (RFC 7540 section 3.2), which some servers (e.g. vLLM/uvicorn)
-     * handle by dropping the request body. Only set it explicitly when the server is known to
-     * support it.
+     * HTTP 2。在 {@code https://} URL 上通过 ALPN 协商；在明文 URL 上尝试
+     * h2c 升级（RFC 7540 第 3.2 节）。某些服务端（例如 vLLM/uvicorn）
+     * 处理升级时会丢弃请求体，因此仅在确认服务端支持时才显式设置。
      */
     HTTP_2;
 

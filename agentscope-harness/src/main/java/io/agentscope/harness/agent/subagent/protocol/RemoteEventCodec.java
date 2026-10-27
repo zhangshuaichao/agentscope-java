@@ -40,16 +40,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Bidirectional mapping between internal {@link AgentEvent}s and stable {@link RemoteAgentEvent}
- * wire DTOs.
+ * 内部 {@link AgentEvent} 与稳定的 {@link RemoteAgentEvent}
+ * 传输 DTO 之间的双向映射。
  */
 public final class RemoteEventCodec {
 
     private static final Logger log = LoggerFactory.getLogger(RemoteEventCodec.class);
 
     /**
-     * Unknown properties are ignored so that a payload survives derived getters that no constructor
-     * accepts (for example {@code ChatUsage.getTotalTokens()}) and fields added by a newer peer.
+     * 忽略未知属性，使载荷能容忍没有任何构造器接收的派生 getter
+     * （例如 {@code ChatUsage.getTotalTokens()}），以及较新对端新增的字段。
      */
     private static final ObjectMapper JSON =
             new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -57,13 +57,11 @@ public final class RemoteEventCodec {
     private RemoteEventCodec() {}
 
     /**
-     * Maps an internal agent event to a protocol DTO (without seq/taskId — those are assigned by
-     * the server event bus).
+     * 将内部智能体事件映射为协议 DTO（不含 seq/taskId，它们由服务器事件总线分配）。
      *
-     * <p>Every event also carries its full serialization in {@link RemoteAgentEvent#getPayload()},
-     * so a client can restore the original instance instead of the lossy flat fields. Event types
-     * without a dedicated wire type are forwarded as {@link RemoteEventType#AGENT_EVENT} and are
-     * only visible at {@code detail=verbose}.
+     * <p>每个事件还在 {@link RemoteAgentEvent#getPayload()} 中携带完整序列化结果，
+     * 使客户端可恢复原始实例，而非依赖有损的展平字段。没有专属传输类型的事件
+     * 以 {@link RemoteEventType#AGENT_EVENT} 转发，仅在 {@code detail=verbose} 时可见。
      */
     public static Optional<RemoteAgentEvent> fromAgentEvent(AgentEvent event) {
         if (event == null) {
@@ -79,9 +77,8 @@ public final class RemoteEventCodec {
     }
 
     /**
-     * Fills the flat, type-specific fields kept for clients that do not read {@code payload}, and
-     * assigns the wire type. Falls back to {@link RemoteEventType#AGENT_EVENT} for events that
-     * never had a dedicated wire type.
+     * 填充为不读取 {@code payload} 的客户端保留的类型专属展平字段，
+     * 并指定传输类型。没有专属传输类型的事件回退到 {@link RemoteEventType#AGENT_EVENT}。
      */
     private static RemoteAgentEvent withTypedFields(RemoteAgentEvent dto, AgentEvent event) {
         if (event instanceof AgentStartEvent start) {
@@ -141,19 +138,19 @@ public final class RemoteEventCodec {
     }
 
     /**
-     * Maps a protocol DTO back to an internal {@link AgentEvent}. Unknown or incomplete types are
-     * dropped. When the DTO carries a {@code taskId}, it is copied onto {@link
-     * AgentEvent#METADATA_TASK_ID}.
+     * 将协议 DTO 映射回内部 {@link AgentEvent}。丢弃未知或不完整的类型。
+     * DTO 携带 {@code taskId} 时，将其复制到 {@link AgentEvent#METADATA_TASK_ID}。
      *
-     * <p>A {@code payload} is preferred over the flat fields: it restores the original event with
-     * its ids, timestamps and metadata intact, and is the only way to recover events sent as
-     * {@link RemoteEventType#AGENT_EVENT}. Servers too old to send one still decode through the
-     * per-type mapping below.
+     * <p>优先使用 {@code payload} 而不是展平字段：它可完整恢复原始事件的 ID、时间戳和
+     * 元数据，也是恢复以 {@link RemoteEventType#AGENT_EVENT} 发送的事件的唯一方式。
+     * 太旧而无法发送载荷的服务器仍通过下面的按类型映射解码。
      */
     public static Optional<AgentEvent> toAgentEvent(RemoteAgentEvent remote) {
         if (remote == null) {
             return Optional.empty();
         }
+        // 【学习提示】先尝试完整载荷，再降级到旧版展平字段：兼顾事件信息保真与协议演进。
+        // 未知类型不一定意味着整条事件不可用，只要完整载荷仍能解析，就可恢复并标记任务来源。
         Optional<AgentEvent> fromPayload = deserializeEvent(remote.getPayload());
         if (fromPayload.isPresent()) {
             return fromPayload.map(event -> stampTaskId(event, remote));
@@ -215,10 +212,10 @@ public final class RemoteEventCodec {
     }
 
     /**
-     * Whether this event type should be emitted for the given detail level.
+     * 给定详细级别下是否应发出此事件类型。
      *
-     * @param type event type
-     * @param detail see {@link RemoteStreamDetail}
+     * @param type 事件类型
+     * @param detail 参见 {@link RemoteStreamDetail}
      */
     public static boolean matchesDetail(RemoteEventType type, String detail) {
         if (type == null) {
@@ -232,7 +229,9 @@ public final class RemoteEventCodec {
         };
     }
 
-    /** Detail check for a whole DTO; equivalent to {@link #matchesDetail(RemoteEventType, String)}. */
+    /**
+     * 针对整个 DTO 的详细级别检查；等价于 {@link #matchesDetail(RemoteEventType, String)}。
+     */
     public static boolean matchesDetail(RemoteAgentEvent event, String detail) {
         return event != null && matchesDetail(event.getType(), detail);
     }
@@ -293,9 +292,8 @@ public final class RemoteEventCodec {
     }
 
     /**
-     * Serializes an event for {@link RemoteAgentEvent#getPayload()}. Returns {@code null} when the
-     * event cannot be represented as JSON, in which case the receiver falls back to the flat wire
-     * fields rather than the run failing.
+     * 为 {@link RemoteAgentEvent#getPayload()} 序列化事件。无法将事件表示为 JSON
+     * 时返回 {@code null}；此时接收端回退到展平的传输字段，而不是使运行失败。
      */
     private static String serializeEvent(AgentEvent event) {
         try {

@@ -187,21 +187,20 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
 /**
- * ReAct (Reasoning and Acting) Agent implementation.
+ * ReAct（推理与行动）智能体实现。
  *
- * <p>ReAct is an agent design pattern that combines reasoning (thinking and planning) with acting
- * (tool execution) in an iterative loop. The agent alternates between these two phases until it
- * either completes the task or reaches the maximum iteration limit.
+ * <p>ReAct 是将推理（思考与规划）和行动（工具执行）结合为迭代循环的智能体设计模式。
+ * 智能体交替执行两个阶段，直到完成任务或达到最大迭代次数。
  *
- * <p><b>Key Features:</b>
+ * <p><b>主要特性：</b>
  * <ul>
- *   <li><b>Reactive Streaming:</b> Uses Project Reactor for non-blocking execution
- *   <li><b>Hook System:</b> Extensible hooks for monitoring and intercepting agent execution
- *   <li><b>HITL Support:</b> Human-in-the-loop via stopAgent() in PostReasoningEvent/PostActingEvent
- *   <li><b>Structured Output:</b> per-call {@code generate_response} tool provides type-safe output
+ * <li><b>响应式流：</b>使用 Project Reactor 实现非阻塞执行</li>
+ * <li><b>钩子系统：</b>通过可扩展钩子监测、拦截执行</li>
+ * <li><b>HITL 支持：</b>通过 PostReasoningEvent/PostActingEvent 的 stopAgent() 实现人在回路中</li>
+ * <li><b>结构化输出：</b>单次调用的 {@code generate_response} 工具提供类型安全输出</li>
  * </ul>
  *
- * <p><b>Usage Example:</b>
+ * <p><b>用法示例：</b>
  * <pre>{@code
  * import io.agentscope.extensions.model.dashscope.DashScopeChatModel;
  *
@@ -232,10 +231,9 @@ import reactor.util.context.Context;
  *     .build()).block();
  * }</pre>
  *
- * <p><b>Concurrency:</b> Calls sharing a {@code (userId, sessionId)} slot are serialized;
- * distinct slots can execute concurrently. Runtime contexts are passed through each call's
- * execution scope, middleware parameters, and tool parameters, never through a shared current
- * context accessor. Custom tools, hooks, and middlewares must also be safe for concurrent use.
+ * <p><b>并发：</b>共享 {@code (userId, sessionId)} 槽位的调用串行执行，不同槽位可并发执行。
+ * 运行时上下文通过每次调用的执行作用域、中间件参数和工具参数传递，绝不经共享“当前上下文”访问器传递。
+ * 自定义工具、钩子和中间件也必须支持安全并发使用。
  */
 @SuppressWarnings("deprecation")
 public class ReActAgent extends AgentBase implements AutoCloseable {
@@ -244,19 +242,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     private static final GracefulShutdownManager shutdownManager =
             GracefulShutdownManager.getInstance();
 
-    /** Tool name used for the per-call structured-output {@code generate_response} tool. */
+    /**
+     * 单次调用结构化输出工具 {@code generate_response} 使用的工具名称。
+     */
     public static final String STRUCTURED_OUTPUT_TOOL_NAME = "generate_response";
 
     /**
-     * @deprecated Permission HITL no longer uses a Reactor Sink. Confirm results are now
-     *     delivered via a second {@code agent.call(msgs)} carrying a {@link ConfirmResult}
-     *     payload — see {@code applyConfirmResults}. This constant is retained as a
-     *     compile-time marker and will be removed in a future release.
+     * @deprecated 权限 HITL 不再使用 Reactor Sink。确认结果现在通过第二次 {@code agent.call(msgs)} 调用携带
+     * {@link ConfirmResult} 载荷传入，参见 {@code applyConfirmResults}。
+     * 此常量保留为编译期标记，将在未来版本移除。
      */
     @Deprecated
     public static final String CONFIRM_SINK_KEY = "io.agentscope.core.ReActAgent.confirmSink";
 
-    // ==================== Core Dependencies ====================
+    // ==================== 核心依赖 ====================
 
     private final String sysPrompt;
     private final Model model;
@@ -266,31 +265,32 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     private final GenerateOptions generateOptions;
 
     /**
-     * Whether native structured-output responses are validated against the requested JSON Schema.
-     * Enabled by default; {@link Builder#validateStructuredOutput(boolean)} can restore the
-     * legacy trust-the-provider behavior.
+     * 是否按请求的 JSON Schema 校验原生结构化输出响应。
+     * 默认启用；{@link Builder#validateStructuredOutput(boolean)} 可恢复旧式“信任提供方”的行为。
      */
     private final boolean validateStructuredOutput;
 
     /**
-     * Agent-owned toolkit (a deep copy made at {@code build()} time, isolated per agent instance).
-     * Shared across this agent's concurrent calls; per-call structured-output tools are NOT
-     * registered here — they live on the per-call {@link CallExecution} scope.
+     * 智能体拥有的工具集（在 {@code build()} 时深拷贝，每个智能体实例隔离）。
+     * 在该智能体的并发调用之间共享；单次调用的结构化输出工具不注册在此，
+     * 而是存于单次调用的 {@link CallExecution} 作用域。
      */
     private final Toolkit toolkit;
 
-    /** Default active groups captured after builder-time toolkit configuration is complete. */
+    /**
+     * 构建器阶段工具集配置完成后捕获的默认活动工具组。
+     */
     private final List<String> initialActiveToolGroups;
 
     /**
-     * Builder-configured baseline {@link SkillFilter} for this agent's skill view. Never null —
-     * an unset builder filter defaults to {@link SkillFilter#all()}. This is the baseline the
-     * skill middlewares apply; per-call overlays supplied via the {@link RuntimeContext} compose
-     * on top of it.
+     * 构建器配置的技能视图基准 {@link SkillFilter}。绝不为 null，未设置时默认 {@link SkillFilter#all()}。
+     * 技能中间件使用此基准，再叠加通过 {@link RuntimeContext} 提供的单次调用过滤器。
      */
     private final SkillFilter skillFilter;
 
-    /** Builder-configured stable directory for skill materialisation; {@code null} when unset. */
+    /**
+     * 构建器配置的稳定技能实体化目录；未设置时为 {@code null}。
+     */
     private final Path skillWorkDir;
 
     private final ToolExecutionContext toolExecutionContext;
@@ -300,59 +300,61 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     private final ActionObserver actionObserver;
 
     /**
-     * Per-extension-point participants, grouped once at construction from {@link #middlewares}
-     * (stable filter, onion order preserved). Immutable and shared across concurrent calls;
-     * later {@link MiddlewareBase#activePoints()} changes have no effect.
+     * 按扩展点分组的参与者，在构造时从 {@link #middlewares} 一次性分组（稳定过滤，保留洋葱顺序）。
+     * 结果不可变，在并发调用间共享；之后修改 {@link MiddlewareBase#activePoints()} 不会生效。
      */
     private final Map<MiddlewareBase.ExtensionPoint, List<MiddlewareBase>> groupedMiddlewares;
 
     private final boolean enablePendingToolRecovery;
 
-    // ==================== Persistence ====================
+    // ==================== 持久化 ====================
 
     private final AgentStateStore stateStore;
 
     /**
-     * Policy applied when an optimistic-concurrency save of {@code agent_state} conflicts.
-     * Defaults to {@link ConflictPolicy#OVERWRITE} (legacy last-writer-wins).
+     * {@code agent_state} 乐观并发保存冲突时使用的策略。
+     * 默认为 {@link ConflictPolicy#OVERWRITE}（旧式后写覆盖）。
      */
     private final ConflictPolicy conflictPolicy;
 
     /**
-     * Builder-time fallback {@code sessionId}, used only when a call does not supply a
-     * {@code sessionId} via its {@link RuntimeContext}. Each call still picks its own active slot
-     * (see {@link #activateSlotForContext(RuntimeContext)}); this is only the fallback when RC
-     * carries no per-call session identity.
+     * 构建器阶段设置的回退 {@code sessionId}，仅当调用未通过 {@link RuntimeContext} 提供 {@code sessionId} 时使用。
+     * 每次调用仍选择自己的活动槽位（见 {@link #activateSlotForContext(RuntimeContext)}）；
+     * 这仅是 RC 未携带单次调用会话身份时的回退值。
      */
     private final String defaultSessionId;
 
     /**
-     * Builder-time permission template, applied to every freshly-created slot. Nullable.
+     * 构建器阶段的权限模板，应用于每个新建槽位。可以为 null。
      */
     private final PermissionContextState initialPermissionContext;
 
-    // ==================== 2.0 Core Fields ====================
+    // ==================== 2.0 核心字段 ====================
 
-    /** Cache of state per {@code (userId, sessionId)} slot key. */
+    /**
+     * 按 {@code (userId, sessionId)} 槽位键缓存状态。
+     */
     private final ConcurrentHashMap<String, AgentState> stateCache = new ConcurrentHashMap<>();
 
-    /** Detached working copies for the compatibility get/mutate/save API; never execution state. */
+    /**
+     * 兼容 get/mutate/save API 的独立工作副本，绝不作为执行状态。
+     */
     private final ConcurrentHashMap<String, SessionStateAccess.Snapshot> nativeStateCopies =
             new ConcurrentHashMap<>();
 
     /**
-     * Optimistic-concurrency version observed for each slot (parallel to {@link #stateCache}).
-     * Updated on load and on successful CAS save. Absent entries mean {@link
-     * AgentStateStore#UNVERSIONED}.
+     * 每个槽位观测到的乐观并发版本（与 {@link #stateCache} 并行维护）。
+     * 在加载及成功 CAS 保存时更新；不存在的条目表示 {@link AgentStateStore#UNVERSIONED}。
      */
     private final ConcurrentHashMap<String, Long> slotVersions = new ConcurrentHashMap<>();
 
-    /** Count of CAS conflicts observed during agent_state saves (metric / diagnostics). */
+    /**
+     * agent_state 保存期间观测到的 CAS 冲突次数（用于指标／诊断）。
+     */
     private final AtomicLong stateConflictCount = new AtomicLong();
 
     /**
-     * Per-slot permission engine cache: runtime-added ASK rules accumulate within the owning
-     * slot rather than leaking across users / sessions.
+     * 按槽位缓存权限引擎：运行时添加的 ASK 规则仅在所属槽位内累积，不会泄漏到其他用户／会话。
      */
     private final ConcurrentHashMap<String, PermissionEngine> permissionEngineCache =
             new ConcurrentHashMap<>();
@@ -361,15 +363,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     private final ReactConfig reactConfig;
 
     /**
-     * Reactor Context key carrying the {@code streamEvents} event sink into the underlying
-     * {@code call()} subscription. The sink is read in {@link #doCall(List)} and bound to the
-     * freshly-built {@link CallExecution#eventSink} for that subscription, so concurrent
-     * {@code streamEvents} invocations on one agent each carry their own sink (no shared instance
-     * field, no race).
+     * 将 {@code streamEvents} 事件 sink 带入底层 {@code call()} 订阅的 Reactor Context 键。
+     * 在 {@link #doCall(List)} 中读取，并绑定到为该订阅新建的 {@link CallExecution#eventSink}。
+     * 因此同一智能体上的并发 {@code streamEvents} 调用分别携带自己的 sink，无共享实例字段，也无竞争。
      */
     private static final String EVENT_SINK_KEY = "io.agentscope.core.ReActAgent.eventSink";
 
-    /** Synthetic reminder injected when looping back to reasoning for an empty final response. */
+    /**
+     * 最终回复为空而重新进入推理时，注入的合成提醒。
+     */
     private static final String EMPTY_RESPONSE_REMINDER_TEXT =
             "<system-reminder>Your previous reply had empty content - the full answer was written"
                     + " to the reasoning channel only. Reply again and write the final answer into"
@@ -378,9 +380,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     @SuppressWarnings("deprecation")
     private final LegacyHookDispatcher hookDispatcher;
 
-    // ==================== Constructor ====================
+    // ==================== 构造方法 ====================
 
-    /** Read-only open: does not acquire ownership, run repair, or dispatch work. */
+    /**
+     * 只读打开：不获取所有权、不执行修复、不派发工作。
+     */
     public SessionLog sessionLog(RuntimeContext context) {
         if (sessionLogStore == null)
             throw new IllegalStateException("Native session history is disabled");
@@ -448,11 +452,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         if (this.stateStore != null && !sessionLogEnabled()) {
             shutdownManager.bindStateSaver(
                     this,
-                    // The saver receives the precise per-(userId, sessionId) AgentState bound to
-                    // the interrupted request, so persist that session directly rather than the
-                    // instance "last-active" CallExecution (which is wrong under concurrency).
-                    // On CAS conflict the session was taken over elsewhere — log and skip
-                    // overwrite.
+                    // 保存器接收与被中断请求准确绑定的 (userId, sessionId) AgentState，
+                    // 因此直接持久化该会话，而不是使用实例的
+                    // “最近活跃” CallExecution（它在并发下不正确）。
+                    // CAS 冲突说明会话已在别处被接管，记录日志并跳过
+                    // 覆盖。
                     agentState -> {
                         String uid = agentState.getUserId();
                         String sid = agentState.getSessionId();
@@ -480,15 +484,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Internal slot identifier — {@code (userId or "__anon__") + "/" + sessionId}.
-     * Not part of the public API.
+     * 内部槽位标识符：{@code (userId or "__anon__") + "/" + sessionId}。
+     * 不属于公共 API。
      */
     private static String slotKey(String userId, String sessionId) {
         Objects.requireNonNull(sessionId, "sessionId must not be null");
         return (userId == null || userId.isBlank() ? "__anon__" : userId) + "/" + sessionId;
     }
 
-    /** Reverse of {@link #slotKey}: the parsed {@code (userId, sessionId)} pair. */
+    /**
+     * {@link #slotKey} 的逆操作：解析出的 {@code (userId, sessionId)} 对。
+     */
     private record SlotRef(String userId, String sessionId) {
         static SlotRef parse(String slotKey) {
             int slash = slotKey.lastIndexOf('/');
@@ -499,11 +505,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Loads the standalone state-store entry, or creates a fresh state. Older v1 session keys
-     * require an explicit migration and are not consulted during normal activation.
+     * 加载独立的状态存储条目，或创建新状态。旧 v1 会话键需要显式迁移，正常激活时不会查询。
      *
-     * @return state paired with the store version ({@code 0} when absent on a versioning backend,
-     *     {@link AgentStateStore#UNVERSIONED} when the backend does not version)
+     * @return 状态及其存储版本（支持版本的后端中不存在条目时为 {@code 0}，
+     * 后端不支持版本时为 {@link AgentStateStore#UNVERSIONED}）
      */
     private static VersionedState<AgentState> loadOrCreateAgentStateForSlot(
             AgentStateStore stateStore,
@@ -548,9 +553,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Persist the current {@link AgentState} via the configured {@link AgentStateStore}, or {@code
-     * Mono.empty()} when no AgentStateStore was provided. Uses optimistic concurrency when the
-     * store supports versioning.
+     * 通过配置的 {@link AgentStateStore} 持久化当前 {@link AgentState}；
+     * 未提供 AgentStateStore 时返回 {@code Mono.empty()}。存储支持版本时使用乐观并发控制。
      */
     private Mono<Void> saveStateToSession(CallExecution scope) {
         SessionRecorder recorder = SessionRecorder.from(scope.rc);
@@ -582,16 +586,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Persist the safe conversation state accumulated before a failed call and rethrow the original
-     * failure. Incomplete model chunks are only held by the per-iteration accumulator, so they are
-     * deliberately not added to {@link AgentState} or persisted here.
+     * 持久化失败调用之前已累积的安全会话状态，并重新抛出原始错误。
+     * 不完整的模型片段仅保存在每次迭代的累积器中，因此有意不加入 {@link AgentState}，也不在此持久化。
      *
-     * <p>{@link InterruptedException} is intentionally skipped: an interrupt is already handled end
-     * to end by {@link #handleInterrupt}, which first reconciles any dangling tool_use produced
-     * during reasoning (synthesizing error results for pending tool calls) and only then persists.
-     * Saving here would race ahead of that reconciliation and persist an inconsistent intermediate
-     * state (a tool_use with no matching tool result), so the interrupt is allowed to propagate
-     * untouched.
+     * <p>有意跳过 {@link InterruptedException}：中断已由 {@link #handleInterrupt} 完整处理，
+     * 该方法先协调推理过程中产生的悬空 tool_use（为待处理工具调用合成错误结果），再执行持久化。
+     * 此处保存可能抢在协调完成前写入不一致的中间状态（tool_use 缺少匹配工具结果），
+     * 所以允许中断原样向上传播。
      */
     private <T> Mono<T> saveStateAfterCallFailure(CallExecution scope, Throwable callFailure) {
         if (ExceptionUtils.containsInterruptedException(callFailure)) {
@@ -613,10 +614,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * CAS-aware persist of {@code agent_state}. Applies {@link #conflictPolicy} on conflict.
+     * 支持 CAS 的 {@code agent_state} 持久化，冲突时应用 {@link #conflictPolicy}。
      *
-     * @return the new store version, or {@link AgentStateStore#UNVERSIONED} when the backend does
-     *     not version
+     * @return 新存储版本；后端不支持版本时为 {@link AgentStateStore#UNVERSIONED}
      */
     private long persistAgentStateCas(
             String userId,
@@ -627,10 +627,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             int loadedContextSize) {
         if (!stateStore.supportsVersioning() || expectedVersion == AgentStateStore.UNVERSIONED) {
             if (stateStore.supportsVersioning()) {
-                // Unconditional write through the versioning API: the store returns the
-                // version assigned to THIS write (JDBC #3220, in-memory likewise), so
-                // slotVersions can no longer capture a concurrent writer's version between
-                // the write and a separate version read.
+                // 通过版本化 API 无条件写入：存储返回本次写入
+                // 分配的版本（JDBC #3220，内存实现亦然），因此
+                // slotVersions 不会再在写入与独立读取版本之间
+                // 误记并发写入者的版本。
                 long written =
                         stateStore.saveIfVersion(
                                 userId,
@@ -642,8 +642,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                     slotVersions.put(slot, written);
                     return written;
                 }
-                // Defensive only: a versioning backend returning UNVERSIONED for an
-                // unconditional write violates the AgentStateStore contract.
+                // 仅作防御：支持版本的后端若为无条件写入返回 UNVERSIONED，
+                // 就违反了 AgentStateStore 契约。
                 stateStore.save(userId, sessionId, "agent_state", toSave);
             } else {
                 stateStore.save(userId, sessionId, "agent_state", toSave);
@@ -730,17 +730,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Per-call slot activation. Reads {@code (userId, sessionId)} from the given RuntimeContext
-     * (falling back to {@link #defaultSessionId} when absent), and atomically swaps the active
-     * {@code #state} + {@code #permissionEngine} to that slot's cached entries.
+     * 单次调用槽位激活。从给定 RuntimeContext 读取 {@code (userId, sessionId)}
+     * （缺失时回退到 {@link #defaultSessionId}），原子地将活动 {@code #state} 与 {@code #permissionEngine}
+     * 切换为该槽位的缓存条目。
      *
-     * <p>When a {@link AgentStateStore} is configured the state is always reloaded from the store
-     * at the beginning of each call so that distributed deployments (where the same sessionId may
-     * drift across machines) see the latest persisted state rather than a stale local cache entry.
-     * The per-call cost of one store read is negligible compared to the LLM round-trip.
+     * <p>配置 {@link AgentStateStore} 后，每次调用开始时总是从存储重新加载状态，
+     * 使分布式部署中同一 sessionId 即使转移到不同机器，也能看到最新持久化状态而非过期本地缓存。
+     * 相比大模型往返调用，每次读取一次存储的代价很小。
      *
-     * <p>Safe to call from {@code beforeAgentExecution} only — caller must hold the
-     * {@code AgentBase.acquireExecution} lock.
+     * <p>仅允许从 {@code beforeAgentExecution} 安全调用；调用方必须持有 {@code AgentBase.acquireExecution} 锁。
      */
     private CallExecution activateSlotForContext(RuntimeContext ctx) {
         String sid = ctx != null ? ctx.getSessionId() : null;
@@ -804,7 +802,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return new CallExecution(loaded, loadedEngine, slot, loadedVersion);
     }
 
-    // ==================== Config assembly helpers ====================
+    // ==================== 配置组装辅助方法 ====================
 
     private static ModelConfig assembleModelConfig(Builder b) {
         int retries = b.flatMaxRetries != null ? b.flatMaxRetries : ModelConfig.DEFAULT_MAX_RETRIES;
@@ -823,9 +821,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
 
     @Override
     protected Object callSerializationKey(RuntimeContext rc) {
-        // Serialize calls per (userId, sessionId) slot: same-session calls share cached AgentState
+        // 按 (userId, sessionId) 槽位串行化调用：同会话调用共享缓存的 AgentState
         // /
-        // conversation history, so they must run one-at-a-time; distinct sessions run in parallel.
+        // 及会话历史，因此必须逐个运行；不同会话则并行。
         String sid = rc != null ? rc.getSessionId() : null;
         if (sid == null || sid.isBlank()) {
             sid = defaultSessionId;
@@ -935,22 +933,22 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         if (ctx == null) {
             ctx = RuntimeContext.builder().runId(control.runId()).build();
         }
-        // Per-call: resolve the (userId, sessionId) slot carried by the RuntimeContext (falling
-        // back to the builder-time default when absent) and build a fresh per-call scope bound to
-        // that slot's cached state / permissionEngine. The returned reference is the authoritative
-        // per-call scope (carried on the Reactor Context); the instance field is only a
-        // side-channel default for out-of-call accessors.
+        // 按调用解析 RuntimeContext 携带的 (userId, sessionId) 槽位（缺失时
+        // 回退到构建器默认值），并新建绑定到该槽位缓存状态／权限引擎的
+        // 调用作用域。返回引用是权威的
+        // 单次调用作用域（经 Reactor Context 传递）；实例字段仅是
+        // 调用之外访问器使用的旁路默认值。
         CallExecution scope = activateSlotForContext(ctx);
-        // Expose the call-scoped AgentState on the RuntimeContext so middlewares / tools resolve
-        // the active session's state via rc.getAgentState() (call-scoped, concurrency-safe)
-        // rather than agent.getAgentState() (not call-scoped under concurrency).
+        // 在 RuntimeContext 暴露调用作用域 AgentState，使中间件／工具
+        // 通过 rc.getAgentState() 解析活动会话状态（调用作用域、并发安全），
+        // 而不是通过并发时不具备调用作用域的 agent.getAgentState()。
         ctx.setAgentState(scope.state);
-        // State is ready: invoke the onAgentStateReady extension point while this call's input can
-        // still be adjusted before it enters the pipeline (pre-call hooks, memory, reasoning).
+        // 状态已就绪：调用 onAgentStateReady 扩展点，此时还可以在输入进入
+        // 管道（前置调用钩子、记忆、推理）之前调整输入。
         onAgentStateReady(ctx, scope.state, msgs);
-        // Seed per-call state onto the active execution scope. The system message is initialised
-        // by consumeSystemMsgAfterPreCall; the event sink (if any) is bound in doCall() from the
-        // per-subscription Reactor Context carried by streamEvents.
+        // 将单次调用状态放入活动执行作用域。系统消息由
+        // consumeSystemMsgAfterPreCall 初始化；事件 sink（如果存在）在 doCall() 中从
+        // streamEvents 携带的按订阅 Reactor Context 绑定。
         scope.rc = ctx;
         scope.executionIdentity =
                 ctx.get(ExecutionIdentity.CONTEXT_KEY) instanceof ExecutionIdentity identity
@@ -962,9 +960,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                         ? SessionRecorder.from(ctx).turnId()
                                         : UUID.randomUUID().toString(),
                                 control.runId());
-        // Per-call tool request config (immutable tool difference, external tools + merge mode).
-        // The shared toolkit field is never copied and never mutated; the per-call difference is
-        // carried on the scope's toolRequestConfig and composed with the shared toolkit on demand.
+        // 单次调用工具请求配置（不可变工具差异：外部工具及合并模式）。
+        // 共享 toolkit 字段既不复制也不修改；单次调用差异
+        // 保存在作用域的 toolRequestConfig 中，按需与共享工具集组合。
         ToolRequestConfig requestConfig = ctx.getToolRequestConfig();
         scope.toolRequestConfig = requestConfig != null ? requestConfig : ToolRequestConfig.NONE;
         scope.activeToolkit = this.toolkit;
@@ -974,11 +972,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Invokes {@link MiddlewareBase#onAgentStateReady} for every {@code ON_AGENT_STATE_READY}
-     * participant ({@link #middlewaresAt}) in list order (= {@code order()} descending). No
-     * isolation: an exception propagates to the caller unchanged and the remaining middlewares
-     * are not invoked. {@code msgs} is the per-subscription private mutable copy, so in-place
-     * adjustments apply to the rest of the call only.
+     * 按列表顺序（即 {@code order()} 降序）为每个 {@code ON_AGENT_STATE_READY} 参与者
+     * （{@link #middlewaresAt}）调用 {@link MiddlewareBase#onAgentStateReady}。不做异常隔离：
+     * 异常原样传播给调用方，后续中间件不再调用。{@code msgs} 是订阅私有的可变副本，
+     * 原地调整只影响本次调用的后续过程。
      */
     private void onAgentStateReady(RuntimeContext ctx, AgentState state, List<Msg> msgs) {
         for (MiddlewareBase mw :
@@ -1030,7 +1027,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return callScope instanceof CallExecution ce ? ce.state : getAgentState();
     }
 
-    /** Groups middlewares per extension point; {@code null} declarations count as full set. */
+    /**
+     * 按扩展点分组中间件；声明为 {@code null} 时视为参与全部扩展点。
+     */
     private static Map<MiddlewareBase.ExtensionPoint, List<MiddlewareBase>> groupMiddlewares(
             List<MiddlewareBase> middlewares) {
         Map<MiddlewareBase.ExtensionPoint, List<MiddlewareBase>> grouped =
@@ -1050,13 +1049,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Returns the middlewares active at the given extension point, in onion-chain order.
+     * 按洋葱链顺序返回在指定扩展点活动的中间件。
      *
-     * <p>The list is an immutable construction-time snapshot and is empty when no middleware
-     * participates at this point.
+     * <p>列表是构造时的不可变快照，无中间件参与时为空。
      *
-     * @param point the extension point
-     * @return immutable participant list, never {@code null}
+     * @param point 扩展点
+     * @return 不可变参与者列表，绝不为 {@code null}
      */
     public List<MiddlewareBase> middlewaresAt(MiddlewareBase.ExtensionPoint point) {
         return groupedMiddlewares.getOrDefault(point, List.of());
@@ -1108,8 +1106,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Calls the agent with a per-call {@link RuntimeContext} (metadata for hooks and tools, not
-     * persisted).
+     * 使用单次调用 {@link RuntimeContext} 调用智能体（供钩子和工具使用的元数据，不持久化）。
      */
     public Mono<Msg> call(List<Msg> msgs, RuntimeContext context) {
         return callInternal(msgs, context, this::doCall);
@@ -1124,33 +1121,31 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Calls the agent with a plain text input and per-call {@link RuntimeContext}.
+     * 使用纯文本输入和单次调用 {@link RuntimeContext} 调用智能体。
      *
-     * @param text    input text (wrapped into a {@link UserMessage})
-     * @param context per-call runtime context
-     * @return response message
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @param context 单次调用运行时上下文
+     * @return 回复消息
      */
     public Mono<Msg> call(String text, RuntimeContext context) {
         return call(List.of(new UserMessage(text)), context);
     }
 
     /**
-     * Calls the agent with a plain text input, structured output class, and per-call
-     * {@link RuntimeContext}.
+     * 使用纯文本输入、结构化输出类及单次调用 {@link RuntimeContext} 调用智能体。
      *
-     * @param text                 input text (wrapped into a {@link UserMessage})
-     * @param structuredOutputClass class defining the structure
-     * @param context              per-call runtime context
-     * @return response message with structured data in metadata
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @param structuredOutputClass 定义结构的类
+     * @param context 单次调用运行时上下文
+     * @return 在元数据中携带结构化数据的回复消息
      */
     public Mono<Msg> call(String text, Class<?> structuredOutputClass, RuntimeContext context) {
         return call(List.of(new UserMessage(text)), structuredOutputClass, context);
     }
 
     /**
-     * Attaches the caller-supplied {@link RuntimeContext} to the Reactor Context of the given
-     * publisher under {@link AgentBase#RUNTIME_CONTEXT_KEY}, so the call lifecycle reads it
-     * per-subscription (concurrency-safe) rather than from a shared instance field.
+     * 将调用方提供的 {@link RuntimeContext} 以 {@link AgentBase#RUNTIME_CONTEXT_KEY} 为键
+     * 附加到给定发布者的 Reactor Context，使调用生命周期按订阅读取它（并发安全），而非从共享实例字段读取。
      */
     private Mono<Msg> withRuntimeContext(Mono<Msg> mono, RuntimeContext context) {
         return context == null ? mono : mono.contextWrite(c -> c.put(RUNTIME_CONTEXT_KEY, context));
@@ -1160,10 +1155,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return context == null ? flux : flux.contextWrite(c -> c.put(RUNTIME_CONTEXT_KEY, context));
     }
 
-    // ==================== Interrupt (per-session) ====================
+    // ==================== 中断（会话级） ====================
 
     /**
-     * @deprecated Use {@link #interrupt(String, String)} with explicit userId/sessionId.
+     * @deprecated 请显式提供 userId/sessionId，使用 {@link #interrupt(String, String)}。
      */
     @Deprecated
     @Override
@@ -1171,14 +1166,18 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         interrupt(null, defaultSessionId);
     }
 
-    /** @deprecated Use {@link #interrupt(String, String, Msg)} with explicit userId/sessionId. */
+    /**
+     * @deprecated 请显式提供 userId/sessionId，使用 {@link #interrupt(String, String, Msg)}。
+     */
     @Deprecated
     @Override
     public void interrupt(Msg msg) {
         interrupt(null, defaultSessionId, msg);
     }
 
-    /** @deprecated Use {@link #interrupt(String, String)} with explicit userId/sessionId. */
+    /**
+     * @deprecated 请显式提供 userId/sessionId，使用 {@link #interrupt(String, String)}。
+     */
     @Deprecated
     @Override
     public void interrupt(InterruptSource source) {
@@ -1186,21 +1185,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Interrupts the in-flight call identified by the given {@link RuntimeContext}.
-     * Uses {@code ctx.getUserId()} and {@code ctx.getSessionId()} to locate the session.
+     * 中断给定 {@link RuntimeContext} 标识的进行中调用。
+     * 使用 {@code ctx.getUserId()} 与 {@code ctx.getSessionId()} 定位会话。
      *
-     * @param ctx the runtime context identifying the session to interrupt
+     * @param ctx 标识待中断会话的运行时上下文
      */
     public void interrupt(RuntimeContext ctx) {
         interrupt(ctx, null);
     }
 
     /**
-     * Interrupts the in-flight call identified by the given {@link RuntimeContext} with an
-     * associated user message.
+     * 中断给定 {@link RuntimeContext} 标识的进行中调用，并附带用户消息。
      *
-     * @param ctx the runtime context identifying the session to interrupt
-     * @param msg optional user message to attach to the interrupt signal
+     * @param ctx 标识待中断会话的运行时上下文
+     * @param msg 可选的附加到中断信号的用户消息
      */
     public void interrupt(RuntimeContext ctx, Msg msg) {
         String uid = ctx != null ? ctx.getUserId() : null;
@@ -1212,27 +1210,25 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Interrupts the in-flight call for a specific {@code (userId, sessionId)} session.
+     * 中断指定 {@code (userId, sessionId)} 会话的进行中调用。
      *
-     * @param userId the user id ({@code null} = anonymous / single-tenant)
-     * @param sessionId the session id
+     * @param userId 用户 ID（{@code null} 表示匿名／单租户）
+     * @param sessionId 会话 ID
      */
     public void interrupt(String userId, String sessionId) {
         interrupt(userId, sessionId, null);
     }
 
     /**
-     * Interrupts the in-flight call for a specific {@code (userId, sessionId)} session with an
-     * associated user message.
+     * 中断指定 {@code (userId, sessionId)} 会话的进行中调用，并附带用户消息。
      */
     public void interrupt(String userId, String sessionId, Msg msg) {
         interruptRunning(slotKey(userId, sessionId), InterruptSource.USER, msg);
     }
 
     /**
-     * @deprecated since 2.0.0, for removal. Use {@link #streamEvents(List)} (and overloads that
-     *     accept {@link RuntimeContext} via {@code call()}-driven lifecycle) for the
-     *     fine-grained {@code AgentEvent} stream.
+     * @deprecated 自 2.0.0 起弃用，计划移除。请使用 {@link #streamEvents(List)}
+     * 及通过 {@code call()} 驱动生命周期、接收 {@link RuntimeContext} 的重载，获取细粒度 {@code AgentEvent} 流。
      */
     @Deprecated(since = "2.0.0", forRemoval = true)
     public Flux<Event> stream(List<Msg> msgs, StreamOptions options, RuntimeContext context) {
@@ -1240,8 +1236,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * @deprecated since 2.0.0, for removal. Use {@link #streamEvents(List)} for the
-     *     fine-grained {@code AgentEvent} stream.
+     * @deprecated 自 2.0.0 起弃用，计划移除。请使用 {@link #streamEvents(List)} 获取细粒度 {@code AgentEvent} 流。
      */
     @Deprecated(since = "2.0.0", forRemoval = true)
     public Flux<Event> stream(
@@ -1253,8 +1248,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * @deprecated since 2.0.0, for removal. Use {@link #streamEvents(List)} for the
-     *     fine-grained {@code AgentEvent} stream.
+     * @deprecated 自 2.0.0 起弃用，计划移除。请使用 {@link #streamEvents(List)} 获取细粒度 {@code AgentEvent} 流。
      */
     @Deprecated(since = "2.0.0", forRemoval = true)
     public Flux<Event> stream(
@@ -1262,20 +1256,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return withRuntimeContext(stream(msgs, options, schema), context);
     }
 
-    // ==================== Shared agent-stream core ====================
+    // ==================== 共享智能体流核心 ====================
 
     /**
-     * Overrides the base-class hook so that every {@code call()} variant — including structured
-     * output and context-bearing overloads — runs through the same {@link #buildAgentStream} core
-     * as {@code streamEvents()}.  This guarantees that the {@code onAgent} middleware chain fires
-     * on <em>all</em> invocation paths, not only on the streaming path.
+     * 覆盖基类钩子，使所有 {@code call()} 变体（包括结构化输出及携带上下文的重载）
+     * 都与 {@code streamEvents()} 走相同的 {@link #buildAgentStream} 核心，
+     * 保证 {@code onAgent} 中间件链在所有调用路径上触发，而不只在流式路径触发。
      *
-     * <p>The result is extracted from the {@link AgentResultEvent} emitted by
-     * {@link #buildAgentStream} before {@link AgentEndEvent}.
+     * <p>从 {@link #buildAgentStream} 在 {@link AgentEndEvent} 之前发出的 {@link AgentResultEvent} 提取结果。
      */
     @Override
     protected Mono<Msg> callInternal(
             List<Msg> msgs, RuntimeContext context, Function<List<Msg>, Mono<Msg>> doCallFn) {
+        // 【学习提示】普通 call 并不另写一套执行逻辑，而是从公共事件流提取最终结果。
+        // 学习时将事件流视作主干，可同时理解流式 API、普通 API 与中间件的一致性。
         return buildAgentStream(msgs, context, doCallFn)
                 .filter(e -> e instanceof AgentResultEvent)
                 .cast(AgentResultEvent.class)
@@ -1285,20 +1279,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Single implementation shared by both {@code call()} (via {@link #callInternal}) and
-     * {@code streamEvents()}.
+     * {@code call()}（经 {@link #callInternal}）和 {@code streamEvents()} 共享的唯一实现。
      *
-     * <p>The stream is bookended by {@link AgentStartEvent} / {@link AgentEndEvent}, wraps the
-     * full {@link AgentBase#runLifecycle} (shutdown guard, serialization gate, pre/post hooks,
-     * tracing), and emits {@link AgentResultEvent} carrying the final {@link Msg} immediately
-     * before {@link AgentEndEvent}.  The {@code onAgent} middleware chain is applied exactly
-     * once around this core.
+     * <p>流以 {@link AgentStartEvent}／{@link AgentEndEvent} 为起止边界，
+     * 包装完整的 {@link AgentBase#runLifecycle}（关闭保护、串行化门控、前后钩子及追踪），
+     * 并在 {@link AgentEndEvent} 之前立即发出携带最终 {@link Msg} 的 {@link AgentResultEvent}。
+     * {@code onAgent} 中间件链在此核心外只应用一次。
      *
-     * @param msgs      input messages
-     * @param context   caller-supplied per-call {@link RuntimeContext}, or {@code null}
-     * @param doCallFn  the concrete call implementation ({@link #doCall} or a structured-output
-     *                  variant) passed straight through to {@link AgentBase#runLifecycle}
-     * @return event stream covering the full agent invocation lifecycle
+     * @param msgs 输入消息列表
+     * @param context 调用方提供的单次调用 {@link RuntimeContext}，或 {@code null}
+     * @param doCallFn 具体调用实现（{@link #doCall} 或结构化输出变体），直接传给 {@link AgentBase#runLifecycle}
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     private Flux<AgentEvent> buildAgentStream(
             List<Msg> msgs, RuntimeContext context, Function<List<Msg>, Mono<Msg>> doCallFn) {
@@ -1357,22 +1348,22 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                     reactor.util.context.Context subscriberCtx =
                                             reactor.util.context.Context.of(sink.contextView());
 
-                                    // Call runLifecycle directly — NOT call() — to avoid the
-                                    // onAgent chain being applied a second time.
+                                    // 直接调用 runLifecycle，而非 call()，避免
+                                    // 第二次应用 onAgent 链。
                                     Mono<Msg> lifecycle = runLifecycle(input.msgs(), doCallFn);
                                     if (context != null) {
                                         lifecycle =
                                                 lifecycle.contextWrite(
                                                         c -> c.put(RUNTIME_CONTEXT_KEY, context));
                                     }
-                                    // Do not install AgentEventEmitter.CONTEXT_KEY when the
-                                    // deprecated stream() → SubagentEventBus path is driving
-                                    // this invocation. On that path AgentSpawnTool reads
-                                    // SubagentEventBus.CONTEXT_KEY to forward child events;
-                                    // installing CONTEXT_KEY here would cause execLocalSync to
-                                    // take the AgentEvent path instead of the bus path, routing
-                                    // child events into this Flux's internal sink where they get
-                                    // filtered out by callInternal before reaching the caller.
+                                    // 当已弃用的 stream() → SubagentEventBus 路径
+                                    // 驱动本次调用时，不安装 AgentEventEmitter.CONTEXT_KEY。
+                                    // 在该路径上，AgentSpawnTool 读取
+                                    // SubagentEventBus.CONTEXT_KEY 转发子事件；
+                                    // 若在此安装 CONTEXT_KEY，execLocalSync 会
+                                    // 改走 AgentEvent 路径而非总线路径，将
+                                    // 子事件路由到此 Flux 的内部 sink，随后它们会在
+                                    // 到达调用方之前被 callInternal 过滤掉。
                                     boolean isSubagentBusPath =
                                             subscriberCtx.hasKey(SubagentEventBus.CONTEXT_KEY);
                                     Disposable lifecycleDisposable =
@@ -1414,10 +1405,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Prepare a single-use event execution handle without starting the call. Adopts the context's
-     * runId ({@code run.runId() == ctx.getRunId()}). A null context is equivalent to {@link
-     * RuntimeContext#empty()} for the whole call chain — the reactive context always carries a
-     * (possibly empty) context.
+     * 准备一次性事件执行句柄，但不启动调用。采用上下文的 runId（{@code run.runId() == ctx.getRunId()}）。
+     * null 上下文在整条调用链中等价于 {@link RuntimeContext#empty()}，
+     * 响应式上下文始终携带一个（可能为空的）上下文。
      */
     public AgentRun<AgentEvent> prepareRun(List<Msg> msgs, RuntimeContext context) {
         RuntimeContext effective = context != null ? context : RuntimeContext.empty();
@@ -1426,99 +1416,93 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Prepare a single-use reply execution handle without starting the call. Adopts the context's
-     * runId ({@code run.runId() == ctx.getRunId()}). A null context is equivalent to {@link
-     * RuntimeContext#empty()} for the whole call chain — the reactive context always carries a
-     * (possibly empty) context.
+     * 准备一次性回复执行句柄，但不启动调用。采用上下文的 runId（{@code run.runId() == ctx.getRunId()}）。
+     * null 上下文在整条调用链中等价于 {@link RuntimeContext#empty()}，
+     * 响应式上下文始终携带一个（可能为空的）上下文。
      */
     public AgentRun<Msg> prepareCall(List<Msg> msgs, RuntimeContext context) {
         RuntimeContext effective = context != null ? context : RuntimeContext.empty();
         return AgentRun.create(getAgentId(), effective.getRunId(), () -> call(msgs, effective));
     }
 
-    // ==================== streamEvents public API ====================
+    // ==================== streamEvents 公共 API ====================
 
     /**
-     * Stream fine-grained {@link AgentEvent}s from the full agent lifecycle.
+     * 流式发送完整智能体生命周期中的细粒度 {@link AgentEvent}。
      *
-     * <p>Both {@code call()} and {@code streamEvents()} share the same internal
-     * {@link #buildAgentStream} core, so the {@code onAgent} middleware chain fires on all paths.
-     * The stream includes {@link AgentResultEvent} (carrying the final {@link Msg}) immediately
-     * before {@link AgentEndEvent}.
+     * <p>{@code call()} 与 {@code streamEvents()} 共享内部 {@link #buildAgentStream} 核心，
+     * 因此 {@code onAgent} 中间件链在所有路径触发。流在 {@link AgentEndEvent} 之前包含
+     * 携带最终 {@link Msg} 的 {@link AgentResultEvent}。
      *
-     * @param msgs input messages
-     * @return event stream covering the full agent invocation lifecycle
+     * @param msgs 输入消息列表
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(List<Msg> msgs) {
         return streamEvents(msgs, (RuntimeContext) null);
     }
 
     /**
-     * Stream fine-grained {@link AgentEvent}s for a single input message.
+     * 为单条输入消息流式发送细粒度 {@link AgentEvent}。
      *
-     * @param msg input message
-     * @return event stream covering the full agent invocation lifecycle
+     * @param msg 输入消息
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(Msg msg) {
         return streamEvents(List.of(msg));
     }
 
     /**
-     * Stream fine-grained {@link AgentEvent}s with a caller-supplied {@link RuntimeContext}.
+     * 使用调用方提供的 {@link RuntimeContext} 流式发送细粒度 {@link AgentEvent}。
      *
-     * <p>Delegates directly to {@link #buildAgentStream} — the same core used by {@code call()}.
-     * Concurrent invocations do not share any state; each subscription gets its own event sink and
-     * lifecycle execution.
+     * <p>直接委托给 {@link #buildAgentStream}，与 {@code call()} 使用相同核心。
+     * 并发调用不共享状态；每个订阅具有独立的事件 sink 和生命周期执行。
      *
-     * @param msgs input messages
-     * @param context runtime context to propagate into the call
-     * @return event stream covering the full agent invocation lifecycle
+     * @param msgs 输入消息列表
+     * @param context 要传播到调用中的运行时上下文
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(List<Msg> msgs, RuntimeContext context) {
         return buildAgentStream(msgs, context, this::doCall);
     }
 
     /**
-     * Stream fine-grained {@link AgentEvent}s for a single input message with a caller-supplied
-     * {@link RuntimeContext}.
+     * 使用调用方提供的 {@link RuntimeContext}，为单条输入消息流式发送细粒度 {@link AgentEvent}。
      *
-     * @param msg input message
-     * @param context runtime context to propagate into the call
-     * @return event stream covering the full agent invocation lifecycle
+     * @param msg 输入消息
+     * @param context 要传播到调用中的运行时上下文
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(Msg msg, RuntimeContext context) {
         return streamEvents(List.of(msg), context);
     }
 
     /**
-     * Stream fine-grained {@link AgentEvent}s for a plain text input.
+     * 为纯文本输入流式发送细粒度 {@link AgentEvent}。
      *
-     * @param text input text (wrapped into a {@link UserMessage})
-     * @return event stream covering the full agent invocation lifecycle
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(String text) {
         return streamEvents(new UserMessage(text));
     }
 
     /**
-     * Stream fine-grained {@link AgentEvent}s for a plain text input with a caller-supplied
-     * {@link RuntimeContext}.
+     * 使用调用方提供的 {@link RuntimeContext}，为纯文本输入流式发送细粒度 {@link AgentEvent}。
      *
-     * @param text    input text (wrapped into a {@link UserMessage})
-     * @param context runtime context to propagate into the call
-     * @return event stream covering the full agent invocation lifecycle
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @param context 要传播到调用中的运行时上下文
+     * @return 覆盖完整智能体调用生命周期的事件流
      */
     public Flux<AgentEvent> streamEvents(String text, RuntimeContext context) {
         return streamEvents(new UserMessage(text), context);
     }
 
-    // ==================== Protected API ====================
+    // ==================== 受保护 API ====================
 
     /**
-     * Resolves the per-call {@link CallExecution} from the Reactor Context (carried by the shared
-     * {@code call()} lifecycle). Falls back to the instance {@link #exec} when absent (e.g. legacy
-     * paths that do not flow through {@code call()}), so concurrent calls each operate on their own
-     * scope.
+     * 从共享 {@code call()} 生命周期携带的 Reactor Context 解析单次调用 {@link CallExecution}。
+     * 缺失时（例如不经过 {@code call()} 的旧路径）回退到实例 {@link #exec}，
+     * 使各并发调用操作自己的作用域。
      */
     private CallExecution scopeFrom(reactor.util.context.ContextView cv) {
         Object scope = cv.getOrDefault(CALL_SCOPE_KEY, null);
@@ -1535,9 +1519,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return Mono.deferContextual(
                 cv -> {
                     CallExecution scope = scopeFrom(cv);
-                    // When a forwarding emitter is present, the parent's tool is routing child
-                    // events through a source-tagging wrapper. Skip the direct FluxSink so
-                    // publishEvent() uses the forwarding emitter instead.
+                    // 存在转发发射器时，父级工具正通过附加来源标签的包装器路由子事件。
+                    // 跳过直接 FluxSink，让
+                    // publishEvent() 改用转发发射器。
                     boolean hasForwardingEmitter =
                             cv.hasKey(AgentEventEmitter.FORWARDING_CONTEXT_KEY);
                     if (!hasForwardingEmitter) {
@@ -1563,7 +1547,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 });
     }
 
-    // ==================== Structured output (per-call) ====================
+    // ==================== 结构化输出（单次调用） ====================
 
     @Override
     protected Mono<Msg> doCall(List<Msg> msgs, Class<?> structuredOutputClass) {
@@ -1576,9 +1560,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Structured-output call dispatcher. Routes to the native path (model's {@code response_format})
-     * when the model supports it, otherwise falls back to the synthetic {@code generate_response}
-     * tool approach.
+     * 结构化输出调用分派器。模型支持时走原生路径（模型的 {@code response_format}），
+     * 否则回退到合成 {@code generate_response} 工具方案。
      */
     private Mono<Msg> doStructuredCall(List<Msg> msgs, Class<?> targetClass, JsonNode schemaDesc) {
         if (targetClass == null && schemaDesc == null) {
@@ -1630,9 +1613,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Native structured-output path: passes the schema via {@code response_format} in
-     * {@link GenerateOptions}. The model returns structured JSON as text content and the
-     * ReAct loop terminates naturally (no synthetic tool needed).
+     * 原生结构化输出路径：通过 {@link GenerateOptions} 的 {@code response_format} 传递 schema。
+     * 模型以文本内容返回结构化 JSON，ReAct 循环自然结束，无需合成工具。
      */
     private Mono<Msg> doNativeStructuredCall(List<Msg> msgs, Map<String, Object> jsonSchema) {
         return Mono.deferContextual(
@@ -1688,9 +1670,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Fallback structured-output path: injects a {@code generate_response} synthetic tool and
-     * an instruction hint. When the model calls the tool, the loop stops naturally via
-     * {@code PostActingEvent.stopAgent()}.
+     * 回退结构化输出路径：注入合成 {@code generate_response} 工具和指令提示。
+     * 模型调用该工具后，循环通过 {@code PostActingEvent.stopAgent()} 自然停止。
      */
     private Mono<Msg> doFallbackStructuredCall(List<Msg> msgs, Map<String, Object> jsonSchema) {
         return Mono.deferContextual(
@@ -1788,8 +1769,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Remove structured-output-related messages from the conversation context and append
-     * the final response.
+     * 从会话上下文移除结构化输出相关消息，并追加最终回复。
      */
     private void compressStructuredOutputContext(AgentState agentState) {
         List<Msg> contextMutable = agentState.contextMutable();
@@ -1870,9 +1850,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Build the per-call {@code generate_response} tool that captures the model's structured
-     * response. The tool only stores the raw response payload; schema validation is performed by
-     * the tool executor before this is invoked.
+     * 构建单次调用的 {@code generate_response} 工具，以捕获模型结构化回复。
+     * 该工具只保存原始响应载荷；schema 校验由工具执行器在调用它之前完成。
      */
     private AgentTool createStructuredOutputTool(Map<String, Object> schema) {
         return new AgentTool() {
@@ -1892,8 +1871,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 Map<String, Object> params = new HashMap<>();
                 params.put("type", "object");
 
-                // Shallow-copy the inner schema so we can safely hoist $defs to the outer params
-                // root without mutating the shared `schema` instance.
+                // 浅拷贝内部 schema，便于安全地将 $defs 提升到外层参数
+                // 根节点，而不修改共享的 `schema` 实例。
                 Map<String, Object> innerSchema = new HashMap<>(schema);
                 Map<String, Object> hoistedDefs = new HashMap<>();
                 hoistDefsKey(innerSchema, "$defs", hoistedDefs);
@@ -1945,7 +1924,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         };
     }
 
-    /** Extract the structured result message from the {@code generate_response} tool result. */
+    /**
+     * 从 {@code generate_response} 工具结果提取结构化结果消息。
+     */
     private Msg extractStructuredResult(Msg hookResultMsg) {
         if (hookResultMsg == null) {
             return null;
@@ -1966,14 +1947,14 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Restores a {@link Msg} from a metadata value.
+     * 从元数据值恢复 {@link Msg}。
      *
-     * <p>After a JSON persistence round-trip (agent session save/load) the typed message
-     * stored in {@code ToolResultBlock.metadata["response_msg"]} is restored as a {@code LinkedHashMap},
-     * so it is converted back to its typed form here.
+     * <p>经过 JSON 持久化往返（智能体会话保存／加载）后，
+     * {@code ToolResultBlock.metadata["response_msg"]} 中的类型化消息恢复为 {@code LinkedHashMap}，
+     * 因此在此转回类型化形式。
      *
-     * @param value the raw metadata value
-     * @return the typed message, or {@code null} if it cannot be restored
+     * @param value 原始元数据值
+     * @return 类型化消息；无法恢复时为 {@code null}
      */
     private static Msg toMsg(Object value) {
         if (value instanceof Msg msg) {
@@ -2009,7 +1990,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return responseMsg;
     }
 
-    /** Merge aggregated {@link ChatUsage} / {@link ThinkingBlock} into the final message. */
+    /**
+     * 将汇总的 {@link ChatUsage}／{@link ThinkingBlock} 合并到最终消息。
+     */
     private Msg mergeCollectedMetadata(Msg msg, ChatUsage chatUsage, ThinkingBlock thinking) {
         Map<String, Object> metadata =
                 new HashMap<>(msg.getMetadata() != null ? msg.getMetadata() : Map.of());
@@ -2038,7 +2021,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 .build();
     }
 
-    /** Hoist {@code $defs}/{@code definitions} from a nested schema up to the params root. */
+    /**
+     * 将嵌套 schema 中的 {@code $defs}／{@code definitions} 提升到参数根节点。
+     */
     @SuppressWarnings("unchecked")
     private static void hoistDefsKey(
             Map<String, Object> innerSchema, String key, Map<String, Object> target) {
@@ -2049,11 +2034,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Per-call execution scope: holds the active {@code (userId, sessionId)} slot's mutable
-     * {@link AgentState} + {@link PermissionEngine} + slot key, and hosts the entire ReAct
-     * reasoning loop. Non-static inner class so the loop references the enclosing agent's
-     * immutable config ({@code model}, {@code toolkit}, {@code middlewares}, …) and lifecycle
-     * helpers directly. Built per-call by {@link #activateSlotForContext(RuntimeContext)}.
+     * 单次调用执行作用域：保存活动 {@code (userId, sessionId)} 槽位的可变 {@link AgentState}、
+     * {@link PermissionEngine} 和槽位键，并承载完整 ReAct 推理循环。
+     * 采用非静态内部类，使循环可直接访问外层智能体的不可变配置
+     * （{@code model}、{@code toolkit}、{@code middlewares} 等）及生命周期辅助方法。
+     * 由 {@link #activateSlotForContext(RuntimeContext)} 按调用创建。
      */
     final class CallExecution {
         private static final String PERMISSION_DENIED_BY_USER = "Permission denied by user";
@@ -2073,91 +2058,92 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         String slotKey;
 
         /**
-         * Store version observed when this call loaded {@link #state}. Used for CAS on save.
-         * {@link AgentStateStore#UNVERSIONED} when the backend does not version.
+         * 本次调用加载 {@link #state} 时观测到的存储版本，用于保存时 CAS。
+         * 后端不支持版本时为 {@link AgentStateStore#UNVERSIONED}。
          */
         long loadedVersion;
 
-        /** Context size at load time; used by {@link ConflictPolicy#APPEND_MERGE}. */
+        /**
+         * 加载时的上下文大小，供 {@link ConflictPolicy#APPEND_MERGE} 使用。
+         */
         int loadedContextSize;
 
         /**
-         * Per-call system message, propagated across PreCallEvent → PreReasoningEvent /
-         * PreSummaryEvent. Owned by a single logical execution: seeded to {@code null} at call
-         * entry ({@code #beforeAgentExecution(List)}) and set by
-         * {@link #consumeSystemMsgAfterPreCall(Msg, Object)}.
+         * 单次调用系统消息，在 PreCallEvent → PreReasoningEvent／PreSummaryEvent 之间传递。
+         * 属于一次逻辑执行：在调用入口（{@code #beforeAgentExecution(List)}）初始化为 {@code null}，
+         * 由 {@link #consumeSystemMsgAfterPreCall(Msg, Object)} 设置。
          */
         Msg systemMsg;
 
         /**
-         * Per-call event sink for {@code streamEvents}. Bound in {@link ReActAgent#doCall(List)}
-         * from the per-subscription Reactor Context ({@code EVENT_SINK_KEY}) and read by
-         * {@link #publishEvent}.
+         * {@code streamEvents} 的单次调用事件 sink。在 {@link ReActAgent#doCall(List)} 中
+         * 从按订阅 Reactor Context（{@code EVENT_SINK_KEY}）绑定，由 {@link #publishEvent} 读取。
          */
         FluxSink<AgentEvent> eventSink;
 
         ExecutionIdentity executionIdentity;
 
         /**
-         * External event emitter for child-agent event forwarding. When a parent's tool (e.g.
-         * {@code agent_spawn}) injects a forwarding emitter via
-         * {@link AgentEventEmitter#FORWARDING_CONTEXT_KEY}, this child agent uses it to push
-         * events into the parent's {@code streamEvents()} stream with source tagging. Takes
-         * effect only when {@link #eventSink} is null.
+         * 转发子智能体事件的外部事件发射器。父级工具（例如 {@code agent_spawn}）
+         * 通过 {@link AgentEventEmitter#FORWARDING_CONTEXT_KEY} 注入转发发射器时，
+         * 子智能体使用它向父级 {@code streamEvents()} 流推送附带来源标签的事件。
+         * 仅在 {@link #eventSink} 为 null 时生效。
          */
         AgentEventEmitter externalEventEmitter;
 
         /**
-         * The call's {@link RuntimeContext} (caller-supplied metadata for hooks / tools). Set once
-         * at call entry; read directly by the reasoning loop instead of the instance-level
-         * {@code rc} so the loop is self-contained per call.
+         * 本次调用的 {@link RuntimeContext}（调用方为钩子／工具提供的元数据）。
+         * 在调用入口设置一次，由推理循环直接读取，而非读取实例级 {@code rc}，使循环在每次调用内自包含。
          */
         RuntimeContext rc;
 
         /**
-         * Stable per-call reference to the agent's shared {@code toolkit}, resolved once in
-         * {@code beforeAgentExecution}. The toolkit is never copied and never mutated per call;
-         * per-call tool differences live on {@link #toolRequestConfig} and are composed with this
-         * toolkit on demand, so concurrent calls on the same agent never observe each other's
-         * differences. All toolkit access in this scope reads {@code activeToolkit} for uniformity.
+         * 指向智能体共享 {@code toolkit} 的稳定单次调用引用，在 {@code beforeAgentExecution} 中解析一次。
+         * 工具集不会按调用复制或修改；单次调用工具差异存于 {@link #toolRequestConfig}，按需与工具集组合，
+         * 同一智能体的并发调用不会看到彼此的差异。此作用域所有工具集访问统一读取 {@code activeToolkit}。
          */
         Toolkit activeToolkit;
 
         /**
-         * Per-call tool request config ({@link ToolRequestConfig#NONE} = use the shared toolkit
-         * as-is). Carries the immutable per-call tool difference (external tools + merge mode);
-         * the shared {@link #activeToolkit} is never copied or mutated.
+         * 单次调用工具请求配置（{@link ToolRequestConfig#NONE} 表示原样使用共享工具集）。
+         * 携带不可变的单次调用工具差异（外部工具及合并模式）；共享 {@link #activeToolkit} 从不复制或修改。
          */
         ToolRequestConfig toolRequestConfig = ToolRequestConfig.NONE;
 
         /**
-         * Per-call structured-output tool (the {@code generate_response} tool). Non-null only for
-         * fallback structured-output calls (when the model does not support native structured
-         * output). Lives on this scope rather than the shared toolkit so concurrent
-         * structured-output calls do not collide.
+         * 单次调用结构化输出工具（{@code generate_response}）。
+         * 仅在回退式结构化输出调用中非空（模型不支持原生结构化输出时）。
+         * 存于此作用域而非共享工具集，避免并发结构化输出调用冲突。
          */
         AgentTool soTool;
 
-        /** Set to {@code true} when the {@code generate_response} tool completes successfully. */
+        /**
+         * {@code generate_response} 工具成功完成时设为 {@code true}。
+         */
         boolean soCompleted;
 
-        /** The tool result message from the successful {@code generate_response} call. */
+        /**
+         * 成功 {@code generate_response} 调用返回的工具结果消息。
+         */
         Msg soResultMsg;
 
         /**
-         * Cumulative count of forced {@code generate_response} calls. {@code 0} = never forced;
-         * when greater than {@code 0} the next reasoning round consumes the flag to force
-         * {@code tool_choice} (or a prompt reminder), and the value doubles as the retry cap: at
-         * {@code 3} we stop forcing and finish without structured data to avoid a deadlock loop.
+         * 强制 {@code generate_response} 调用的累计次数。{@code 0} 表示从未强制；
+         * 大于 {@code 0} 时，下一轮推理消费该标志以强制 {@code tool_choice}（或提示提醒）。
+         * 此值也用作重试上限：达到 {@code 3} 时停止强制，不带结构化数据结束，避免死循环。
          */
         int soForceToolChoiceCount;
 
-        /** Placeholder sentence written to the tool_result of a returnDirect tool. */
+        /**
+         * 写入 returnDirect 工具 tool_result 的占位句。
+         */
         private static final String RETURN_DIRECT_PLACEHOLDER =
                 "Tool call completed. The result has been presented to the user as the final output"
                         + " of this turn.";
 
-        /** Native structured-output format set on the per-call scope for native-path calls. */
+        /**
+         * 在原生路径调用的单次调用作用域中设置的原生结构化输出格式。
+         */
         ResponseFormat nativeResponseFormat;
 
         CallExecution(AgentState state, PermissionEngine permissionEngine, String slotKey) {
@@ -2177,7 +2163,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Reads this execution's own signal; queued calls never share cancellation state.
+         * 读取本次执行自己的信号；排队中的调用绝不共享取消状态。
          */
         private Mono<Void> checkInterrupted() {
             return Mono.defer(
@@ -2189,10 +2175,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         private Mono<Msg> doCallInner(List<Msg> msgs) {
-            // Graceful-shutdown deduplication: if the agent's session was previously interrupted
-            // by shutdown, the client is likely retrying with the same user prompt that already
-            // exists in memory. Discard the duplicate input so the agent resumes purely from its
-            // saved memory context.
+            // 优雅关闭去重：如果智能体会话先前被关闭流程中断，
+            // 客户端很可能使用已存在于记忆中的相同用户提示重试。
+            // 丢弃重复输入，使智能体仅从
+            // 已保存的记忆上下文恢复。
             if (shutdownManager.checkAndClearShutdownInterruptedForState(state)) {
                 log.info(
                         "Detected shutdown-interrupted session for agent {}, discarding duplicate"
@@ -2203,23 +2189,23 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
 
             Set<String> pendingIds = MessageUtils.pendingToolUseIds(state.contextMutable());
 
-            // No pending tools -> normal processing
+            // 没有待处理工具，正常处理
             if (pendingIds.isEmpty()) {
                 addToContext(msgs);
                 return coreAgent();
             }
 
-            // Permission HITL: if any pending tool is ASKING, the caller MUST supply
-            // ConfirmResults (via Msg.METADATA_CONFIRM_RESULTS) before we can proceed.
+            // 权限 HITL：任何待处理工具处于 ASKING 时，调用方必须先通过
+            // Msg.METADATA_CONFIRM_RESULTS 提供 ConfirmResults，才能继续。
             List<ToolUseBlock> asking = askingToolCalls();
             if (!asking.isEmpty()) {
                 validateAndAcceptConfirmResults(msgs, asking);
                 return resumeAgent();
             }
 
-            // Pending-tool-call recovery: auto-patch orphaned pending tool calls with synthetic
-            // error results so the agent can continue instead of crashing. This must happen after
-            // the permission HITL flow so ASKING tool calls are handled by confirmation first.
+            // 待处理工具调用恢复：为孤立的待处理工具调用自动补充合成
+            // 错误结果，让智能体继续而非崩溃。必须在
+            // 权限 HITL 流程之后执行，使 ASKING 调用优先由确认流程处理。
             if (enablePendingToolRecovery) {
                 maybePatchPendingToolCalls(msgs, pendingIds);
                 pendingIds = MessageUtils.pendingToolUseIds(state.contextMutable());
@@ -2229,25 +2215,25 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 }
             }
 
-            // Has pending tools but no input -> resume (execute pending tools directly)
+            // 存在待处理工具但无输入：恢复并直接执行待处理工具
             if (msgs == null || msgs.isEmpty()) {
                 return resumeAgent();
             }
 
-            // Has pending tools + input -> check if user provided tool results
+            // 存在待处理工具且有输入：检查用户是否提供工具结果
             List<ToolResultBlock> providedResults =
                     msgs.stream()
                             .flatMap(m -> m.getContentBlocks(ToolResultBlock.class).stream())
                             .toList();
 
             if (!providedResults.isEmpty()) {
-                // User provided tool results -> validate and add. Correlate the pending
-                // tool_use batch with the provided results BEFORE persisting, so a
-                // returnDirect short-circuit (same predicate as the in-framework path) can
-                // persist the placeholder-shaped tool_result directly. Only a batch resolved
-                // entirely by this resume short-circuits; a partially resolved batch (across
-                // earlier resumes, or mixed with framework-executed tools) is always fed
-                // back to the model.
+                // 用户提供了工具结果：验证后添加。持久化前将待处理
+                // tool_use 批次与提供的结果关联，以便
+                // returnDirect 短路（与框架内路径采用相同判定）能
+                // 直接持久化占位形式的 tool_result。仅本次恢复
+                // 完整解决的批次才短路；部分解决的批次（跨
+                // 先前恢复，或与框架执行工具混合）始终反馈
+                // 给模型。
                 List<ToolUseBlock> pendingBatch =
                         MessageUtils.extractPendingToolCalls(state.contextMutable(), getName());
                 List<ToolUseBlock> originalBatch =
@@ -2262,9 +2248,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 && pendingBatch.size() == originalBatch.size()
                                 && externalPairs.size() == pendingBatch.size()
                                 && externalPairs.stream().allMatch(this::isReturnDirectToolCall);
-                // Validate and publish from the caller's original messages so the
-                // ExternalExecutionResultEvent carries the real external results;
-                // only what lands in context is placeholder-shaped on a short-circuit.
+                // 根据调用方原始消息验证并发布，使
+                // ExternalExecutionResultEvent 携带真实的外部结果；
+                // 短路时仅存入上下文的内容被替换为占位形式。
                 validateAndAddToolResults(
                         msgs,
                         returnDirectResume ? placeholderToolResultMsgs(msgs) : msgs,
@@ -2278,7 +2264,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                         : coreAgent();
             }
 
-            // Recovery was disabled and user did not provide tool results — unrecoverable.
+            // 恢复功能被禁用，且用户未提供工具结果，无法恢复。
             throw new IllegalStateException(
                     "Pending tool calls exist without results. "
                             + "Enable enablePendingToolRecovery or provide tool results. "
@@ -2287,8 +2273,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Pull all {@link ConfirmResult}s out of the {@link Msg#METADATA_CONFIRM_RESULTS} metadata
-         * key across the incoming message list.
+         * 从传入消息列表的 {@link Msg#METADATA_CONFIRM_RESULTS} 元数据键中提取全部 {@link ConfirmResult}。
          */
         @SuppressWarnings("unchecked")
         private List<ConfirmResult> extractConfirmResults(List<Msg> msgs) {
@@ -2316,13 +2301,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Validate and accept a permission-HITL resume payload against the currently ASKING tool
-         * calls.
+         * 根据当前 ASKING 工具调用验证并接收权限 HITL 恢复载荷。
          *
-         * <p>Permission HITL resumes with one or more confirmations for currently ASKING tool
-         * calls. Confirmations may cover a subset of ASKING calls, but no result may reference a
-         * stale or unrelated tool call. Once accepted, the normalized results are applied to agent
-         * state and the correlated resume event is emitted.
+         * <p>权限 HITL 通过一个或多个针对当前 ASKING 工具调用的确认恢复。
+         * 确认可以只覆盖部分 ASKING 调用，但不能引用过期或无关调用。
+         * 接收后，将规范化结果应用到智能体状态，并发出关联的恢复事件。
          */
         private void validateAndAcceptConfirmResults(List<Msg> msgs, List<ToolUseBlock> asking) {
             List<ConfirmResult> results = extractConfirmResults(msgs);
@@ -2399,7 +2382,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             applyConfirmResults(normalized, replyId);
         }
 
-        /** Resolve the reply id for the pending HITL request stored on the last assistant message. */
+        /**
+         * 解析最后一条助手消息中待处理 HITL 请求的回复 ID。
+         */
         private String resolvePendingRequestReplyId(String metadataKey) {
             Msg requestMsg = MessageUtils.lastAssistantMessage(state.contextMutable());
             if (requestMsg == null || requestMsg.getMetadata() == null) {
@@ -2410,10 +2395,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Persist the reply id for a pending HITL request on the live assistant message.
+         * 将待处理 HITL 请求的回复 ID 持久化到实时助手消息。
          *
-         * <p>The assistant message owns the paused {@link ToolUseBlock}s, so storing the correlation
-         * metadata there lets the next call recover it from session state.
+         * <p>助手消息拥有暂停的 {@link ToolUseBlock}，将关联元数据存于此处，
+         * 使下一次调用能从会话状态恢复它。
          */
         private void persistPendingRequestReplyId(String metadataKey, String replyId) {
             Msg lastAssistant = MessageUtils.lastAssistantMessage(state.contextMutable());
@@ -2428,7 +2413,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                     lastAssistant.withMetadata(metadata));
         }
 
-        /** Remove HITL correlation metadata after the resume payload is accepted. */
+        /**
+         * 恢复载荷被接收后移除 HITL 关联元数据。
+         */
         private void clearPendingRequestReplyId(String metadataKey) {
             Msg lastAssistant = MessageUtils.lastAssistantMessage(state.contextMutable());
             if (lastAssistant == null || lastAssistant.getMetadata() == null) {
@@ -2446,22 +2433,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Apply user confirmation results to the ASKING tool calls in context.
+         * 将用户确认结果应用于上下文中的 ASKING 工具调用。
          *
-         * <p>For each result:
+         * <p>针对每个结果：
          * <ul>
-         *   <li>{@code confirmed == true}: replace the ASKING ToolUseBlock with the (possibly
-         *       modified) one from the result, set state to {@link ToolCallState#ALLOWED}, and
-         *       register any attached {@link PermissionRule}s with the engine.</li>
-         *   <li>{@code confirmed == false}: write a DENIED {@link ToolResultBlock} to context so
-         *       the tool will no longer be pending on resume, using the user-supplied
-         *       {@link ConfirmResult#getReason() reason} when present, and publish the complete
-         *       tool-result event lifecycle.</li>
+         * <li>{@code confirmed == true}：用结果中的（可能已修改的）ToolUseBlock 替换 ASKING 块，
+         * 将状态设为 {@link ToolCallState#ALLOWED}，并向引擎注册附带的 {@link PermissionRule}。</li>
+         * <li>{@code confirmed == false}：向上下文写入 DENIED {@link ToolResultBlock}，
+         * 使工具在恢复时不再待处理；若提供了用户 {@link ConfirmResult#getReason() reason} 则采用它，
+         * 并发布完整工具结果事件生命周期。</li>
          * </ul>
          */
         private void applyConfirmResults(List<ConfirmResult> results, String replyId) {
-            // Replace ASKING ToolUseBlocks with possibly-modified ones from the user, and
-            // promote them to ALLOWED. Collect denied ones for separate handling.
+            // 用用户提供的可能已修改的块替换 ASKING ToolUseBlock，
+            // 将其提升为 ALLOWED。收集被拒绝的调用另行处理。
             List<Map.Entry<ToolUseBlock, String>> deniedToolCalls = new ArrayList<>();
             Map<String, ToolUseBlock> replacements = new HashMap<>();
             for (ConfirmResult r : results) {
@@ -2504,7 +2489,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             }
         }
 
-        /** Build the complete DENIED tool-result lifecycle for any permission-denial path. */
+        /**
+         * 为任意权限拒绝路径构建完整 DENIED 工具结果生命周期。
+         */
         private List<AgentEvent> deniedToolResultEvents(
                 ToolUseBlock toolCall, String replyId, String reason) {
             return List.of(
@@ -2561,18 +2548,14 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Synthesize error {@link ToolResultBlock}s for pending tool calls in the last assistant
-         * message that have no matching results.
+         * 为最后一条助手消息中没有匹配结果的待处理工具调用合成错误 {@link ToolResultBlock}。
          *
-         * <p>Called from {@link ReActAgent#handleInterrupt} before the recovery message is
-         * appended, so that an interrupt signalled between reasoning (which writes the assistant
-         * {@code tool_use}) and acting (which would produce the tool results) does not persist a
-         * {@link ToolUseBlock} with no matching {@link ToolResultBlock}. Without this, the next
-         * resumed run inherits an inconsistent context and providers may return an empty response.
+         * <p>由 {@link ReActAgent#handleInterrupt} 在追加恢复消息之前调用，确保在推理
+         * （写入助手 {@code tool_use}）与行动（产生工具结果）之间收到中断时，
+         * 不会持久化缺少匹配 {@link ToolResultBlock} 的 {@link ToolUseBlock}。
+         * 否则下一次恢复运行将继承不一致上下文，提供方可能返回空响应。
          *
-         * <p>Must run <em>before</em> the recovery message is added, otherwise that recovery
-         * message becomes the last assistant message and pending-tool detection no longer
-         * detects the pending calls.
+         * <p>必须在添加恢复消息之前运行，否则恢复消息成为最后一条助手消息，待处理工具检测就无法再发现这些调用。
          */
         private void synthesizeErrorResultsForPendingToolCalls() {
             List<ToolUseBlock> pendingToolCalls =
@@ -2611,26 +2594,23 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Validate input messages when there are pending tool calls, then add to context.
+         * 存在待处理工具调用时验证输入消息，再加入上下文。
          *
-         * <p>Validation rules:
+         * <p>验证规则：
          * <ul>
-         *   <li>Empty input: no-op (will proceed to acting)</li>
-         *   <li>No tool results: throw error</li>
-         *   <li>Has tool results: validate IDs match pending, no duplicates</li>
-         *   <li>Partial results + text content: throw error (text only allowed when all tools
-         *       completed)</li>
+         * <li>空输入：无操作（将继续进入行动）</li>
+         * <li>无工具结果：抛出错误</li>
+         * <li>有工具结果：验证 ID 与待处理调用匹配且无重复</li>
+         * <li>部分结果加文本内容：抛出错误（仅全部工具完成后允许文本）</li>
          * </ul>
          *
-         * <p>Validation and the published {@link ExternalExecutionResultEvent} always reflect
-         * {@code msgs} as the caller supplied them; {@code msgsToPersist} is what lands in
-         * context and may differ only on a returnDirect short-circuit, where the tool results
-         * are replaced with placeholder-shaped copies.
+         * <p>验证及发布的 {@link ExternalExecutionResultEvent} 始终反映调用方提供的 {@code msgs}。
+         * {@code msgsToPersist} 才是存入上下文的消息，仅 returnDirect 短路时可能不同，此时工具结果被替换为占位副本。
          *
-         * @param msgs The input messages to validate and publish
-         * @param msgsToPersist The messages to add to context (may be placeholder-substituted)
-         * @param pendingIds The set of pending tool use IDs
-         * @throws IllegalStateException if validation fails
+         * @param msgs 要验证并发布的输入消息
+         * @param msgsToPersist 要加入上下文的消息（可能已替换为占位内容）
+         * @param pendingIds 待处理工具调用 ID 集合
+         * @throws IllegalStateException 验证失败时抛出
          */
         private void validateAndAddToolResults(
                 List<Msg> msgs, List<Msg> msgsToPersist, Set<String> pendingIds) {
@@ -2650,7 +2630,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 + pendingIds);
             }
 
-            // Check for duplicate IDs
+            // 检查重复 ID
             Set<String> providedIds = new HashSet<>();
             for (ToolResultBlock r : results) {
                 if (!providedIds.add(r.getId())) {
@@ -2658,7 +2638,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 }
             }
 
-            // Check all provided IDs match pending IDs
+            // 检查所有提供的 ID 都匹配待处理 ID
             Set<String> invalidIds =
                     providedIds.stream()
                             .filter(id -> !pendingIds.contains(id))
@@ -2668,13 +2648,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                         "Invalid tool result IDs: " + invalidIds + ". Expected: " + pendingIds);
             }
 
-            // Check for non-ToolResultBlock content
+            // 检查非 ToolResultBlock 内容
             boolean hasTextContent =
                     msgs.stream()
                             .flatMap(m -> m.getContent().stream())
                             .anyMatch(block -> !(block instanceof ToolResultBlock));
 
-            // If only partial results provided, text content is not allowed
+            // 仅提供部分结果时不允许文本内容
             boolean isPartialResults = !providedIds.containsAll(pendingIds);
             if (isPartialResults && hasTextContent) {
                 throw new IllegalStateException(
@@ -2694,9 +2674,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Correlate the pending tool_use batch (in declaration order) with the tool results
-         * supplied by the caller, aligned by id. Returns only the pairs that have a matching
-         * result; a partial supply yields fewer pairs than the batch.
+         * 按 ID 将待处理 tool_use 批次（保持声明顺序）与调用方提供的工具结果关联。
+         * 仅返回有匹配结果的配对；部分结果产生的配对数少于批次数量。
          */
         private List<Map.Entry<ToolUseBlock, ToolResultBlock>> pairProvidedToolResults(
                 List<ToolUseBlock> pendingBatch, List<ToolResultBlock> providedResults) {
@@ -2715,13 +2694,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Build placeholder-shaped copies of the caller-supplied messages for a returnDirect
-         * short-circuit: every {@link ToolResultBlock}'s output is replaced with the
-         * returnDirect placeholder sentence (id/name preserved, state normalized via {@link
-         * #determineToolResultState(ToolResultBlock)} like the in-framework path) while
-         * non-tool-result content passes through unchanged. New {@link Msg}s are built — the
-         * caller's objects are never mutated — keeping the context invariant {@code [tool_use,
-         * tool_result(placeholder), assistant(full result)]}.
+         * 为 returnDirect 短路构建调用方消息的占位副本：将每个 {@link ToolResultBlock} 的输出
+         * 替换为 returnDirect 占位句（保留 ID／名称，像框架内路径一样通过
+         * {@link #determineToolResultState(ToolResultBlock)} 规范化状态），非工具结果内容原样通过。
+         * 构建新的 {@link Msg}，绝不修改调用方对象，保持上下文不变量
+         * {@code [tool_use, tool_result(placeholder), assistant(full result)]}。
          */
         private List<Msg> placeholderToolResultMsgs(List<Msg> msgs) {
             List<Msg> replaced = new ArrayList<>(msgs.size());
@@ -2744,9 +2721,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Add messages to the agent state context if not null.
+         * 消息非 null 时，将其加入智能体状态上下文。
          *
-         * @param msgs The messages to add
+         * @param msgs 要添加的消息
          */
         private void addToContext(List<Msg> msgs) {
             if (msgs != null) {
@@ -2754,18 +2731,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             }
         }
 
-        // ==================== Core ReAct Loop ====================
+        // ==================== 核心 ReAct 循环 ====================
 
         /**
-         * Entry point for a fresh agent invocation: kicks off the ReAct loop at iteration 0.
+         * 新智能体调用的入口：从第 0 次迭代启动 ReAct 循环。
          */
         private Mono<Msg> coreAgent() {
             return settleSession(executeIteration(0));
         }
 
         /**
-         * Resume entry point when pending tool calls remain from a previous turn:
-         * jumps directly into the acting phase without another reasoning step.
+         * 上一轮仍有待处理工具调用时的恢复入口：不再进行一次推理，直接跳入行动阶段。
          */
         private Mono<Msg> resumeAgent() {
             return settleSession(acting(0));
@@ -2798,19 +2774,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Execute the reasoning phase.
+         * 执行推理阶段。
          *
-         * <p>This method streams from the model, accumulates chunks, notifies hooks, and
-         * decides whether to continue to acting or return early (HITL stop, gotoReasoning, or finished).
+         * <p>从模型流式读取、累积片段、通知钩子，并决定继续行动还是提前返回
+         * （HITL 停止、gotoReasoning 或已完成）。
          *
-         * @param iter Current iteration number
-         * @param ignoreMaxIters If true, skip maxIters check (for gotoReasoning and the
-         * structured-output forced retries)
-         * @return Mono containing the final result message
+         * @param iter 当前迭代编号
+         * @param ignoreMaxIters 为 true 时跳过 maxIters 检查（用于 gotoReasoning 及结构化输出强制重试）
+         * @return 包含最终结果消息的 Mono
          */
         private Mono<Msg> reasoning(int iter, boolean ignoreMaxIters) {
+            // 【学习提示】一轮推理负责“向模型提问并解释回答”，而不是直接执行工具。
+            // 本轮新建 ReasoningContext 累积增量，随后依据完整消息选择行动、结束或重新推理。
             lastSessionIteration = iter;
-            // Check maxIters unless ignoreMaxIters is set
+            // 除非设置 ignoreMaxIters，否则检查 maxIters
             if (!ignoreMaxIters && iter >= maxIters) {
                 return summarizing();
             }
@@ -2850,10 +2827,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                             .build(),
                                                     options);
                                 }
-                                // Force generate_response when the previous round finished
-                                // without calling it. Mutually exclusive with nativeResponseFormat
-                                // above: soForceToolChoiceCount is only set on the fallback path
-                                // (soTool != null), where nativeResponseFormat is always null.
+                                // 上一轮结束却未调用 generate_response 时，
+                                // 强制调用它。与上面的 nativeResponseFormat 互斥：
+                                // soForceToolChoiceCount 只在回退路径设置
+                                // （soTool != null），该路径的 nativeResponseFormat 始终为 null。
                                 if (soForceToolChoiceCount > 0
                                         && soTool != null
                                         && model.supportsToolChoiceSpecific()) {
@@ -2873,8 +2850,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                         activeToolkit.getToolSchemas(
                                                 state.getToolContext().getActivatedGroups(),
                                                 toolRequestConfig);
-                                // Per-call structured-output tool: expose generate_response to the
-                                // model for this call only (not registered on the shared toolkit).
+                                // 单次调用结构化输出工具：只在本次调用中向
+                                // 模型暴露 generate_response，不注册到共享工具集。
                                 if (soTool != null) {
                                     tools = new ArrayList<>(tools);
                                     tools.add(
@@ -2905,9 +2882,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                 .apply(
                                                         new ReasoningInput(
                                                                 modelInput, tools, options));
-                                // Track any RequestStopEvent emitted by middlewares while still
-                                // exhausting the stream. Publish at the outer reasoning boundary
-                                // so events added by onReasoning middlewares are forwarded too.
+                                // 跟踪中间件发出的所有 RequestStopEvent，同时仍
+                                // 消费完整流。在外层推理边界发布，
+                                // 使 onReasoning 中间件追加的事件也能转发。
                                 AtomicReference<RequestStopEvent> stopRequested =
                                         new AtomicReference<>();
                                 return stream.doOnNext(this::publishEvent)
@@ -2925,11 +2902,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                             RequestStopEvent rs =
                                                                     stopRequested.get();
                                                             if (rs != null && finalMsg != null) {
-                                                                // Persist the reasoning message
-                                                                // before
-                                                                // returning so the next call can
-                                                                // resume
-                                                                // from pending tool calls.
+                                                                // 持久化推理消息
+                                                                // 然后
+                                                                // 才返回，确保下一次调用可以
+                                                                // 恢复
+                                                                // 待处理工具调用。
                                                                 state.contextMutable()
                                                                         .add(finalMsg);
                                                                 return Mono.just(
@@ -2959,10 +2936,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                             })
                     .flatMap(
                             msg -> {
-                                // Short-circuit: middleware requested stop during reasoning. The
-                                // msg
-                                // is already persisted to context and tagged with the correct
-                                // GenerateReason; skip legacy postReasoning hook.
+                                // 短路：中间件在推理期间请求停止。消息
+                                // 此时
+                                // 已持久化到上下文并标记正确的
+                                // GenerateReason；跳过旧式 postReasoning 钩子。
                                 if (msg.getGenerateReason()
                                                 == GenerateReason.MIDDLEWARE_STOP_REQUESTED
                                         || msg.getGenerateReason()
@@ -2984,7 +2961,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                     state.contextMutable().add(eventMsg);
                                 }
 
-                                // HITL stop
+                                // HITL 停止
                                 if (event.isStopRequested()) {
                                     if (eventMsg == null) {
                                         return Mono.empty();
@@ -2994,7 +2971,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                     GenerateReason.REASONING_STOP_REQUESTED));
                                 }
 
-                                // gotoReasoning requested (e.g., by a PostReasoning hook)
+                                // 请求 gotoReasoning（例如来自 PostReasoning 钩子）
                                 if (event.isGotoReasoningRequested()) {
                                     List<Msg> gotoMsgs = event.getGotoReasoningMsgs();
                                     if (gotoMsgs != null) {
@@ -3003,11 +2980,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                     return reasoning(iter + 1, true);
                                 }
 
-                                // Check finish conditions
+                                // 检查结束条件
                                 if (isFinished(eventMsg)) {
-                                    // Structured output still pending: force the model to call
-                                    // generate_response. Retry up to 3 times, then give up to
-                                    // avoid a deadlock loop when the model refuses to call it.
+                                    // 结构化输出仍未完成：强制模型调用
+                                    // generate_response。最多重试 3 次，然后放弃，
+                                    // 避免模型拒绝调用时陷入死循环。
                                     if (soTool != null && !soCompleted) {
                                         if (soForceToolChoiceCount < 3) {
                                             soForceToolChoiceCount++;
@@ -3017,11 +2994,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                     soForceToolChoiceCount,
                                                     getAgentId(),
                                                     getName());
-                                            // ignoreMaxIters is deliberate: a forced retry
-                                            // must not be cut short by maxIters (e.g. a
-                                            // maxIters=1 caller still gets the pending
-                                            // generate_response), and the total extra model
-                                            // calls stay bounded by the 3-retry ceiling above.
+                                            // 有意使用 ignoreMaxIters：强制重试
+                                            // 不能被 maxIters 提前截断（例如
+                                            // maxIters=1 的调用方仍应获得待执行的
+                                            // generate_response），额外模型调用总量
+                                            // 仍受上述 3 次重试上限约束。
                                             return reasoning(iter + 1, true);
                                         }
                                         log.warn(
@@ -3036,10 +3013,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                     return Mono.justOrEmpty(eventMsg);
                                 }
 
-                                // Empty final response: no tool calls and no visible content
-                                // (e.g. a reasoning model that wrote its whole answer into the
-                                // reasoning channel and left the content channel empty). Loop
-                                // back to reasoning with a synthetic reminder.
+                                // 最终回复为空：没有工具调用，也没有可见内容
+                                // （例如推理模型将完整答案写入思考
+                                // 通道，却让内容通道为空）。注入合成提醒
+                                // 并重新进入推理。
                                 if (!MessageUtils.hasToolCalls(eventMsg)) {
                                     log.warn(
                                             "Final response has no visible content (empty reply),"
@@ -3049,29 +3026,28 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                     state.contextMutable().add(buildEmptyResponseReminder());
                                 }
 
-                                // Continue to acting
+                                // 继续进入行动
                                 return checkInterrupted().then(acting(iter));
                             })
                     .switchIfEmpty(
                             Mono.defer(
                                     () -> {
-                                        // No message was produced
+                                        // 未产生消息
                                         return Mono.justOrEmpty((Msg) null);
                                     }));
         }
 
         /**
-         * Stream fine-grained {@link AgentEvent}s from a model call during reasoning.
+         * 流式发送推理阶段模型调用产生的细粒度 {@link AgentEvent}。
          *
-         * <p>Emits: {@link ModelCallStartEvent} → block start/delta/end events → {@link
-         * ModelCallEndEvent}. The provided {@link ReasoningContext} is used to accumulate chunks
-         * (for building the final {@link Msg}) and to notify legacy {@link Hook}s.
+         * <p>事件顺序：{@link ModelCallStartEvent} → 块开始／增量／结束事件 → {@link ModelCallEndEvent}。
+         * 提供的 {@link ReasoningContext} 用于累积片段（构建最终 {@link Msg}）及通知旧式 {@link Hook}。
          *
-         * @param context   reasoning context for chunk accumulation
-         * @param messages  the messages to send to the model
-         * @param tools     the tool schemas available
-         * @param options   generation options
-         * @return event stream from a single model call
+         * @param context 用于片段累积的推理上下文
+         * @param messages 要发送给模型的消息
+         * @param tools 可用工具 schema
+         * @param options 生成选项
+         * @return 单次模型调用的事件流
          */
         Flux<AgentEvent> reasoningStream(
                 ReasoningContext context,
@@ -3169,9 +3145,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Appends the structured-output reminder to a request-local copy of the model input. The
-         * reminder never enters {@code state.contextMutable()}, so hooks, middleware, session
-         * persistence, and subsequent calls observe only the caller's real messages.
+         * 将结构化输出提醒追加到请求局部的模型输入副本。
+         * 提醒绝不进入 {@code state.contextMutable()}，因此钩子、中间件、会话持久化及后续调用仅看到调用方真实消息。
          */
         private ModelCallInput appendTransientSoToolReminder(ModelCallInput input) {
             if (soTool == null) {
@@ -3316,10 +3291,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Builds the complete tool-result lifecycle for a provider-executed tool result.
+         * 为提供方执行的工具结果构建完整工具结果生命周期。
          *
-         * <p>Only the server-tool marker is attached to events; the provider-specific raw result
-         * remains on the final message and is not duplicated into the event stream.
+         * <p>事件仅附加服务端工具标记；提供方特定原始结果保留在最终消息中，不重复放入事件流。
          */
         private List<AgentEvent> serverToolResultEvents(ToolResultBlock result, String replyId) {
             String toolId = result.getId();
@@ -3352,12 +3326,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Tracks block lifecycle within one model-call subscription.
+         * 跟踪单次模型调用订阅内的块生命周期。
          *
-         * <p>The model stream is consumed through {@code concatMap}, but the state holders keep the
-         * previous thread-safe shape because model providers may deliver chunk content
-         * unpredictably. Each contiguous text or thinking segment receives its own block ID so its
-         * start, delta, and end events can be correlated independently.
+         * <p>模型流通过 {@code concatMap} 消费，但状态容器仍保持原有线程安全结构，
+         * 因为模型提供方可能以不可预测的方式投递片段内容。每段连续文本或思考获得独立块 ID，
+         * 使其开始、增量和结束事件能独立关联。
          */
         private final class ModelCallBlockLifecycle {
             private final String replyId;
@@ -3457,32 +3430,33 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Execute the acting phase.
+         * 执行行动阶段。
          *
-         * <p>This method executes only pending tools (those without results in context),
-         * notifies hooks for successful tool results, and decides whether to continue iteration
-         * or return (HITL stop, suspended tools, or structured output).
+         * <p>仅执行待处理工具（上下文中尚无结果的调用），为成功工具结果通知钩子，
+         * 并决定继续迭代还是返回（HITL 停止、工具暂停或结构化输出）。
          *
-         * <p>For tools that throw {@link io.agentscope.core.tool.ToolSuspendException}:
+         * <p>对于抛出 {@link io.agentscope.core.tool.ToolSuspendException} 的工具：
          * <ul>
-         *   <li>The exception is caught by Toolkit and converted to a pending ToolResultBlock</li>
-         *   <li>Successful results are stored in context, pending results are not</li>
-         *   <li>Returns Msg with {@link GenerateReason#TOOL_SUSPENDED} containing suspended ToolUseBlocks</li>
+         * <li>Toolkit 捕获异常并转为待处理 ToolResultBlock</li>
+         * <li>成功结果存入上下文，待处理结果不存入</li>
+         * <li>返回标记为 {@link GenerateReason#TOOL_SUSPENDED} 且包含暂停 ToolUseBlock 的 Msg</li>
          * </ul>
          *
-         * @param iter Current iteration number
-         * @return Mono containing the final result message
+         * @param iter 当前迭代编号
+         * @return 包含最终结果消息的 Mono
          */
         private Mono<Msg> acting(int iter) {
+            // 【学习提示】待执行集合由上下文中“有 tool_use、无匹配 tool_result”推导，
+            // 不简单地执行最近消息的全部工具。恢复调用时，这能避免重跑已有结果的工具。
             List<ToolUseBlock> pendingToolCalls =
                     MessageUtils.extractPendingToolCalls(state.contextMutable(), getName());
             String replyId = UUID.randomUUID().toString().replace("-", "");
 
-            // Tool calls whose streamed arguments never formed a valid JSON object (typically
-            // truncated by a max-tokens stop) are not executable. Synthesize ERROR results with
-            // the original call IDs so tool_use ↔ tool_result pairing stays complete, and never
-            // hand them to the permission gate, middleware chain or executor. The loop continues
-            // to the next reasoning iteration; no automatic retry is attempted this turn.
+            // 流式参数始终未构成合法 JSON 对象的工具调用（通常被
+            // max-tokens 停止截断）不可执行。使用原调用 ID 合成 ERROR 结果，
+            // 保持 tool_use ↔ tool_result 配对完整，并且绝不
+            // 交给权限门控、中间件链或执行器。循环继续
+            // 进入下一轮推理；本轮不进行自动重试。
             List<ToolUseBlock> malformedToolCalls =
                     pendingToolCalls.stream().filter(ToolUseBlock::hasMalformedArguments).toList();
             if (!malformedToolCalls.isEmpty()) {
@@ -3536,9 +3510,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                             })
                     .flatMap(
                             results -> {
-                                // Middleware requested stop during acting — return immediately with
-                                // the requested GenerateReason, preserving any results already
-                                // collected.
+                                // 中间件在行动期间请求停止，立即返回
+                                // 请求的 GenerateReason，同时保留已经
+                                // 收集到的结果。
                                 RequestStopEvent rs = actingStopRequested.get();
                                 if (rs != null) {
                                     if (rs.getGenerateReason()
@@ -3578,13 +3552,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                 && successPairs.stream()
                                                         .allMatch(this::isReturnDirectToolCall);
 
-                                // Fire the hook and persist every executed tool's result, then
-                                // let the earliest stopAgent() win: takeUntil would cancel the
-                                // tail's hooks and tool_result writes, leaving dangling
-                                // tool_use for tools that already ran (cf.
-                                // synthesizeErrorResultsForPendingToolCalls on the interrupt
-                                // path). Past a stop, results persist verbatim — the turn ends
-                                // via ACTING_STOP_REQUESTED, not the returnDirect short-circuit.
+                                // 为每个已执行工具触发钩子并持久化结果，然后
+                                // 让最早的 stopAgent() 生效；若使用 takeUntil，会取消
+                                // 尾部钩子及 tool_result 写入，使已经运行的工具留下
+                                // 悬空 tool_use（参照中断路径的
+                                // synthesizeErrorResultsForPendingToolCalls）。
+                                // 停止之后仍原样持久化结果；本轮通过
+                                // ACTING_STOP_REQUESTED 结束，而不是 returnDirect 短路。
                                 AtomicBoolean stopSeen = new AtomicBoolean();
                                 return Flux.fromIterable(successPairs)
                                         .concatMap(
@@ -3626,36 +3600,38 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Stream fine-grained {@link AgentEvent}s from tool execution during the acting phase.
+         * 流式发送行动阶段工具执行产生的细粒度 {@link AgentEvent}。
          *
-         * <p>Emits: {@link ToolResultStartEvent} → delta events → {@link ToolResultEndEvent}
-         * for each tool call. The provided {@code resultHolder} is populated with the execution
-         * results so the caller can process them afterward.
+         * <p>每个工具调用发出：{@link ToolResultStartEvent} → 增量事件 → {@link ToolResultEndEvent}。
+         * 执行结果填入 {@code resultHolder}，便于调用方随后处理。
          *
-         * @param toolCalls    the tool calls to execute
-         * @param replyId      the reply identifier for event correlation
-         * @param resultHolder populated with tool execution results on completion
-         * @return event stream from tool execution
+         * @param toolCalls 要执行的工具调用
+         * @param replyId 用于事件关联的回复标识符
+         * @param resultHolder 完成时填入工具执行结果
+         * @return 工具执行事件流
          */
         Flux<AgentEvent> actingStream(
                 List<ToolUseBlock> toolCalls,
                 String replyId,
                 AtomicReference<List<Map.Entry<ToolUseBlock, ToolResultBlock>>> resultHolder) {
 
+            // 【学习提示】权限门控先于实际副作用。ASKING 保留为待确认调用并暂停，
+            // DENIED 写入拒绝结果形成完整配对，ALLOWED 才进入后续执行路径。
+            // 恢复时依靠消息里的调用 ID 关联确认，不能把“继续”理解为无条件批准所有工具。
             return evaluatePermissions(toolCalls)
                     .flatMapMany(
                             gate -> {
                                 List<ToolUseBlock> pending = gate.pendingAsk();
                                 Set<String> autoDenied = gate.autoDeniedIds();
 
-                                // Mark ToolUseBlock.state in context for every gated tool. ALLOWED
-                                // calls run immediately; ASKING calls cause the agent to pause and
-                                // return; DENIED calls get DENIED ToolResultBlocks written below.
+                                // 为每个经过门控的工具在上下文标记 ToolUseBlock.state。ALLOWED
+                                // 调用立即执行；ASKING 调用使智能体暂停并
+                                // 返回；DENIED 调用在下面写入 DENIED ToolResultBlock。
                                 Map<String, ToolCallState> stateUpdates = new HashMap<>();
                                 for (ToolUseBlock tc : toolCalls) {
                                     if (autoDenied.contains(tc.getId())) {
-                                        // DENIED tools don't need a state change — they'll get a
-                                        // DENIED ToolResultBlock and won't reappear in pending.
+                                        // DENIED 工具无需更改调用状态，因为会写入
+                                        // DENIED ToolResultBlock，之后不再出现在待处理列表。
                                         continue;
                                     }
                                     stateUpdates.put(
@@ -3677,19 +3653,19 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                             toolCalls, autoDenied, replyId, resultHolder);
                                 }
 
-                                // Permission HITL: surface the pending tool calls, persist any
-                                // auto-denied results so the second call can identify which ones
-                                // still need confirmation, then signal stop via RequestStopEvent.
-                                // The agent's acting() will see the RequestStopEvent, set the
-                                // GenerateReason to PERMISSION_ASKING, and return.
+                                // 权限 HITL：暴露待处理工具调用，持久化全部
+                                // 自动拒绝结果，使第二次调用能辨别哪些
+                                // 仍需确认，然后通过 RequestStopEvent 发出停止信号。
+                                // 智能体的 acting() 将看到 RequestStopEvent，设置
+                                // GenerateReason 为 PERMISSION_ASKING，然后返回。
                                 if (!autoDenied.isEmpty()) {
-                                    // Write DENIED results in-place so they aren't re-evaluated on
-                                    // resume.
+                                    // 原地写入 DENIED 结果，避免恢复时
+                                    // 再次评估。
                                     writeAutoDeniedResults(toolCalls, autoDenied);
                                 }
-                                // resultHolder may be inspected by the caller after stream
-                                // completion;
-                                // initialise it to empty since no successful execution happened.
+                                // 流完成之后，调用方可能检查 resultHolder；
+                                // 此时
+                                // 由于未发生成功执行，将它初始化为空。
                                 resultHolder.set(List.of());
                                 persistPendingRequestReplyId(
                                         Msg.METADATA_CONFIRM_REQUEST_REPLY_ID, replyId);
@@ -3713,9 +3689,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Synthesise DENIED ToolResultBlocks for tools that were rejected by deny rules and append
-         * them to context so the conversation reflects the rejection (and resume doesn't see them
-         * as pending).
+         * 为被 deny 规则拒绝的工具合成 DENIED ToolResultBlock，并追加到上下文，
+         * 使会话反映拒绝事实，恢复时不再将其视为待处理。
          */
         private void writeAutoDeniedResults(List<ToolUseBlock> toolCalls, Set<String> deniedIds) {
             for (ToolUseBlock tc : toolCalls) {
@@ -3732,11 +3707,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Synthesise ERROR ToolResultBlocks for tool calls whose streamed arguments never formed a
-         * valid JSON object (marked via {@link
-         * ToolUseBlock#METADATA_MALFORMED_ARGUMENTS}). The handler is never invoked; results are
-         * appended to the context and emitted as lifecycle events so the tool_use ↔ tool_result
-         * pairing stays complete and the model can reissue the call.
+         * 为流式参数始终未构成合法 JSON 对象的工具调用合成 ERROR ToolResultBlock
+         * （由 {@link ToolUseBlock#METADATA_MALFORMED_ARGUMENTS} 标记）。
+         * 绝不调用处理器；结果追加到上下文并作为生命周期事件发出，
+         * 保持 tool_use ↔ tool_result 配对完整，让模型能够重新发起调用。
          */
         private void writeMalformedArgumentResults(
                 List<ToolUseBlock> toolCalls, String replyId, boolean outputLimitReached) {
@@ -3757,10 +3731,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Execute the given tool calls, synthesising DENIED results for any tool whose id is in
-         * {@code deniedIds} (skipping toolkit invocation for those) and running the rest through
-         * {@link #executeToolCalls(List)}. The combined results are written to {@code resultHolder}
-         * and emitted as a stream of fine-grained {@link AgentEvent}s.
+         * 执行给定工具调用；ID 位于 {@code deniedIds} 的调用合成 DENIED 结果并跳过工具集调用，
+         * 其余通过 {@link #executeToolCalls(List)} 执行。
+         * 合并结果写入 {@code resultHolder}，并以细粒度 {@link AgentEvent} 流发出。
          */
         private Flux<AgentEvent> runToolBatch(
                 List<ToolUseBlock> toolCalls,
@@ -3810,21 +3783,21 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 return deniedEvents;
             }
 
-            // Capture the parent Reactor Context (set by AgentBase.createEventStream, which puts
-            // the
-            // SubagentEventBus there) so we can forward it into the inner executeToolCalls
-            // subscribe.
-            // Without this, the bare .subscribe() below detaches from the upstream chain and tools
-            // like AgentSpawnTool see an empty ContextView, breaking child-event forwarding.
+            // 捕获父级 Reactor Context（由 AgentBase.createEventStream 设置，其中放入
+            // 了
+            // SubagentEventBus），以便转发到内部 executeToolCalls 的
+            // 订阅中。
+            // 否则下面直接 .subscribe() 会脱离上游链，使 AgentSpawnTool 等工具
+            // 看到空 ContextView，破坏子事件转发。
             Flux<AgentEvent> approvedEvents =
                     Flux.<AgentEvent>deferContextual(
                             parentCtx ->
                                     Flux.<AgentEvent>create(
                                             sink -> {
-                                                // Start/progress/result events now come from the
-                                                // executor as it reaches each tool, so
-                                                // ToolResultStartEvent reflects actual execution
-                                                // start instead of batch admission.
+                                                // 开始／进度／结果事件现在由
+                                                // 执行器逐个触及工具时产生，因此
+                                                // ToolResultStartEvent 表示实际执行
+                                                // 开始，而非批次获准进入。
                                                 ToolResultCallback callback =
                                                         new ToolResultCallback(
                                                                 replyId, sink, parentCtx);
@@ -3902,25 +3875,23 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Outcome of running every {@link ToolBase} call through the {@link PermissionEngine}.
+         * 每个 {@link ToolBase} 调用通过 {@link PermissionEngine} 后的结果。
          *
-         * @param pendingAsk tool calls that require user confirmation before execution.
-         * @param autoDeniedIds ids of tool calls whose decision was {@code DENY}; the agent loop
-         *     synthesises denied results for them without invoking the tool.
+         * @param pendingAsk 执行前需要用户确认的工具调用
+         * @param autoDeniedIds 决策为 {@code DENY} 的调用 ID；智能体循环为其合成拒绝结果，不实际调用工具
          */
         private record PermissionGate(List<ToolUseBlock> pendingAsk, Set<String> autoDeniedIds) {}
 
         /**
-         * Run every tool call through the permission gate.
+         * 让每个工具调用通过权限门控。
          *
-         * <p>When the agent's {@link io.agentscope.core.permission.PermissionContextState} is trivial
-         * (default mode, no rules, no working directories — i.e. the user has not opted into the
-         * permission system) we fall back to the lightweight pre-2.0 path: the tool's own
-         * {@link ToolBase#checkPermissions} ASK gates a confirmation, anything else is approved.
+         * <p>当智能体的 {@link io.agentscope.core.permission.PermissionContextState} 为简单配置
+         * （默认模式、无规则、无工作目录，即用户未启用权限系统）时，回退到 2.0 之前的轻量路径：
+         * 工具自身 {@link ToolBase#checkPermissions} 返回 ASK 时要求确认，其余通过。
          *
-         * <p>Otherwise we engage the full {@link PermissionEngine} pipeline so deny/ask/allow rules
-         * and EXPLORE/ACCEPT_EDITS/BYPASS/DONT_ASK modes are honoured before execution. Legacy
-         * {@link AgentTool}s that do not extend {@link ToolBase} always pass through approved.
+         * <p>否则启用完整 {@link PermissionEngine} 管道，在执行前遵循 deny/ask/allow 规则
+         * 及 EXPLORE/ACCEPT_EDITS/BYPASS/DONT_ASK 模式。
+         * 不继承 {@link ToolBase} 的旧式 {@link AgentTool} 始终获准通过。
          */
         private Mono<PermissionGate> evaluatePermissions(List<ToolUseBlock> toolCalls) {
             if (toolCalls == null || toolCalls.isEmpty()) {
@@ -3939,7 +3910,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                         case DENY -> denied.add(v.use().getId());
                                         case ASK -> pending.add(v.use());
                                         case ALLOW, PASSTHROUGH -> {
-                                            // auto-approved; falls through to execution
+                                            // 自动批准，继续执行
                                         }
                                     }
                                 }
@@ -3948,7 +3919,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         private Mono<PermissionVerdict> evaluateOne(ToolUseBlock use, boolean useEngine) {
-            // Tools already promoted to ALLOWED by user confirmation skip the engine entirely.
+            // 【学习提示】这是兼容性边界：旧 AgentTool（非 ToolBase）直接通过；
+            // ToolBase 才参与此处权限检查。不能仅因配置了权限引擎就假定所有旧工具自动受控。
+            // 经用户确认提升为 ALLOWED 的工具完全跳过引擎。
             if (use.getState() == ToolCallState.ALLOWED) {
                 return Mono.just(new PermissionVerdict(use, PermissionBehavior.ALLOW));
             }
@@ -3974,9 +3947,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 if (decision == null) {
                                     return new PermissionVerdict(use, PermissionBehavior.ALLOW);
                                 }
-                                // In the legacy lightweight path only an explicit ASK from the tool
-                                // gates execution; PASSTHROUGH and ALLOW both run, DENY is
-                                // honoured.
+                                // 旧式轻量路径中，仅工具显式返回 ASK 才要求
+                                // 确认；PASSTHROUGH 和 ALLOW 都执行，DENY
+                                // 仍会被遵守。
                                 return switch (decision.getBehavior()) {
                                     case ASK -> new PermissionVerdict(use, PermissionBehavior.ASK);
                                     case DENY ->
@@ -3997,24 +3970,27 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Publish start, progress, and result events for locally dispatched tool calls.
+         * 为本地派发的工具调用发布开始、进度及结果事件。
          *
-         * <p>Tracks resolved results per call id: the batch error fallback re-processes every
-         * call, but calls that already resolved must keep their real result and must not receive
-         * a second round of events. The instance is created per batch inside {@code
-         * Flux.create}, so this state never outlives one batch and the shared {@link Toolkit}
-         * stays stateless.
+         * <p>按调用 ID 跟踪已确定结果：批次错误回退会重新遍历所有调用，
+         * 但已确定结果的调用必须保留真实结果，不得重复发送事件。
+         * 实例在 {@code Flux.create} 内按批次创建，因此该状态不超出单批次生命周期，
+         * 共享 {@link Toolkit} 保持无状态。
          */
         private final class ToolResultCallback implements ToolExecutionCallback {
             private final String replyId;
             private final FluxSink<AgentEvent> sink;
             private final reactor.util.context.ContextView parentContext;
 
-            /** Results resolved before batch settlement, by call id. */
+            /**
+             * 批次结算前已确定的结果，以调用 ID 为键。
+             */
             private final ConcurrentHashMap<String, ToolResultBlock> resolvedResults =
                     new ConcurrentHashMap<>();
 
-            /** Ids of calls whose start has been published. */
+            /**
+             * 已发布开始事件的调用 ID。
+             */
             private final Set<String> startedCalls = ConcurrentHashMap.newKeySet();
 
             private ToolResultCallback(
@@ -4032,8 +4008,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
 
             @Override
             public void onStart(ToolUseBlock call) {
-                // Idempotent: the executor fires this once per invocation, and the batch error
-                // fallback calls it defensively for calls that never reached the executor.
+                // 幂等：执行器每次调用触发一次，批次错误
+                // 回退会对尚未进入执行器的调用防御性地触发它。
                 if (!startedCalls.add(call.getId())) return;
                 emit(new ToolResultStartEvent(replyId, call.getId(), call.getName()));
             }
@@ -4055,8 +4031,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
 
             @Override
             public void onResult(ToolUseBlock call, ToolResultBlock result) {
-                // Record before the suspended check so an earlier suspension survives the batch
-                // error fallback; only the first resolution publishes events.
+                // 在暂停检查前记录，使较早的暂停状态在批次
+                // 错误回退后仍保留；仅首次确定结果时发布事件。
                 if (resolvedResults.putIfAbsent(call.getId(), result) != null) return;
                 if (result.isSuspended()) return;
                 Map<String, Object> metadata = result.getMetadata();
@@ -4083,7 +4059,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 .withMetadata(metadata));
             }
 
-            /** Result already resolved for {@code call}, or {@code null} if it never settled. */
+            /**
+             * {@code call} 已确定的结果；尚未完成结算时为 {@code null}。
+             */
             private ToolResultBlock resolvedResult(ToolUseBlock call) {
                 return resolvedResults.get(call.getId());
             }
@@ -4109,13 +4087,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Build a message containing suspended tool calls for user execution.
+         * 构建包含暂停工具调用的消息，供用户执行。
          *
-         * <p>The message contains each suspended call's ToolUseBlock paired with a marker
-         * ToolResultBlock (empty output, {@link ToolResultState#SUSPENDED}).
+         * <p>每个暂停调用的 ToolUseBlock 与标记 ToolResultBlock 配对
+         * （空输出、{@link ToolResultState#SUSPENDED}）。
          *
-         * @param pendingPairs List of (ToolUseBlock, pending ToolResultBlock) pairs
-         * @return Msg with GenerateReason.TOOL_SUSPENDED
+         * @param pendingPairs (ToolUseBlock, 待处理 ToolResultBlock) 配对列表
+         * @return GenerateReason.TOOL_SUSPENDED 的 Msg
          */
         private Msg buildSuspendedMsg(List<Map.Entry<ToolUseBlock, ToolResultBlock>> pendingPairs) {
             List<ContentBlock> content = new ArrayList<>();
@@ -4131,8 +4109,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Build a stop-acknowledgement Msg for middleware-requested stops during acting. Preserves
-         * any already-collected tool results so the caller sees partial progress.
+         * 为行动阶段中间件请求的停止构建确认 Msg，保留已收集的工具结果，使调用方看到部分进度。
          */
         private Msg buildStopMsg(
                 List<Map.Entry<ToolUseBlock, ToolResultBlock>> results, GenerateReason reason) {
@@ -4151,17 +4128,14 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Execute tool calls and return paired results.
+         * 执行工具调用并返回配对结果。
          *
-         * <p>If tool execution fails (timeout, error, etc.), this method generates error tool results
-         * for all pending tool calls instead of propagating the error. This ensures the agent can
-         * continue processing and the model receives proper error feedback. Calls that already
-         * resolved keep their real result and are not re-notified; the generated error results
-         * for the remaining calls are passed to the callback, and calls that never started
-         * receive their start notification first.
+         * <p>工具执行失败（超时、错误等）时，为所有待处理调用生成错误工具结果，而非传播错误，
+         * 使智能体能继续处理，模型获得适当错误反馈。已经确定结果的调用保留真实结果，不再重复通知；
+         * 其余调用生成的错误结果传给回调，尚未开始的调用先获得开始通知。
          *
-         * @param toolCalls The list of tool calls (potentially modified by PreActingEvent hooks)
-         * @return Mono containing list of (ToolUseBlock, ToolResultBlock) pairs
+         * @param toolCalls 工具调用列表（可能已被 PreActingEvent 钩子修改）
+         * @return 包含 (ToolUseBlock, ToolResultBlock) 配对列表的 Mono
          */
         private Mono<List<Map.Entry<ToolUseBlock, ToolResultBlock>>> executeToolCalls(
                 List<ToolUseBlock> toolCalls, ToolResultCallback callback) {
@@ -4178,15 +4152,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                     .onErrorResume(
                             Exception.class,
                             error -> {
-                                // Preserve interruption signal for agent stop policy
+                                // 保留中断信号，供智能体停止策略处理
                                 if (ActionObservationException.causedBy(error))
                                     return Mono.error(error);
                                 if (error instanceof InterruptedException) {
                                     return Mono.error(error);
                                 }
-                                // Generate error tool results for all pending tool calls.
-                                // Only catch Exception subclasses; critical JVM errors
-                                // (e.g. OutOfMemoryError) are left to propagate.
+                                // 为所有待处理工具调用生成错误工具结果。
+                                // 仅捕获 Exception 子类；严重 JVM 错误
+                                // （例如 OutOfMemoryError）继续传播。
                                 String errorMsg = ExceptionUtils.getErrorMessage(error);
                                 log.error(
                                         "Tool execution failed, generating error results for {}"
@@ -4197,11 +4171,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                         toolCalls.stream()
                                                 .map(
                                                         toolCall -> {
-                                                            // A call that already resolved keeps
-                                                            // its real result: the event layer
-                                                            // already published it, and telling
-                                                            // the model a finished tool failed
-                                                            // invites pointless retries.
+                                                            // 已确定结果的调用保留
+                                                            // 真实结果：事件层
+                                                            // 已经发布过它，再告诉
+                                                            // 模型已完成工具失败
+                                                            // 会诱发无意义重试。
                                                             ToolResultBlock resolved =
                                                                     callback.resolvedResult(
                                                                             toolCall);
@@ -4209,11 +4183,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                                 return Map.entry(
                                                                         toolCall, resolved);
                                                             }
-                                                            // No-op for calls the executor
-                                                            // already started; queued calls
-                                                            // (e.g. behind the failure in
-                                                            // sequential mode) get their Start
-                                                            // here so no End arrives orphaned.
+                                                            // 执行器已经启动的调用
+                                                            // 不做操作；排队调用
+                                                            // （例如顺序模式中位于失败
+                                                            // 之后的调用）在此收到 Start，
+                                                            // 避免出现没有对应开始的 End。
                                                             callback.onStart(toolCall);
                                                             ToolResultBlock errorResult =
                                                                     ToolResultBlock.error(
@@ -4231,10 +4205,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Resolve tool results for {@code toolCalls}, in the same order. When this call is a
-         * structured-output call, any {@code generate_response} invocations are executed against
-         * the per-call {@link #soTool} (never registered on the shared toolkit); all other tools go
-         * through {@link Toolkit#callToolsWithCallback}.
+         * 按原顺序解析 {@code toolCalls} 的工具结果。结构化输出调用中，
+         * {@code generate_response} 调用针对单次调用 {@link #soTool} 执行（绝不注册到共享工具集）；
+         * 其他工具经 {@link Toolkit#callToolsWithCallback} 执行。
          */
         private Mono<List<ToolResultBlock>> dispatchToolCalls(
                 List<ToolUseBlock> toolCalls, ToolResultCallback callback) {
@@ -4308,8 +4281,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Execute the per-call {@code generate_response} tool for a single tool call, mirroring the
-         * schema validation the executor performs for registered tools.
+         * 对单个工具调用执行本次调用的 {@code generate_response} 工具，
+         * 采用与执行器对注册工具相同的 schema 校验。
          */
         private Mono<ToolResultBlock> executeStructuredTool(ToolUseBlock use) {
             ToolCallParam param =
@@ -4340,22 +4313,20 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Fire PostActingEvent for a single tool result, build message and add to context.
+         * 为单个工具结果触发 PostActingEvent，构建消息并加入上下文。
          *
-         * <p>When {@code returnDirect} is {@code true} (the whole batch is being returned
-         * directly) and the hook did not stop, the tool result written to context is replaced
-         * with the placeholder sentence; the full result is kept on the hook event for
-         * auditing and later lifted into the closing assistant message.
+         * <p>{@code returnDirect} 为 {@code true}（整个批次直接返回）且钩子未请求停止时，
+         * 写入上下文的工具结果替换为占位句；完整结果保留在钩子事件中供审计，稍后提升为结束助手消息。
          */
         private Mono<PostActingEvent> notifyPostActingHook(
                 Map.Entry<ToolUseBlock, ToolResultBlock> entry, boolean returnDirect) {
             ToolUseBlock toolUse = entry.getKey();
             ToolResultBlock result = entry.getValue();
 
-            // FIX: determine the final state and update ToolResultBlock before
-            // adding to contextMutable(), so that history queries via
-            // agent.getAgentState(ctx).contextMutable() reflect the correct
-            // final state instead of always showing RUNNING.
+            // 修复：加入 contextMutable() 前先确定最终状态并更新
+            // ToolResultBlock，使通过
+            // agent.getAgentState(ctx).contextMutable() 查询历史时反映正确
+            // 终态，而非始终显示 RUNNING。
             ToolResultState finalState = determineToolResultState(result);
             ToolResultBlock updatedResult = result.withState(finalState);
 
@@ -4397,7 +4368,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                             });
         }
 
-        /** The earliest stop-requesting event of the batch, or the last event if none stopped. */
+        /**
+         * 本批次中最早请求停止的事件；若没有停止请求则返回最后一个事件。
+         */
         private PostActingEvent earliestStopOrLast(List<PostActingEvent> events) {
             return events.stream()
                     .filter(PostActingEvent::isStopRequested)
@@ -4406,9 +4379,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Whether a single tool result may participate in the returnDirect short-circuit: the tool
-         * declared {@code returnDirect = true} and its result actually executed successfully.
-         * DENIED / ERROR / INTERRUPTED results must never be presented as the final answer.
+         * 单个工具结果是否可参与 returnDirect 短路：工具声明了 {@code returnDirect = true}，
+         * 且结果确实执行成功。DENIED／ERROR／INTERRUPTED 结果绝不能作为最终答案展示。
          */
         private boolean isReturnDirectToolCall(Map.Entry<ToolUseBlock, ToolResultBlock> entry) {
             AgentTool tool = toolkit.getTool(entry.getKey().getName());
@@ -4418,7 +4390,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             return determineToolResultState(entry.getValue()) == ToolResultState.SUCCESS;
         }
 
-        /** Builds the placeholder tool_result, replacing only the output while keeping id/name/state. */
+        /**
+         * 构建占位 tool_result，仅替换输出，保留 ID／名称／状态。
+         */
         private Msg buildReturnDirectPlaceholderMsg(ToolUseBlock toolUse, ToolResultBlock result) {
             ToolResultBlock placeholder =
                     placeholderResultBlock(toolUse.getId(), toolUse.getName(), result.getState());
@@ -4426,8 +4400,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * The placeholder-shaped {@link ToolResultBlock} persisted in place of a returnDirect
-         * tool's real result: same id/name/state, output swapped for the placeholder sentence.
+         * 替代 returnDirect 工具真实结果进行持久化的占位 {@link ToolResultBlock}：
+         * ID／名称／状态相同，输出换成占位句。
          */
         private ToolResultBlock placeholderResultBlock(
                 String id, String name, ToolResultState state) {
@@ -4440,13 +4414,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Finalize a returnDirect turn: synthesize the closing assistant message, persist it,
-         * emit the closing text events, and log.
+         * 完成 returnDirect 轮次：合成结束助手消息、持久化、发出结束文本事件并记录日志。
          *
-         * <p>Shared by the in-framework path ({@code acting}) and the external-resume path
-         * ({@code doCallInner}), so both produce identical message, context, return-contract,
-         * and event-stream shapes. {@code replyId} correlates the emitted events with the
-         * originating reply (the acting replyId, or the suspended external-execution request).
+         * <p>框架内路径（{@code acting}）及外部恢复路径（{@code doCallInner}）共享，
+         * 使两者产生相同的消息、上下文、返回契约及事件流结构。
+         * {@code replyId} 将发出的事件与原回复关联（行动 replyId 或暂停的外部执行请求）。
          */
         private Msg finalizeReturnDirect(
                 List<Map.Entry<ToolUseBlock, ToolResultBlock>> pairs, String replyId) {
@@ -4458,15 +4430,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Emit the standard text-block lifecycle ({@code TextBlockStart/Delta/End}) for the
-         * returnDirect closing message, so event-stream consumers (AG-UI, A2A, ...) see the
-         * same projection they would for a model-generated final answer.
+         * 为 returnDirect 结束消息发出标准文本块生命周期（{@code TextBlockStart/Delta/End}），
+         * 使 AG-UI、A2A 等事件流消费者获得与模型生成最终答案相同的投影。
          *
-         * <p>The delta carries {@link AgentEvent#METADATA_GENERATE_REASON} set to {@code
-         * TOOL_RETURN_DIRECT} for audit purposes. Non-text blocks (images, data) emit nothing
-         * and keep travelling via the Msg-level {@code AgentResultEvent}. Events are published
-         * synchronously before the closing message is returned, hence ahead of {@code
-         * AgentResultEvent}/{@code AgentEndEvent}.
+         * <p>增量事件将 {@link AgentEvent#METADATA_GENERATE_REASON} 设为 {@code TOOL_RETURN_DIRECT} 供审计。
+         * 非文本块（图像、数据）不发出事件，继续通过 Msg 级 {@code AgentResultEvent} 传递。
+         * 事件在结束消息返回前同步发布，因此早于 {@code AgentResultEvent}／{@code AgentEndEvent}。
          */
         private void publishReturnDirectTextEvents(Msg closingMsg, String replyId) {
             String effectiveReplyId =
@@ -4487,8 +4456,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Logs the returnDirect short-circuit: {@code info} marks that the tool result(s) were
-         * returned directly as the final answer, {@code debug} adds the tool count and names.
+         * 记录 returnDirect 短路：{@code info} 表示工具结果直接作为最终答案返回，
+         * {@code debug} 补充工具数量及名称。
          */
         private void logReturnDirect(List<Map.Entry<ToolUseBlock, ToolResultBlock>> pairs) {
             List<String> names = pairs.stream().map(e -> e.getKey().getName()).toList();
@@ -4499,35 +4468,25 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Synthesises the closing assistant message carrying the full tool result, mimicking the
-         * final answer the model would otherwise have produced.
+         * 合成携带完整工具结果的结束助手消息，模拟原本由模型生成的最终答案。
          *
-         * <p>For multiple tools the output blocks are concatenated in execution order (= {@code
-         * pairs} order = the model's tool_calls order) without inlining tool names or adding
-         * separator blocks. Just like a model-generated summary, the closing message carries no
-         * per-block provenance: consumers correlate blocks to tools (when needed) via block
-         * order plus the tool id/name carried by the event stream's tool-result events, never
-         * by assuming the turn was short-circuited.
+         * <p>多个工具的输出块按执行顺序（即 {@code pairs} 顺序，也就是模型 tool_calls 顺序）连接，
+         * 不内嵌工具名称、不添加分隔块。与模型生成摘要一样，结束消息不携带逐块来源；
+         * 消费者需要时通过块顺序及事件流工具结果事件中的工具 ID／名称关联，不能假设本轮是否短路。
          *
-         * <p>A tool whose result contains <em>zero</em> content blocks (possible only via a custom
-         * converter returning an empty output list) contributes nothing to the closing message —
-         * mirroring how a model summary skips a tool that produced no output — and matches the
-         * event stream, which emits no text projection for such results either. An empty-text
-         * block (e.g. {@code TextBlock("")} from an MCP tool) is a block and passes through
-         * unchanged. Only when the whole batch yields zero blocks is a single {@code "(no
-         * output)"} placeholder inserted, keeping the closing message non-empty for providers
-         * that reject empty assistant content; callers can tell it apart from a real tool
-         * output via {@link GenerateReason#TOOL_RETURN_DIRECT} and the {@code
-         * _tool_return_direct} metadata. Tool authors declaring {@code returnDirect} should
-         * ensure successful results always carry presentable blocks, so the placeholder stays a
-         * defensive fallback rather than an expected outcome.
+         * <p>结果包含零个内容块的工具（仅自定义转换器返回空输出列表时可能发生）不为结束消息贡献内容，
+         * 对应模型摘要跳过无输出工具的行为；事件流也不为这种结果发出文本投影。
+         * 空文本块（例如 MCP 工具的 {@code TextBlock("")}）仍是块，会原样通过。
+         * 仅当整个批次产生零个块时，才插入单个 {@code "(no output)"} 占位内容，
+         * 避免拒绝空助手内容的提供方报错。调用方可通过 {@link GenerateReason#TOOL_RETURN_DIRECT}
+         * 及 {@code _tool_return_direct} 元数据将它与真实工具输出区分。
+         * 声明 {@code returnDirect} 的工具应保证成功结果始终包含可展示内容块，
+         * 使占位内容仅作为防御性回退，而非预期结果。
          *
-         * <p>Boundary: the message is assembled from the pre-hook execution results. Rewrites made
-         * by the (deprecated, for-removal) PostActing hook are intentionally ignored, as are
-         * {@code onModelCall} middleware text transformations, since no model call occurs. Use
-         * the tool's result converter (or an {@code AgentTool} decorator) for content
-         * transformation/redaction: transformations at the source apply uniformly to both the
-         * in-framework and the external-resume path.
+         * <p>边界：消息根据钩子运行前的执行结果组装。有意忽略已弃用、计划移除的 PostActing 钩子改写，
+         * 也忽略 {@code onModelCall} 中间件文本转换，因为这里不调用模型。
+         * 内容转换／脱敏应使用工具结果转换器（或 {@code AgentTool} 装饰器）；
+         * 在源头转换可同时统一作用于框架内路径与外部恢复路径。
          */
         private Msg buildReturnDirectResultMsg(
                 List<Map.Entry<ToolUseBlock, ToolResultBlock>> pairs) {
@@ -4547,12 +4506,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Generate summary when max iterations reached.
+         * 达到最大迭代次数时生成摘要。
          */
         protected Mono<Msg> summarizing() {
             log.debug("Maximum iterations reached. Generating summary...");
 
-            // Handle pending tool calls that were not completed before max iterations
+            // 处理达到最大迭代次数之前尚未完成的工具调用
             List<ToolUseBlock> pendingTools =
                     MessageUtils.extractPendingToolCalls(state.contextMutable(), getName());
             if (!pendingTools.isEmpty()) {
@@ -4633,16 +4592,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Stream fine-grained {@link AgentEvent}s from a model call during summarization.
+         * 流式发送摘要阶段模型调用产生的细粒度 {@link AgentEvent}。
          *
-         * <p>Structurally identical to {@link #reasoningStream} but notifies summary-specific
-         * hooks (SummaryChunkEvent) and does not pass tool schemas to the model.
+         * <p>结构与 {@link #reasoningStream} 相同，但通知摘要专用钩子（SummaryChunkEvent），不向模型传递工具 schema。
          *
-         * @param context   reasoning context for chunk accumulation
-         * @param messages  the messages to send to the model
-         * @param options   generation options
-         * @param model     the model used for this summary call
-         * @return event stream from the summary model call
+         * @param context 用于片段累积的推理上下文
+         * @param messages 要发送给模型的消息
+         * @param options 生成选项
+         * @param model 本次摘要调用使用的模型
+         * @return 摘要模型调用的事件流
          */
         Flux<AgentEvent> summaryStream(
                 ReasoningContext context,
@@ -4798,19 +4756,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             return Mono.just(errorMsg);
         }
 
-        // ==================== Helper Methods ====================
+        // ==================== 辅助方法 ====================
 
         /**
-         * Check if the ReAct loop should terminate.
+         * 检查 ReAct 循环是否应终止。
          *
-         * <p>A response with unfinished or local tool calls continues to the acting phase.
-         * Completed server tool calls do not require local execution. A tool-free response
-         * finishes only when it carries visible content: empty or thinking-only responses (the
-         * entire answer in the reasoning channel) loop back to reasoning, bounded by {@code
-         * maxIters}, instead of silently ending the agent with an empty reply.
+         * <p>含未完成调用或本地工具调用的响应继续进入行动；已完成的服务端工具调用无需本地执行。
+         * 无工具调用的响应只有携带可见内容才结束；空响应或仅思考响应（答案全在推理通道）
+         * 会重新进入推理，受 {@code maxIters} 限制，而非静默以空回复结束。
          *
-         * @param msg The reasoning message
-         * @return true if should finish, false if should continue to acting
+         * @param msg 推理消息
+         * @return 应结束时为 true，应继续行动时为 false
          */
         private boolean isFinished(Msg msg) {
             if (msg == null) {
@@ -4825,11 +4781,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                                 && !textBlock.getText().isBlank());
             }
 
-            // Server tool calls are executed by the provider and their results arrive in the
-            // same assistant message: if every tool call is a server tool with its result
-            // present, there is nothing left to act on. A server tool call without a result
-            // (e.g. pause_turn) keeps the loop running so the conversation goes back to the
-            // provider to continue.
+            // 服务端工具由提供方执行，结果随同一
+            // 助手消息到达；若每个调用都是有结果的服务端工具，
+            // 则无需再执行行动。没有结果的服务端工具调用
+            // （例如 pause_turn）会保持循环运行，让会话回到
+            // 提供方继续处理。
             Set<String> inlineResultIds = MessageUtils.inlineServerToolResultIds(msg);
             return toolCalls.stream()
                     .allMatch(
@@ -4839,13 +4795,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Build the synthetic {@code system} reminder injected before looping back to reasoning
-         * after an empty final response.
+         * 构建最终回复为空后、重新进入推理前注入的合成 {@code system} 提醒。
          *
-         * <p>Unlike {@code TaskReminderMiddleware}'s transient todo reminder, this reminder is
-         * written into the agent context and persists in the session state (like {@code
-         * SubagentsMiddleware}'s task-delivery reminder): the corrective signal stays visible to
-         * later turns. Accumulation is bounded by {@code maxIters} per call.
+         * <p>不同于 {@code TaskReminderMiddleware} 的临时待办提醒，此提醒会写入智能体上下文并持久化
+         * 到会话状态（类似 {@code SubagentsMiddleware} 的任务交付提醒），使纠正信号在后续轮次仍可见。
+         * 每次调用的累积量受 {@code maxIters} 限制。
          */
         private static Msg buildEmptyResponseReminder() {
             return Msg.builder()
@@ -4862,9 +4816,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Build an onActing middleware chain that emits {@link AllToolsDeniedEvent}, giving
-         * middlewares the opportunity to emit a {@link RequestStopEvent}. If a stop is requested,
-         * the agent returns immediately; otherwise it continues to the next iteration.
+         * 构建发出 {@link AllToolsDeniedEvent} 的 onActing 中间件链，
+         * 给中间件机会发出 {@link RequestStopEvent}。若请求停止，智能体立即返回；否则继续下一轮迭代。
          */
         private Mono<Msg> emitAllToolsDeniedThroughMiddleware(
                 List<ToolUseBlock> deniedToolCalls, int iter) {
@@ -4916,18 +4869,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Extract tool calls from the most recent assistant message.
+         * 从最近一条助手消息提取工具调用。
          */
         private List<ToolUseBlock> extractRecentToolCalls() {
             return MessageUtils.extractRecentToolCalls(state.contextMutable(), getName());
         }
 
-        // ==================== Tool call state helpers (Permission HITL) ====================
+        // ==================== 工具调用状态辅助方法（权限 HITL） ====================
 
         /**
-         * Locate the last assistant Msg in context and replace the {@code state} of every
-         * {@link ToolUseBlock} whose id matches the given map's key. Mirrors Python's
-         * {@code _update_tool_call_state} but operates in bulk to minimise list rebuilds.
+         * 定位上下文最后一条助手 Msg，替换 ID 匹配给定映射键的每个 {@link ToolUseBlock} 的 {@code state}。
+         * 对应 Python 的 {@code _update_tool_call_state}，但采用批量操作以减少列表重建。
          */
         private void updateToolCallStates(Map<String, ToolCallState> updates) {
             if (updates == null || updates.isEmpty()) {
@@ -4947,7 +4899,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             MessageUtils.replaceToolUseBlocks(state.contextMutable(), replacements);
         }
 
-        /** The ToolUseBlocks in the last assistant Msg that are in ASKING state (HITL pending). */
+        /**
+         * 最后一条助手 Msg 中处于 ASKING 状态（HITL 待确认）的 ToolUseBlock。
+         */
         private List<ToolUseBlock> askingToolCalls() {
             Msg last = MessageUtils.lastAssistantMessage(state.contextMutable());
             if (last == null) {
@@ -4964,10 +4918,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     protected GenerateOptions buildGenerateOptions() {
-        // Start with user-configured generateOptions if available
+        // 优先使用用户配置的 generateOptions（如果存在）
         GenerateOptions baseOptions = generateOptions;
 
-        // Layer the agent-level retry budget underneath explicit per-call settings.
+        // 将智能体级重试额度叠加到显式单次调用设置之下。
         if (modelConfig != null) {
             GenerateOptions retryBudgetOptions =
                     GenerateOptions.builder()
@@ -4979,7 +4933,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             baseOptions = GenerateOptions.mergeOptions(baseOptions, retryBudgetOptions);
         }
 
-        // If modelExecutionConfig is set, merge it into the options
+        // 设置了 modelExecutionConfig 时，将其合并到选项
         if (modelExecutionConfig != null) {
             GenerateOptions execConfigOptions =
                     GenerateOptions.builder().executionConfig(modelExecutionConfig).build();
@@ -5004,7 +4958,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             @Override
             public Flux<ChatResponse> stream(
                     List<Msg> messages, List<ToolSchema> tools, GenerateOptions options) {
-                // Route synchronous model setup failures through the same first-signal fallback.
+                // 将同步模型初始化失败导入相同的首信号回退路径。
                 Flux<ChatResponse> primaryFlux =
                         Flux.defer(
                                 () -> {
@@ -5124,9 +5078,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Notifies the failover listener at the switch site. An exception from the listener is
-     * contained here: it is logged and does not affect the switch or the fallback call that
-     * follows.
+     * 在切换位置通知回退监听器。监听器异常在此被隔离：记录日志，但不影响切换及后续回退调用。
      */
     private static void notifyFailover(FailoverListener listener, Model primary, Throwable error) {
         if (listener == null) {
@@ -5144,7 +5096,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return Mono.deferContextual(
                 cv -> {
                     CallExecution scope = scopeFrom(cv);
-                    // Resolve the source from this execution's own interrupt signal.
+                    // 从本次执行自己的中断信号解析来源。
                     InterruptSource source = scope.interruption.getSource();
                     if (source == InterruptSource.SYSTEM) {
                         String requestId =
@@ -5152,9 +5104,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                         shutdownManager.saveOnInterruptObserved(requestId);
                         return Mono.error(new AgentShuttingDownException());
                     }
-                    // Reconcile any pending tool calls before appending the recovery message.
-                    // The tool_use written during reasoning would otherwise be persisted with no
-                    // matching tool result, leaving the AgentState inconsistent for the next run.
+                    // 追加恢复消息前，协调全部待处理工具调用。
+                    // 否则推理写入的 tool_use 会在没有
+                    // 匹配工具结果的情况下持久化，使下一次运行继承不一致的 AgentState。
                     scope.synthesizeErrorResultsForPendingToolCalls();
                     String recoveryText =
                             "I noticed that you have interrupted me. What can I do for you?";
@@ -5194,26 +5146,27 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return Mono.empty();
     }
 
-    // ==================== Getters ====================
+    // ==================== 访问方法 ====================
 
-    /** Returns this agent's toolkit; request-specific views do not mutate its registry. */
+    /**
+     * 返回智能体工具集；请求专属视图不会修改其注册表。
+     */
     public Toolkit getToolkit() {
         return toolkit;
     }
 
     /**
-     * Returns the builder-configured baseline {@link SkillFilter} for this agent's skill view.
-     * Never {@code null}: an unset builder filter defaults to {@link SkillFilter#all()}. The
-     * auto-installed {@link DynamicSkillMiddleware} applies this baseline; per-call overlays
-     * supplied via {@code RuntimeContext.get(SkillFilter.class)} compose on top of it.
+     * 返回构建器配置的技能视图基准 {@link SkillFilter}。
+     * 绝不为 {@code null}，未设置时默认 {@link SkillFilter#all()}。
+     * 自动安装的 {@link DynamicSkillMiddleware} 应用该基准，再叠加
+     * 通过 {@code RuntimeContext.get(SkillFilter.class)} 提供的单次调用过滤器。
      */
     public SkillFilter getSkillFilter() {
         return skillFilter;
     }
 
     /**
-     * Returns the builder-configured stable directory for skill materialisation, or
-     * {@code null} when unset — consumers then fall back to their own temporary allocation.
+     * 返回构建器配置的稳定技能实体化目录；未设置时为 {@code null}，使用方回退到自行分配的临时目录。
      */
     public Path getSkillWorkDir() {
         return skillWorkDir;
@@ -5232,18 +5185,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Gets the configured generation options for this agent.
+     * 获取此智能体配置的生成选项。
      *
-     * @return The generation options, or null if not configured
+     * @return 生成选项；未配置时为 null
      */
     public GenerateOptions getGenerateOptions() {
         return generateOptions;
     }
 
     /**
-     * @deprecated Use {@link #getAgentState(RuntimeContext)} or
-     *     {@link #getAgentState(String, String)} with explicit session identity.
-     *     This method delegates to the default session slot.
+     * @deprecated 请显式提供会话身份，使用 {@link #getAgentState(RuntimeContext)} 或
+     * {@link #getAgentState(String, String)}。此方法委托给默认会话槽位。
      */
     @Deprecated
     @Override
@@ -5252,10 +5204,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Returns the {@link AgentState} for the session identified by the given {@link RuntimeContext}.
+     * 返回给定 {@link RuntimeContext} 所标识会话的 {@link AgentState}。
      *
-     * @param ctx the runtime context (uses {@code getUserId()} and {@code getSessionId()})
-     * @return the agent state for the identified session
+     * @param ctx 运行时上下文（使用 {@code getUserId()} 和 {@code getSessionId()}）
+     * @return 所标识会话的智能体状态
      */
     public AgentState getAgentState(RuntimeContext ctx) {
         if (SessionRecorder.from(ctx) != null && ctx.getAgentState() != null)
@@ -5270,10 +5222,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Reads native state from the committed log, returning a detached working copy. The optional
-     * get/mutate/save compatibility path rejects stale copies when saved. Prefer
-     * {@link #updateAgentState(RuntimeContext, String, Consumer)} for administrative mutations.
-     * Standalone agents without a native log retain the state-store cache behavior.
+     * 从已提交日志读取原生状态，返回独立工作副本。可选的 get/mutate/save 兼容路径在保存时拒绝过期副本。
+     * 管理性修改优先使用 {@link #updateAgentState(RuntimeContext, String, Consumer)}。
+     * 无原生日志的独立智能体保留状态存储缓存行为。
      */
     public AgentState getAgentState(String userId, String sessionId) {
         if (sessionLogEnabled()) return nativeWorkingCopy(stateContext(userId, sessionId));
@@ -5324,7 +5275,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 initialActiveToolGroups);
     }
 
-    /** Inspects a detached native state snapshot without changing history or local working copies. */
+    /**
+     * 检查独立的原生状态快照，不修改历史或本地工作副本。
+     */
     public SessionStateAccess.Snapshot inspectAgentState(RuntimeContext context) {
         RuntimeContext ctx = stateContext(context);
         if (!sessionLogEnabled())
@@ -5333,9 +5286,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Applies an administrative change to the latest state and persists it immediately. Native
-     * sessions acquire the writer lease, reject active executions, and commit a checkpoint. The
-     * callback must be short and must not invoke models/tools or perform external side effects.
+     * 对最新状态应用管理性变更并立即持久化。原生会话获取写入者租约、拒绝活动执行并提交检查点。
+     * 回调必须简短，不得调用模型／工具或产生外部副作用。
      */
     public AgentState updateAgentState(
             RuntimeContext context, String reason, Consumer<AgentState> mutation) {
@@ -5358,15 +5310,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Clears all locally cached per-session state and permission engines.
+     * 清空所有本地缓存的会话状态及权限引擎。
      *
-     * <p>This only releases the in-memory cache held by this agent. It does not delete or modify
-     * any state in the configured {@link AgentStateStore}. A later {@code getAgentState(...)} or
-     * {@code call(...)} reloads the session from the store when one is configured.
+     * <p>仅释放此智能体持有的内存缓存，不删除或修改所配置 {@link AgentStateStore} 中的任何状态。
+     * 配置存储后，后续 {@code getAgentState(...)} 或 {@code call(...)} 会从存储重新加载会话。
      *
-     * <p>Call this after the agent's in-flight calls have completed. Existing callers that still
-     * hold an {@link AgentState} reference, or an in-flight call that captured one, may continue
-     * to retain that object until those references are released.
+     * <p>应在进行中的调用全部完成后调用。仍持有 {@link AgentState} 引用的调用方或已捕获状态的
+     * 进行中调用可能继续保留该对象，直到释放引用。
      */
     public void clearStateCache() {
         stateCache.clear();
@@ -5376,11 +5326,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Clears the locally cached state and permission engine for the session identified by
-     * {@code ctx}.
+     * 清空 {@code ctx} 所标识会话的本地缓存状态及权限引擎。
      *
-     * @param ctx runtime context identifying the session; a missing session id uses the default
-     *     session id
+     * @param ctx 标识会话的运行时上下文；缺少会话 ID 时使用默认会话 ID
      */
     public void clearStateCache(RuntimeContext ctx) {
         String uid = ctx != null ? ctx.getUserId() : null;
@@ -5389,14 +5337,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Clears the locally cached state and permission engine for one {@code (userId, sessionId)}
-     * slot.
+     * 清空一个 {@code (userId, sessionId)} 槽位的本地缓存状态及权限引擎。
      *
-     * <p>This only releases local references. It does not delete the corresponding state from
-     * the configured {@link AgentStateStore}; the next access reloads the persisted state.
+     * <p>仅释放本地引用，不删除配置的 {@link AgentStateStore} 中的对应状态；下次访问会重新加载持久化状态。
      *
-     * @param userId user identity for the slot ({@code null} = anonymous / single-tenant)
-     * @param sessionId session identity; {@code null} or blank uses the default session id
+     * @param userId 槽位用户身份（{@code null} 表示匿名／单租户）
+     * @param sessionId 会话身份；{@code null} 或空白时使用默认会话 ID
      */
     public void clearStateCache(String userId, String sessionId) {
         String sid = (sessionId == null || sessionId.isBlank()) ? defaultSessionId : sessionId;
@@ -5408,23 +5354,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Clears the model-visible conversation context for the session identified by {@code ctx}.
+     * 清空 {@code ctx} 所标识会话中模型可见的对话上下文。
      *
-     * <p>The session identity, permission configuration, tool state, tasks, and plan-mode state
-     * are preserved. When an {@link AgentStateStore} is configured and the session has already
-     * been persisted, the latest persisted state is reloaded before clearing so only the
-     * conversation messages and any compaction summary are removed. The updated state is persisted
-     * immediately.
+     * <p>保留会话身份、权限配置、工具状态、任务及计划模式状态。配置 {@link AgentStateStore} 且会话已持久化时，
+     * 先重新加载最新持久化状态，再仅清除对话消息及压缩摘要。更新后立即持久化。
      *
-     * <p>Native sessions record the reset as a checkpoint and reject active writers or pending
-     * interactions. Standalone state-store sessions with neither cached nor persisted state are
-     * left unchanged.
+     * <p>原生会话将重置记录为检查点，并拒绝活动写入者或待处理交互。
+     * 无缓存也无持久化状态的独立状态存储会话保持不变。
      *
-     * <p>This method does not cancel an in-flight call. Invoke it after the session's current call
-     * has completed so that the next call reliably starts with an empty conversation context.
+     * <p>此方法不取消进行中调用。应在会话当前调用完成后使用，确保下次调用从空对话上下文开始。
      *
-     * @param ctx runtime context identifying the session; a missing session id uses the default
-     *     session id
+     * @param ctx 标识会话的运行时上下文；缺少会话 ID 时使用默认会话 ID
      */
     public void clearContext(RuntimeContext ctx) {
         if (sessionLogEnabled()) {
@@ -5437,23 +5377,18 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Clears the model-visible conversation context for one {@code (userId, sessionId)} session.
+     * 清空一个 {@code (userId, sessionId)} 会话中模型可见的对话上下文。
      *
-     * <p>The session keeps the same identity. Unlike creating a new session, this only removes
-     * the conversation messages and compaction summary, so permission configuration, tool state,
-     * tasks, and plan-mode state remain available. When an {@link AgentStateStore} is configured
-     * and the session has already been persisted, the latest persisted state is reloaded before
-     * clearing. The updated state is persisted immediately.
+     * <p>会话身份保持不变。与新建会话不同，仅删除对话消息及压缩摘要，保留权限配置、工具状态、任务及计划模式状态。
+     * 配置 {@link AgentStateStore} 且会话已持久化时，先重新加载最新持久化状态，再清空并立即持久化更新。
      *
-     * <p>Native sessions record the reset as a checkpoint and reject active writers or pending
-     * interactions. Standalone state-store sessions with neither cached nor persisted state are
-     * left unchanged.
+     * <p>原生会话将重置记录为检查点，并拒绝活动写入者或待处理交互。
+     * 无缓存也无持久化状态的独立状态存储会话保持不变。
      *
-     * <p>This method does not cancel an in-flight call. Invoke it after the session's current call
-     * has completed so that the next call reliably starts with an empty conversation context.
+     * <p>此方法不取消进行中调用。应在会话当前调用完成后使用，确保下次调用从空对话上下文开始。
      *
-     * @param userId user identity for the slot ({@code null} = anonymous / single-tenant)
-     * @param sessionId session identity; {@code null} or blank uses the default session id
+     * @param userId 槽位用户身份（{@code null} 表示匿名／单租户）
+     * @param sessionId 会话身份；{@code null} 或空白时使用默认会话 ID
      */
     public void clearContext(String userId, String sessionId) {
         if (sessionLogEnabled()) {
@@ -5504,23 +5439,19 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Switches the {@link PermissionMode} for the given {@code (userId, sessionId)} session at
-     * runtime and rebuilds that session's cached {@link PermissionEngine} so the change takes
-     * effect on the next tool evaluation. The configured rules and working directories are
-     * preserved; only the mode changes. The change is persisted so the next {@code call} on that
-     * session sees it.
+     * 运行时切换指定 {@code (userId, sessionId)} 会话的 {@link PermissionMode}，
+     * 并重建该会话缓存的 {@link PermissionEngine}，让下次工具评估生效。
+     * 保留已有规则和工作目录，仅改变模式；变更会持久化，使该会话下一次 {@code call} 能看到。
      *
-     * <p>Use this to implement a deliberate, user-initiated "bypass permissions" toggle (pass
-     * {@link PermissionMode#BYPASS}) or to restore stricter enforcement afterwards (pass
-     * {@link PermissionMode#DEFAULT}). {@code BYPASS} disables all rule evaluation, so it should be
-     * an explicit, per-session action and is best paired with a sandboxed environment.
+     * <p>可用于实现用户主动、有意开启的“绕过权限”开关（传入 {@link PermissionMode#BYPASS}），
+     * 或随后恢复更严格的执行（传入 {@link PermissionMode#DEFAULT}）。
+     * {@code BYPASS} 禁用全部规则评估，应作为显式的会话级操作，最好配合沙箱环境使用。
      *
-     * <p>Native sessions reject changes while an execution holds the writer lease. Standalone
-     * state-store sessions retain their current call engine until the next call.
+     * <p>原生会话在执行持有写入者租约时拒绝变更；独立状态存储会话保留当前调用引擎，直到下一次调用。
      *
-     * @param userId user identity for the slot (may be {@code null})
-     * @param sessionId session identity (falls back to the default session id when {@code null})
-     * @param mode the permission mode to switch to
+     * @param userId 槽位用户身份（可以为 {@code null}）
+     * @param sessionId 会话身份（{@code null} 时回退到默认会话 ID）
+     * @param mode 要切换到的权限模式
      */
     public void setPermissionMode(String userId, String sessionId, PermissionMode mode) {
         Objects.requireNonNull(mode, "mode must not be null");
@@ -5539,15 +5470,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Replaces the permission context for one {@code (userId, sessionId)} slot, rebuilds that
-     * slot's permission engine, and persists the updated state.
+     * 替换一个 {@code (userId, sessionId)} 槽位的权限上下文，重建该槽位权限引擎并持久化更新。
      *
-     * <p>Native sessions reject changes while an execution holds the writer lease. The replacement
-     * applies to subsequent calls on this slot and does not affect other sessions.
+     * <p>原生会话在执行持有写入者租约时拒绝变更。替换仅作用于该槽位后续调用，不影响其他会话。
      *
-     * @param userId user identity for the slot (may be {@code null})
-     * @param sessionId session identity (falls back to the default session id when {@code null})
-     * @param permissionContext complete replacement context
+     * @param userId 槽位用户身份（可以为 {@code null}）
+     * @param sessionId 会话身份（{@code null} 时回退到默认会话 ID）
+     * @param permissionContext 完整替换上下文
      */
     public void replacePermissionContext(
             String userId, String sessionId, PermissionContextState permissionContext) {
@@ -5576,11 +5505,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Switches the {@link PermissionMode} for the session identified by the given
-     * {@link RuntimeContext}. See {@link #setPermissionMode(String, String, PermissionMode)}.
+     * 切换给定 {@link RuntimeContext} 所标识会话的 {@link PermissionMode}。
+     * 参见 {@link #setPermissionMode(String, String, PermissionMode)}。
      *
-     * @param ctx the runtime context identifying the session
-     * @param mode the permission mode to switch to
+     * @param ctx 标识会话的运行时上下文
+     * @param mode 要切换到的权限模式
      */
     public void setPermissionMode(RuntimeContext ctx, PermissionMode mode) {
         Objects.requireNonNull(mode, "mode must not be null");
@@ -5599,11 +5528,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Returns the current {@link PermissionMode} for the given {@code (userId, sessionId)} session.
+     * 返回给定 {@code (userId, sessionId)} 会话当前的 {@link PermissionMode}。
      *
-     * @param userId user identity for the slot (may be {@code null})
-     * @param sessionId session identity (falls back to the default session id when {@code null})
-     * @return the session's current permission mode
+     * @param userId 槽位用户身份（可以为 {@code null}）
+     * @param sessionId 会话身份（{@code null} 时回退到默认会话 ID）
+     * @return 会话当前权限模式
      */
     public PermissionMode getPermissionMode(String userId, String sessionId) {
         String sid = (sessionId == null || sessionId.isBlank()) ? defaultSessionId : sessionId;
@@ -5611,11 +5540,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Persists the cached {@link AgentState} for the session identified by the given
-     * {@link RuntimeContext}. No-op when no store is configured or the session has never
-     * been loaded.
+     * 持久化给定 {@link RuntimeContext} 所标识会话缓存的 {@link AgentState}。
+     * 未配置存储或会话从未加载时不做操作。
      *
-     * @param ctx the runtime context identifying the session to save
+     * @param ctx 标识待保存会话的运行时上下文
      */
     public void saveAgentState(RuntimeContext ctx) {
         SessionRecorder recorder = SessionRecorder.from(ctx);
@@ -5636,10 +5564,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
     }
 
     /**
-     * Saves the detached native working copy only if its original committed prefix is still
-     * current. A concurrent writer or stale copy is rejected. For standalone state-store agents,
-     * persists the cached state using the configured conflict policy. A missing working copy is
-     * a no-op. Prefer {@link #updateAgentState(RuntimeContext, String, Consumer)} for new code.
+     * 仅当原始已提交前缀仍为当前版本时保存独立原生工作副本；拒绝并发写入者或过期副本。
+     * 独立状态存储智能体则按已配置冲突策略持久化缓存状态。缺少工作副本时不做操作。
+     * 新代码优先使用 {@link #updateAgentState(RuntimeContext, String, Consumer)}。
      */
     public void saveAgentState(String userId, String sessionId) {
         if (sessionLogEnabled()) {
@@ -5674,40 +5601,51 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
     }
 
-    /** Returns how many optimistic-concurrency conflicts have been observed on this agent. */
+    /**
+     * 返回此智能体已观测到的乐观并发冲突次数。
+     */
     public long getStateConflictCount() {
         return stateConflictCount.get();
     }
 
-    /** Returns the configured {@link ConflictPolicy} for agent_state saves. */
+    /**
+     * 返回 agent_state 保存使用的已配置 {@link ConflictPolicy}。
+     */
     public ConflictPolicy getConflictPolicy() {
         return conflictPolicy;
     }
 
-    /** Returns the {@link AgentStateStore} configured for state persistence, or {@code null}. */
+    /**
+     * 返回用于状态持久化的 {@link AgentStateStore}，或 {@code null}。
+     */
     public AgentStateStore getStateStore() {
         return stateStore;
     }
 
     /**
-     * Returns the builder-time fallback {@code sessionId}, used when a call's
-     * {@link RuntimeContext} carries no {@code sessionId}.
+     * 返回构建器阶段设置的回退 {@code sessionId}，当调用的 {@link RuntimeContext} 未携带 {@code sessionId} 时使用。
      */
     public String getDefaultSessionId() {
         return defaultSessionId;
     }
 
-    /** Returns the model-call configuration (retries, timeouts). */
+    /**
+     * 返回模型调用配置（重试、超时）。
+     */
     public ModelConfig getModelConfig() {
         return modelConfig;
     }
 
-    /** Returns the reasoning-loop configuration (maxIters, stopOnReject). */
+    /**
+     * 返回推理循环配置（maxIters、stopOnReject）。
+     */
     public ReactConfig getReactConfig() {
         return reactConfig;
     }
 
-    /** @deprecated Use {@code getAgentState(userId, sessionId).getPermissionContext()} instead. */
+    /**
+     * @deprecated 请改用 {@code getAgentState(userId, sessionId).getPermissionContext()}。
+     */
     @Deprecated
     public PermissionEngine getPermissionEngine() {
         String slot = slotKey(null, defaultSessionId);
@@ -5716,13 +5654,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 slot, k -> new PermissionEngine(s.getPermissionContext()));
     }
 
-    /** @deprecated Use {@code getAgentState(userId, sessionId).getPermissionContext()} instead. */
+    /**
+     * @deprecated 请改用 {@code getAgentState(userId, sessionId).getPermissionContext()}。
+     */
     @Deprecated
     public PermissionContextState getPermissionContext() {
         return getAgentState().getPermissionContext();
     }
 
-    /** Returns the immutable list of registered middlewares. */
+    /**
+     * 返回已注册中间件的不可变列表。
+     */
     public List<MiddlewareBase> getMiddlewares() {
         return middlewares;
     }
@@ -5731,30 +5673,37 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         return modelRequestPreparer;
     }
 
-    /** Returns the per-model-call {@link ExecutionConfig}, or {@code null} if none was set. */
+    /**
+     * 返回每次模型调用的 {@link ExecutionConfig}；未设置时为 {@code null}。
+     */
     public ExecutionConfig getModelExecutionConfig() {
         return modelExecutionConfig;
     }
 
-    /** Returns the per-tool-call {@link ExecutionConfig}, or {@code null} if none was set. */
+    /**
+     * 返回每次工具调用的 {@link ExecutionConfig}；未设置时为 {@code null}。
+     */
     public ExecutionConfig getToolExecutionConfig() {
         return toolExecutionConfig;
     }
 
-    /** Returns the {@link ToolExecutionContext} bound at build time, or {@code null} if none. */
+    /**
+     * 返回构建时绑定的 {@link ToolExecutionContext}；未设置时为 {@code null}。
+     */
     public ToolExecutionContext getToolExecutionContext() {
         return toolExecutionContext;
     }
 
     /**
-     * Returns whether pending-tool-call recovery is enabled (HITL: resume tool calls left in
-     * a pending state across {@code call()} invocations).
+     * 返回是否启用待处理工具调用恢复（HITL：跨 {@code call()} 调用恢复仍处于待处理状态的工具调用）。
      */
     public boolean isPendingToolRecoveryEnabled() {
         return enablePendingToolRecovery;
     }
 
-    /** Returns the system prompt (alias for {@link #getSysPrompt()}). */
+    /**
+     * 返回系统提示（{@link #getSysPrompt()} 的别名）。
+     */
     public String getSystemPrompt() {
         return sysPrompt;
     }
@@ -5765,13 +5714,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
 
     @Override
     public void close() {
-        // Release the ShutdownStateSaver registered in the constructor so that ephemeral /
-        // per-call agent instances are not retained by GracefulShutdownManager.stateSavers.
+        // 释放构造方法中注册的 ShutdownStateSaver，避免临时／
+        // 单次调用智能体实例被 GracefulShutdownManager.stateSavers 持有。
         shutdownManager.unbindStateSaver(this);
         clearStateCache();
     }
 
-    // ==================== Builder ====================
+    // ==================== 构建器 ====================
 
     @SuppressWarnings("deprecation")
     public static class Builder {
@@ -5790,7 +5739,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             return this;
         }
 
-        /** Makes the native log authoritative for this agent's session state. */
+        /**
+         * 将原生日志设为此智能体会话状态的权威来源。
+         */
         public Builder sessionLogStore(SessionLogStore store) {
             this.sessionLogStore = Objects.requireNonNull(store);
             return this;
@@ -5813,13 +5764,17 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         private ModelRequestPreparer modelRequestPreparer;
         private ActionObserver actionObserver;
 
-        /** Install acknowledged action recording. Unconfigured ReAct agents keep their normal loop. */
+        /**
+         * 安装已确认行动记录。未配置的 ReAct 智能体保持正常循环。
+         */
         public Builder actionObserver(ActionObserver observer) {
             this.actionObserver = Objects.requireNonNull(observer);
             return this;
         }
 
-        /** Installs the final request preparation boundary, outside the middleware onion. */
+        /**
+         * 安装位于中间件洋葱层之外的最终请求准备边界。
+         */
         public Builder modelRequestPreparer(ModelRequestPreparer preparer) {
             this.modelRequestPreparer = Objects.requireNonNull(preparer);
             return this;
@@ -5829,7 +5784,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         private boolean taskListEnabled = false;
         private boolean taskRequirementsEnabled = false;
 
-        /** Enables candidate requirement proposals independently from todo tracking. */
+        /**
+         * 独立于待办跟踪启用候选需求提议。
+         */
         public Builder enableTaskRequirements(boolean enabled) {
             taskRequirementsEnabled = enabled;
             return this;
@@ -5838,10 +5795,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         private ToolExecutionContext toolExecutionContext;
         private boolean enablePendingToolRecovery = false;
 
-        // 2.0 core fields
+        // 2.0 核心字段
         private PermissionContextState permissionContext;
 
-        // Flat setters backing ModelConfig / ReactConfig values
+        // 支持 ModelConfig／ReactConfig 值的扁平设置方法
         private Integer flatMaxRetries;
         private Model flatFallbackModel;
         private FailoverListener flatFailoverListener;
@@ -5850,10 +5807,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         private ConflictPolicy conflictPolicy;
         private String defaultSessionId;
 
-        // ==================== 1.x legacy compatibility fields ====================
-        // Below fields back the deprecated `longTermMemory(...)`, `knowledge(...)`,
-        // `skillBox(...)` setters. They are consumed by configureXxx() during build() so
-        // legacy 1.x user code keeps producing equivalent runtime behavior.
+        // ==================== 1.x 旧版兼容字段 ====================
+        // 以下字段支撑已弃用的 `longTermMemory(...)`、`knowledge(...)`、
+        // `skillBox(...)` 设置方法。build() 期间由 configureXxx() 消费，
+        // 使旧版 1.x 用户代码保持等价运行时行为。
 
         @Deprecated(forRemoval = true, since = "2.0.0")
         private LongTermMemory longTermMemory;
@@ -5877,36 +5834,34 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         @Deprecated(forRemoval = true, since = "2.0.0")
         private SkillBox skillBox;
 
-        // ==================== 2.0 skill repository entry ====================
-        // The 2.0 way to mount skills: hand the agent one or more
-        // {@link AgentSkillRepository} instances. {@link #build()} installs a
-        // {@link DynamicSkillMiddleware} that rebuilds the skill prompt on every call,
-        // letting per-user namespaced repositories swap content under the same skill name.
+        // ==================== 2.0 技能仓库入口 ====================
+        // 2.0 挂载技能的方式：向智能体提供一个或多个
+        // {@link AgentSkillRepository} 实例。{@link #build()} 安装
+        // {@link DynamicSkillMiddleware}，在每次调用时重建技能提示，
+        // 使按用户隔离的命名空间仓库能够在相同技能名称下切换内容。
 
         private final List<AgentSkillRepository> skillRepositories = new ArrayList<>();
         private SkillFilter skillFilter;
         private boolean dynamicSkillsEnabled = true;
 
         /**
-         * When true, {@link DynamicSkillMiddleware} toggles the prompt provider's code-execution
-         * block (per-skill {@code <files-root>} listing + instructions). Off by default —
-         * enabling it without also wiring a shell-like tool will produce a prompt that asks the
-         * model to do things it cannot.
+         * 为 true 时，{@link DynamicSkillMiddleware} 打开提示提供方的代码执行块
+         * （每个技能的 {@code <files-root>} 列表及说明）。默认关闭；
+         * 未同时接入类 shell 工具时启用，会生成要求模型执行其无法完成操作的提示。
          */
         private boolean skillCodeExecutionEnabled = false;
 
         /**
-         * Stable working directory passed to {@link DynamicSkillMiddleware}. {@code null} means
-         * the middleware will mkdtemp one on first reload and reuse it for the agent's lifetime.
+         * 传给 {@link DynamicSkillMiddleware} 的稳定工作目录。{@code null} 表示中间件在首次重载时
+         * 通过 mkdtemp 创建目录，并在智能体整个生命周期内复用。
          */
         private Path skillWorkDir;
 
         private Builder() {}
 
         /**
-         * Copies configuration without sharing mutable registration collections. Configured model,
-         * tool, middleware and storage instances retain their application-managed lifetimes.
-         * Configure the source before sharing it; concurrent setter calls are not supported.
+         * 复制配置，不共享可变注册集合。配置的模型、工具、中间件及存储实例仍由应用管理生命周期。
+         * 共享之前应配置好源对象，不支持并发调用设置方法。
          */
         public synchronized Builder copy() {
             Builder copy = new Builder();
@@ -5957,10 +5912,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the name for this agent.
+         * 设置智能体名称。
          *
-         * @param name The agent name, must not be null
-         * @return This builder instance for method chaining
+         * @param name 智能体名称，不能为 null
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -5968,19 +5923,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the agent id (trimmed; null/blank falls back to a generated UUID). Format contract:
-         * {@link AgentBase#normalizeAgentId(String)}, validated at {@code build()} time.
-         * Framework internals key off it.
+         * 设置智能体 ID（去掉首尾空白；null／空白时回退到生成 UUID）。
+         * 格式契约见 {@link AgentBase#normalizeAgentId(String)}，在 {@code build()} 时验证；框架内部以此为键。
          *
-         * <p>You normally do not need to set this: unless you need a specific, externally known
-         * id for the agent (e.g. to keep a stable identity — state, tracing, routing — across
-         * restarts), leave it unset and the framework generates a unique random UUID for you.
-         * If you do set it, uniqueness is your responsibility — it is not enforced or checked
-         * by the framework, so keep the id unique among live agents at all times; duplicates
-         * can collide in state storage, filesystem namespaces, and message routing.
+         * <p>通常无需设置：除非需要外部已知的特定 ID，例如重启后保持状态、追踪、路由身份稳定，
+         * 否则留空，由框架生成唯一随机 UUID。若显式设置，唯一性由你负责，框架不强制检查；
+         * 必须始终保证活动智能体 ID 唯一，否则可能在状态存储、文件系统命名空间或消息路由中冲突。
          *
-         * @param agentId The agent id
-         * @return This builder instance for method chaining
+         * @param agentId 智能体 ID
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder agentId(String agentId) {
             this.agentId = agentId;
@@ -5992,17 +5943,19 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             return this;
         }
 
-        /** @deprecated No longer enforced; per-session serialization handles concurrency. */
+        /**
+         * @deprecated 不再强制执行；会话级串行化负责处理并发。
+         */
         @Deprecated
         public Builder checkRunning(boolean checkRunning) {
             return this;
         }
 
         /**
-         * Sets the system prompt for this agent.
+         * 设置智能体系统提示。
          *
-         * @param sysPrompt The system prompt, can be null or empty
-         * @return This builder instance for method chaining
+         * @param sysPrompt 系统提示，可以为 null 或空
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder sysPrompt(String sysPrompt) {
             this.sysPrompt = sysPrompt;
@@ -6010,10 +5963,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the language model for this agent.
+         * 设置智能体语言模型。
          *
-         * @param model The language model to use for reasoning, must not be null
-         * @return This builder instance for method chaining
+         * @param model 用于推理的语言模型，不能为 null
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder model(Model model) {
             this.model = model;
@@ -6021,15 +5974,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Configures the model from a string id resolved via {@link ModelRegistry}: a named
-         * registration ({@link ModelRegistry#register(String, Model)}) or an extension provider
-         * pattern such as {@code openai:gpt-5.5}, {@code dashscope:qwen-max}, {@code
-         * anthropic:claude-sonnet-4-5}, {@code gemini:gemini-2.0-flash}, or {@code ollama:llama3}.
-         * Extension modules read API keys from their standard environment variables when auto-created.
+         * 通过 {@link ModelRegistry} 解析字符串 ID 来配置模型：可以是命名注册
+         * （{@link ModelRegistry#register(String, Model)}），也可以是扩展提供方模式，
+         * 例如 {@code openai:gpt-5.5}、{@code dashscope:qwen-max}、{@code anthropic:claude-sonnet-4-5}、
+         * {@code gemini:gemini-2.0-flash} 或 {@code ollama:llama3}。
+         * 自动创建时，扩展模块从各自标准环境变量读取 API 密钥。
          *
-         * @param modelId registry id or {@code provider:model} string
-         * @return this builder
-         * @throws IllegalArgumentException if the id cannot be resolved
+         * @param modelId 注册表 ID 或 {@code provider:model} 字符串
+         * @return 当前构建器
+         * @throws IllegalArgumentException 无法解析 ID 时抛出
          */
         public Builder model(String modelId) {
             this.model = ModelRegistry.resolve(modelId);
@@ -6037,13 +5990,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the toolkit containing available tools for this agent.
+         * 设置包含智能体可用工具的工具集。
          *
-         * <p>The registry is copied at build time before hook/meta tools are registered.
-         * Existing tool instances are shared by reference and must support concurrent use.
+         * <p>在构建时、注册钩子／元工具之前复制注册表；已有工具实例按引用共享，必须支持并发使用。
          *
-         * @param toolkit The toolkit with available tools, must not be null
-         * @return This builder instance for method chaining
+         * @param toolkit 包含可用工具的工具集，不能为 null
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder toolkit(Toolkit toolkit) {
             this.toolkit = toolkit;
@@ -6051,10 +6003,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the maximum number of reasoning-acting iterations.
+         * 设置推理—行动最大迭代次数。
          *
-         * @param maxIters Maximum iterations, must be positive
-         * @return This builder instance for method chaining
+         * @param maxIters 最大迭代次数，必须为正数
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder maxIters(int maxIters) {
             this.maxIters = maxIters;
@@ -6062,14 +6014,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Adds a hook for monitoring and intercepting agent execution events.
+         * 添加用于监测、拦截智能体执行事件的钩子。
          *
-         * <p>Hooks can observe or modify events during reasoning, acting, and other phases.
-         * Multiple hooks can be added and will be executed in priority order (lower priority
-         * values execute first).
+         * <p>钩子可以在推理、行动等阶段观察或修改事件。可添加多个钩子，按优先级顺序执行（数值小者优先）。
          *
-         * @param hook The hook to add, must not be null
-         * @return This builder instance for method chaining
+         * @param hook 要添加的钩子，不能为 null
+         * @return 当前构建器实例，支持链式调用
          * @see Hook
          * @see Hook#tools()
          */
@@ -6079,13 +6029,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Adds multiple hooks for monitoring and intercepting agent execution events.
+         * 添加多个用于监测、拦截智能体执行事件的钩子。
          *
-         * <p>Hooks can observe or modify events during reasoning, acting, and other phases.
-         * All hooks will be executed in priority order (lower priority values execute first).
+         * <p>钩子可以在推理、行动等阶段观察或修改事件，全部按优先级顺序执行（数值小者优先）。
          *
-         * @param hooks The list of hooks to add, must not be null
-         * @return This builder instance for method chaining
+         * @param hooks 要添加的钩子列表，不能为 null
+         * @return 当前构建器实例，支持链式调用
          * @see Hook
          * @see Hook#tools()
          */
@@ -6095,10 +6044,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Adds a middleware for intercepting agent execution.
+         * 添加拦截智能体执行的中间件。
          *
-         * @param middleware the middleware to add
-         * @return this builder instance for method chaining
+         * @param middleware 要添加的中间件
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder middleware(MiddlewareBase middleware) {
             this.middlewares.add(middleware);
@@ -6106,10 +6055,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Adds multiple middlewares for intercepting agent execution.
+         * 添加多个拦截智能体执行的中间件。
          *
-         * @param middlewares the list of middlewares to add
-         * @return this builder instance for method chaining
+         * @param middlewares 要添加的中间件列表
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder middlewares(List<? extends MiddlewareBase> middlewares) {
             this.middlewares.addAll(middlewares);
@@ -6117,14 +6066,13 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Enables or disables the meta-tool functionality.
+         * 启用或禁用元工具功能。
          *
-         * <p>When enabled, the toolkit will automatically register a meta-tool that provides
-         * information about available tools to the agent. This can help the agent understand
-         * what tools are available without relying solely on the system prompt.
+         * <p>启用后，工具集自动注册向智能体提供可用工具信息的元工具，
+         * 帮助智能体了解可用工具，而不完全依赖系统提示。
          *
-         * @param enableMetaTool true to enable meta-tool, false to disable
-         * @return This builder instance for method chaining
+         * @param enableMetaTool true 表示启用，false 表示禁用
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder enableMetaTool(boolean enableMetaTool) {
             this.enableMetaTool = enableMetaTool;
@@ -6132,26 +6080,25 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Enables the built-in task-list capability ({@code todo_write} tool + per-turn reminder).
+         * 启用内置任务列表能力（{@code todo_write} 工具及每轮提醒）。
          *
-         * <p>Equivalent to {@link #enableTaskList(boolean) enableTaskList(true)}.
+         * <p>等价于 {@link #enableTaskList(boolean) enableTaskList(true)}。
          *
-         * @return this builder for chaining
+         * @return 当前构建器，支持链式调用
          */
         public Builder enableTaskList() {
             return enableTaskList(true);
         }
 
         /**
-         * Enables or disables the built-in task-list capability.
+         * 启用或禁用内置任务列表能力。
          *
-         * <p>When enabled, {@link #build()} registers a {@code todo_write} tool (operating on
-         * {@link io.agentscope.core.state.AgentState#getTasksContext()} with full-list-replace
-         * semantics) and a {@link io.agentscope.core.middleware.TaskReminderMiddleware} that
-         * re-surfaces the current list before every reasoning step. Default OFF.
+         * <p>启用后，{@link #build()} 注册 {@code todo_write} 工具
+         * （对 {@link io.agentscope.core.state.AgentState#getTasksContext()} 采用完整列表替换语义），
+         * 以及在每次推理之前重新呈现当前列表的 {@link io.agentscope.core.middleware.TaskReminderMiddleware}。默认关闭。
          *
-         * @param enabled true to enable the task list
-         * @return this builder for chaining
+         * @param enabled true 表示启用任务列表
+         * @return 当前构建器，支持链式调用
          */
         public Builder enableTaskList(boolean enabled) {
             this.taskListEnabled = enabled;
@@ -6159,17 +6106,15 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Enables or disables automatic recovery from orphaned pending tool calls.
+         * 启用或禁用孤立待处理工具调用的自动恢复。
          *
-         * <p>When enabled, the agent automatically detects orphaned pending tool calls and
-         * patches them with synthetic error results before processing new input. This prevents
-         * {@link IllegalStateException} when tool execution fails, times out, or is interrupted.
+         * <p>启用后，在处理新输入前自动检测孤立待处理调用并补上合成错误结果，
+         * 避免工具执行失败、超时或中断时产生 {@link IllegalStateException}。
          *
-         * <p>Disable this if you prefer to handle pending tool calls manually, for example
-         * through HITL (Human-in-the-loop) mechanisms or custom error handling strategies.
+         * <p>若希望通过 HITL（人在回路中）或自定义错误处理策略手动处理待处理调用，可禁用此功能。
          *
-         * @param enable true to enable auto-recovery, false to disable
-         * @return This builder instance for method chaining
+         * @param enable true 表示启用自动恢复，false 表示禁用
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder enablePendingToolRecovery(boolean enable) {
             this.enablePendingToolRecovery = enable;
@@ -6177,14 +6122,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the execution configuration for model API calls.
+         * 设置模型 API 调用的执行配置。
          *
-         * <p>This configuration controls timeout, retry behavior, and backoff strategy for
-         * model requests during the reasoning phase. If not set, the agent will use the
-         * model's default execution configuration.
+         * <p>控制推理阶段模型请求的超时、重试及退避策略。未设置时使用模型默认执行配置。
          *
-         * @param modelExecutionConfig The execution configuration for model calls, can be null
-         * @return This builder instance for method chaining
+         * @param modelExecutionConfig 模型调用执行配置，可以为 null
+         * @return 当前构建器实例，支持链式调用
          * @see ExecutionConfig
          */
         public Builder modelExecutionConfig(ExecutionConfig modelExecutionConfig) {
@@ -6193,14 +6136,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the execution configuration for tool executions.
+         * 设置工具执行配置。
          *
-         * <p>This configuration controls timeout, retry behavior, and backoff strategy for
-         * tool calls during the acting phase. If not set, the toolkit will use its default
-         * execution configuration.
+         * <p>控制行动阶段工具调用的超时、重试及退避策略。未设置时使用工具集默认执行配置。
          *
-         * @param toolExecutionConfig The execution configuration for tool calls, can be null
-         * @return This builder instance for method chaining
+         * @param toolExecutionConfig 工具调用执行配置，可以为 null
+         * @return 当前构建器实例，支持链式调用
          * @see ExecutionConfig
          */
         public Builder toolExecutionConfig(ExecutionConfig toolExecutionConfig) {
@@ -6209,13 +6150,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the generation options for model API calls.
+         * 设置模型 API 调用的生成选项。
          *
-         * <p>This configuration controls LLM generation parameters such as temperature, topP,
-         * maxTokens, frequencyPenalty, presencePenalty, etc. These options are passed to the
-         * model during the reasoning phase.
+         * <p>控制 temperature、topP、maxTokens、frequencyPenalty、presencePenalty 等大模型生成参数，
+         * 在推理阶段传给模型。
          *
-         * <p><b>Example usage:</b>
+         * <p><b>用法示例：</b>
          * <pre>{@code
          * ReActAgent agent = ReActAgent.builder()
          *     .name("assistant")
@@ -6228,12 +6168,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
          *     .build();
          * }</pre>
          *
-         * <p><b>Note:</b> If both generateOptions and modelExecutionConfig are set,
-         * the modelExecutionConfig's executionConfig will be merged into the generateOptions,
-         * with modelExecutionConfig taking precedence for execution settings.
+         * <p><b>注意：</b>同时设置 generateOptions 与 modelExecutionConfig 时，
+         * 后者的 executionConfig 会合并到 generateOptions；执行设置以 modelExecutionConfig 为优先。
          *
-         * @param generateOptions The generation options for model calls, can be null
-         * @return This builder instance for method chaining
+         * @param generateOptions 模型调用生成选项，可以为 null
+         * @return 当前构建器实例，支持链式调用
          * @see GenerateOptions
          */
         public Builder generateOptions(GenerateOptions generateOptions) {
@@ -6242,13 +6181,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Controls whether native structured-output responses are validated against the requested
-         * JSON Schema after the model returns. Enabled by default. When disabled, the agent still
-         * requires valid JSON and still attaches the parsed payload as structured data, but it
-         * trusts the provider to enforce schema conformance.
+         * 控制模型返回后是否按请求的 JSON Schema 校验原生结构化输出响应。默认启用。
+         * 禁用后，智能体仍要求合法 JSON，仍将解析载荷附加为结构化数据，但信任提供方保证 schema 一致性。
          *
-         * @param validateStructuredOutput whether to validate native structured output
-         * @return This builder instance for method chaining
+         * @param validateStructuredOutput 是否校验原生结构化输出
+         * @return 当前构建器实例，支持链式调用
          */
         public Builder validateStructuredOutput(boolean validateStructuredOutput) {
             this.validateStructuredOutput = validateStructuredOutput;
@@ -6256,12 +6193,12 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the tool execution context for this agent.
+         * 设置智能体工具执行上下文。
          *
-         * @param toolExecutionContext The tool execution context
-         * @return This builder instance for method chaining
-         * @deprecated Use {@link RuntimeContext} with {@code agent.call(msg, runtimeContext)}
-         *     or register POJOs directly via {@code RuntimeContext.builder().put(Type, value)}.
+         * @param toolExecutionContext 工具执行上下文
+         * @return 当前构建器实例，支持链式调用
+         * @deprecated 请通过 {@code agent.call(msg, runtimeContext)} 使用 {@link RuntimeContext}，
+         * 或直接通过 {@code RuntimeContext.builder().put(Type, value)} 注册 POJO。
          */
         @Deprecated
         public Builder toolExecutionContext(ToolExecutionContext toolExecutionContext) {
@@ -6270,9 +6207,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the {@link AgentStateStore} backing automatic AgentState load (at construction) and save
-         * (after every successful {@code call()} and on graceful shutdown). When {@code null}, the
-         * agent runs purely in-memory and persistence is a no-op.
+         * 设置支持自动加载 AgentState（构造时）及保存（每次成功 {@code call()} 后及优雅关闭时）的
+         * {@link AgentStateStore}。为 {@code null} 时智能体仅在内存运行，持久化为空操作。
          */
         public Builder stateStore(AgentStateStore stateStore) {
             this.stateStore = stateStore;
@@ -6280,9 +6216,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the policy applied when an optimistic-concurrency save of {@code agent_state}
-         * conflicts with another writer's update. Defaults to {@link ConflictPolicy#OVERWRITE}.
-         * Prefer {@link ConflictPolicy#FAIL} when a distributed session turn gate is enabled.
+         * 设置 {@code agent_state} 乐观并发保存与其他写入者更新冲突时的策略。
+         * 默认为 {@link ConflictPolicy#OVERWRITE}；启用分布式会话轮次门控时优先使用 {@link ConflictPolicy#FAIL}。
          */
         public Builder conflictPolicy(ConflictPolicy conflictPolicy) {
             this.conflictPolicy = conflictPolicy;
@@ -6290,10 +6225,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the builder-time fallback {@code sessionId} used to persist {@code agent_state}
-         * when a call does not supply a {@code sessionId} on its {@link RuntimeContext}. Defaults
-         * to the agent name when unset. Per-call routing is via {@code RuntimeContext.sessionId};
-         * this is only the bootstrap / single-tenant default.
+         * 设置构建器阶段的回退 {@code sessionId}，用于调用未在 {@link RuntimeContext} 提供 {@code sessionId} 时
+         * 持久化 {@code agent_state}。未设置时默认为智能体名称。
+         * 单次调用路由通过 {@code RuntimeContext.sessionId} 完成；这里只是启动／单租户默认值。
          */
         public Builder defaultSessionId(String sessionId) {
             this.defaultSessionId = sessionId;
@@ -6301,8 +6235,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the model-call retry budget (max attempts including the first try). Defaults to
-         * {@link ModelConfig#DEFAULT_MAX_RETRIES} when unset.
+         * 设置模型调用重试额度（包括首次尝试的最大尝试次数）。
+         * 未设置时默认为 {@link ModelConfig#DEFAULT_MAX_RETRIES}。
          */
         public Builder maxRetries(int maxRetries) {
             if (maxRetries <= 0) {
@@ -6313,8 +6247,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the fallback model invoked after the primary model exhausts its retry budget.
-         * Pass {@code null} to explicitly clear (no fallback).
+         * 设置主模型耗尽重试额度后调用的回退模型。传入 {@code null} 显式清除（不回退）。
          */
         public Builder fallbackModel(Model fallbackModel) {
             this.flatFallbackModel = fallbackModel;
@@ -6322,11 +6255,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Convenience overload that resolves {@code modelId} via
-         * {@link ModelRegistry#resolve(String)} (named registration or
-         * {@code provider:model} pattern like {@code openai:gpt-5.5}, {@code dashscope:qwen-max}).
+         * 便捷重载，通过 {@link ModelRegistry#resolve(String)} 解析 {@code modelId}
+         * （命名注册，或 {@code provider:model} 模式，例如 {@code openai:gpt-5.5}、{@code dashscope:qwen-max}）。
          *
-         * @throws IllegalArgumentException if the id cannot be resolved
+         * @throws IllegalArgumentException 无法解析 ID 时抛出
          */
         public Builder fallbackModel(String modelId) {
             this.flatFallbackModel = ModelRegistry.resolve(modelId);
@@ -6334,10 +6266,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the listener notified when the fallback model takes over from a failed primary
-         * model. Pass {@code null} to explicitly clear (no notification).
+         * 设置失败主模型被回退模型接管时通知的监听器。传入 {@code null} 显式清除（不通知）。
          *
-         * @see FailoverListener for the threading and failure contract
+         * @see FailoverListener 线程及失败契约
          */
         public Builder failoverListener(FailoverListener failoverListener) {
             this.flatFailoverListener = failoverListener;
@@ -6345,9 +6276,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Controls whether a permission rejection of any tool call terminates the reasoning loop
-         * (instead of feeding the rejection back into the next reasoning round). Defaults to
-         * {@link ReactConfig#DEFAULT_STOP_ON_REJECT}.
+         * 控制任一工具调用被权限拒绝时是否终止推理循环，而不是将拒绝反馈到下一轮推理。
+         * 默认为 {@link ReactConfig#DEFAULT_STOP_ON_REJECT}。
          */
         public Builder stopOnReject(boolean stopOnReject) {
             this.flatStopOnReject = stopOnReject;
@@ -6355,23 +6285,22 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets the {@link PermissionContextState} consulted by the {@link PermissionEngine} during tool
-         * execution. When unset, an empty permission context is used (PASSTHROUGH for all tools).
+         * 设置工具执行期间 {@link PermissionEngine} 查询的 {@link PermissionContextState}。
+         * 未设置时使用空权限上下文（所有工具为 PASSTHROUGH）。
          */
         public Builder permissionContext(PermissionContextState permissionContext) {
             this.permissionContext = permissionContext;
             return this;
         }
 
-        // ==================== 1.x legacy compatibility setters ====================
-        // The setters below are deprecated since 2.0 and will be removed in the next minor.
-        // Each one captures a value used later by configureXxx() during build(), wiring the
-        // corresponding legacy hook(s) and/or tool(s) into the agent so 1.x user code keeps
-        // producing equivalent runtime behavior. Internal references use legacy.* packages.
+        // ==================== 1.x 旧版兼容设置方法 ====================
+        // 以下设置方法自 2.0 起弃用，将在下一次要版本移除。
+        // 每个方法捕获一个值，稍后在 build() 中由 configureXxx() 使用，
+        // 将相应旧版钩子和／或工具接入智能体，使 1.x 用户代码
+        // 保持等价运行时行为。内部引用使用 legacy.* 包。
 
         /**
-         * @deprecated since 2.0.0. Long-term memory is being redesigned around the upcoming reme
-         *     base class. Hooks added through this path still work.
+         * @deprecated 自 2.0.0 起弃用。长期记忆正围绕即将推出的 reme 基类重新设计，通过此路径添加的钩子仍然有效。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder longTermMemory(LongTermMemory longTermMemory) {
@@ -6380,7 +6309,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. See {@link #longTermMemory}.
+         * @deprecated 自 2.0.0 起弃用。参见 {@link #longTermMemory}。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder longTermMemoryMode(LongTermMemoryMode mode) {
@@ -6389,7 +6318,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. See {@link #longTermMemory}.
+         * @deprecated 自 2.0.0 起弃用。参见 {@link #longTermMemory}。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder longTermMemoryAsyncRecord(boolean asyncRecord) {
@@ -6398,7 +6327,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. RAG is being redesigned; legacy adapters remain functional.
+         * @deprecated 自 2.0.0 起弃用。RAG 正在重新设计，旧适配器仍然有效。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder knowledge(Knowledge knowledge) {
@@ -6409,7 +6338,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. See {@link #knowledge}.
+         * @deprecated 自 2.0.0 起弃用。参见 {@link #knowledge}。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder knowledges(List<Knowledge> knowledges) {
@@ -6420,7 +6349,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. See {@link #knowledge}.
+         * @deprecated 自 2.0.0 起弃用。参见 {@link #knowledge}。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder ragMode(RAGMode mode) {
@@ -6431,7 +6360,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. See {@link #knowledge}.
+         * @deprecated 自 2.0.0 起弃用。参见 {@link #knowledge}。
          */
         @Deprecated(forRemoval = true, since = "2.0.0")
         public Builder retrieveConfig(RetrieveConfig config) {
@@ -6442,11 +6371,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * @deprecated since 2.0.0. Skills now flow through {@link #skillRepository} /
-         *     {@link #skillRepositories}; legacy {@link io.agentscope.core.skill.SkillBox}
-         *     instances are still accepted for source compatibility, but combining a
-         *     {@code skillBox(...)} with {@code skillRepository(...)} is untested — new code
-         *     should prefer {@link #skillRepository(AgentSkillRepository)}.
+         * @deprecated 自 2.0.0 起弃用。技能现在通过 {@link #skillRepository}／{@link #skillRepositories} 提供。
+         * 为源码兼容仍接受旧 {@link io.agentscope.core.skill.SkillBox} 实例，但
+         * {@code skillBox(...)} 与 {@code skillRepository(...)} 组合未经测试，新代码应优先使用
+         * {@link #skillRepository(AgentSkillRepository)}。
          */
         @Deprecated(since = "2.0.0")
         public Builder skillBox(SkillBox skillBox) {
@@ -6455,14 +6383,11 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Adds a single {@link AgentSkillRepository} to the layered skill stack. Multiple calls
-         * append in order from low to high priority — when two repositories expose a skill with
-         * the same {@link io.agentscope.core.skill.AgentSkill#getName()}, the later (higher
-         * priority) entry wins.
+         * 向分层技能栈添加一个 {@link AgentSkillRepository}。多次调用按低到高优先级追加；
+         * 两个仓库暴露相同 {@link io.agentscope.core.skill.AgentSkill#getName()} 的技能时，后者（高优先级）生效。
          *
-         * <p>If at least one repository is registered and dynamic skills remain enabled
-         * (see {@link #dynamicSkillsEnabled(boolean)}), {@link #build()} attaches a
-         * {@link DynamicSkillMiddleware} that rebuilds the skill prompt on every {@code call()}.
+         * <p>至少注册一个仓库且动态技能仍启用时（见 {@link #dynamicSkillsEnabled(boolean)}），
+         * {@link #build()} 附加 {@link DynamicSkillMiddleware}，每次 {@code call()} 重建技能提示。
          */
         public Builder skillRepository(AgentSkillRepository repo) {
             if (repo != null) {
@@ -6472,8 +6397,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Replaces the current repository list with the supplied collection. {@code null}
-         * entries are dropped silently; passing {@code null} clears the list.
+         * 用提供的集合替换当前仓库列表，静默丢弃 {@code null} 条目；传入 {@code null} 则清空列表。
          */
         public Builder skillRepositories(List<AgentSkillRepository> repos) {
             this.skillRepositories.clear();
@@ -6488,10 +6412,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Builder-time {@link SkillFilter} stored on the built agent (see
-         * {@code getSkillFilter()}) and applied by the auto-installed
-         * {@link DynamicSkillMiddleware} as its baseline. Defaults to
-         * {@link SkillFilter#all()} when unset.
+         * 构建器阶段的 {@link SkillFilter} 存于构建后的智能体（见 {@code getSkillFilter()}），
+         * 由自动安装的 {@link DynamicSkillMiddleware} 作为基准使用。未设置时默认为 {@link SkillFilter#all()}。
          */
         public Builder skillFilter(SkillFilter filter) {
             this.skillFilter = filter;
@@ -6499,10 +6421,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Toggles automatic installation of {@link DynamicSkillMiddleware}. Set to {@code false}
-         * when an external orchestrator (e.g. {@code HarnessAgent}) wants to attach its own
-         * subclass of {@link DynamicSkillMiddleware} or fall back to a static
-         * {@link io.agentscope.core.skill.SkillBox}. Defaults to {@code true}.
+         * 控制是否自动安装 {@link DynamicSkillMiddleware}。外部编排器（例如 {@code HarnessAgent}）
+         * 希望附加自己的 {@link DynamicSkillMiddleware} 子类，或回退到静态
+         * {@link io.agentscope.core.skill.SkillBox} 时，设为 {@code false}。默认为 {@code true}。
          */
         public Builder dynamicSkillsEnabled(boolean enabled) {
             this.dynamicSkillsEnabled = enabled;
@@ -6510,18 +6431,14 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Enables the code-execution prompt block emitted by
-         * {@link io.agentscope.core.skill.AgentSkillPromptProvider}. When on:
+         * 启用 {@link io.agentscope.core.skill.AgentSkillPromptProvider} 发出的代码执行提示块。启用后：
          * <ul>
-         *   <li>If every visible skill has an on-disk origin directory (e.g. produced by
-         *       {@link io.agentscope.core.skill.repository.FileSystemSkillRepository}), each
-         *       {@code <skill>} entry includes a {@code <files-root>} child with the absolute
-         *       path so the LLM can shell-execute scripts directly;</li>
-         *   <li>Otherwise the prompt falls back to a single {@code uploadDir} root.</li>
+         * <li>所有可见技能都有磁盘来源目录时（例如由 {@link io.agentscope.core.skill.repository.FileSystemSkillRepository}
+         * 生成），每个 {@code <skill>} 条目包含带绝对路径的 {@code <files-root>} 子项，使大模型可直接通过 shell 执行脚本。</li>
+         * <li>否则提示回退到单个 {@code uploadDir} 根目录。</li>
          * </ul>
          *
-         * <p>Only flip this on when the agent's toolkit has a shell-like tool wired in —
-         * otherwise the prompt will ask the model to do things it cannot. Defaults to {@code false}.
+         * <p>仅在智能体工具集已接入类 shell 工具时启用，否则提示会要求模型执行无法完成的操作。默认为 {@code false}。
          */
         public Builder skillCodeExecutionEnabled(boolean enabled) {
             this.skillCodeExecutionEnabled = enabled;
@@ -6529,10 +6446,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Sets a stable working directory for skill materialisation, stored on the built agent
-         * (see {@code getSkillWorkDir()}) and caller-managed for its whole lifecycle. When
-         * {@code null} (the default), consumers materialise under a framework-allocated
-         * anonymous temp root that the framework never deletes.
+         * 设置技能实体化的稳定工作目录，存于构建后的智能体（见 {@code getSkillWorkDir()}），
+         * 整个生命周期由调用方管理。为 {@code null}（默认）时，使用方在框架分配的匿名临时根目录下实体化；
+         * 框架不会删除该目录。
          */
         public Builder skillWorkDir(Path dir) {
             this.skillWorkDir = dir;
@@ -6540,11 +6456,10 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Returns a new {@link Builder} pre-populated with the given agent's observable
-         * configuration: name, description, system prompt, model, maxIters, generateOptions, and
-         * a defensive copy of the toolkit.
+         * 返回新的 {@link Builder}，预填给定智能体可观测的配置：名称、描述、系统提示、模型、
+         * maxIters、generateOptions，以及工具集防御性副本。
          *
-         * <p>Use to derive a related agent without re-specifying every field.
+         * <p>用于派生相关智能体，无需重新指定每个字段。
          */
         public static Builder fromAgent(ReActAgent agent) {
             Builder b = new Builder();
@@ -6564,21 +6479,19 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
             return b;
         }
 
-        // ==================== 1.x legacy configureXxx helpers ====================
-        // Ported verbatim from 1.x ReActAgent.Builder (origin/1.x ReActAgent.java:1762-1925),
-        // with two adjustments for 2.0:
-        //   1) all legacy classes are referenced through the io.agentscope.core.legacy.* packages;
-        //   2) configureLongTermMemory's static hook receives an AgentStateMemoryView that lazily
-        //      reads AgentState.context via a `selfRef` shared with build().
+        // ==================== 1.x 旧版 configureXxx 辅助方法 ====================
+        // 从 1.x ReActAgent.Builder（origin/1.x ReActAgent.java:1762-1925）原样移植，
+        // 为 2.0 做了两项调整：
+        // 1）所有旧类通过 io.agentscope.core.legacy.* 包引用；
+        // 2）configureLongTermMemory 的静态钩子接收 AgentStateMemoryView，
+        // 通过与 build() 共享的 `selfRef` 惰性读取 AgentState.context。
 
         /**
-         * Configures long-term memory based on the selected mode.
+         * 按所选模式配置长期记忆。
          *
-         * <p>AGENT_CONTROL registers memory tools for the agent to call. STATIC_CONTROL adds
-         * a {@link StaticLongTermMemoryHook} that retrieves /
-         * records memory automatically. BOTH combines them. The hook reads context lazily from
-         * {@code selfRef.get().getAgentState()} so it tolerates being constructed before the
-         * agent itself exists.
+         * <p>AGENT_CONTROL 注册供智能体调用的记忆工具；STATIC_CONTROL 添加自动检索／记录记忆的
+         * {@link StaticLongTermMemoryHook}；BOTH 结合两者。
+         * 钩子从 {@code selfRef.get().getAgentState()} 惰性读取上下文，因此允许它先于智能体本身构造。
          */
         @SuppressWarnings("deprecation")
         private void configureLongTermMemory(
@@ -6602,7 +6515,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Configures RAG (Retrieval-Augmented Generation) based on the selected mode.
+         * 按所选模式配置 RAG（检索增强生成）。
          */
         @SuppressWarnings("deprecation")
         private void configureRAG(Toolkit agentToolkit) {
@@ -6617,7 +6530,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                         agentToolkit.registerTool(
                                 new KnowledgeRetrievalTools(aggregatedKnowledge, retrieveConfig));
                 case NONE -> {
-                    // intentionally no-op
+                    // 有意保持空操作
                 }
             }
         }
@@ -6666,8 +6579,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Registers the built-in task-list tool ({@code todo_write}) and a per-turn reminder
-         * middleware. Opt-in via {@link #enableTaskList()}.
+         * 注册内置任务列表工具（{@code todo_write}）及每轮提醒中间件。
+         * 通过 {@link #enableTaskList()} 显式启用。
          */
         private void configureTodoTools(Toolkit agentToolkit) {
             if (taskListEnabled) agentToolkit.registerTool(new TodoTools());
@@ -6676,8 +6589,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Configures SkillBox by binding the toolkit, registering the skill-load tool, uploading
-         * skill files when auto-upload is enabled, and adding the SkillHook to the chain.
+         * 配置 SkillBox：绑定工具集、注册技能加载工具、自动上传启用时上传技能文件，并将 SkillHook 加入链。
          */
         @SuppressWarnings("deprecation")
         private Hook configureSkillBox(Toolkit agentToolkit) {
@@ -6690,18 +6602,18 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Builds and returns a new ReActAgent instance with the configured settings.
+         * 按配置构建并返回新的 ReActAgent 实例。
          *
-         * @return A new ReActAgent instance
-         * @throws IllegalArgumentException if required parameters are missing or invalid
+         * @return 新的 ReActAgent 实例
+         * @throws IllegalArgumentException 必填参数缺失或无效时抛出
          */
         public ReActAgent build() {
             return copy().buildInstance();
         }
 
         private ReActAgent buildInstance() {
-            // Isolate registrations added by this agent while sharing existing tool instances.
-            // Request-specific visibility is composed at execution time, without copying.
+            // 隔离此智能体新增的注册项，同时共享已有工具实例。
+            // 请求特定可见性在执行时组合，无需复制。
             Toolkit agentToolkit = this.toolkit.copy();
 
             registerToolsFromHooks(agentToolkit);
@@ -6710,8 +6622,8 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 agentToolkit.registerMetaTool();
             }
 
-            // 1.x legacy compat: shared selfRef gives the long-term-memory hook (constructed
-            // pre-agent) a way to resolve AgentState.context lazily once the agent exists.
+            // 1.x 兼容：共享 selfRef 让早于智能体构造的长期记忆钩子
+            // 能在智能体存在后惰性解析 AgentState.context。
             AtomicReference<ReActAgent> selfRef = new AtomicReference<>();
 
             if (longTermMemory != null) {
@@ -6730,7 +6642,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 List.copyOf(skillRepositories), skillCodeExecutionEnabled));
             }
 
-            // List.sort is stable: middlewares with equal order retain their registration order.
+            // List.sort 是稳定排序：order 相等的中间件保持注册顺序。
             middlewares.sort(Comparator.comparingInt(MiddlewareBase::order).reversed());
 
             if (skillHook != null) {
@@ -6741,7 +6653,7 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                 selfRef.set(agent);
                 return agent;
             } finally {
-                // Generated hooks belong only to this agent, not subsequent builder uses.
+                // 生成的钩子只属于此智能体，不属于后续构建器使用。
                 if (skillHook != null) {
                     hooks.remove(skillHook);
                 }
@@ -6749,10 +6661,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
         }
 
         /**
-         * Registers tool objects declared by hooks ({@link Hook#tools()}) on the agent toolkit.
+         * 将钩子声明的工具对象（{@link Hook#tools()}）注册到智能体工具集。
          *
-         * <p>The agent owns a build-time registry copy, so hook-supplied registrations cannot
-         * overwrite tools in other agents built from the same source toolkit.
+         * <p>智能体拥有构建时的注册表副本，钩子提供的注册项不会覆盖从同一源工具集构建的其他智能体的工具。
          */
         private void registerToolsFromHooks(Toolkit agentToolkit) {
             for (Hook hook : hooks) {

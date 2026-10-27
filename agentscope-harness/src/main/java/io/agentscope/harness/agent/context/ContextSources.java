@@ -23,7 +23,7 @@ import java.util.Objects;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** Internal immutable registration snapshot used by the harness compiler and builder. */
+/** 供 Harness 编译器与构建器使用的内部不可变注册快照。 */
 public final class ContextSources {
     private record Registration(String id, ContextSource source, ContextSourceOptions options) {}
 
@@ -121,7 +121,7 @@ public final class ContextSources {
                                                             + ":"
                                                             + error.getClass().getSimpleName())));
                         })
-                // Structural violations are never hidden by the optional-source failure policy.
+                // 可选来源的失败策略绝不能掩盖结构性违规。
                 .map(
                         loaded -> {
                             var ids = new HashSet<String>();

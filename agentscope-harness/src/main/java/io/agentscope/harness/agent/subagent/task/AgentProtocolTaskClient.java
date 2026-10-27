@@ -46,18 +46,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Minimal HTTP client for the internal AgentScope task protocol ({@code POST/GET /tasks/...}).
+ * 内部 AgentScope 任务协议（{@code POST/GET /tasks/...}）的最小 HTTP 客户端。
  *
- * <p>The client-supplied {@code taskId} is used as the remote task identifier (no separate run id).
+ * <p>使用客户端提供的 {@code taskId} 作为远程任务标识符（没有单独的运行 ID）。
  */
 public final class AgentProtocolTaskClient {
 
     private static final Logger log = LoggerFactory.getLogger(AgentProtocolTaskClient.class);
 
     /**
-     * Unknown {@code type} values deserialize to {@code null} instead of throwing, so a newer
-     * server introducing a wire event type degrades to "this client ignores it" rather than
-     * dropping the event as unparseable — and an event carrying a {@code payload} still decodes.
+     * 未知的 {@code type} 值反序列化为 {@code null} 而不是抛出异常；
+     * 因此较新服务器引入传输事件类型时，降级为“此客户端忽略它”，而不是
+     * 因无法解析而丢弃事件；携带 {@code payload} 的事件仍可解码。
      */
     private static final ObjectMapper JSON =
             new ObjectMapper()
@@ -77,7 +77,9 @@ public final class AgentProtocolTaskClient {
         this.http = Objects.requireNonNull(http, "http");
     }
 
-    /** {@code POST /tasks} with body {@code {task_id, agent_id, input}} (+ optional context). */
+    /**
+     * {@code POST /tasks}，请求体为 {@code {task_id, agent_id, input}}（加可选 context）。
+     */
     public void submitTask(
             String baseUrl,
             Map<String, String> headers,
@@ -89,9 +91,9 @@ public final class AgentProtocolTaskClient {
     }
 
     /**
-     * {@code POST /tasks} with body {@code {task_id, agent_id, input, context?}}.
+     * {@code POST /tasks}，请求体为 {@code {task_id, agent_id, input, context?}}。
      *
-     * <p>Legacy servers ignore unknown {@code context} field.
+     * <p>旧服务器忽略未知的 {@code context} 字段。
      */
     public void submitTask(
             String baseUrl,
@@ -147,9 +149,8 @@ public final class AgentProtocolTaskClient {
     }
 
     /**
-     * {@code GET /tasks/{taskId}/wait?timeout_seconds=<n>} — blocks until the server completes
-     * the task. The HTTP read timeout is set to {@code timeoutSeconds + 60} seconds to give the
-     * server time to respond.
+     * {@code GET /tasks/{taskId}/wait?timeout_seconds=<n>}：阻塞直到服务器完成任务。
+     * HTTP 读取超时设置为 {@code timeoutSeconds + 60} 秒，为服务器预留响应时间。
      */
     public String waitForResult(
             String baseUrl, Map<String, String> headers, String taskId, long timeoutSeconds)
@@ -191,9 +192,9 @@ public final class AgentProtocolTaskClient {
     }
 
     /**
-     * {@code POST /tasks/{taskId}/resume} with body {@code {decisions: [...]}}.
+     * {@code POST /tasks/{taskId}/resume}，请求体为 {@code {decisions: [...]}}。
      *
-     * @throws IOException on HTTP error (including 404 when the server lacks HITL support)
+     * @throws IOException HTTP 出错时抛出（包括服务器不支持 HITL 时返回的 404）
      */
     public void resumeTask(
             String baseUrl,
@@ -226,8 +227,8 @@ public final class AgentProtocolTaskClient {
     }
 
     /**
-     * Opens {@code GET /tasks/{taskId}/events} as an SSE stream and delivers parsed events to {@code
-     * consumer}. Silently no-ops (returns a closed handle) when the server returns 404.
+     * 以 SSE 流打开 {@code GET /tasks/{taskId}/events}，将解析出的事件交给
+     * {@code consumer}。服务器返回 404 时静默不执行操作（返回已关闭句柄）。
      */
     public Closeable openEventStream(
             String baseUrl,

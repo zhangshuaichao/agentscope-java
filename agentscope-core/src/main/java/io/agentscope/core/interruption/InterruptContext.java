@@ -22,13 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Context information about an interruption.
+ * 一次中断的上下文信息。
  *
- * <p>Captures metadata about when and why an interruption occurred,
- * including the source, timestamp, user message (if any), and any pending
- * tool calls that were interrupted.
+ * <p>记录中断发生时间和原因的元数据，
+ * 包括来源、时间戳、用户消息（如有）以及被中断的待处理工具调用。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * InterruptContext context = InterruptContext.builder()
  *     .source(InterruptSource.USER)
@@ -57,52 +56,52 @@ public class InterruptContext {
     }
 
     /**
-     * Get the source of the interruption.
+     * 获取中断来源。
      *
-     * @return The interrupt source
+     * @return 中断来源
      */
     public InterruptSource getSource() {
         return source;
     }
 
     /**
-     * Get the timestamp when the interruption occurred.
+     * 获取中断发生时的时间戳。
      *
-     * @return The interrupt timestamp
+     * @return 中断时间戳
      */
     public Instant getTimestamp() {
         return timestamp;
     }
 
     /**
-     * Get the user message that triggered the interruption (if any).
+     * 获取触发中断的用户消息（如有）。
      *
-     * @return The user message, or null if not applicable
+     * @return 用户消息；不适用时为 null
      */
     public Msg getUserMessage() {
         return userMessage;
     }
 
     /**
-     * Get the list of tool calls that were pending when the interruption occurred.
+     * 获取中断发生时尚待处理的工具调用列表。
      *
-     * @return Immutable list of pending tool calls
+     * @return 不可修改的待处理工具调用列表
      */
     public List<ToolUseBlock> getPendingToolCalls() {
         return pendingToolCalls;
     }
 
     /**
-     * Create a new builder for InterruptContext.
+     * 创建新的 InterruptContext 构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for InterruptContext.
+     * InterruptContext 的构建器。
      */
     public static class Builder {
         private InterruptSource source = InterruptSource.USER;
@@ -113,10 +112,10 @@ public class InterruptContext {
         private Builder() {}
 
         /**
-         * Set the source of the interruption.
+         * 设置中断来源。
          *
-         * @param source The interrupt source
-         * @return This builder
+         * @param source 中断来源
+         * @return 此构建器
          */
         public Builder source(InterruptSource source) {
             this.source = source;
@@ -124,10 +123,10 @@ public class InterruptContext {
         }
 
         /**
-         * Set the timestamp of the interruption.
+         * 设置中断时间戳。
          *
-         * @param timestamp The interrupt timestamp
-         * @return This builder
+         * @param timestamp 中断时间戳
+         * @return 此构建器
          */
         public Builder timestamp(Instant timestamp) {
             this.timestamp = timestamp;
@@ -135,10 +134,10 @@ public class InterruptContext {
         }
 
         /**
-         * Set the user message that triggered the interruption.
+         * 设置触发中断的用户消息。
          *
-         * @param userMessage The user message
-         * @return This builder
+         * @param userMessage 用户消息
+         * @return 此构建器
          */
         public Builder userMessage(Msg userMessage) {
             this.userMessage = userMessage;
@@ -146,10 +145,10 @@ public class InterruptContext {
         }
 
         /**
-         * Set the pending tool calls at the time of interruption.
+         * 设置中断发生时尚待处理的工具调用。
          *
-         * @param pendingToolCalls List of pending tool calls
-         * @return This builder
+         * @param pendingToolCalls 待处理工具调用列表
+         * @return 此构建器
          */
         public Builder pendingToolCalls(List<ToolUseBlock> pendingToolCalls) {
             this.pendingToolCalls =
@@ -160,9 +159,9 @@ public class InterruptContext {
         }
 
         /**
-         * Build the InterruptContext.
+         * 构建 InterruptContext。
          *
-         * @return A new InterruptContext instance
+         * @return 新的 InterruptContext 实例
          */
         public InterruptContext build() {
             return new InterruptContext(source, timestamp, userMessage, pendingToolCalls);
@@ -170,12 +169,12 @@ public class InterruptContext {
     }
 
     /**
-     * Returns a string representation of the interrupt context.
+     * 返回中断上下文的字符串表示。
      *
-     * <p>The string includes the interrupt source, timestamp, user message presence,
-     * and count of pending tool calls in a compact format.
+     * <p>该字符串以紧凑格式包含中断来源、时间戳、是否有用户消息，
+     * 以及待处理工具调用的数量。
      *
-     * @return A formatted string representation of the interrupt context
+     * @return 中断上下文的格式化字符串表示
      */
     @Override
     public String toString() {

@@ -16,30 +16,32 @@
 package io.agentscope.harness.agent.sandbox.layout;
 
 /**
- * Layout entry that creates a file with inline text content.
+ * 创建带内联文本内容文件的布局条目。
  */
 public class FileEntry extends WorkspaceEntry {
 
     private String content = "";
     private String encoding = "UTF-8";
 
-    /** Creates an empty file entry. */
+    /**
+ * 创建空文件条目。
+ */
     public FileEntry() {}
 
     /**
-     * Creates a file entry with the given content.
+     * 使用给定内容创建文件条目。
      *
-     * @param content the file content as a string
+     * @param content 字符串形式的文件内容
      */
     public FileEntry(String content) {
         this.content = content;
     }
 
     /**
-     * Creates a file entry with the given content and encoding.
+     * 使用给定内容和编码创建文件条目。
      *
-     * @param content the file content as a string
-     * @param encoding the character encoding to use when writing the file
+     * @param content 字符串形式的文件内容
+     * @param encoding 写入文件所用字符编码
      */
     public FileEntry(String content, String encoding) {
         this.content = content;
@@ -47,36 +49,36 @@ public class FileEntry extends WorkspaceEntry {
     }
 
     /**
-     * Returns the file content.
+     * 返回文件内容。
      *
-     * @return file content string
+     * @return 文件内容字符串
      */
     public String getContent() {
         return content;
     }
 
     /**
-     * Sets the file content.
+     * 设置文件内容。
      *
-     * @param content the file content string
+     * @param content 文件内容字符串
      */
     public void setContent(String content) {
         this.content = content;
     }
 
     /**
-     * Returns the character encoding used to write this file.
+     * 返回写入此文件使用的字符编码。
      *
-     * @return encoding name (e.g. "UTF-8")
+     * @return 编码名称（例如 "UTF-8"）
      */
     public String getEncoding() {
         return encoding;
     }
 
     /**
-     * Sets the character encoding used to write this file.
+     * 设置写入此文件使用的字符编码。
      *
-     * @param encoding encoding name (e.g. "UTF-8")
+     * @param encoding 编码名称（例如 "UTF-8"）
      */
     public void setEncoding(String encoding) {
         this.encoding = encoding;

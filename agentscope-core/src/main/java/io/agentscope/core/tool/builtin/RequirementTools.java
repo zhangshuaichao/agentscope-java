@@ -21,9 +21,13 @@ import io.agentscope.core.state.TaskRequirement;
 import io.agentscope.core.tool.Tool;
 import io.agentscope.core.tool.ToolParam;
 
-/** Opt-in candidate proposals, independent of the todo capability. */
+/**
+ * 可选启用的候选提议能力，与待办能力独立。
+ */
 public final class RequirementTools {
-    /** Proposals cannot confirm authority or certify completion. */
+    /**
+     * 提议不能确认授权，也不能证明任务已完成。
+     */
     @Tool(
             name = "task_requirement_propose",
             stateInjected = true,

@@ -17,7 +17,7 @@ package io.agentscope.core.session;
 
 import java.util.Set;
 
-/** Native schema v1. Public transport names and cursors are independently versioned. */
+/** 原生模式 v1。公开传输名称和游标独立进行版本管理。 */
 public final class SessionEventTypes {
     private SessionEventTypes() {}
 
@@ -27,7 +27,7 @@ public final class SessionEventTypes {
                     "run/end",
                     "run/stop_requested",
                     "turn/start",
-                    "turn/end", // Read compatibility for pre-identity journals; no longer emitted.
+                    "turn/end", // 兼容读取尚未引入身份信息的旧日志；不再发出此类记录。
                     "turn/resumed",
                     "turn/completed",
                     "turn/suspended",

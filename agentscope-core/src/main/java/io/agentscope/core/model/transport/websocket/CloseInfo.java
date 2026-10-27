@@ -16,51 +16,51 @@
 package io.agentscope.core.model.transport.websocket;
 
 /**
- * WebSocket connection close information.
+ * WebSocket 连接关闭信息。
  *
- * <p>Contains the close code and reason when a WebSocket connection is closed.
+ * <p>包含 WebSocket 连接关闭时的关闭码和原因。
  *
- * @param code WebSocket close code
- * @param reason Close reason message
+ * @param code WebSocket 关闭码
+ * @param reason 关闭原因消息
  */
 public record CloseInfo(int code, String reason) {
 
-    /** Normal closure (1000). */
+    /** 正常关闭（1000）。 */
     public static final int NORMAL_CLOSURE = 1000;
 
-    /** Going away (1001). */
+    /** 端点离开（1001）。 */
     public static final int GOING_AWAY = 1001;
 
-    /** Protocol error (1002). */
+    /** 协议错误（1002）。 */
     public static final int PROTOCOL_ERROR = 1002;
 
-    /** Abnormal closure (1006). */
+    /** 异常关闭（1006）。 */
     public static final int ABNORMAL_CLOSURE = 1006;
 
     /**
-     * Check if this is a normal closure.
+     * 检查是否为正常关闭。
      *
-     * @return true if the close code is 1000 (normal closure)
+     * @return 关闭码为 1000（正常关闭）时返回 true
      */
     public boolean isNormal() {
         return code == NORMAL_CLOSURE;
     }
 
     /**
-     * Create a CloseInfo for normal closure.
+     * 创建正常关闭的 CloseInfo。
      *
-     * @param reason Close reason
-     * @return CloseInfo instance
+     * @param reason 关闭原因
+     * @return CloseInfo 实例
      */
     public static CloseInfo normal(String reason) {
         return new CloseInfo(NORMAL_CLOSURE, reason);
     }
 
     /**
-     * Create a CloseInfo for abnormal closure.
+     * 创建异常关闭的 CloseInfo。
      *
-     * @param reason Close reason
-     * @return CloseInfo instance
+     * @param reason 关闭原因
+     * @return CloseInfo 实例
      */
     public static CloseInfo abnormal(String reason) {
         return new CloseInfo(ABNORMAL_CLOSURE, reason);

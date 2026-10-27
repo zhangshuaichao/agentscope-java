@@ -18,19 +18,21 @@ package io.agentscope.core.state;
 import java.util.List;
 
 /**
- * Utility class for computing hash values of state lists.
+ * 计算状态列表哈希值的工具类。
  *
- * <p>This class provides hash computation for change detection in AgentStateStore implementations. The hash
- * is used to detect if a list has been modified (not just appended) since the last save operation.
+ * <p>为 AgentStateStore 实现提供变更检测所需的哈希计算，
+ * 用于判断自上次保存以来列表是否被修改，而不仅仅是在末尾追加。
  *
- * <p>The hash computation uses a sampling strategy to avoid iterating over large lists:
- *
+ * <p>哈希计算采用采样策略，避免遍历大型列表：
  * <ul>
- *   <li>For small lists (≤5 elements): all elements are included
- *   <li>For large lists: samples at positions 0, 1/4, 1/2, 3/4, and last
+ *   <li>小型列表（不超过 5 个元素）：包含所有元素
+ *   <li>大型列表：采样位置 0、1/4、1/2、3/4 和最后一个元素
  * </ul>
  *
- * <p>Usage in AgentStateStore implementations:
+ * <p>【学习提示】采样哈希是低成本变更信号，不是逐元素相等证明，更不是密码学完整性校验。
+ * 未采样位置的改动可能不改变采样结果；理解这一取舍后再评估是否适合自己的存储场景。
+ *
+ * <p>在 AgentStateStore 实现中的用法：
  *
  * <pre>{@code
  * String currentHash = ListHashUtil.computeHash(values);
@@ -47,31 +49,29 @@ import java.util.List;
  */
 public final class ListHashUtil {
 
-    /** Empty list hash constant. */
+    /** 空列表的哈希常量。 */
     private static final String EMPTY_HASH = "empty:0";
 
-    /** Threshold for using sampling strategy. */
+    /** 启用采样策略的阈值。 */
     private static final int SAMPLING_THRESHOLD = 5;
 
     private ListHashUtil() {
-        // Utility class, prevent instantiation
+        // 工具类，禁止实例化
     }
 
     /**
-     * Compute a hash value for a list of state objects.
+     * 计算状态对象列表的哈希值。
      *
-     * <p>The hash includes:
-     *
+     * <p>哈希包含：
      * <ul>
-     *   <li>List size
-     *   <li>Hash codes of sampled elements
+     *   <li>列表大小
+     *   <li>采样元素的哈希码
      * </ul>
      *
-     * <p>This method is designed to be lightweight and fast, using sampling for large lists to
-     * avoid O(n) iteration.
+     * <p>此方法旨在轻量且快速，对大型列表采用采样，避免 O(n) 遍历。
      *
-     * @param values the list of state objects to hash
-     * @return a hex string hash representing the list content
+     * @param values 要计算哈希的状态对象列表
+     * @return 表示列表内容的十六进制哈希字符串
      */
     public static String computeHash(List<? extends State> values) {
         if (values == null || values.isEmpty()) {
@@ -82,7 +82,7 @@ public final class ListHashUtil {
         StringBuilder sb = new StringBuilder();
         sb.append("size:").append(size).append(";");
 
-        // Get sample indices based on list size
+        // 根据列表大小获取采样下标
         int[] sampleIndices = getSampleIndices(size);
 
         for (int idx : sampleIndices) {
@@ -95,21 +95,20 @@ public final class ListHashUtil {
     }
 
     /**
-     * Get the indices to sample from a list of given size.
+     * 获取指定大小列表的采样下标。
      *
-     * <p>Sampling strategy:
-     *
+     * <p>采样策略：
      * <ul>
-     *   <li>For size ≤ 5: returns all indices [0, 1, 2, ..., size-1]
-     *   <li>For size > 5: returns [0, size/4, size/2, size*3/4, size-1]
+     *   <li>大小 ≤ 5：返回所有下标 [0, 1, 2, ..., size-1]
+     *   <li>大小 > 5：返回 [0, size/4, size/2, size*3/4, size-1]
      * </ul>
      *
-     * @param size the size of the list
-     * @return array of indices to sample
+     * @param size 列表大小
+     * @return 要采样的下标数组
      */
     private static int[] getSampleIndices(int size) {
         if (size <= SAMPLING_THRESHOLD) {
-            // Small list: sample all elements
+            // 小型列表：采样所有元素
             int[] indices = new int[size];
             for (int i = 0; i < size; i++) {
                 indices[i] = i;
@@ -117,32 +116,32 @@ public final class ListHashUtil {
             return indices;
         }
 
-        // Large list: sample at key positions
+        // 大型列表：在关键位置采样
         return new int[] {0, size / 4, size / 2, size * 3 / 4, size - 1};
     }
 
     /**
-     * Check if the list has changed based on hash comparison.
+     * 根据哈希比较检查列表是否发生变化。
      *
-     * @param currentHash the hash of the current list
-     * @param storedHash the previously stored hash (may be null)
-     * @return true if the list has changed, false otherwise
+     * @param currentHash 当前列表的哈希
+     * @param storedHash 之前保存的哈希（可为 null）
+     * @return 列表变化时为 true，否则为 false
      */
     public static boolean hasChanged(String currentHash, String storedHash) {
         if (storedHash == null) {
-            // No previous hash, consider as new list
+            // 没有之前的哈希，视为新列表
             return false;
         }
         return !storedHash.equals(currentHash);
     }
 
     /**
-     * Determine if a full rewrite is needed based on list content and existing count.
+     * 根据列表内容和现有条目数量判断是否需要完整重写。
      *
-     * @param currentValues the current complete list of state objects
-     * @param storedHash the previously stored hash (may be null)
-     * @param existingCount the count of items already stored
-     * @return true if full rewrite is needed, false if incremental append is sufficient
+     * @param currentValues 当前完整的状态对象列表
+     * @param storedHash 之前保存的哈希（可为 null）
+     * @param existingCount 已存储的条目数量
+     * @return 需要完整重写时为 true；增量追加即可满足要求时为 false
      */
     public static boolean needsFullRewrite(
             List<? extends State> currentValues, String storedHash, int existingCount) {
@@ -152,18 +151,18 @@ public final class ListHashUtil {
 
         int currentSize = currentValues.size();
 
-        // Case 1: List shrunk (items were deleted)
+        // 情况 1：列表缩短（元素已被删除）
         if (currentSize < existingCount) {
             return true;
         }
 
-        // Case 2: Missing hash but existing data found (e.g., version upgrade or corrupted hash)
-        // Must rewrite because we cannot verify unmodified state.
+        // 情况 2：缺少哈希，但存在已有数据（例如版本升级或哈希损坏）
+        // 无法验证状态未被修改，因此必须重写。
         if (storedHash == null && existingCount > 0) {
             return true;
         }
 
-        // Case 3: Check if the previously existing elements were modified.
+        // 情况 3：检查之前已有的元素是否被修改。
         List<? extends State> prefix = currentValues.subList(0, existingCount);
         String prefixHash = computeHash(prefix);
         return hasChanged(prefixHash, storedHash);

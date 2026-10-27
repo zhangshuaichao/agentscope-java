@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Immutable snapshot of the skills visible to a single {@code onSystemPrompt} pass.
+ * 单次 {@code onSystemPrompt} 处理可见技能的不可变快照。
  *
- * <p>Keyed by {@code skillId} (the AgentSkill's {@code name + "_" + source}), insertion-order
- * preserved so the prompt renders skills in compose order.
+ * <p>以 {@code skillId}（AgentSkill 的 {@code name + "_" + source}）为键，保留插入顺序，让提示按组合顺序渲染技能。
  */
 public final class SkillCatalog {
 
@@ -50,17 +49,23 @@ public final class SkillCatalog {
         return new SkillCatalog(map);
     }
 
-    /** Lookup by {@code skillId} (name_source). Returns {@code null} when absent. */
+    /**
+     * 按 {@code skillId}（name_source）查找；不存在时返回 {@code null}。
+     */
     public HarnessSkillEntry get(String skillId) {
         return skillId == null ? null : entries.get(skillId);
     }
 
-    /** All entries in compose order (low-to-high priority). */
+    /**
+     * 按组合顺序返回全部条目（优先级从低到高）。
+     */
     public Collection<HarnessSkillEntry> all() {
         return entries.values();
     }
 
-    /** All skillIds, in compose order. */
+    /**
+     * 按组合顺序返回全部 skillId。
+     */
     public List<String> ids() {
         return List.copyOf(entries.keySet());
     }

@@ -20,25 +20,25 @@ import io.agentscope.core.message.ToolUseBlock;
 import io.agentscope.core.tool.Toolkit;
 
 /**
- * Base class for tool execution (acting) related events.
+ * 工具执行（行动）相关事件的基类。
  *
- * <p>This sealed class provides common context for all acting events:
+ * <p>此密封类为所有行动事件提供公共上下文：
  * <ul>
- *   <li>{@link #getToolkit()} - The toolkit instance</li>
- *   <li>{@link #getToolUse()} - The tool being executed</li>
+ *   <li>{@link #getToolkit()}：工具集实例</li>
+ *   <li>{@link #getToolUse()}：正在执行的工具</li>
  * </ul>
  *
- * <p>Subclasses represent different stages of tool execution:
+ * <p>子类表示工具执行的不同阶段：
  * <ul>
- *   <li>{@link PreActingEvent} - Before tool execution</li>
- *   <li>{@link PostActingEvent} - After tool execution</li>
- *   <li>{@link ActingChunkEvent} - During tool streaming</li>
+ *   <li>{@link PreActingEvent}：工具执行前</li>
+ *   <li>{@link PostActingEvent}：工具执行后</li>
+ *   <li>{@link ActingChunkEvent}：工具流式输出期间</li>
  * </ul>
  *
  * @see PreActingEvent
  * @see PostActingEvent
  * @see ActingChunkEvent
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public abstract sealed class ActingEvent extends HookEvent
@@ -48,12 +48,12 @@ public abstract sealed class ActingEvent extends HookEvent
     protected ToolUseBlock toolUse;
 
     /**
-     * Constructor for ActingEvent.
+     * ActingEvent 的构造器。
      *
-     * @param type The event type (must not be null)
-     * @param agent The agent instance (must not be null)
-     * @param toolkit The toolkit instance
-     * @param toolUse The tool being executed (can be null for empty events)
+     * @param type 事件类型（不可为 null）
+     * @param agent 智能体实例（不可为 null）
+     * @param toolkit 工具集实例
+     * @param toolUse 正在执行的工具（空事件时可为 null）
      */
     protected ActingEvent(HookEventType type, Agent agent, Toolkit toolkit, ToolUseBlock toolUse) {
         super(type, agent);
@@ -62,18 +62,18 @@ public abstract sealed class ActingEvent extends HookEvent
     }
 
     /**
-     * Get the toolkit instance.
+     * 获取工具集实例。
      *
-     * @return The toolkit
+     * @return 工具集
      */
     public final Toolkit getToolkit() {
         return toolkit;
     }
 
     /**
-     * Get the tool being executed.
+     * 获取正在执行的工具。
      *
-     * @return The tool use block
+     * @return 工具调用块
      */
     public final ToolUseBlock getToolUse() {
         return toolUse;

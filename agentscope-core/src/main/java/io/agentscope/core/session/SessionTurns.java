@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Read-only task and input projection over one committed execution prefix. */
+/** 基于同一已提交执行前缀的只读任务与输入投影。 */
 public record SessionTurns(
         List<Turn> turns, Map<String, List<Msg>> inputs, Set<String> started, Set<String> applied) {
     public record Turn(String turnId, String runId, String status) {

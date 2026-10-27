@@ -20,19 +20,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Describes the desired initial state of a sandbox workspace: root path, materialized
- * file/directory entries, and per-exec environment variables.
+ * 描述沙箱工作区的预期初始状态：根路径、物化的文件／目录条目，以及每次执行的环境变量。
  *
- * <p>Fields:
+ * <p>字段：
  * <ul>
- *   <li>{@code root} — workspace path inside the sandbox (default: {@code /workspace})
- *   <li>{@code entries} — files, directories, and optional {@code bind_mount} entries to apply at
- *       startup (bind mounts are enforced by Docker/Kubernetes stores, not materialized as
- *       copied files)
- *   <li>{@code environment} — environment variables to inject into every exec command
+ *   <li>{@code root}：沙箱内工作区路径，默认 {@code /workspace}
+ *   <li>{@code entries}：启动时应用的文件、目录及可选 {@code bind_mount} 条目（绑定挂载由 Docker/Kubernetes 存储落实，不会物化为复制文件）
+ *   <li>{@code environment}：注入每次 exec 命令的环境变量
  * </ul>
  *
- * <p>Usage example:
+ * <p>用法示例：
  * <pre>{@code
  * WorkspaceSpec spec = new WorkspaceSpec();
  * spec.setRoot("/workspace");
@@ -73,8 +70,7 @@ public class WorkspaceSpec {
     }
 
     /**
-     * Creates a deep copy. {@link WorkspaceEntry} values in the entries map are shared
-     * (shallow copy); they are treated as immutable once a sandbox has started.
+     * 创建副本。entries 映射中的 {@link WorkspaceEntry} 值仍然共享（浅拷贝）；沙箱启动后视为不可变。
      */
     public WorkspaceSpec copy() {
         WorkspaceSpec copy = new WorkspaceSpec();

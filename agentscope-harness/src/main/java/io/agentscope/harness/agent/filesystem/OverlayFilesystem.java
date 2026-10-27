@@ -34,23 +34,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A layered filesystem that overlays a user-specific "upper" layer on top of a shared "lower"
- * layer, providing copy-on-write semantics.
+ * 分层文件系统：在共享“下层”之上覆盖用户专属“上层”，提供写时复制语义。
  *
- * <p>Read operations check the upper layer first and fall back to the lower layer. Write operations
- * always target the upper layer. This enables per-user customization of shared content (e.g.
- * skills, subagents) without modifying the shared originals.
+ * <p>读取先检查上层，再回退到下层；写入始终面向上层。
+ * 这样可以按用户定制共享内容（例如技能、子智能体），而不修改共享原件。
  *
- * <p>Merge semantics:
+ * <p>合并语义：
  *
  * <ul>
- *   <li>{@code ls} — union of both layers; upper entries take precedence on path collision
- *   <li>{@code read} — upper first, then lower
- *   <li>{@code write}/{@code edit} — always to upper (copy-on-write)
- *   <li>{@code delete} — removes from upper only; shared-layer files cannot be deleted
- *   <li>{@code grep}/{@code glob} — searches both layers; upper results override lower on path
- *       collision
- *   <li>{@code exists} — true if present in either layer
+ *   <li>{@code ls} — 合并两层；路径冲突时上层条目优先
+ *   <li>{@code read} — 先上层，后下层
+ *   <li>{@code write}/{@code edit} — 始终写上层（写时复制）
+ *   <li>{@code delete} — 仅从上层删除；不能删除共享层文件
+ *   <li>{@code grep}/{@code glob} — 搜索两层；路径冲突时上层结果覆盖下层结果
+ *   <li>{@code exists} — 任一层存在即为 true
  * </ul>
  */
 public class OverlayFilesystem implements AbstractFilesystem {
@@ -64,10 +61,10 @@ public class OverlayFilesystem implements AbstractFilesystem {
     private final AbstractFilesystem lower;
 
     /**
-     * Creates an overlay filesystem.
+     * 创建覆盖文件系统。
      *
-     * @param upper the user-specific layer (read/write); takes precedence on conflicts
-     * @param lower the shared layer (read-only from the overlay's perspective)
+     * @param upper 用户专属层（可读写）；冲突时优先
+     * @param lower 共享层（从此覆盖层看为只读）
      */
     public OverlayFilesystem(AbstractFilesystem upper, AbstractFilesystem lower) {
         if (upper == null) {
@@ -80,31 +77,33 @@ public class OverlayFilesystem implements AbstractFilesystem {
         this.lower = lower;
     }
 
-    /** Returns the upper (writable) layer. */
+    /**
+     * 返回上层（可写层）。
+     */
     public AbstractFilesystem upper() {
         return upper;
     }
 
-    /** Returns the lower (shared) layer. */
+    /**
+     * 返回下层（共享层）。
+     */
     public AbstractFilesystem lower() {
         return lower;
     }
 
     /**
-     * Builds an overlay that automatically exposes shell execution when {@code upper} supports
-     * it. Returns a {@link AbstractSandboxFilesystem}-implementing subclass when
-     * {@code upper instanceof AbstractSandboxFilesystem}, otherwise a plain
-     * {@link OverlayFilesystem}.
+     * 构建覆盖层；当 {@code upper} 支持 Shell 执行时自动暴露该能力。
+     * 当 {@code upper instanceof AbstractSandboxFilesystem} 时返回实现
+     * {@link AbstractSandboxFilesystem} 的子类，否则返回普通 {@link OverlayFilesystem}。
      *
-     * <p>Use this factory in preference to the constructor when {@code upper} may carry shell
-     * capability (e.g. {@link io.agentscope.harness.agent.filesystem.local.LocalFilesystemWithShell})
-     * — it lets callers like
-     * {@code ReActAgent.Builder} keep their {@code instanceof AbstractSandboxFilesystem} check
-     * working through the overlay.
+     * <p>{@code upper} 可能带 Shell 能力时（例如
+     * {@link io.agentscope.harness.agent.filesystem.local.LocalFilesystemWithShell}），
+     * 优先使用此工厂而不是构造方法；这样 {@code ReActAgent.Builder} 等调用方的
+     * {@code instanceof AbstractSandboxFilesystem} 检查穿过覆盖层后仍然有效。
      *
-     * @param upper user-specific layer (read/write); takes precedence on conflicts
-     * @param lower shared layer (read-only from the overlay's perspective)
-     * @return overlay; either plain or shell-aware depending on {@code upper}
+     * @param upper 用户专属层（可读写）；冲突时优先
+     * @param lower 共享层（从此覆盖层看为只读）
+     * @return 根据 {@code upper} 能力返回普通或感知 Shell 的覆盖层
      */
     public static AbstractFilesystem of(AbstractFilesystem upper, AbstractFilesystem lower) {
         if (upper instanceof AbstractSandboxFilesystem shellUpper) {
@@ -114,9 +113,8 @@ public class OverlayFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Overlay subtype that delegates shell {@link #execute} and {@link #id} to a shell-capable
-     * upper store. Filesystem operations inherit the standard overlay semantics from
-     * {@link OverlayFilesystem}.
+     * 将 Shell {@link #execute} 和 {@link #id} 委托给支持 Shell 的上层存储的覆盖子类。
+     * 文件系统操作继承 {@link OverlayFilesystem} 的标准覆盖语义。
      */
     private static final class ShellAwareOverlay extends OverlayFilesystem
             implements AbstractSandboxFilesystem {
@@ -295,12 +293,16 @@ public class OverlayFilesystem implements AbstractFilesystem {
         return upper.exists(runtimeContext, path) || lower.exists(runtimeContext, path);
     }
 
-    /** Returns the user-specific (read/write) layer. */
+    /**
+     * 返回用户专属层（可读写）。
+     */
     public AbstractFilesystem getUpper() {
         return upper;
     }
 
-    /** Returns the shared (read-only-through-this-overlay) layer. */
+    /**
+     * 返回共享层（通过此覆盖层访问时只读）。
+     */
     public AbstractFilesystem getLower() {
         return lower;
     }

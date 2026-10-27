@@ -20,15 +20,11 @@ import io.agentscope.core.skill.AgentSkill;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Percentage-based rollout for agent-authored skills. Hashes {@code userId × skillName}, and
- * admits the skill iff {@code hash mod 100 < percent}.
+ * 针对智能体编写技能的百分比灰度发布。对 {@code userId × skillName} 做哈希，仅当 {@code hash mod 100 < percent} 时允许技能。
  *
- * <p>Only applies to agent-authored skills (via {@link AbstractAgentCreatedFilter}). Hand-
- * authored / hub-installed skills always pass through.
+ * <p>仅通过 {@link AbstractAgentCreatedFilter} 作用于智能体编写的技能，手工编写或技能中心安装的技能始终通过。
  *
- * <p>The {@code rampUpDays} parameter is currently a placeholder — accepted on construction
- * but the current implementation does not yet ramp; it always uses the configured static
- * percentage. A future version will interpolate using {@code SkillUsageRecord.promotedAt}.
+ * <p>{@code rampUpDays} 当前只是占位参数：构造时接受，但实现尚未支持逐步放量，始终采用配置的静态百分比。未来版本计划根据 {@code SkillUsageRecord.promotedAt} 插值。
  */
 public class CanaryFilter extends AbstractAgentCreatedFilter {
 
@@ -69,15 +65,17 @@ public class CanaryFilter extends AbstractAgentCreatedFilter {
         return bucket < percent;
     }
 
-    /** Stable hash → bucket. Uses Java's String.hashCode so behavior is deterministic. */
+    /**
+     * 稳定哈希映射到桶，使用 Java String.hashCode 保证确定性。
+     */
     static int stableBucket(String key, int modulus) {
-        // Avoid signed-overflow surprises; use absolute value of a 32-bit rolling hash.
+        // 取 32 位滚动哈希的绝对值，避免有符号溢出带来的意外。
         int h = 0;
         for (byte b : key.getBytes(StandardCharsets.UTF_8)) {
             h = 31 * h + (b & 0xFF);
         }
         if (h < 0) {
-            h = -(h + 1); // Math.abs(Integer.MIN_VALUE) edge case
+            h = -(h + 1); // 处理 Math.abs(Integer.MIN_VALUE) 边界情况。
         }
         return h % modulus;
     }

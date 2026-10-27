@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Explicit ephemeral backend for tests and non-persistent embedded applications. */
+/** 显式的临时后端，用于测试和不要求持久化的嵌入式应用。 */
 public final class InMemorySessionLogStore implements SessionLogStore {
     private final ConcurrentHashMap<SessionKey, AtomicSessionStorage> stores =
             new ConcurrentHashMap<>();

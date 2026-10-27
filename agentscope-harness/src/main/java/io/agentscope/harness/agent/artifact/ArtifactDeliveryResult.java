@@ -16,13 +16,12 @@
 package io.agentscope.harness.agent.artifact;
 
 /**
- * Result of an {@link ArtifactDeliveryTarget#deliver} attempt.
+ * {@link ArtifactDeliveryTarget#deliver} 尝试的结果。
  *
- * @param successful whether the artifact was delivered
- * @param conflict whether the delivery was rejected because an artifact with the same name already
- *     exists and {@code force} was {@code false}
- * @param error error description on failure, {@code null} on success
- * @param message human-readable confirmation detail on success (may be {@code null})
+ * @param successful 产物是否已交付
+ * @param conflict 是否因为同名产物已存在且 {@code force} 为 {@code false} 而拒绝交付
+ * @param error 失败时的错误说明；成功时为 {@code null}
+ * @param message 成功时供人阅读的确认详情（可以为 {@code null}）
  */
 public record ArtifactDeliveryResult(
         boolean successful, boolean conflict, String error, String message) {

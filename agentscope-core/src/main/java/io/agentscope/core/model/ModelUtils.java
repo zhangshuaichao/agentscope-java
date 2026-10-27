@@ -27,50 +27,50 @@ import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;
 
 /**
- * Utility class for common Model operations.
+ * 常用模型操作的工具类。
  *
- * <p>This class provides shared functionality used across different Model implementations,
- * including timeout and retry logic for model API calls.
+ * <p>提供不同 Model 实现共享的能力，包括模型 API 调用的超时和重试逻辑。
  */
 public final class ModelUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ModelUtils.class);
 
     private ModelUtils() {
-        // Utility class - prevent instantiation
+        // 工具类，禁止实例化
     }
 
     /**
-     * Applies timeout and retry configuration to a model response Flux.
+     * 为模型响应 Flux 应用超时与重试配置。
      *
-     * <p>This method wraps the original Flux with timeout and retry operators based on the
-     * configuration in GenerateOptions. Both timeout and retry are optional and only applied if
-     * configured.
+     * <p>根据 GenerateOptions 中的配置，用超时和重试操作符包装原始 Flux。
+     * 两者均为可选项，仅在配置后应用。
      *
-     * <p><b>Timeout Behavior:</b>
+     * <p><b>超时行为：</b>
      * <ul>
-     *   <li>If requestTimeout is configured, the entire request will fail if it exceeds the
-     *       specified duration
-     *   <li>Timeout triggers a ModelException with details about the timeout duration
-     *   <li>If no timeout is configured, requests can run indefinitely
+     *   <li>配置 requestTimeout 后，响应流等待信号超过指定时长则失败
+     *   <li>超时触发 ModelException，并包含超时时长信息
+     *   <li>未配置超时时，请求可无限期运行
      * </ul>
      *
-     * <p><b>Retry Behavior:</b>
+     * <p><b>重试行为：</b>
      * <ul>
-     *   <li>If RetryConfig is provided, failed requests will be retried with exponential backoff
-     *       only while the current subscription has not emitted a response with visible content
-     *       blocks
-     *   <li>Retries respect the maxAttempts, initialBackoff, and maxBackoff settings
-     *   <li>Only errors matching the retryOn predicate will be retried
-     *   <li>Each retry is logged with attempt number and failure reason
+     *   <li>提供 RetryConfig 后，失败请求采用指数退避重试，但仅限当前订阅
+     *       尚未发出包含可见内容块的响应时
+     *   <li>重试遵循 maxAttempts、initialBackoff 和 maxBackoff 设置
+     *   <li>仅重试满足 retryOn 谓词的错误
+     *   <li>每次重试记录尝试次数及失败原因
      * </ul>
      *
-     * @param responseFlux the original response Flux to enhance
-     * @param options generation options containing timeout and retry config (may be null)
-     * @param defaultOptions default options to use if options is null
-     * @param modelName the name of the model for error messages and logging
-     * @param provider the provider name (e.g., "dashscope", "openai") for error messages
-     * @return wrapped Flux with timeout and retry applied
+     * <p>【学习提示】重试意味着重新订阅，可能重新发出模型请求。
+     * 已有部分可见输出后继续重试会造成重复内容，因此“错误可重试”不等于“任何时刻都可重试”。
+     * 此处使用 Flux.timeout：检查等待首个或后续信号的间隔，不是整个流的累计耗时上限。
+     *
+     * @param responseFlux 要增强的原始响应 Flux
+     * @param options 包含超时和重试配置的生成选项（可为 null）
+     * @param defaultOptions 当 options 为 null 时使用的默认选项
+     * @param modelName 用于错误消息和日志的模型名称
+     * @param provider 用于错误消息的服务商名称（例如 "dashscope"、"openai"）
+     * @return 应用超时和重试后的 Flux
      */
     public static Flux<ChatResponse> applyTimeoutAndRetry(
             Flux<ChatResponse> responseFlux,
@@ -79,13 +79,13 @@ public final class ModelUtils {
             String modelName,
             String provider) {
 
-        // Merge options: per-request options (primary) override default options (fallback)
+        // 合并选项：请求级选项（主配置）覆盖默认选项（回退配置）
         GenerateOptions effectiveOptions = GenerateOptions.mergeOptions(options, defaultOptions);
 
-        // Extract execution config
+        // 提取执行配置
         ExecutionConfig execConfig = effectiveOptions.getExecutionConfig();
         if (execConfig != null) {
-            // Apply timeout if configured
+            // 已配置时应用超时
             Duration timeout = execConfig.getTimeout();
             if (timeout != null) {
                 responseFlux =
@@ -101,14 +101,14 @@ public final class ModelUtils {
                 LOG.debug("Applied timeout: {} for model: {}", timeout, modelName);
             }
 
-            // Apply retry if configured (maxAttempts > 1 means retry is enabled)
+            // 已配置时应用重试（maxAttempts > 1 表示启用重试）
             Integer maxAttempts = execConfig.getMaxAttempts();
             if (maxAttempts != null && maxAttempts > 1) {
                 Duration initialBackoff = execConfig.getInitialBackoff();
                 Duration maxBackoff = execConfig.getMaxBackoff();
                 Predicate<Throwable> retryOn = execConfig.getRetryOn();
 
-                // Use defaults if not specified
+                // 未指定时使用默认值
                 if (initialBackoff == null) {
                     initialBackoff = Duration.ofSeconds(1);
                 }
@@ -116,20 +116,20 @@ public final class ModelUtils {
                     maxBackoff = Duration.ofSeconds(10);
                 }
                 if (retryOn == null) {
-                    retryOn = error -> true; // retry all errors by default
+                    retryOn = error -> true; // 默认重试所有错误
                 }
-                // Lambda captures below require effectively final variables
+                // 下方 Lambda 捕获的变量必须保持有效 final
                 final int retryCount = maxAttempts - 1;
                 final Duration effectiveInitialBackoff = initialBackoff;
                 final Duration effectiveMaxBackoff = maxBackoff;
                 final Predicate<Throwable> effectiveRetryOn = retryOn;
 
-                // Retrying is only safe before user-visible content is emitted: resubscribing
-                // after partial output would reissue the request and downstream would observe
-                // the first partial response followed by the retried one, duplicating content.
-                // The visibility flag is created inside defer so every subscription (model
-                // call) gets a fresh flag, while it persists across retry attempts of the same
-                // call.
+                // 只有尚未发出用户可见内容时才可安全重试；在部分输出之后重新订阅
+                // 会再次发出请求，下游会先看到第一次的部分响应，随后又看到重试响应，
+                // 从而产生重复内容。
+                // 可见性标记在 defer 内创建，保证每个订阅（模型调用）
+                // 都有独立的新标记；同一次调用的多次重试
+                // 则共享该标记。
                 final Flux<ChatResponse> source = responseFlux;
                 responseFlux =
                         Flux.defer(
@@ -208,41 +208,38 @@ public final class ModelUtils {
         return responseFlux;
     }
 
-    /**
-     * Whether the response carries user-visible content (text, thinking or tool-call deltas).
-     */
+    /** 响应是否携带用户可见内容（文本、思考或工具调用增量）。 */
     private static boolean hasVisibleContent(ChatResponse response) {
         List<ContentBlock> content = response.getContent();
         return content != null && !content.isEmpty();
     }
 
     /**
-     * Ensures GenerateOptions has MODEL_DEFAULTS for executionConfig applied.
+     * 确保 GenerateOptions 的 executionConfig 已应用 MODEL_DEFAULTS。
      *
-     * <p>This method applies the standard default execution configuration to GenerateOptions:
+     * <p>为 GenerateOptions 应用标准默认执行配置：
      * <ul>
-     *   <li>If options is null, creates new options with MODEL_DEFAULTS
-     *   <li>If options has null executionConfig, merges with MODEL_DEFAULTS
-     *   <li>Otherwise returns options unchanged
+     *   <li>options 为 null 时，创建使用 MODEL_DEFAULTS 的新选项
+     *   <li>options 的 executionConfig 为 null 时，与 MODEL_DEFAULTS 合并
+     *   <li>否则原样返回 options
      * </ul>
      *
-     * <p>This is used by model builders to ensure that all models have proper default timeout
-     * and retry configuration applied, even when users provide custom GenerateOptions without
-     * executionConfig.
+     * <p>模型建造者使用此方法，确保即使用户提供的自定义 GenerateOptions
+     * 不含 executionConfig，所有模型仍具有恰当的默认超时和重试配置。
      *
-     * @param options the original options (may be null)
-     * @return options with MODEL_DEFAULTS applied as needed
+     * @param options 原始选项（可为 null）
+     * @return 按需应用 MODEL_DEFAULTS 后的选项
      */
     public static GenerateOptions ensureDefaultExecutionConfig(GenerateOptions options) {
         if (options == null) {
-            // No options provided, use MODEL_DEFAULTS
+            // 未提供选项，使用 MODEL_DEFAULTS
             return GenerateOptions.builder()
                     .executionConfig(ExecutionConfig.MODEL_DEFAULTS)
                     .build();
         }
 
         if (options.getExecutionConfig() == null) {
-            // Options provided but no executionConfig, merge with MODEL_DEFAULTS
+            // 已提供选项但未提供 executionConfig，与 MODEL_DEFAULTS 合并
             GenerateOptions withDefaults =
                     GenerateOptions.builder()
                             .executionConfig(ExecutionConfig.MODEL_DEFAULTS)
@@ -250,7 +247,7 @@ public final class ModelUtils {
             return GenerateOptions.mergeOptions(options, withDefaults);
         }
 
-        // executionConfig already present, return as-is
+        // executionConfig 已存在，原样返回
         return options;
     }
 }

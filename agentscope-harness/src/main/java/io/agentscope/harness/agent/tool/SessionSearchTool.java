@@ -32,12 +32,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-/** Read-only session discovery and full conversation views from the authoritative native log. */
+/**
+ * 从权威原生日志中只读地发现会话并查看完整对话。
+ */
 public class SessionSearchTool {
     /**
-     * Hard ceiling for model-supplied result limits. The tool is excluded from
-     * {@code ToolResultEvictionConfig} on the "bounded results" rationale, so nothing
-     * downstream trims an oversized result — the clamp has to happen here (#3270).
+     * 模型提供的结果数量限制的硬上限。此工具以“结果有界”为由排除在
+     * {@code ToolResultEvictionConfig} 之外，因此下游不会裁剪过大结果，
+     * 必须在此限制数量（#3270）。
      */
     private static final int MAX_RESULTS_CEILING = 100;
 
@@ -51,7 +53,9 @@ public class SessionSearchTool {
         this.store = Objects.requireNonNull(store);
     }
 
-    /** Compatibility constructor; the supplied native store owns discovery and history. */
+    /**
+     * 兼容构造器；提供的原生日志存储负责会话发现与历史。
+     */
     public SessionSearchTool(WorkspaceManager workspace, SessionLogStore store) {
         this(store == null ? new WorkspaceSessionLogStore(workspace) : store);
     }

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Shared team task board item. */
+/** 共享团队任务看板中的条目。 */
 public record TeamTask(
         String taskId,
         String teamName,
@@ -38,14 +38,14 @@ public record TeamTask(
     public static final String COMPLETED = "completed";
     public static final String FAILED = "failed";
 
-    /** {@code true} when the state accepts no further transitions. */
+    /** 状态不再接受任何转换时为 {@code true}。 */
     public static boolean isTerminal(String state) {
         return COMPLETED.equals(state) || FAILED.equals(state);
     }
 
     /**
-     * Unblocked pending tasks claimable by {@code forMember}: unassigned open-board items, and when
-     * {@code forMember} is non-blank also pending tasks assigned to that member.
+     * 可由 {@code forMember} 领取且未被阻塞的 pending 任务，包括未分配的开放看板任务；
+     * 当 {@code forMember} 非空白时，也包含已经分配给该成员的 pending 任务。
      */
     public static List<TeamTask> claimableOf(List<TeamTask> tasks, String forMember) {
         if (tasks == null || tasks.isEmpty()) {

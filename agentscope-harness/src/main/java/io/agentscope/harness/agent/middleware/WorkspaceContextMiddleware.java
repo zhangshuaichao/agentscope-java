@@ -43,16 +43,18 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Collects workspace instructions and reference materials for final request rendering via
- * {@link #onSystemPrompt(Agent, RuntimeContext, String)}.
+ * 通过 {@link #onSystemPrompt(Agent, RuntimeContext, String)} 收集工作区指令和参考材料，
+ * 供最终请求渲染使用。
  *
- * <p>Runs once per {@code call()} (just like the previous {@code WorkspaceContextHook}
- * fired on {@code PreCallEvent}).
+ * <p>每次 {@code call()} 执行一次，类似旧版 {@code WorkspaceContextHook}
+ * 在 {@code PreCallEvent} 上触发的方式。
  *
- * <p>Memory-related guidance and reference material loading are gated by the same
- * builder flags as Harness memory tools/hooks ({@code disableMemoryTools} /
- * {@code disableMemoryHooks}) so the model is not instructed to use capabilities that are
- * turned off.
+ * <p>记忆相关指导和参考材料加载，受与 Harness 记忆工具／钩子相同的建造者开关
+ * （{@code disableMemoryTools} / {@code disableMemoryHooks}）控制，
+ * 避免提示模型使用已经关闭的能力。
+ *
+ * <p>【学习提示】工作区材料按调用加载，最终模型请求则可在每轮推理时重新装配。
+ * 不要把“本次调用读取了一次文件”误认为“每轮都重新读取文件”，也不要将参考材料自动提升为系统指令。
  */
 public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
 
@@ -162,7 +164,7 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
         this.disableMemoryHooks = disableMemoryHooks;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_SYSTEM_PROMPT);
@@ -172,25 +174,20 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
         this.additionalContextFiles = files != null ? files : List.of();
     }
 
-    /**
-     * Whether memory tools are disabled for this middleware (affects prompt guidance).
-     */
+    /** 此中间件是否禁用记忆工具（影响提示指导）。 */
     public boolean isDisableMemoryTools() {
         return disableMemoryTools;
     }
 
-    /**
-     * Whether memory hooks are disabled for this middleware (affects prompt guidance).
-     */
+    /** 此中间件是否禁用记忆钩子（影响提示指导）。 */
     public boolean isDisableMemoryHooks() {
         return disableMemoryHooks;
     }
 
     /**
-     * Whether an {@link io.agentscope.harness.agent.artifact.ArtifactDeliveryTarget} is configured
-     * and the {@code deliver_artifact} tool is exposed. When {@code true}, the sandbox branch of the
-     * workspace paragraph tells the model to use that tool; when {@code false}, it states that files
-     * cannot leave the sandbox.
+     * 是否配置了 {@link io.agentscope.harness.agent.artifact.ArtifactDeliveryTarget}
+     * 且暴露 {@code deliver_artifact} 工具。为 {@code true} 时，工作区段落的沙箱分支
+     * 会要求模型使用该工具；为 {@code false} 时，说明文件无法离开沙箱。
      */
     public void setArtifactDeliveryEnabled(boolean artifactDeliveryEnabled) {
         this.artifactDeliveryEnabled = artifactDeliveryEnabled;
@@ -268,12 +265,12 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
                                 "additional", "workspace:additional-files", additionalBlock)));
     }
 
-    /** Head-truncation cap for AGENTS.md content, in UTF-8 bytes. */
+    /** AGENTS.md 内容保留头部的截断上限，单位为 UTF-8 字节。 */
     private static final int MAX_AGENTS_MD_BYTES = 100 * 1024;
 
     /**
-     * Caps the rule body at {@link #MAX_AGENTS_MD_BYTES} UTF-8 bytes and prefixes the
-     * applicability line so the note travels with the rules instead of a distant block.
+     * 将规则正文限制为 {@link #MAX_AGENTS_MD_BYTES} 个 UTF-8 字节，
+     * 并在前面加入适用范围说明，让说明与规则相伴，而不是散落在远处的块中。
      */
     private static String composeAgentsContent(String raw) {
         String content = truncateUtf8(raw.strip(), MAX_AGENTS_MD_BYTES);
@@ -286,9 +283,9 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Head-truncates to {@code maxBytes} UTF-8 bytes and appends a visible truncation marker.
-     * Encodes into a fixed-size buffer; the encoder stops before a code point that no longer
-     * fits, so the head always decodes back without splitting a character.
+     * 保留头部至 {@code maxBytes} 个 UTF-8 字节，并追加可见的截断标记。
+     * 编码到固定大小缓冲区；编码器会在放不下的码点之前停止，
+     * 因此保留内容可以完整解码，不会切断字符。
      */
     private static String truncateUtf8(String content, int maxBytes) {
         CharsetEncoder encoder = StandardCharsets.UTF_8.newEncoder();
@@ -301,8 +298,8 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Inject {@code MEMORY.md} unless both memory tools and hooks are disabled — at that point
-     * the harness memory surface is fully off and the file should not appear as model context.
+     * 注入 {@code MEMORY.md}，除非记忆工具与记忆钩子均被禁用；
+     * 两者都禁用时，Harness 记忆能力完全关闭，该文件不应再进入模型上下文。
      */
     private boolean includeMemoryContext() {
         return !(disableMemoryTools && disableMemoryHooks);
@@ -345,20 +342,19 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds the {@code ## Workspace} paragraph, branching by the active filesystem type so the
-     * LLM sees a description that matches its real deployment surface.
+     * 构建 {@code ## Workspace} 段落，按活动文件系统类型分支，
+     * 确保 LLM 看到的描述与实际部署环境一致。
      *
      * <ul>
-     *   <li><b>Local overlay</b> ({@link OverlayFilesystem} wrapping
-     *       {@link LocalFilesystemWithShell}) — renders Project + Workspace as two lines plus
-     *       overlay/shell semantics.
-     *   <li><b>Sandbox</b> ({@link AbstractSandboxFilesystem} not wrapped in an overlay) —
-     *       describes the isolated container view and how host files reach it.
-     *   <li><b>Remote</b> ({@link CompositeFilesystem}) — describes the distributed store-backed
-     *       workspace and the fact that there is no host filesystem to fall back to.
-     *   <li><b>Other</b> — single-line legacy "working directory is X" form for plain
-     *       {@link io.agentscope.harness.agent.filesystem.local.LocalFilesystem} or anything we
-     *       don't recognize.
+     *   <li><b>本地 overlay</b>（{@link OverlayFilesystem} 包装
+     *       {@link LocalFilesystemWithShell}）—— 分两行渲染 Project 和 Workspace，
+     *       并描述 overlay／shell 语义。
+     *   <li><b>沙箱</b>（未被 overlay 包装的 {@link AbstractSandboxFilesystem}）——
+     *       描述隔离容器视图及宿主机文件如何进入容器。
+     *   <li><b>远程</b>（{@link CompositeFilesystem}）—— 描述基于分布式存储的工作区，
+     *       并说明不存在可回退访问的宿主机文件系统。
+     *   <li><b>其他</b> —— 对普通 {@link io.agentscope.harness.agent.filesystem.local.LocalFilesystem}
+     *       或未知类型，使用旧版单行“工作目录为 X”形式。
      * </ul>
      */
     private static String buildWorkspaceParagraph(
@@ -464,10 +460,9 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Best-effort: returns the upper {@link LocalFilesystemWithShell} when {@code fs} is an
-     * overlay constructed by {@code LocalFilesystemSpec}, otherwise {@code null}. Used to pull
-     * project / mode / policy metadata for the prompt without leaking those into other
-     * filesystem types.
+     * 尽力获取上层 {@link LocalFilesystemWithShell}：当 {@code fs} 是由
+     * {@code LocalFilesystemSpec} 创建的 overlay 时返回它，否则为 {@code null}。
+     * 用于提取提示中的项目／模式／策略元数据，避免将这些信息泄漏到其他文件系统类型。
      */
     private static LocalFilesystemWithShell detectLocalUpper(AbstractFilesystem fs) {
         if (fs instanceof OverlayFilesystem ov
@@ -478,9 +473,8 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Extra allow-list roots beyond the project and workspace (which the LLM already sees).
-     * Filters out exact matches and ancestors to keep the prompt focused on truly additional
-     * locations.
+     * 除项目和工作区（LLM 已能看到）之外的额外允许根目录。
+     * 过滤精确匹配项及祖先目录，使提示聚焦于真正额外的位置。
      */
     private static List<Path> extraRootsOf(
             LocalFilesystemWithShell upper, Path project, Path workspace) {
@@ -528,9 +522,9 @@ public class WorkspaceContextMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Per-call volatile facts for the tail runtime channel: the session id and the resolved date.
-     * Both change independently of the agent's identity and instructions (a long session crosses
-     * midnight), so they must not sit in the byte-stable system head.
+     * 用于尾部运行时通道的每次调用易变事实：会话 ID 和解析后的日期。
+     * 两者独立于智能体身份和指令变化（长会话可能跨越午夜），
+     * 因此不能放入字节稳定的系统头部。
      */
     private String buildSessionStateSection(RuntimeContext rc) {
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE MMM d, yyyy"));

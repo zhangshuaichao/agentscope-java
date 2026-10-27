@@ -36,12 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for file system operations related to skills.
+ * 技能相关文件系统操作的工具类。
  *
- * <p>This class provides reusable operations for loading, listing, saving, and
- * deleting skills on the file system. It is designed to be shared by multiple
- * repositories such as file system and Git based repositories.
- *
+ * <p>提供可复用的加载、列举、保存和删除操作，供文件系统仓库、Git 仓库等多个实现共享。
  */
 public final class SkillFileSystemHelper {
 
@@ -51,13 +48,13 @@ public final class SkillFileSystemHelper {
     private SkillFileSystemHelper() {}
 
     /**
-     * Loads a skill by name from the given base directory.
+     * 从指定基础目录按名称加载技能。
      *
-     * @param baseDir The base directory containing skill folders
-     * @param skillName The skill name to load
-     * @param source The source identifier for the created skill
-     * @return The loaded AgentSkill
-     * @throws IllegalArgumentException if the skill cannot be found or is invalid
+     * @param baseDir 包含技能目录的基础目录
+     * @param skillName 要加载的技能名称
+     * @param source 为所创建技能设置的来源标识符
+     * @return 加载出的 AgentSkill
+     * @throws IllegalArgumentException 未找到技能或技能无效时抛出
      */
     public static AgentSkill loadSkill(Path baseDir, String skillName, String source) {
         Path skillDir =
@@ -71,27 +68,27 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Loads a skill from a specific directory, eagerly reading every non-hidden file in the
-     * skill tree into memory. Equivalent to {@link #loadSkillFromDirectory(Path, String, boolean)
-     * loadSkillFromDirectory(skillDir, source, true)}.
+     * 从指定目录加载技能，将技能树中所有非隐藏文件预先读入内存。
+     * 等同于 {@link #loadSkillFromDirectory(Path, String, boolean)
+     *  loadSkillFromDirectory(skillDir, source, true)}。
      */
     public static AgentSkill loadSkillFromDirectory(Path skillDir, String source) {
         return loadSkillFromDirectory(skillDir, source, true);
     }
 
     /**
-     * Loads a skill from a specific directory.
+     * 从指定目录加载技能。
      *
-     * <p>The returned skill always carries an absolute {@code originDir} matching {@code skillDir},
-     * so callers (prompt provider, load tool) can address files on disk without a second copy.
+     * <p>返回的技能始终带有与 {@code skillDir} 对应的绝对 {@code originDir}，
+     * 调用方（提示词提供者、加载工具）可直接定位磁盘文件，无需再次复制。
      *
-     * @param skillDir The directory containing SKILL.md
-     * @param source The source identifier for the created skill
-     * @param includeResources when {@code true}, all non-hidden files under {@code skillDir} are
-     *     pre-loaded into the skill's in-memory resource map (legacy behavior). When {@code false},
-     *     only SKILL.md is read; callers fall back to disk through {@code originDir} on demand.
-     * @return The loaded AgentSkill (with {@code originDir} populated)
-     * @throws IllegalArgumentException if SKILL.md is missing or invalid
+     * @param skillDir 包含 SKILL.md 的目录
+     * @param source 为所创建技能设置的来源标识符
+     * @param includeResources 为 {@code true} 时，将 {@code skillDir} 下所有非隐藏文件
+     *      预加载到技能的内存资源映射中（旧行为）；为 {@code false} 时仅读取 SKILL.md，
+     *      调用方按需通过 {@code originDir} 回退到磁盘访问
+     * @return 加载出的 AgentSkill（已填充 {@code originDir}）
+     * @throws IllegalArgumentException SKILL.md 缺失或无效时抛出
      */
     public static AgentSkill loadSkillFromDirectory(
             Path skillDir, String source, boolean includeResources) {
@@ -121,10 +118,10 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Retrieves all skill names by parsing SKILL.md metadata in each skill folder.
+     * 解析每个技能目录中的 SKILL.md 元数据，获取全部技能名称。
      *
-     * @param baseDir The base directory containing skill folders
-     * @return A list of skill names sorted alphabetically
+     * @param baseDir 包含技能目录的基础目录
+     * @return 按字母顺序排序的技能名称列表
      */
     public static List<String> getAllSkillNames(Path baseDir) {
         List<String> skillNames = new ArrayList<>();
@@ -146,22 +143,22 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Retrieves all skills from the base directory with resources pre-loaded into memory.
-     * Equivalent to {@link #getAllSkills(Path, String, boolean) getAllSkills(baseDir, source,
-     * true)}.
+     * 获取基础目录中的全部技能，并将资源预加载到内存。
+     * 等同于 {@link #getAllSkills(Path, String, boolean) getAllSkills(baseDir, source,
+     *  true)}。
      */
     public static List<AgentSkill> getAllSkills(Path baseDir, String source) {
         return getAllSkills(baseDir, source, true);
     }
 
     /**
-     * Retrieves all skills from the base directory.
+     * 获取基础目录中的全部技能。
      *
-     * @param baseDir The base directory containing skill folders
-     * @param source The source identifier for created skills
-     * @param includeResources when {@code false}, each skill's resource map is left empty and
-     *     callers must rely on the skill's {@code originDir} for disk-side reads
-     * @return A list of skills
+     * @param baseDir 包含技能目录的基础目录
+     * @param source 为所创建技能设置的来源标识符
+     * @param includeResources 为 {@code false} 时，技能资源映射保持为空，
+     *      调用方必须依靠技能的 {@code originDir} 读取磁盘内容
+     * @return 技能列表
      */
     public static List<AgentSkill> getAllSkills(
             Path baseDir, String source, boolean includeResources) {
@@ -193,12 +190,12 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Saves skills to the base directory.
+     * 将技能保存到基础目录。
      *
-     * @param baseDir The base directory to save skills
-     * @param skills The skills to save
-     * @param force Whether to overwrite existing skills
-     * @return true if all skills were saved, false otherwise
+     * @param baseDir 保存技能的基础目录
+     * @param skills 要保存的技能
+     * @param force 是否覆盖已存在的技能
+     * @return 全部技能均保存成功时为 true，否则为 false
      */
     public static boolean saveSkills(Path baseDir, List<AgentSkill> skills, boolean force) {
         if (skills == null || skills.isEmpty()) {
@@ -216,7 +213,7 @@ public final class SkillFileSystemHelper {
                     if (!force) {
                         logger.info(
                                 "Skill directory already exists and force=false: {}", skillName);
-                        continue; // Skip to the next skill if force=false
+                        continue; // force=false 时跳过并处理下一个技能
                     } else {
                         logger.info("Overwriting existing skill directory: {}", skillName);
                         deleteDirectory(skillDir);
@@ -261,11 +258,11 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Deletes a skill by name based on SKILL.md metadata.
+     * 根据 SKILL.md 元数据中的技能名称删除技能。
      *
-     * @param baseDir The base directory containing skill folders
-     * @param skillName The skill name to delete
-     * @return true if deleted, false if not found
+     * @param baseDir 包含技能目录的基础目录
+     * @param skillName 要删除的技能名称
+     * @return 删除成功为 true，未找到为 false
      */
     public static boolean deleteSkill(Path baseDir, String skillName) {
         Optional<Path> skillDir = findSkillDirectoryByName(baseDir, skillName);
@@ -285,11 +282,11 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Checks whether a skill exists by scanning SKILL.md metadata.
+     * 扫描 SKILL.md 元数据，检查技能是否存在。
      *
-     * @param baseDir The base directory containing skill folders
-     * @param skillName The skill name to check
-     * @return true if a matching skill exists
+     * @param baseDir 包含技能目录的基础目录
+     * @param skillName 要检查的技能名称
+     * @return 存在匹配技能时为 true
      */
     public static boolean skillExists(Path baseDir, String skillName) {
         if (skillName == null || skillName.isEmpty()) {
@@ -299,12 +296,12 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Validates that a resolved path is within the base directory.
+     * 验证解析出的路径是否位于基础目录内。
      *
-     * @param baseDir The base directory to constrain resolution
-     * @param skillName The skill name to resolve
-     * @return The validated absolute path
-     * @throws IllegalArgumentException if the path escapes the base directory
+     * @param baseDir 用于约束路径解析的基础目录
+     * @param skillName 要解析的技能名称
+     * @return 验证后的绝对路径
+     * @throws IllegalArgumentException 路径逃逸出基础目录时抛出
      */
     public static Path validateAndResolvePath(Path baseDir, String skillName) {
         if (skillName == null || skillName.isEmpty()) {
@@ -325,10 +322,10 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Checks if a directory contains a SKILL.md file.
+     * 检查目录是否包含 SKILL.md 文件。
      *
-     * @param dir The directory to check
-     * @return true if SKILL.md exists in the directory
+     * @param dir 要检查的目录
+     * @return 目录中存在 SKILL.md 时为 true
      */
     public static boolean hasSkillFile(Path dir) {
         try (Stream<Path> files = Files.walk(dir, 1)) {
@@ -340,10 +337,10 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Recursively deletes a directory and all its contents.
+     * 递归删除目录及其全部内容。
      *
-     * @param directory The directory to delete
-     * @throws IOException if deletion fails
+     * @param directory 要删除的目录
+     * @throws IOException 删除失败时抛出
      */
     public static void deleteDirectory(Path directory) throws IOException {
         if (!Files.exists(directory)) {
@@ -365,9 +362,9 @@ public final class SkillFileSystemHelper {
     }
 
     /**
-     * Registers a shutdown hook to delete the given directory on JVM exit.
+     * 注册 JVM 关闭钩子，在退出时删除指定目录。
      *
-     * @param directory The directory to delete at shutdown
+     * @param directory 关闭时要删除的目录
      */
     public static Thread registerTempDirectoryCleanup(Path directory) {
         Thread hook =
@@ -391,7 +388,7 @@ public final class SkillFileSystemHelper {
 
     private static Map<String, String> loadResources(Path skillDir, Path skillFile) {
         Map<String, String> resources = new HashMap<>();
-        // Recursive traversal starting from the root directory
+        // 从根目录开始递归遍历
         collectResources(skillDir, skillDir, skillFile, resources);
         return resources;
     }

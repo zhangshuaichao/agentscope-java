@@ -52,7 +52,7 @@ public sealed interface ToolChoice
     record Auto() implements ToolChoice {}
 
     /**
-     * None mode: 禁止模型调用任何工具.
+     * None 模式：禁止模型调用任何工具。
      * 模型仅以文本回复。
      */
     record None() implements ToolChoice {}
@@ -64,7 +64,7 @@ public sealed interface ToolChoice
     record Required() implements ToolChoice {}
 
     /**
-     * Specific mode: 按名称强制模型调用指定工具.
+     * Specific 模式：按名称强制模型调用指定工具。
      *
      * @param toolName 必须调用的工具名称
      */

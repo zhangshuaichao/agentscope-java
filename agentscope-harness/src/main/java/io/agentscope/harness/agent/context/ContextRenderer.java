@@ -18,14 +18,15 @@ package io.agentscope.harness.agent.context;
 import java.util.Comparator;
 import java.util.List;
 
-/** Deterministic formatting only. No LLM rewriting and no interpretation of embedded instructions. */
+/** 只执行确定性的格式化；不调用 LLM 改写，也不解释嵌入内容中的指令。 */
 public final class ContextRenderer {
     private ContextRenderer() {}
 
     /**
-     * Renders each item in its own frame. Bodies are kept verbatim — only the renderer's own
-     * closing delimiters are neutralized so a body cannot close its frame early; attribute
-     * values stay escaped.
+     * 将每个条目渲染到独立边框内。正文保持原样，仅中和渲染器自身的闭合分隔符，
+     * 防止正文提前关闭所在边框；属性值仍会进行转义。
+     *
+     * <p>【学习提示】边界转义保持结构完整，但不等于证明材料可信；权限由来源提供者决定。
      */
     public static String render(List<ContextItem> items) {
         StringBuilder text = new StringBuilder();

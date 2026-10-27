@@ -22,15 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A {@link Memory} implementation that delegates all reads and writes to
- * {@link AgentState#contextMutable()}.
+ * 将所有读写操作委派给
+ * {@link AgentState#contextMutable()} 的 {@link Memory} 实现。
  *
- * <p>This adapter exists solely to preserve backward compatibility for code that
- * accesses conversation history via {@code agent.getMemory().getMessages()}.
- * The canonical location of conversation context in 2.0 is
- * {@link AgentState#getContext()}.
+ * <p>此适配器仅用于兼容通过
+ * {@code agent.getMemory().getMessages()} 访问对话历史的旧代码。
+ * 2.0 中对话上下文的规范存放位置是
+ * {@link AgentState#getContext()}。
  *
- * @deprecated since 2.0.0. Use {@link AgentState#getContext()} directly.
+ * @deprecated 自 2.0.0 起弃用。请直接使用 {@link AgentState#getContext()}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class StateBackedMemory implements Memory {

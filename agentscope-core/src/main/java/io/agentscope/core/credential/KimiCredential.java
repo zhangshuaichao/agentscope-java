@@ -23,10 +23,10 @@ import io.agentscope.core.model.ChatModelBase;
 import java.util.Objects;
 
 /**
- * Credential for the Kimi (Moonshot AI) API.
+ * Kimi（Moonshot AI）API 的凭据。
  *
- * <p>No {@code KimiChatModel} class ships in agentscope-core yet, so {@link #getChatModelClass()}
- * throws {@link UnsupportedOperationException}.
+ * <p>agentscope-core 尚未提供 {@code KimiChatModel} 类，因此 {@link #getChatModelClass()}
+ * 抛出 {@link UnsupportedOperationException}。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"id", "type", "api_key", "base_url"})

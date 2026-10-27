@@ -20,25 +20,25 @@ import io.agentscope.core.model.GenerateOptions;
 import java.util.Objects;
 
 /**
- * Base class for reasoning-related events.
+ * 推理相关事件的基类。
  *
- * <p>This sealed class provides common context for all reasoning events:
+ * <p>此密封类为所有推理事件提供公共上下文：
  * <ul>
- *   <li>{@link #getModelName()} - The model name (e.g., "qwen-plus", "gpt-4")</li>
- *   <li>{@link #getGenerateOptions()} - The generation options (temperature, etc.)</li>
+ *   <li>{@link #getModelName()}：模型名称（例如 "qwen-plus"、"gpt-4"）</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项（temperature 等）</li>
  * </ul>
  *
- * <p>Subclasses represent different stages of the reasoning process:
+ * <p>子类表示推理流程的不同阶段：
  * <ul>
- *   <li>{@link PreReasoningEvent} - Before LLM call</li>
- *   <li>{@link PostReasoningEvent} - After LLM call</li>
- *   <li>{@link ReasoningChunkEvent} - During streaming</li>
+ *   <li>{@link PreReasoningEvent}：LLM 调用前</li>
+ *   <li>{@link PostReasoningEvent}：LLM 调用后</li>
+ *   <li>{@link ReasoningChunkEvent}：流式输出期间</li>
  * </ul>
  *
  * @see PreReasoningEvent
  * @see PostReasoningEvent
  * @see ReasoningChunkEvent
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public abstract sealed class ReasoningEvent extends HookEvent
@@ -48,13 +48,13 @@ public abstract sealed class ReasoningEvent extends HookEvent
     private final GenerateOptions generateOptions;
 
     /**
-     * Constructor for ReasoningEvent.
+     * ReasoningEvent 的构造器。
      *
-     * @param type The event type (must not be null)
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null if using model defaults)
-     * @throws NullPointerException if type, agent, or modelName is null
+     * @param type 事件类型（不可为 null）
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（使用模型默认值时可为 null）
+     * @throws NullPointerException 当 type、agent 或 modelName 为 null 时抛出
      */
     protected ReasoningEvent(
             HookEventType type, Agent agent, String modelName, GenerateOptions generateOptions) {
@@ -64,19 +64,19 @@ public abstract sealed class ReasoningEvent extends HookEvent
     }
 
     /**
-     * Get the model name.
+     * 获取模型名称。
      *
-     * @return The model name (e.g., "qwen-plus", "gpt-4")
+     * @return 模型名称（例如 "qwen-plus"、"gpt-4"）
      */
     public final String getModelName() {
         return modelName;
     }
 
     /**
-     * Get the generation options.
+     * 获取生成选项。
      *
-     * @return The generation options (temperature, maxTokens, etc.), or null if using model
-     *     defaults
+     * @return 生成选项（temperature、maxTokens 等）；使用模型
+     *     默认值时为 null
      */
     public final GenerateOptions getGenerateOptions() {
         return generateOptions;

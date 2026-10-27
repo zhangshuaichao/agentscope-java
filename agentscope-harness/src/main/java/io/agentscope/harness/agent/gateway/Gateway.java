@@ -26,58 +26,58 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Gateway-style entrypoint: route inbound turns by {@link MsgContext}, and bind the primary {@link
- * HarnessAgent} for announce delivery.
+ * 网关式入口：按 {@link MsgContext} 路由入站轮次，并绑定主 {@link
+ * HarnessAgent} 以投递公告。
  *
- * <p>Implementations should serialize turns per logical session (fair wait) so injected announce
- * runs and user/channel {@link #run} calls do not race the same {@code HarnessAgent} turn.
+ * <p>实现应按逻辑会话串行化轮次（公平等待），防止注入的公告执行与用户／渠道
+ * {@link #run} 调用竞争同一 {@code HarnessAgent} 轮次。
  *
- * <p>Callers may supply a {@link RuntimeContext} that is merged into the agent turn. Gateway-owned
- * identity fields ({@code sessionId}, {@code userId}, {@code outboundAddress}, …) always win on
- * conflict.
+ * <p>调用方可提供合并到智能体轮次的 {@link RuntimeContext}。
+ * 冲突时，网关拥有的身份字段（{@code sessionId}、{@code userId}、{@code outboundAddress} 等）始终优先。
  */
 public interface Gateway {
 
     /**
-     * Binds the primary harness agent after construction. The agent is registered under its
-     * {@link HarnessAgent#getAgentId()} for routing by {@link #run}.
+     * 构造后绑定主 Harness 智能体。按 {@link HarnessAgent#getAgentId()} 注册它，
+     * 供 {@link #run} 路由。
      */
     void bindMainAgent(HarnessAgent agent);
 
     /**
-     * Registers a named harness agent for routing. {@link #run} will resolve the target agent by
-     * the {@code agentId} supplied in {@link MsgContext#extra()} (key {@code "agentId"}), falling
-     * back to the agent registered via {@link #bindMainAgent}.
+     * 注册用于路由的命名 Harness 智能体。{@link #run} 根据 {@link MsgContext#extra()}
+     * 中提供的 {@code agentId}（键 {@code "agentId"}）解析目标，
+     * 找不到时回退到 {@link #bindMainAgent} 注册的智能体。
      */
     default void registerAgent(String agentId, HarnessAgent agent) {}
 
-    /** Inbound turn (direct API or channel adapter). */
+    /**
+     * 入站轮次（直接 API 或渠道适配器）。
+     */
     Mono<Msg> run(MsgContext context, List<Msg> messages);
 
     /**
-     * Inbound turn with outbound address. The {@code outboundAddress} is recorded as the session's
-     * "last route" so that proactive outbound messages (e.g. subagent announces) can be delivered
-     * back to the originating channel/peer.
+     * 带出站地址的入站轮次。将 {@code outboundAddress} 记录为会话的“最近路由”，
+     * 使主动出站消息（例如子智能体公告）能够返回原始渠道／会话对端。
      *
-     * @param context routing context for session key resolution
-     * @param messages the inbound messages
-     * @param outboundAddress the delivery target for proactive replies; may be null
+     * @param context 用于解析会话键的路由上下文
+     * @param messages 入站消息
+     * @param outboundAddress 主动回复的投递目标；可为 null
      */
     default Mono<Msg> run(MsgContext context, List<Msg> messages, OutboundAddress outboundAddress) {
         return run(context, messages, outboundAddress, null);
     }
 
     /**
-     * Inbound turn with outbound address and an optional caller {@link RuntimeContext}.
+     * 带出站地址及可选调用方 {@link RuntimeContext} 的入站轮次。
      *
-     * <p>The caller context is merged into the turn; gateway identity fields take precedence. The
-     * default implementation ignores {@code callerContext} and delegates to {@link
-     * #run(MsgContext, List)}.
+     * <p>调用方上下文合并到本轮，网关身份字段优先。
+     * 默认实现忽略 {@code callerContext}，委托给 {@link
+     * #run(MsgContext, List)}。
      *
-     * @param context routing context for session key resolution
-     * @param messages the inbound messages
-     * @param outboundAddress the delivery target for proactive replies; may be null
-     * @param callerContext optional application context to merge; may be null
+     * @param context 用于解析会话键的路由上下文
+     * @param messages 入站消息
+     * @param outboundAddress 主动回复的投递目标；可为 null
+     * @param callerContext 可选的待合并应用上下文；可为 null
      */
     default Mono<Msg> run(
             MsgContext context,
@@ -88,10 +88,10 @@ public interface Gateway {
     }
 
     /**
-     * Inbound turn with full Channel metadata for {@link
-     * io.agentscope.harness.agent.gateway.channel.ChannelRuntimeContextResolver}.
+     * 带完整渠道元数据的入站轮次，供 {@link
+     * io.agentscope.harness.agent.gateway.channel.ChannelRuntimeContextResolver} 使用。
      *
-     * @param inboundMessage optional inbound envelope passed to the resolver; may be null
+     * @param inboundMessage 传给解析器的可选入站信封；可为 null
      */
     default Mono<Msg> run(
             MsgContext context,
@@ -102,26 +102,32 @@ public interface Gateway {
         return run(context, messages);
     }
 
-    /** Single-message convenience. */
+    /**
+     * 单消息便捷方法。
+     */
     default Mono<Msg> run(MsgContext context, Msg message) {
         return run(context, List.of(message));
     }
 
-    /** Streaming variant of {@link #run(MsgContext, List)}. Returns fine-grained events. */
+    /**
+     * {@link #run(MsgContext, List)} 的流式变体，返回细粒度事件。
+     */
     default Flux<AgentEvent> runStream(MsgContext context, List<Msg> messages) {
         return runStream(context, messages, null, null);
     }
 
-    /** Streaming variant of {@link #run(MsgContext, List, OutboundAddress)}. */
+    /**
+     * {@link #run(MsgContext, List, OutboundAddress)} 的流式变体。
+     */
     default Flux<AgentEvent> runStream(
             MsgContext context, List<Msg> messages, OutboundAddress outboundAddress) {
         return runStream(context, messages, outboundAddress, null);
     }
 
     /**
-     * Streaming variant of {@link #run(MsgContext, List, OutboundAddress, RuntimeContext)}.
+     * {@link #run(MsgContext, List, OutboundAddress, RuntimeContext)} 的流式变体。
      *
-     * <p>The default signals unsupported streaming.
+     * <p>默认实现发出“不支持流式调用”的错误信号。
      */
     default Flux<AgentEvent> runStream(
             MsgContext context,
@@ -132,8 +138,8 @@ public interface Gateway {
     }
 
     /**
-     * Streaming variant of {@link #run(MsgContext, List, OutboundAddress, RuntimeContext,
-     * InboundMessage)}.
+     * {@link #run(MsgContext, List, OutboundAddress, RuntimeContext,
+     * InboundMessage)} 的流式变体。
      */
     default Flux<AgentEvent> runStream(
             MsgContext context,
@@ -145,18 +151,19 @@ public interface Gateway {
     }
 
     /**
-     * Routes messages directly to an exposed subagent session identified by {@code subagentId},
-     * bypassing normal binding-based routing. Returns the subagent's reply.
+     * 将消息直接路由到 {@code subagentId} 标识的已公开子智能体会话，
+     * 跳过常规绑定路由，返回子智能体回复。
      *
-     * @param subagentId the handle returned by
-     *     {@link SubagentGatewayBridge.ExposeResult#subagentId()}
-     * @param messages the messages to send to the subagent
+     * @param subagentId {@link SubagentGatewayBridge.ExposeResult#subagentId()} 返回的句柄
+     * @param messages 要发送给子智能体的消息
      */
     default Mono<Msg> runSubagent(String subagentId, List<Msg> messages) {
         return Mono.error(new UnsupportedOperationException("Subagent routing not supported"));
     }
 
-    /** Streaming variant of {@link #runSubagent(String, List)}. */
+    /**
+     * {@link #runSubagent(String, List)} 的流式变体。
+     */
     default Flux<AgentEvent> runSubagentStream(String subagentId, List<Msg> messages) {
         return Flux.error(new UnsupportedOperationException("Subagent streaming not supported"));
     }

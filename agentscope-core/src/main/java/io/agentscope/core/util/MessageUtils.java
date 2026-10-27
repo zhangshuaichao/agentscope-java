@@ -31,10 +31,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Utility methods for message processing and extraction.
+ * 消息处理与提取辅助方法。
  *
- * <p>This class provides common operations for working with message lists and extracting
- * information from conversation history.
+ * <p>提供处理消息列表及从会话历史提取信息的常用操作。
  * @hidden
  */
 public final class MessageUtils {
@@ -44,15 +43,13 @@ public final class MessageUtils {
     }
 
     /**
-     * Extract tool calls from the most recent assistant message in the message list.
+     * 从消息列表最近一条助手消息提取工具调用。
      *
-     * <p>This method scans the message list from the end to find the most recent assistant message
-     * matching the specified agent name, then extracts any tool use blocks from that message.
+     * <p>从列表末尾扫描，找到名称匹配指定智能体的最近助手消息，再从中提取工具调用块。
      *
-     * @param messages The list of messages to search
-     * @param agentName The name of the agent to match (must match the message sender's name)
-     * @return List of tool use blocks from the last matching assistant message, or empty list if
-     *     none found
+     * @param messages 要搜索的消息列表
+     * @param agentName 要匹配的智能体名称（必须与消息发送者名称一致）
+     * @return 最后匹配助手消息的工具调用块列表；未找到时为空列表
      */
     public static List<ToolUseBlock> extractRecentToolCalls(List<Msg> messages, String agentName) {
         if (messages == null || messages.isEmpty()) {
@@ -74,11 +71,11 @@ public final class MessageUtils {
     }
 
     /**
-     * Extracts only pending tool calls from the most recent assistant message.
+     * 仅从最近一条助手消息提取待处理工具调用。
      *
-     * @param messages the conversation messages
-     * @param agentName the agent name to match
-     * @return tool calls that do not yet have corresponding results
+     * @param messages 会话消息
+     * @param agentName 要匹配的智能体名称
+     * @return 尚无对应结果的工具调用
      */
     public static List<ToolUseBlock> extractPendingToolCalls(List<Msg> messages, String agentName) {
         List<ToolUseBlock> allToolCalls = extractRecentToolCalls(messages, agentName);
@@ -86,6 +83,8 @@ public final class MessageUtils {
             return List.of();
         }
 
+        // 【学习提示】“最近发起”与“仍待执行”是两个集合。先定位最近批次，再按会话中
+        // 已存在的结果 ID 过滤，可让恢复调用只处理未完成项，而非重复执行整个批次。
         Set<String> pendingIds = pendingToolUseIds(messages);
         return allToolCalls.stream()
                 .filter(toolUse -> pendingIds.contains(toolUse.getId()))
@@ -93,11 +92,11 @@ public final class MessageUtils {
     }
 
     /**
-     * Finds the most recent message with the requested role.
+     * 查找具有指定角色的最近消息。
      *
-     * @param messages the message list to search
-     * @param role the role to match
-     * @return the last matching message, or {@code null} if none exists
+     * @param messages 要搜索的消息列表
+     * @param role 要匹配的角色
+     * @return 最后一条匹配消息；不存在时为 {@code null}
      */
     public static Msg lastMessageByRole(List<Msg> messages, MsgRole role) {
         if (messages == null || messages.isEmpty()) {
@@ -113,22 +112,21 @@ public final class MessageUtils {
     }
 
     /**
-     * Finds the most recent assistant message.
+     * 查找最近一条助手消息。
      *
-     * @param messages the message list to search
-     * @return the last assistant message, or {@code null} if none exists
+     * @param messages 要搜索的消息列表
+     * @return 最后一条助手消息；不存在时为 {@code null}
      */
     public static Msg lastAssistantMessage(List<Msg> messages) {
         return lastMessageByRole(messages, MsgRole.ASSISTANT);
     }
 
     /**
-     * Returns whether the most recent assistant message from the named agent stopped at its
-     * output token limit.
+     * 判断指定名称智能体的最近助手消息是否因达到输出 token 上限而停止。
      *
-     * @param messages the conversation messages
-     * @param agentName the agent name to match
-     * @return {@code true} if that assistant message carries the output-limit marker
+     * @param messages 会话消息
+     * @param agentName 要匹配的智能体名称
+     * @return 该助手消息携带输出上限标记时为 {@code true}
      */
     public static boolean lastAssistantReachedOutputLimit(List<Msg> messages, String agentName) {
         if (messages == null || messages.isEmpty()) {
@@ -146,15 +144,14 @@ public final class MessageUtils {
     }
 
     /**
-     * Returns the IDs of server tool results contained in the supplied message.
+     * 返回指定消息所包含的服务端工具结果 ID。
      *
-     * <p>Only provider-produced terminal results are included. Local tool results normally live
-     * in TOOL-role messages, so a local result that unexpectedly appears in an assistant message
-     * must not mark a matching server tool call as complete. A running provider result is also
-     * excluded because it represents an intermediate partial result, not a completed tool call.
+     * <p>只包含提供方生成的终态结果。本地工具结果通常位于 TOOL 角色消息中，
+     * 意外出现在助手消息中的本地结果不得使匹配的服务端工具调用被视为完成。
+     * 运行中的提供方结果也排除，因为它只是中间部分结果，而非完成的工具调用。
      *
-     * @param message the message to inspect
-     * @return the inline server tool result IDs
+     * @param message 要检查的消息
+     * @return 内嵌服务端工具结果 ID
      */
     public static Set<String> inlineServerToolResultIds(Msg message) {
         if (message == null) {
@@ -170,12 +167,12 @@ public final class MessageUtils {
     }
 
     /**
-     * Replaces the most recent message with the requested role.
+     * 替换具有指定角色的最近消息。
      *
-     * @param messages the mutable message list to update
-     * @param role the role to match
-     * @param replacement the replacement message
-     * @return {@code true} if a message was replaced
+     * @param messages 要更新的可变消息列表
+     * @param role 要匹配的角色
+     * @param replacement 替换消息
+     * @return 替换了消息时为 {@code true}
      */
     public static boolean replaceLastMessageByRole(
             List<Msg> messages, MsgRole role, Msg replacement) {
@@ -193,12 +190,11 @@ public final class MessageUtils {
     }
 
     /**
-     * Returns the IDs of local tool calls in the last assistant message that do not yet have a
-     * matching tool result anywhere in the conversation. Server tools are executed by the provider
-     * and must not enter local execution or pending-tool recovery.
+     * 返回最后一条助手消息中、在整个会话中尚无匹配工具结果的本地工具调用 ID。
+     * 服务端工具由提供方执行，不得进入本地执行或待处理工具恢复流程。
      *
-     * @param messages the conversation messages
-     * @return the pending tool-call IDs
+     * @param messages 会话消息
+     * @return 待处理工具调用 ID
      */
     public static Set<String> pendingToolUseIds(List<Msg> messages) {
         Msg lastAssistant = lastAssistantMessage(messages);
@@ -221,21 +217,21 @@ public final class MessageUtils {
     }
 
     /**
-     * Returns whether the message contains any tool-call blocks.
+     * 判断消息是否包含任何工具调用块。
      *
-     * @param message the message to inspect
-     * @return {@code true} if at least one tool call exists
+     * @param message 要检查的消息
+     * @return 至少存在一个工具调用时为 {@code true}
      */
     public static boolean hasToolCalls(Msg message) {
         return message != null && !message.getContentBlocks(ToolUseBlock.class).isEmpty();
     }
 
     /**
-     * Prepends a system message to the supplied message list without mutating the original list.
+     * 在指定消息列表前添加系统消息，不修改原列表。
      *
-     * @param messages the base messages
-     * @param systemMessage the system message to prepend
-     * @return the combined message list
+     * @param messages 原消息列表
+     * @param systemMessage 要前置的系统消息
+     * @return 合并后的消息列表
      */
     public static List<Msg> prependSystemMessage(List<Msg> messages, Msg systemMessage) {
         if (systemMessage == null) {
@@ -250,11 +246,11 @@ public final class MessageUtils {
     }
 
     /**
-     * Returns whether every supplied tool call has a DENIED result in the conversation.
+     * 判断给定工具调用是否全部在会话中具有 DENIED 结果。
      *
-     * @param messages the conversation messages
-     * @param toolCalls the tool calls to inspect
-     * @return {@code true} if all tool calls are denied
+     * @param messages 会话消息
+     * @param toolCalls 要检查的工具调用
+     * @return 全部工具调用均被拒绝时为 {@code true}
      */
     public static boolean allToolCallsDenied(List<Msg> messages, List<ToolUseBlock> toolCalls) {
         if (toolCalls == null) {
@@ -279,12 +275,11 @@ public final class MessageUtils {
     }
 
     /**
-     * Replaces tool-call blocks in the last assistant message when their IDs match the supplied
-     * replacements.
+     * 替换最后一条助手消息中 ID 匹配所提供替换项的工具调用块。
      *
-     * @param messages the mutable conversation messages
-     * @param replacements tool-call IDs mapped to replacement blocks
-     * @return {@code true} if any block was replaced
+     * @param messages 可变会话消息
+     * @param replacements 从工具调用 ID 到替换块的映射
+     * @return 替换了任意块时为 {@code true}
      */
     public static boolean replaceToolUseBlocks(
             List<Msg> messages, Map<String, ToolUseBlock> replacements) {

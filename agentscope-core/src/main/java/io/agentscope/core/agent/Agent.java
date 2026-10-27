@@ -21,112 +21,101 @@ import io.agentscope.core.tool.Toolkit;
 import java.nio.file.Path;
 
 /**
- * Complete agent interface combining all capabilities.
+ * 组合所有能力的完整智能体接口。
  *
- * <p>This interface defines the core contract for agents, combining:
+ * <p>此接口定义智能体的核心契约，组合了：
  * <ul>
- *   <li>{@link CallableAgent} - Process messages and generate responses</li>
- *   <li>{@link StreamableAgent} - Stream events during execution</li>
- *   <li>{@link ObservableAgent} - Observe messages without responding</li>
+ * <li>{@link CallableAgent}：处理消息并生成回复</li>
+ * <li>{@link StreamableAgent}：在执行期间流式发送事件</li>
+ * <li>{@link ObservableAgent}：观察消息但不回复</li>
  * </ul>
  *
- * <p>Design Philosophy:
+ * <p>设计思想：
  * <ul>
- *   <li>Memory management is NOT part of the core Agent interface - it's the responsibility
- *       of specific agent implementations (e.g., ReActAgent)</li>
- *   <li>Structured output is a specialized capability provided by specific agents</li>
- *   <li>Observe pattern allows agents to receive messages without generating a reply,
- *       enabling multi-agent collaboration</li>
+ * <li>记忆管理不属于核心 Agent 接口，而由具体实现（例如 ReActAgent）负责</li>
+ * <li>结构化输出是由特定智能体提供的专门能力</li>
+ * <li>观察模式允许智能体接收消息而不生成回复，从而支持多智能体协作</li>
  * </ul>
  *
- * <p>All agents in the AgentScope framework should implement this interface.
+ * <p>AgentScope 框架中的所有智能体都应实现此接口。
  *
- * <p><b>Reply contract:</b> a single {@code call(...)} invocation produces exactly one
- * terminal {@link Msg}. Streaming variants (see {@link StreamableAgent}) may emit
- * many events but resolve to a single terminal Msg. This is enforced by the
- * {@code Mono<Msg>} return type on the call methods.
+ * <p><b>回复契约：</b>单次 {@code call(...)} 调用恰好产生一条终态 {@link Msg}。
+ * 流式变体（见 {@link StreamableAgent}）可能发出多条事件，但最终仍归结为一条终态 Msg。
+ * call 方法的 {@code Mono<Msg>} 返回类型约束了这一契约。
  */
 public interface Agent extends CallableAgent, StreamableAgent, ObservableAgent {
 
     /**
-     * Get the unique identifier for this agent.
+     * 获取此智能体的唯一标识符。
      *
-     * @return Agent ID
+     * @return 智能体 ID
      */
     String getAgentId();
 
     /**
-     * Get the name of this agent.
+     * 获取此智能体的名称。
      *
-     * @return Agent name
+     * @return 智能体名称
      */
     String getName();
 
     /**
-     * Get the description of this agent.
+     * 获取此智能体的描述。
      *
-     * @return Agent description
+     * @return 智能体描述
      */
     default String getDescription() {
         return "Agent(" + getAgentId() + ") " + getName();
     }
 
     /**
-     * Interrupt the current agent execution.
-     * This method sets an interrupt flag that will be checked by the agent at appropriate
-     * checkpoints during execution. The interruption is cooperative and may not take effect
-     * immediately.
+     * 中断当前智能体执行。
+     * 此方法设置中断标志，智能体会在执行过程中的适当检查点检查该标志。
+     * 中断是协作式的，因此不一定立即生效。
      */
     void interrupt();
 
     /**
-     * Interrupt the current agent execution with a user message.
-     * This method sets an interrupt flag and associates a user message with the interruption.
-     * The interruption is cooperative and may not take effect immediately.
+     * 携带用户消息中断当前智能体执行。
+     * 此方法设置中断标志，并将用户消息与该中断关联。中断是协作式的，因此不一定立即生效。
      *
-     * @param msg User message associated with the interruption
+     * @param msg 与中断关联的用户消息
      */
     void interrupt(Msg msg);
 
     /**
-     * Returns the agent's runtime {@link io.agentscope.core.state.AgentState}, or {@code null} if
-     * this agent type does not maintain one.
+     * 返回智能体运行时的 {@link io.agentscope.core.state.AgentState}；
+     * 如果此类智能体不维护状态，则返回 {@code null}。
      *
-     * <p>This is the canonical access point used by tool methods declared with
-     * {@code @Tool(stateInjected=true)}: the framework binds the live state to the
-     * {@code AgentState} parameter at invocation time.
+     * <p>这是声明了 {@code @Tool(stateInjected=true)} 的工具方法使用的标准访问入口：
+     * 框架会在调用时将实时状态绑定到 {@code AgentState} 参数。
      */
     default io.agentscope.core.state.AgentState getAgentState() {
         return null;
     }
 
     /**
-     * Returns the agent's live {@link Toolkit}, or {@code null} if this agent type does not
-     * maintain one.
+     * 返回智能体当前使用的 {@link Toolkit}；如果此类智能体不维护工具集，则返回 {@code null}。
      *
-     * <p>This is the <em>runtime</em> toolkit — the same instance the agent uses when listing
-     * available tools for the model and dispatching tool calls. Middleware that needs to register
-     * tools dynamically (e.g., skill loaders) must use this accessor rather than any toolkit
-     * reference captured at build time, because agents may deep-copy the toolkit during
-     * construction.
+     * <p>这是<em>运行时</em>工具集，即智能体向模型列举可用工具和分派工具调用时使用的同一实例。
+     * 需要动态注册工具的中间件（例如技能加载器）必须使用此访问方法，而不是使用构建时捕获的工具集引用，
+     * 因为智能体可能在构造期间深拷贝工具集。
      */
     default Toolkit getToolkit() {
         return null;
     }
 
     /**
-     * Returns the agent's baseline {@link SkillFilter}, or {@code null} when this agent type
-     * does not expose one. Consumers overlay per-call {@code RuntimeContext} filters on it
-     * and fall back to their own default when {@code null}.
+     * 返回智能体的基准 {@link SkillFilter}；如果此类智能体不提供该过滤器，则返回 {@code null}。
+     * 使用方在其上叠加每次调用的 {@code RuntimeContext} 过滤器；值为 {@code null} 时回退到自己的默认设置。
      */
     default SkillFilter getSkillFilter() {
         return null;
     }
 
     /**
-     * Returns the agent's stable working directory for skill materialisation, or {@code null}
-     * when this agent type does not provide one. Callers fall back to their own temporary
-     * allocation when {@code null}.
+     * 返回智能体用于技能实体化的稳定工作目录；如果此类智能体不提供工作目录，则返回 {@code null}。
+     * 值为 {@code null} 时，调用方回退到自行分配的临时目录。
      */
     default Path getSkillWorkDir() {
         return null;

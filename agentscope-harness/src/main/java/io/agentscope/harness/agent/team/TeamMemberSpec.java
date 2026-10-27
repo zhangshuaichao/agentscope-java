@@ -15,5 +15,5 @@
  */
 package io.agentscope.harness.agent.team;
 
-/** Member seed for team creation. */
+/** 创建团队时使用的成员初始配置。 */
 public record TeamMemberSpec(String name, String agentRef, String prompt, String deployMode) {}

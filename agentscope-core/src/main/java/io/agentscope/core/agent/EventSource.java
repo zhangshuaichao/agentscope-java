@@ -19,72 +19,52 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * Identifies the origin of an {@link Event} emitted during streaming agent execution.
+ * 标识智能体流式执行期间 {@link Event} 的来源。
  *
- * <p>When a subagent runs synchronously inside a parent agent's {@code stream()} call, every
- * {@link Event} produced by the subagent carries an {@code EventSource} that encodes the full
- * logical path to the producing agent. This mirrors LangGraph streaming v2's
- * <em>namespace / path</em> concept, allowing consumers (UI, adapters, logging) to distinguish
- * events from the top-level agent vs. any nested subagent.
+ * <p>子智能体在父智能体的 {@code stream()} 调用内同步运行时，其产生的每个 {@link Event}
+ * 都携带 {@code EventSource}，编码事件生产智能体的完整逻辑路径。
+ * 这对应 LangGraph streaming v2 的<em>命名空间／路径</em>概念，使界面、适配器和日志消费者
+ * 能区分顶层智能体与任意嵌套子智能体的事件。
  *
- * <p>Events emitted by the top-level (parent) agent have {@code source == null}.
+ * <p>顶层（父）智能体发出的事件满足 {@code source == null}。
  *
- * <h2>Field meanings</h2>
- *
+ * <h2>字段含义</h2>
  * <table border="1">
- *   <caption>EventSource fields</caption>
- *   <tr><th>Field</th><th>Meaning</th></tr>
- *   <tr><td>{@code agentKey}</td>
- *       <td>Opaque runtime handle for the spawned agent instance, e.g.
- *       {@code "agent:researcher:uuid"}. This is the value the LLM passes back to
- *       {@code agent_send} to address a previously spawned agent.</td></tr>
- *   <tr><td>{@code agentId}</td>
- *       <td>Registered subagent type identifier (the filename without {@code .md} in the
- *       workspace {@code subagents/} directory), e.g. {@code "researcher"}.</td></tr>
- *   <tr><td>{@code agentName}</td>
- *       <td>Human-readable display name of the subagent, may be null if not set.</td></tr>
- *   <tr><td>{@code sessionId}</td>
- *       <td>Unique session ID for this specific subagent invocation. Stable across
- *       {@code agent_send} follow-ups to the same spawned instance.</td></tr>
- *   <tr><td>{@code parentSessionId}</td>
- *       <td>AgentStateStore ID of the parent agent that issued the {@code agent_spawn} call.</td></tr>
- *   <tr><td>{@code taskId}</td>
- *       <td>Reserved; non-null only when the subagent runs as a background task (async
- *       streaming, not yet implemented — see extension points below).</td></tr>
- *   <tr><td>{@code depth}</td>
- *       <td>Nesting depth: {@code 1} = direct child of the top-level agent, {@code 2} =
- *       grandchild, and so on.</td></tr>
- *   <tr><td>{@code path}</td>
- *       <td>Slash-separated call hierarchy from root to producer, e.g.
- *       {@code "main/researcher"} or {@code "main/planner/sub-executor"}. Split on
- *       {@code "/"} to recover the hierarchy.</td></tr>
+ * <caption>EventSource 字段</caption>
+ * <tr><th>字段</th><th>含义</th></tr>
+ * <tr><td>{@code agentKey}</td><td>已启动智能体实例的不透明运行时句柄，例如
+ * {@code "agent:researcher:uuid"}。大模型将此值传回 {@code agent_send}，以寻址先前启动的智能体。</td></tr>
+ * <tr><td>{@code agentId}</td><td>已注册的子智能体类型标识符（工作区 {@code subagents/}
+ * 目录中去掉 {@code .md} 后缀的文件名），例如 {@code "researcher"}。</td></tr>
+ * <tr><td>{@code agentName}</td><td>便于阅读的子智能体显示名称；未设置时可以为 null。</td></tr>
+ * <tr><td>{@code sessionId}</td><td>此次子智能体调用的唯一会话 ID；
+ * 对同一已启动实例进行 {@code agent_send} 后续调用时保持不变。</td></tr>
+ * <tr><td>{@code parentSessionId}</td><td>发起 {@code agent_spawn} 的父智能体的 AgentStateStore ID。</td></tr>
+ * <tr><td>{@code taskId}</td><td>预留字段；仅当子智能体作为后台任务运行时非空
+ * （异步流式尚未实现，见下文扩展点）。</td></tr>
+ * <tr><td>{@code depth}</td><td>嵌套深度：{@code 1} 为顶层智能体直接子级，{@code 2} 为孙级，以此类推。</td></tr>
+ * <tr><td>{@code path}</td><td>从根到生产者、以斜杠分隔的调用层次，例如
+ * {@code "main/researcher"} 或 {@code "main/planner/sub-executor"}；按 {@code "/"} 分割可恢复层次。</td></tr>
  * </table>
  *
- * <h2>Path convention</h2>
+ * <h2>路径约定</h2>
+ * <p>{@code path} 是形如 {@code "main/researcher"} 或 {@code "main/planner/sub-executor"}
+ * 的斜杠分隔字符串。根段为父智能体会话 ID（回退值为 {@code "main"}）；
+ * 后续各段为对应深度子智能体的 {@code agentId}。消费者按 {@code "/"} 分割即可重建调用层次。
  *
- * <p>The {@code path} field is a slash-separated string like {@code "main/researcher"} or
- * {@code "main/planner/sub-executor"}. The root segment is the parent agent's session ID
- * (or {@code "main"} as fallback); each subsequent segment is the {@code agentId} of the
- * subagent at that depth. Consumers can split on {@code "/"} to reconstruct the call hierarchy.
- *
- * <h2>Extension points (not yet implemented)</h2>
- *
+ * <h2>扩展点（尚未实现）</h2>
  * <ul>
- *   <li><b>Async task streaming:</b> Populate {@code taskId} when the subagent runs as an
- *       async background task. The task repository can attach a dedicated
- *       {@link SubagentEventBus} to each task so the parent's {@code Flux} accumulates
- *       events even after the original request context ends.</li>
- *   <li><b>Remote subagent streaming:</b> An Agent Protocol {@code GET /tasks/{taskId}/events}
- *       SSE endpoint can deliver events from a remote subagent. Each received event is
- *       stamped with an {@code EventSource} (constructed from the remote agent's metadata)
- *       before being forwarded to the local parent {@code FluxSink}.</li>
- *   <li><b>AG-UI / Web adapter:</b> Consumers can inspect {@code source.path} and
- *       {@code source.depth} to render hierarchical cards or collapsible trace panels,
- *       providing a LangGraph v2 streaming-style experience in the UI.</li>
+ * <li><b>异步任务流：</b>子智能体作为异步后台任务运行时填入 {@code taskId}。
+ * 任务仓库可为每个任务附加独立的 {@link SubagentEventBus}，
+ * 使父级 {@code Flux} 在原始请求上下文结束后仍能累积事件。</li>
+ * <li><b>远程子智能体流：</b>Agent Protocol 的 {@code GET /tasks/{taskId}/events} SSE 端点
+ * 可传递远程子智能体事件。收到事件后，先附加根据远程智能体元数据构建的 {@code EventSource}，
+ * 再转发到本地父级 {@code FluxSink}。</li>
+ * <li><b>AG-UI／Web 适配器：</b>消费者可检查 {@code source.path} 和 {@code source.depth}，
+ * 渲染分层卡片或可折叠追踪面板，提供类似 LangGraph v2 流式处理的界面体验。</li>
  * </ul>
  *
- * <h2>Example</h2>
- *
+ * <h2>示例</h2>
  * <pre>{@code
  * EventSource src = EventSource.builder()
  *     .agentKey("agent:researcher:uuid-1")
@@ -102,43 +82,52 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * }</pre>
  */
 /**
- * @deprecated since 2.0.0. Used only by the v1 {@link Event} stream to attribute events to a
- *     spawned subagent. A subagent-source channel for the new
- *     {@code io.agentscope.core.event.AgentEvent} stream is on the v2 roadmap; once it lands,
- *     {@code EventSource} will be marked {@code forRemoval = true}.
+ * @deprecated 自 2.0.0 起弃用。仅供 v1 {@link Event} 流将事件归属到已启动的子智能体。
+ * 新 {@code io.agentscope.core.event.AgentEvent} 流的子智能体来源通道已列入 v2 路线图；
+ * 实现后，{@code EventSource} 将被标记为 {@code forRemoval = true}。
  */
 @Deprecated(since = "2.0.0")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class EventSource {
 
-    /** Opaque key identifying the spawned agent instance (e.g. {@code "agent:researcher:uuid"}). */
+    /**
+     * 标识已启动智能体实例的不透明键（例如 {@code "agent:researcher:uuid"}）。
+     */
     private final String agentKey;
 
-    /** Registered agent type identifier (e.g. {@code "researcher"}). */
+    /**
+     * 已注册的智能体类型标识符（例如 {@code "researcher"}）。
+     */
     private final String agentId;
 
-    /** Human-readable agent name. */
+    /**
+     * 便于阅读的智能体名称。
+     */
     private final String agentName;
 
-    /** AgentStateStore ID used for this subagent invocation. */
+    /**
+     * 本次子智能体调用使用的 AgentStateStore ID。
+     */
     private final String sessionId;
 
-    /** AgentStateStore ID of the parent agent that spawned this subagent. */
+    /**
+     * 启动此子智能体的父智能体的 AgentStateStore ID。
+     */
     private final String parentSessionId;
 
     /**
-     * Optional task ID when this subagent invocation is associated with a background task
-     * (reserved for future async streaming support).
+     * 本次子智能体调用关联后台任务时使用的可选任务 ID（为未来异步流式支持预留）。
      */
     private final String taskId;
 
-    /** Nesting depth: 1 = direct child of the top-level agent, 2 = grandchild, etc. */
+    /**
+     * 嵌套深度：1 表示顶层智能体的直接子级，2 表示孙级，以此类推。
+     */
     private final int depth;
 
     /**
-     * Slash-separated path from the top-level agent to this producer, e.g.
-     * {@code "main/researcher"}.
+     * 从顶层智能体到本事件生产者、以斜杠分隔的路径，例如 {@code "main/researcher"}。
      */
     private final String path;
 
@@ -158,8 +147,8 @@ public final class EventSource {
     }
 
     /**
-     * Returns a new {@code EventSource} with {@code path} extended by {@code segment}, and
-     * {@code depth} incremented by one. All other fields are copied from this instance.
+     * 返回新的 {@code EventSource}：向 {@code path} 追加 {@code segment}，并将 {@code depth} 加一。
+     * 其他所有字段均从当前实例复制。
      */
     public EventSource withAppendedPath(String segment) {
         String newPath = (path == null || path.isEmpty()) ? segment : path + "/" + segment;
@@ -212,7 +201,9 @@ public final class EventSource {
         return "EventSource{path='" + path + "', depth=" + depth + ", agentId='" + agentId + "'}";
     }
 
-    /** Builder for {@link EventSource}. */
+    /**
+     * {@link EventSource} 的构建器。
+     */
     public static final class Builder {
 
         private String agentKey;

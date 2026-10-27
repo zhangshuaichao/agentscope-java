@@ -29,46 +29,44 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for converting between MCP content types and AgentScope content blocks.
- * This converter handles the translation of MCP protocol data structures to AgentScope's
- * internal representation.
+ * 在 MCP 内容类型和 AgentScope 内容块之间转换的工具类，将协议数据结构转换为内部表示。
  *
- * <p>Supported conversions:
+ * <p>支持：
  * <ul>
- *   <li>MCP TextContent → AgentScope TextBlock</li>
- *   <li>MCP ImageContent → AgentScope ImageBlock</li>
- *   <li>MCP AudioContent → AgentScope AudioBlock</li>
- *   <li>MCP CallToolResult → AgentScope ToolResultBlock</li>
- *   <li>MCP CallToolResult.structuredContent → AgentScope TextBlock (JSON)</li>
+ * <li>MCP TextContent → AgentScope TextBlock</li>
+ * <li>MCP ImageContent → AgentScope ImageBlock</li>
+ * <li>MCP AudioContent → AgentScope AudioBlock</li>
+ * <li>MCP CallToolResult → AgentScope ToolResultBlock</li>
+ * <li>MCP CallToolResult.structuredContent → AgentScope TextBlock（JSON）</li>
  * </ul>
  */
 public class McpContentConverter {
 
     /**
-     * Private constructor to prevent instantiation.
+     * 私有构造器，禁止实例化。
      */
     private McpContentConverter() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     /**
-     * Converts an MCP CallToolResult to an AgentScope ToolResultBlock.
+     * 将 MCP CallToolResult 转换为 AgentScope ToolResultBlock。
      *
-     * @param mcpResult the MCP tool call result
-     * @return the converted ToolResultBlock
+     * @param mcpResult MCP 工具调用结果
+     * @return 转换后的 ToolResultBlock
      */
     public static ToolResultBlock convertCallToolResult(McpSchema.CallToolResult mcpResult) {
         if (mcpResult == null) {
             return ToolResultBlock.error("MCP tool returned null result");
         }
 
-        // Check if the result is an error
+        // 检查结果是否为错误
         if (Boolean.TRUE.equals(mcpResult.isError())) {
             String errorMsg = extractErrorMessage(mcpResult.content());
             return ToolResultBlock.error(errorMsg);
         }
 
-        // Convert successful result: content blocks + structured content (if present)
+        // 转换成功结果：内容块以及可选结构化内容
         List<ContentBlock> contentBlocks = new ArrayList<>(convertContentList(mcpResult.content()));
         if (mcpResult.structuredContent() != null) {
             contentBlocks.add(
@@ -79,10 +77,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts a list of MCP Content to AgentScope ContentBlocks.
+     * 将 MCP Content 列表转换为 AgentScope ContentBlock 列表。
      *
-     * @param mcpContents the list of MCP content
-     * @return list of converted ContentBlocks
+     * @param mcpContents MCP 内容列表
+     * @return 转换后的内容块列表
      */
     public static List<ContentBlock> convertContentList(List<McpSchema.Content> mcpContents) {
         if (mcpContents == null || mcpContents.isEmpty()) {
@@ -102,10 +100,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts a single MCP Content to an AgentScope ContentBlock.
+     * 将单个 MCP Content 转换为 AgentScope ContentBlock。
      *
-     * @param content the MCP content
-     * @return the converted ContentBlock, or null if conversion is not supported
+     * @param content MCP 内容
+     * @return 转换后的内容块；不支持时为 null
      */
     public static ContentBlock convertContent(McpSchema.Content content) {
         if (content == null) {
@@ -128,10 +126,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts MCP TextContent to AgentScope TextBlock.
+     * 将 MCP TextContent 转换为 AgentScope TextBlock。
      *
-     * @param textContent the MCP text content
-     * @return the converted TextBlock
+     * @param textContent MCP 文本内容
+     * @return 转换后的 TextBlock
      */
     private static TextBlock convertTextContent(McpSchema.TextContent textContent) {
         return TextBlock.builder()
@@ -140,10 +138,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts MCP ImageContent to AgentScope ImageBlock.
+     * 将 MCP ImageContent 转换为 AgentScope ImageBlock。
      *
-     * @param imageContent the MCP image content
-     * @return the converted ImageBlock
+     * @param imageContent MCP 图像内容
+     * @return 转换后的 ImageBlock
      */
     private static ImageBlock convertImageContent(McpSchema.ImageContent imageContent) {
         String data = imageContent.data();
@@ -164,10 +162,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts MCP AudioContent to AgentScope AudioBlock.
+     * 将 MCP AudioContent 转换为 AgentScope AudioBlock。
      *
-     * @param audioContent the MCP audio content
-     * @return the converted AudioBlock
+     * @param audioContent MCP 音频内容
+     * @return 转换后的 AudioBlock
      */
     private static AudioBlock convertAudioContent(McpSchema.AudioContent audioContent) {
         String data = audioContent.data();
@@ -187,8 +185,7 @@ public class McpContentConverter {
     }
 
     /**
-     * Serializes an MCP structuredContent value to a JSON string for inclusion
-     * as a TextBlock in the tool result.
+     * 将 MCP structuredContent 序列化为 JSON 字符串，作为 TextBlock 纳入工具结果。
      */
     private static String toJson(Object structuredContent) {
         try {
@@ -199,10 +196,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Converts MCP EmbeddedResource to AgentScope ContentBlock.
+     * 将 MCP EmbeddedResource 转换为 AgentScope ContentBlock。
      *
-     * @param embeddedResource the MCP embedded resource
-     * @return the converted ContentBlock
+     * @param embeddedResource MCP 嵌入资源
+     * @return 转换后的 ContentBlock
      */
     private static ContentBlock convertEmbeddedResource(
             McpSchema.EmbeddedResource embeddedResource) {
@@ -211,7 +208,7 @@ public class McpContentConverter {
         if (resource instanceof McpSchema.TextResourceContents textResource) {
             return TextBlock.builder().text(textResource.text()).build();
         } else if (resource instanceof McpSchema.BlobResourceContents blobResource) {
-            // Convert blob to image if mime type indicates image
+            // MIME 类型表示图像时，将二进制数据转换为图像
             String mimeType = blobResource.mimeType();
             if (mimeType != null && mimeType.startsWith("image/")) {
                 Base64Source source = new Base64Source(mimeType, blobResource.blob());
@@ -232,10 +229,10 @@ public class McpContentConverter {
     }
 
     /**
-     * Extracts error message from MCP content list.
+     * 从 MCP 内容列表提取错误消息。
      *
-     * @param contents the list of MCP content
-     * @return the extracted error message
+     * @param contents MCP 内容列表
+     * @return 提取的错误消息
      */
     private static String extractErrorMessage(List<McpSchema.Content> contents) {
         if (contents == null || contents.isEmpty()) {

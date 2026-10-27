@@ -16,41 +16,41 @@
 package io.agentscope.harness.agent.sandbox.layout;
 
 /**
- * Layout entry that recursively copies a directory from the host filesystem into the sandbox
- * workspace.
+ * 将宿主文件系统目录递归复制到沙箱工作区的布局条目。
  *
- * <p>The {@code sourcePath} is an absolute path to a directory on the host machine. All files
- * within that directory are copied recursively to the destination path in the workspace.
+ * <p>{@code sourcePath} 是宿主机目录的绝对路径。目录内所有文件递归复制到工作区目标路径。
  */
 public class LocalDirEntry extends WorkspaceEntry {
 
     private String sourcePath;
 
-    /** Creates an empty local directory entry. */
+    /**
+ * 创建空本地目录条目。
+ */
     public LocalDirEntry() {}
 
     /**
-     * Creates a local directory entry with the given host source path.
+     * 使用给定宿主源路径创建本地目录条目。
      *
-     * @param sourcePath absolute path to a directory on the host filesystem
+     * @param sourcePath 宿主文件系统中的目录绝对路径
      */
     public LocalDirEntry(String sourcePath) {
         this.sourcePath = sourcePath;
     }
 
     /**
-     * Returns the host-side source directory path.
+     * 返回宿主侧源目录路径。
      *
-     * @return absolute host directory path as a string
+     * @return 字符串形式的宿主目录绝对路径
      */
     public String getSourcePath() {
         return sourcePath;
     }
 
     /**
-     * Sets the host-side source directory path.
+     * 设置宿主侧源目录路径。
      *
-     * @param sourcePath absolute host directory path as a string
+     * @param sourcePath 字符串形式的宿主目录绝对路径
      */
     public void setSourcePath(String sourcePath) {
         this.sourcePath = sourcePath;

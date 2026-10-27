@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import reactor.core.publisher.Mono;
 
-/** Framework-owned, domain-neutral context instructions, loaded once from a versioned resource. */
+/** 框架自有、与领域无关的上下文指令，从带版本的资源中加载一次。 */
 public final class ContextConventionsMiddleware implements HarnessRuntimeMiddleware {
     private static final String INSTRUCTIONS = load();
 
@@ -44,9 +44,9 @@ public final class ContextConventionsMiddleware implements HarnessRuntimeMiddlew
     public Mono<String> onSystemPrompt(Agent agent, RuntimeContext context, String prompt) {
         return Mono.fromSupplier(
                 () -> {
-                    // Installed before the other framework providers: every agent call gets a
-                    // fresh snapshot, even when the caller reuses a RuntimeContext or a child
-                    // inherits one. Disabled providers must not retain a previous agent's data.
+                    // 安装在其他框架提供者之前：每次智能体调用都会取得新的快照，
+                    // 即使调用方复用了 RuntimeContext，或子智能体继承了该上下文。
+                    // 已禁用的提供者不得保留上一个智能体的数据。
                     RuntimeContext rc = context == null ? RuntimeContext.empty() : context;
                     rc.put(
                             WorkspaceContextMaterials.class,

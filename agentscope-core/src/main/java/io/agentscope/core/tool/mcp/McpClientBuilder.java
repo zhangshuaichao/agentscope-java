@@ -51,16 +51,16 @@ import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
 
 /**
- * Builder for creating MCP client wrappers with fluent configuration.
+ * 使用链式配置创建 MCP 客户端包装器的构建器。
  *
- * <p>Supports three transport types:
+ * <p>支持三种传输：
  * <ul>
- * <li>StdIO - for local process communication</li>
- * <li>SSE - for HTTP Server-Sent Events (stateful)</li>
- * <li>StreamableHTTP - for HTTP streaming (stateless)</li>
+ * <li>StdIO：本地进程通信</li>
+ * <li>SSE：HTTP 服务端发送事件（有状态）</li>
+ * <li>StreamableHTTP：HTTP 流式传输（无状态）</li>
  * </ul>
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * // StdIO transport
  * McpClientWrapper client = McpClientBuilder.create("git-mcp")
@@ -110,10 +110,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Creates a new MCP client builder with the specified name.
+     * 使用指定名称创建 MCP 客户端构建器。
      *
-     * @param name unique identifier for the MCP client
-     * @return new builder instance
+     * @param name MCP 客户端唯一标识符
+     * @return 新的构建器实例
      */
     public static McpClientBuilder create(String name) {
         if (name == null || name.trim().isEmpty()) {
@@ -123,11 +123,11 @@ public class McpClientBuilder {
     }
 
     /**
-     * Configures StdIO transport for local process communication.
+     * 配置本地进程通信的 StdIO 传输。
      *
-     * @param command the executable command
-     * @param args    command arguments
-     * @return this builder
+     * @param command 可执行命令
+     * @param args 命令参数
+     * @return 当前构建器
      */
     public McpClientBuilder stdioTransport(String command, String... args) {
         this.transportConfig = new StdioTransportConfig(command, Arrays.asList(args));
@@ -135,12 +135,12 @@ public class McpClientBuilder {
     }
 
     /**
-     * Configures StdIO transport with environment variables.
+     * 配置带环境变量的 StdIO 传输。
      *
-     * @param command the executable command
-     * @param args    command arguments list
-     * @param env     environment variables
-     * @return this builder
+     * @param command 可执行命令
+     * @param args 命令参数列表
+     * @param env 环境变量
+     * @return 当前构建器
      */
     public McpClientBuilder stdioTransport(
             String command, List<String> args, Map<String, String> env) {
@@ -149,10 +149,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Configures HTTP SSE (Server-Sent Events) transport for stateful connections.
+     * 配置用于有状态连接的 HTTP SSE（服务端发送事件）传输。
      *
-     * @param url the server URL
-     * @return this builder
+     * @param url 服务器 URL
+     * @return 当前构建器
      */
     public McpClientBuilder sseTransport(String url) {
         this.transportConfig = new SseTransportConfig(url);
@@ -160,10 +160,9 @@ public class McpClientBuilder {
     }
 
     /**
-     * Customizes the HTTP client for SSE transport (only applicable after calling sseTransport).
-     * This allows advanced HTTP client configuration like HTTP/2, custom timeouts, SSL settings, etc.
+     * 自定义 SSE 传输的 HTTP 客户端（仅在调用 sseTransport 后适用），支持 HTTP/2、自定义超时、SSL 设置等高级配置。
      *
-     * <p>Example usage for HTTP/2:
+     * <p>HTTP/2 用法示例：
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp")
      *         .sseTransport("https://example.com/sse")
@@ -173,8 +172,8 @@ public class McpClientBuilder {
      *         .block();
      * }</pre>
      *
-     * @param customizer consumer to customize the HttpClient.Builder
-     * @return this builder
+     * @param customizer 定制 HttpClient.Builder 的消费者
+     * @return 当前构建器
      */
     public McpClientBuilder customizeSseClient(Consumer<HttpClient.Builder> customizer) {
         if (transportConfig instanceof SseTransportConfig) {
@@ -184,10 +183,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Configures HTTP StreamableHTTP transport for stateless connections.
+     * 配置用于无状态连接的 HTTP StreamableHTTP 传输。
      *
-     * @param url the server URL
-     * @return this builder
+     * @param url 服务器 URL
+     * @return 当前构建器
      */
     public McpClientBuilder streamableHttpTransport(String url) {
         this.transportConfig = new StreamableHttpTransportConfig(url);
@@ -195,13 +194,9 @@ public class McpClientBuilder {
     }
 
     /**
-     * Customizes the HTTP client for StreamableHTTP transport (only applicable
-     * after calling streamableHttpTransport).
-     * This allows advanced HTTP client configuration like HTTP/2, custom timeouts,
-     * SSL settings, etc.
+     * 自定义 StreamableHTTP 传输的 HTTP 客户端（仅在调用 streamableHttpTransport 后适用），支持 HTTP/2、自定义超时、SSL 设置等高级配置。
      *
-     * <p>
-     * Example usage for HTTP/2:
+     * <p>HTTP/2 用法示例：
      *
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp")
@@ -212,8 +207,8 @@ public class McpClientBuilder {
      *         .block();
      * }</pre>
      *
-     * @param customizer consumer to customize the HttpClient.Builder
-     * @return this builder
+     * @param customizer 定制 HttpClient.Builder 的消费者
+     * @return 当前构建器
      */
     public McpClientBuilder customizeStreamableHttpClient(Consumer<HttpClient.Builder> customizer) {
         if (transportConfig instanceof StreamableHttpTransportConfig) {
@@ -223,19 +218,13 @@ public class McpClientBuilder {
     }
 
     /**
-     * Registers a per-request HTTP customizer for dynamic request modification
-     * (only applicable for HTTP transports: SSE and StreamableHTTP).
+     * 注册逐请求 HTTP 定制器，用于动态修改请求（仅适用于 SSE 和 StreamableHTTP 传输）。
      *
-     * <p>Unlike {@link #header(String, String)} which sets static headers at build time,
-     * this customizer is invoked for <strong>every</strong> HTTP request, enabling
-     * dynamic token injection for OAuth/STS scenarios where credentials expire.
+     * <p>与构建时设置静态请求头的 {@link #header(String, String)} 不同，此定制器在<strong>每次</strong>请求时调用，支持 OAuth/STS 凭据过期场景中的动态 token 注入。
      *
-     * <p>This method delegates directly to the MCP SDK's
-     * {@code httpRequestCustomizer(McpSyncHttpClientRequestCustomizer)} API, which
-     * provides the HTTP method, endpoint URI, request body, and transport context
-     * for each request.
+     * <p>直接委托给 MCP SDK 的 {@code httpRequestCustomizer(McpSyncHttpClientRequestCustomizer)} API，每次请求提供 HTTP 方法、端点 URI、请求体和传输上下文。
      *
-     * <p>Example usage with dynamic OAuth token:
+     * <p>动态 OAuth token 示例：
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp-server")
      *         .streamableHttpTransport("https://mcp.example.com/http")
@@ -246,7 +235,7 @@ public class McpClientBuilder {
      *         .buildSync();
      * }</pre>
      *
-     * <p>Example with SSE transport:
+     * <p>SSE 传输示例：
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp-server")
      *         .sseTransport("https://mcp.example.com/sse")
@@ -258,8 +247,8 @@ public class McpClientBuilder {
      *         .block();
      * }</pre>
      *
-     * @param customizer per-request customizer invoked before each HTTP request
-     * @return this builder
+     * @param customizer 每次 HTTP 请求前调用的定制器
+     * @return 当前构建器
      * @since 2.0.0
      */
     public McpClientBuilder httpRequestCustomizer(McpSyncHttpClientRequestCustomizer customizer) {
@@ -270,11 +259,11 @@ public class McpClientBuilder {
     }
 
     /**
-     * Adds an HTTP header (only applicable for HTTP transports).
+     * 添加 HTTP 请求头（仅适用于 HTTP 传输）。
      *
-     * @param key   header name
-     * @param value header value
-     * @return this builder
+     * @param key 请求头名称
+     * @param value 请求头值
+     * @return 当前构建器
      */
     public McpClientBuilder header(String key, String value) {
         if (transportConfig instanceof HttpTransportConfig) {
@@ -284,10 +273,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Sets multiple HTTP headers (only applicable for HTTP transports).
+     * 设置多个 HTTP 请求头（仅适用于 HTTP 传输）。
      *
-     * @param headers map of header name-value pairs
-     * @return this builder
+     * @param headers 请求头名称和值的映射
+     * @return 当前构建器
      */
     public McpClientBuilder headers(Map<String, String> headers) {
         if (transportConfig instanceof HttpTransportConfig) {
@@ -297,16 +286,13 @@ public class McpClientBuilder {
     }
 
     /**
-     * Adds a query parameter to the URL (only applicable for HTTP transports).
+     * 向 URL 添加查询参数（仅适用于 HTTP 传输）。
      *
-     * <p>
-     * Query parameters added via this method will be merged with any existing
-     * query parameters in the URL. If the same parameter key exists in both the URL
-     * and the added parameters, the added parameter will take precedence.
+     * <p>与 URL 已有查询参数合并，同名时新增参数优先。
      *
-     * @param key   query parameter name
-     * @param value query parameter value
-     * @return this builder
+     * @param key 查询参数名称
+     * @param value 查询参数值
+     * @return 当前构建器
      */
     public McpClientBuilder queryParam(String key, String value) {
         if (transportConfig instanceof HttpTransportConfig) {
@@ -316,14 +302,12 @@ public class McpClientBuilder {
     }
 
     /**
-     * Sets multiple query parameters (only applicable for HTTP transports).
+     * 设置多个查询参数（仅适用于 HTTP 传输）。
      *
-     * <p>
-     * This method replaces any previously added query parameters.
-     * Query parameters in the original URL are still preserved and merged.
+     * <p>替换此前添加的查询参数，但仍保留并合并原 URL 中的参数。
      *
-     * @param queryParams map of query parameter name-value pairs
-     * @return this builder
+     * @param queryParams 查询参数名称和值的映射
+     * @return 当前构建器
      */
     public McpClientBuilder queryParams(Map<String, String> queryParams) {
         if (transportConfig instanceof HttpTransportConfig) {
@@ -333,10 +317,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Sets the request timeout duration.
+     * 设置请求超时时长。
      *
-     * @param timeout timeout duration
-     * @return this builder
+     * @param timeout 超时时长
+     * @return 当前构建器
      */
     public McpClientBuilder timeout(Duration timeout) {
         this.requestTimeout = timeout;
@@ -344,10 +328,10 @@ public class McpClientBuilder {
     }
 
     /**
-     * Sets the initialization timeout duration.
+     * 设置初始化超时时长。
      *
-     * @param timeout timeout duration
-     * @return this builder
+     * @param timeout 超时时长
+     * @return 当前构建器
      */
     public McpClientBuilder initializationTimeout(Duration timeout) {
         this.initializationTimeout = timeout;
@@ -355,13 +339,11 @@ public class McpClientBuilder {
     }
 
     /**
-     * Sets the MCP protocol versions that the client supports.
+     * 设置客户端支持的 MCP 协议版本。
      *
-     * <p>By default, the client only supports "2024-11-05". If the MCP server responds
-     * with a different protocol version during initialization (e.g., "2025-03-26"),
-     * the connection will fail with "Unsupported protocol version".
+     * <p>默认仅支持 "2024-11-05"；服务器初始化响应使用其他版本（例如 "2025-03-26"）时，连接会因 "Unsupported protocol version" 失败。
      *
-     * <p>Use this method to declare support for additional protocol versions:
+     * <p>通过此方法声明支持额外版本：
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("server")
      *         .stdioTransport("python", "server.py")
@@ -370,9 +352,9 @@ public class McpClientBuilder {
      *         .block();
      * }</pre>
      *
-     * @param versions one or more protocol version strings (e.g., "2024-11-05", "2025-03-26")
-     * @return this builder
-     * @throws IllegalArgumentException if no versions are provided
+     * @param versions 一个或多个协议版本字符串（例如 "2024-11-05"、"2025-03-26"）
+     * @return 当前构建器
+     * @throws IllegalArgumentException 当未提供版本时
      */
     public McpClientBuilder protocolVersions(String... versions) {
         if (versions == null || versions.length == 0) {
@@ -389,21 +371,13 @@ public class McpClientBuilder {
     }
 
     /**
-     * Registers an asynchronous elicitation handler for processing elicit requests
-     * from the server.
+     * 注册异步信息征询处理器，处理服务器的 elicit 请求。
      *
-     * <p>
-     * When an elicitation handler is registered, the client will automatically
-     * enable
-     * the elicitation capability in ClientCapabilities.
+     * <p>注册后自动在 ClientCapabilities 中启用 elicitation 能力。
      *
-     * <p>
-     * This method is for use with {@link #buildAsync()}. The handler returns a
-     * {@link Mono}
-     * for asynchronous processing.
+     * <p>配合 {@link #buildAsync()} 使用，处理器返回 {@link Mono} 进行异步处理。
      *
-     * <p>
-     * Example usage:
+     * <p>使用示例：
      *
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp")
@@ -417,8 +391,8 @@ public class McpClientBuilder {
      * }
      * </pre>
      *
-     * @param handler function to handle elicit requests asynchronously
-     * @return this builder
+     * @param handler 异步处理 elicit 请求的函数
+     * @return 当前构建器
      */
     public McpClientBuilder asyncElicitation(
             Function<ElicitFormRequest, Mono<ElicitResult>> handler) {
@@ -427,21 +401,13 @@ public class McpClientBuilder {
     }
 
     /**
-     * Registers a synchronous elicitation handler for processing elicit requests
-     * from the server.
+     * 注册同步信息征询处理器，处理服务器的 elicit 请求。
      *
-     * <p>
-     * When an elicitation handler is registered, the client will automatically
-     * enable
-     * the elicitation capability in ClientCapabilities.
+     * <p>注册后自动在 ClientCapabilities 中启用 elicitation 能力。
      *
-     * <p>
-     * This method is for use with {@link #buildSync()}. The handler returns an
-     * {@link ElicitResult}
-     * directly for synchronous processing.
+     * <p>配合 {@link #buildSync()} 使用，处理器直接返回 {@link ElicitResult}。
      *
-     * <p>
-     * Example usage:
+     * <p>使用示例：
      *
      * <pre>{@code
      * McpClientWrapper client = McpClientBuilder.create("mcp")
@@ -454,8 +420,8 @@ public class McpClientBuilder {
      * }
      * </pre>
      *
-     * @param handler function to handle elicit requests synchronously
-     * @return this builder
+     * @param handler 同步处理 elicit 请求的函数
+     * @return 当前构建器
      */
     public McpClientBuilder syncElicitation(Function<ElicitFormRequest, ElicitResult> handler) {
         this.syncElicitationHandler = handler;
@@ -463,15 +429,11 @@ public class McpClientBuilder {
     }
 
     /**
-     * Configures whether request metadata is propagated to this MCP server.
+     * 配置是否向 MCP 服务器传播请求元数据。
      *
-     * <p>By default, entries registered under {@link McpMeta} in the runtime context plus the
-     * framework tool-call id are sent as the {@code meta} field of every tool call request. For
-     * MCP servers that are not fully trusted (e.g. external third-party services), disable the
-     * propagation so that internal metadata such as trace ids or callback URLs never leaves the
-     * process.
+     * <p>默认将运行时上下文中以 {@link McpMeta} 注册的条目及框架工具调用 ID 作为每次请求的 {@code meta} 字段发送。对于不完全可信的服务器（例如第三方服务），应禁用传播，避免追踪 ID、回调 URL 等内部元数据离开进程。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * McpClientWrapper external = McpClientBuilder.create("external-mcp")
      *         .propagateMeta(false)
@@ -480,9 +442,8 @@ public class McpClientBuilder {
      *         .block();
      * }</pre>
      *
-     * @param propagateMeta true to propagate metadata (default), false to omit the {@code meta}
-     *     field entirely from tool call requests
-     * @return this builder
+     * @param propagateMeta true 表示传播（默认），false 表示从请求中完全省略 {@code meta} 字段
+     * @return 当前构建器
      */
     public McpClientBuilder propagateMeta(boolean propagateMeta) {
         this.propagateMeta = propagateMeta;
@@ -490,9 +451,9 @@ public class McpClientBuilder {
     }
 
     /**
-     * Builds an asynchronous MCP client wrapper.
+     * 构建异步 MCP 客户端包装器。
      *
-     * @return Mono emitting the async client wrapper
+     * @return 发出异步客户端包装器的 Mono
      */
     public Mono<McpClientWrapper> buildAsync() {
         if (transportConfig == null) {
@@ -536,9 +497,9 @@ public class McpClientBuilder {
     }
 
     /**
-     * Builds a synchronous MCP client wrapper (blocking operations).
+     * 构建同步 MCP 客户端包装器（阻塞操作）。
      *
-     * @return synchronous client wrapper
+     * @return 同步客户端包装器
      */
     public McpClientWrapper buildSync() {
         if (transportConfig == null) {
@@ -578,9 +539,9 @@ public class McpClientBuilder {
     }
 
     /**
-     * Builds client capabilities
-     * @param withElicitation whether to include elicitation capability
-     * @return client capabilities
+     * 构建客户端能力。
+     * @param withElicitation 是否包含信息征询能力
+     * @return 客户端能力
      */
     private McpSchema.ClientCapabilities buildCapabilities(boolean withElicitation) {
         McpSchema.ClientCapabilities.Builder capabilitiesBuilder =
@@ -591,23 +552,18 @@ public class McpClientBuilder {
         return capabilitiesBuilder.build();
     }
 
-    // ==================== Internal Transport Configuration Classes ====================
+    // ==================== 内部传输配置类 ====================
 
     private interface TransportConfig {
         McpClientTransport createTransport();
     }
 
     /**
-     * A transport decorator that overrides the protocol versions reported to the MCP client.
+     * 覆盖向 MCP 客户端报告的协议版本的传输装饰器。
      *
-     * <p>The MCP Java SDK's {@code LifecycleInitializer} performs a strict check:
-     * the server's protocol version must be contained in the client's supported versions list.
-     * By default, transports only report support for "2024-11-05", causing connections to fail
-     * with servers that respond with newer versions (e.g., "2025-03-26").
+     * <p>MCP Java SDK 的 {@code LifecycleInitializer} 严格检查服务器协议版本是否在客户端支持列表中。默认传输仅报告支持 "2024-11-05"，因此遇到响应较新版本（如 "2025-03-26"）的服务器时连接失败。
      *
-     * <p>This decorator wraps any {@link McpClientTransport} and overrides
-     * {@link #protocolVersions()} to return a user-specified list, while delegating
-     * all other operations to the underlying transport.
+     * <p>包装任意 {@link McpClientTransport}，覆写 {@link #protocolVersions()} 返回用户指定列表，其他操作均委托到底层传输。
      */
     private static class ProtocolVersionOverrideTransport implements McpClientTransport {
 
@@ -729,13 +685,9 @@ public class McpClientBuilder {
         }
 
         /**
-         * Extracts the endpoint path from URL, merging with additional query
-         * parameters.
-         * Query parameters from the original URL are merged with additionally
-         * configured parameters.
-         * Additional parameters take precedence over URL parameters with the same key.
+         * 从 URL 提取端点路径，并合并附加查询参数。原 URL 参数会保留，同名时附加配置优先。
          *
-         * @return endpoint path with query parameters (e.g., "/api/sse?token=abc")
+         * @return 带查询参数的端点路径（例如 "/api/sse?token=abc"）
          */
         protected String extractEndpoint() {
             URI uri;
@@ -750,12 +702,12 @@ public class McpClientBuilder {
                 endpoint = "/";
             }
 
-            // Parse existing query parameters from URL
+            // 解析 URL 已有查询参数
             Map<String, String> mergedParams = new HashMap<>();
             String existingQuery = uri.getQuery();
             if (existingQuery != null && !existingQuery.isEmpty()) {
                 for (String param : existingQuery.split("&")) {
-                    // Skip empty parameters
+                    // 跳过空参数
                     if (param.isEmpty()) {
                         continue;
                     }
@@ -764,7 +716,7 @@ public class McpClientBuilder {
                     String key = keyValue[0];
                     String value = keyValue.length == 2 ? keyValue[1] : "";
 
-                    // URL decode the key and value
+                    // 对键和值进行 URL 解码
                     key = URLDecoder.decode(key, StandardCharsets.UTF_8);
                     value = URLDecoder.decode(value, StandardCharsets.UTF_8);
 
@@ -772,10 +724,10 @@ public class McpClientBuilder {
                 }
             }
 
-            // Merge with additional query parameters (additional params take precedence)
+            // 合并附加查询参数，附加参数优先
             mergedParams.putAll(queryParams);
 
-            // Build query string
+            // 构建查询字符串
             if (!mergedParams.isEmpty()) {
                 String queryString =
                         mergedParams.entrySet().stream()
@@ -818,7 +770,7 @@ public class McpClientBuilder {
                 clientTransportBuilder = HttpClientSseClientTransport.builder(url);
             }
 
-            // Apply HTTP client customization if provided
+            // 若提供 HTTP 客户端定制器则应用
             if (httpClientCustomizer != null) {
                 clientTransportBuilder.customizeClient(httpClientCustomizer);
             }
@@ -858,7 +810,7 @@ public class McpClientBuilder {
                 clientTransportBuilder = HttpClientStreamableHttpTransport.builder(url);
             }
 
-            // Apply HTTP client customization if provided
+            // 若提供 HTTP 客户端定制器则应用
             if (httpClientCustomizer != null) {
                 clientTransportBuilder.customizeClient(httpClientCustomizer);
             }
@@ -876,8 +828,7 @@ public class McpClientBuilder {
     }
 
     /**
-     * Combines static header configuration with an optional per-request customizer into
-     * a single customizer. Returns null when neither is configured.
+     * 将静态请求头配置与可选逐请求定制器合并为一个定制器。二者均未配置时返回 null。
      */
     private static McpSyncHttpClientRequestCustomizer composeRequestCustomizer(
             Map<String, String> headers, McpSyncHttpClientRequestCustomizer delegate) {

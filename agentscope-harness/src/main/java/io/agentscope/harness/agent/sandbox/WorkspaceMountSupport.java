@@ -24,14 +24,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Helpers for {@link io.agentscope.harness.agent.sandbox.layout.BindMountEntry} handling. */
+/**
+ * 处理 {@link io.agentscope.harness.agent.sandbox.layout.BindMountEntry} 的辅助方法。
+ */
 public final class WorkspaceMountSupport {
 
     private WorkspaceMountSupport() {}
 
     /**
-     * Returns relative workspace paths (POSIX-style, no leading slash) for every bind mount in
-     * the spec tree, in stable iteration order.
+     * 按稳定迭代顺序返回规范树中每个绑定挂载的工作区相对路径（POSIX 风格，无前导斜杠）。
      */
     public static List<String> bindMountRelativePaths(WorkspaceSpec spec) {
         if (spec == null || spec.getEntries().isEmpty()) {
@@ -47,7 +48,7 @@ public final class WorkspaceMountSupport {
     }
 
     /**
-     * Absolute mount path inside the sandbox for a top-level entry key (slashes normalized).
+     * 顶层条目键对应的沙箱内绝对挂载路径（斜杠已规范化）。
      */
     public static String containerMountPath(String workspaceRoot, String entryKey) {
         String root =
@@ -60,8 +61,7 @@ public final class WorkspaceMountSupport {
     }
 
     /**
-     * {@code tar} CLI {@code --exclude} arguments ({@code ./relative}) for each bind mount path,
-     * excluding snapshot tar from traversing mount content.
+     * 为每个绑定挂载路径生成 {@code tar} 命令行的 {@code --exclude} 参数（{@code ./relative}），防止快照 tar 遍历挂载内容。
      */
     public static List<String> tarExcludeArgsForBindMounts(WorkspaceSpec spec) {
         List<String> args = new ArrayList<>();
@@ -76,16 +76,13 @@ public final class WorkspaceMountSupport {
     }
 
     /**
-     * {@code tar} CLI {@code --exclude} arguments ({@code ./relative}) for absolute in-sandbox
-     * mount paths (e.g. cloud volume mounts) that sit strictly beneath {@code workspaceRoot}.
+     * 为严格位于 {@code workspaceRoot} 下的沙箱内绝对挂载路径（如云卷挂载）生成 {@code tar} 命令行的 {@code --exclude} 参数（{@code ./relative}）。
      *
-     * <p>Mounts equal to the root or outside of it contribute nothing: an equal mount means the
-     * whole workspace lives on the volume (callers short-circuit persistence instead), and an
-     * outside mount is never traversed by {@code tar -C root .} in the first place.
+     * <p>等于根目录或位于根目录外的挂载不产生参数：根目录挂载表示整个工作区位于卷上（调用方会直接跳过持久化）；目录外挂载本就不会被 {@code tar -C root .} 遍历。
      *
-     * @param workspaceRoot absolute workspace root the tar archive is taken from
-     * @param absoluteMountPaths absolute in-sandbox mount paths
-     * @return {@code --exclude} args for mounts beneath the root, in input order
+     * @param workspaceRoot 创建 tar 归档所用的工作区绝对根路径
+     * @param absoluteMountPaths 沙箱内绝对挂载路径
+     * @return 根目录下挂载的 {@code --exclude} 参数，保持输入顺序
      */
     public static List<String> tarExcludeArgsForAbsolutePaths(
             String workspaceRoot, List<String> absoluteMountPaths) {
@@ -118,17 +115,14 @@ public final class WorkspaceMountSupport {
     }
 
     /**
-     * Shared normalizer for absolute POSIX paths used as sandbox workspace roots or mount paths:
-     * trims surrounding whitespace, converts backslashes to slashes, collapses repeated slashes
-     * and strips a trailing slash (except for the root {@code /} itself). Blank or empty input
-     * yields {@code /}.
+     * 沙箱工作区根目录或挂载路径使用的绝对 POSIX 路径共享规范化器：去除首尾空白，将反斜杠转为斜杠，合并重复斜杠，去除末尾斜杠（根目录 {@code /} 自身除外）。空白或空输入得到 {@code /}。
      *
-     * @param raw raw path (may be null or blank)
-     * @return normalized absolute path
+     * @param raw 原始路径，可为 null 或空白
+     * @return 规范化绝对路径
      */
     public static String normalizeVirtualPath(String raw) {
-        // Collapse repeated slashes first, then drop the (single) trailing slash: the other
-        // order leaves a trailing slash behind for inputs like "//mnt//data//".
+        // 先合并重复斜杠，再移除单个末尾斜杠；反过来处理
+        // 会使 "//mnt//data//" 之类的输入残留末尾斜杠。
         String normalized =
                 stripTrailingSlash(
                         raw == null ? "" : raw.strip().replace('\\', '/').replaceAll("/+", "/"));
@@ -160,8 +154,7 @@ public final class WorkspaceMountSupport {
     }
 
     /**
-     * Top-level {@link BindMountEntry} instances keyed by entry key, for stores that only apply
-     * flat manifest entries (Docker {@code -v}, Kubernetes HostPath).
+     * 按条目键索引的顶层 {@link BindMountEntry} 实例，供仅应用扁平清单条目的存储使用（Docker {@code -v}、Kubernetes HostPath）。
      */
     public static Map<String, BindMountEntry> topLevelBindMounts(WorkspaceSpec spec) {
         Map<String, BindMountEntry> m = new LinkedHashMap<>();
@@ -176,7 +169,9 @@ public final class WorkspaceMountSupport {
         return m;
     }
 
-    /** Normalized absolute host path for Docker / Kubernetes HostPath. */
+    /**
+ * 用于 Docker / Kubernetes HostPath 的规范化宿主绝对路径。
+ */
     public static String normalizedHostPath(String hostPath) {
         if (hostPath == null || hostPath.isBlank()) {
             return "";

@@ -18,57 +18,58 @@ package io.agentscope.core.util;
 import java.util.IdentityHashMap;
 
 /**
- * Utility methods for exception handling.
+ * 异常处理辅助方法。
  */
 public final class ExceptionUtils {
 
     private ExceptionUtils() {
-        // Prevent instantiation
+        // 禁止实例化
     }
 
     /**
-     * Extracts the most informative error message from an exception.
+     * 从异常中提取尽可能有信息量的错误消息。
      *
-     * <p>This method attempts to retrieve an error message in the following order:
+     * <p>按以下顺序尝试：
      * <ol>
-     *   <li>The exception's own message</li>
-     *   <li>The cause's message (if the exception message is empty)</li>
-     *   <li>The exception's simple class name (as a fallback)</li>
+     * <li>异常自身的消息</li>
+     * <li>原因异常的消息（自身消息为空时）</li>
+     * <li>异常的简单类名（回退）</li>
      * </ol>
      *
-     * @param throwable The exception to extract the message from (may be null)
-     * @return A non-null error message string
+     * @param throwable 要提取消息的异常（可以为 null）
+     * @return 非 null 的错误消息字符串
      */
     public static String getErrorMessage(Throwable throwable) {
         if (throwable == null) {
             return "Unknown error";
         }
 
-        // Try to get the message from the exception
+        // 尝试获取异常自身的消息
         String message = throwable.getMessage();
         if (message != null && !message.isEmpty()) {
             return message;
         }
 
-        // If no message, try to get the cause's message
+        // 没有消息时尝试获取原因异常的消息
         Throwable cause = throwable.getCause();
         if (cause != null && cause.getMessage() != null && !cause.getMessage().isEmpty()) {
             return cause.getMessage();
         }
 
-        // Fall back to the exception class name
+        // 回退到异常类名
         return throwable.getClass().getSimpleName();
     }
 
     /**
-     * Whether the given throwable (or any throwable in its cause chain) is an
-     * {@link InterruptedException}. The cause chain is walked with an identity set guard so
-     * circular causes cannot cause an infinite loop.
+     * 判断给定异常或其原因链中的任意异常是否为 {@link InterruptedException}。
+     * 遍历原因链时使用按对象身份判重的集合，防止循环原因关系造成死循环。
      *
-     * @param error the throwable to inspect (may be {@code null})
-     * @return {@code true} if an {@link InterruptedException} is present in the cause chain
+     * @param error 要检查的异常（可以为 {@code null}）
+     * @return 原因链包含 {@link InterruptedException} 时为 {@code true}
      */
     public static boolean containsInterruptedException(Throwable error) {
+        // 【学习提示】按对象身份而非 equals 判重，是为了追踪同一个异常实例是否再次出现。
+        // 这既允许不同异常具有相同消息，也能截断人为构造的循环 cause 链。
         IdentityHashMap<Throwable, Boolean> visited = new IdentityHashMap<>();
         Throwable current = error;
         while (current != null && visited.put(current, Boolean.TRUE) == null) {

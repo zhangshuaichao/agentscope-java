@@ -23,14 +23,11 @@ import io.agentscope.harness.agent.sandbox.SandboxException;
 import java.io.InputStream;
 
 /**
- * Snapshot backed by a {@link RemoteSnapshotClient} (e.g. S3, OSS, GCS).
+ * 由 {@link RemoteSnapshotClient} 支撑的快照（例如 S3、OSS、GCS）。
  *
- * <p>This class delegates all operations to the provided client. The client is responsible
- * for authentication, retry logic, and network error handling.
+ * <p>此类将所有操作委托给提供的客户端，由客户端负责认证、重试逻辑和网络错误处理。
  *
- * <p>Note: {@code RemoteSandboxSnapshot} is not directly serializable to JSON because
- * {@link RemoteSnapshotClient} cannot be serialized. When persisting session state,
- * only the {@code id} is needed — the client is re-injected from the builder at resume time.
+ * <p>注意：{@code RemoteSandboxSnapshot} 不能直接序列化为 JSON，因为 {@link RemoteSnapshotClient} 不可序列化。持久保存会话状态时只需 {@code id}，恢复时从构建器重新注入客户端。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RemoteSandboxSnapshot implements SandboxSnapshot {
@@ -44,10 +41,10 @@ public class RemoteSandboxSnapshot implements SandboxSnapshot {
     }
 
     /**
-     * Creates a remote snapshot.
+     * 创建远程快照。
      *
-     * @param client the remote storage client to delegate operations to
-     * @param id unique identifier for this snapshot
+     * @param client 用于委托操作的远程存储客户端
+     * @param id 此快照的唯一标识符
      */
     public RemoteSandboxSnapshot(RemoteSnapshotClient client, String id) {
         this.client = client;
@@ -57,7 +54,7 @@ public class RemoteSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Uploads the archive via {@link RemoteSnapshotClient#upload}.
+     * <p>通过 {@link RemoteSnapshotClient#upload} 上传归档。
      */
     @Override
     public void persist(InputStream workspaceArchive) throws Exception {
@@ -71,7 +68,7 @@ public class RemoteSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Downloads the archive via {@link RemoteSnapshotClient#download}.
+     * <p>通过 {@link RemoteSnapshotClient#download} 下载归档。
      */
     @Override
     public InputStream restore() throws Exception {
@@ -85,7 +82,7 @@ public class RemoteSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Checks existence via {@link RemoteSnapshotClient#exists}.
+     * <p>通过 {@link RemoteSnapshotClient#exists} 检查存在性。
      */
     @Override
     public boolean isRestorable() throws Exception {

@@ -15,14 +15,14 @@
  */
 package io.agentscope.harness.agent.tools;
 
-/** Receives the terminal result of an MCP server registration attempt. */
+/** 接收 MCP 服务器注册尝试的终态结果。 */
 @FunctionalInterface
 public interface McpServerRegistrationListener {
 
     /**
-     * Invoked once after an MCP server entry is registered, fails registration, or is skipped.
+     * 在 MCP 服务器配置项注册成功、注册失败或被跳过后调用一次。
      *
-     * @param result terminal registration result
+     * @param result 注册终态结果
      */
     void onCompleted(McpServerRegistrationResult result);
 }

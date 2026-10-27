@@ -23,11 +23,9 @@ import com.github.victools.jsonschema.generator.SchemaGeneratorConfigPart;
 import java.util.stream.Stream;
 
 /**
- * A victools JSON Schema {@link Module} that reads {@link ToolParam} annotations
- * to populate {@code "description"} and {@code "required"} in the generated schema.
+ * 读取 {@link ToolParam} 注解的 victools JSON Schema {@link Module}，向生成模式填充 {@code "description"} 和 {@code "required"}。
  *
- * <p>By default, un-annotated fields are treated as required. Pass
- * {@link Option#PROPERTY_REQUIRED_FALSE_BY_DEFAULT} to invert this.
+ * <p>默认将无注解字段视为必填；传入 {@link Option#PROPERTY_REQUIRED_FALSE_BY_DEFAULT} 可反转此行为。
  *
  * @see ToolParam
  */
@@ -36,10 +34,9 @@ public class ToolSchemaModule implements Module {
     private final boolean requiredByDefault;
 
     /**
-     * Creates a module with the given options.
+     * 使用给定选项创建模块。
      *
-     * @param options pass {@link Option#PROPERTY_REQUIRED_FALSE_BY_DEFAULT}
-     *                to treat un-annotated fields as optional
+     * @param options 传入 {@link Option#PROPERTY_REQUIRED_FALSE_BY_DEFAULT}，将无注解字段视为可选
      */
     public ToolSchemaModule(Option... options) {
         this.requiredByDefault =
@@ -53,7 +50,7 @@ public class ToolSchemaModule implements Module {
     }
 
     /**
-     * Registers description resolver and required check.
+     * 注册描述解析器和必填检查。
      */
     private void applyToConfigBuilder(SchemaGeneratorConfigPart<FieldScope> configPart) {
         configPart.withPropertyNameOverrideResolver(this::resolvePropertyName);
@@ -62,10 +59,10 @@ public class ToolSchemaModule implements Module {
     }
 
     /**
-     * Returns the {@code @ToolParam} name, or {@code null} if absent.
+     * 返回 {@code @ToolParam} 的名称；不存在时为 {@code null}。
      *
-     * @param member the field or getter being processed
-     * @return the property name, or {@code null}
+     * @param member 正在处理的字段或 getter
+     * @return 属性名称，或 {@code null}
      */
     private String resolvePropertyName(FieldScope member) {
         ToolParam toolParam = member.getAnnotationConsideringFieldAndGetter(ToolParam.class);
@@ -76,10 +73,10 @@ public class ToolSchemaModule implements Module {
     }
 
     /**
-     * Returns the {@code @ToolParam} description, or {@code null} if absent.
+     * 返回 {@code @ToolParam} 的描述；不存在时为 {@code null}。
      *
-     * @param member the field or getter being processed
-     * @return the description text, or {@code null}
+     * @param member 正在处理的字段或 getter
+     * @return 描述文本，或 {@code null}
      */
     private String resolveDescription(MemberScope<?, ?> member) {
         ToolParam toolParam = member.getAnnotationConsideringFieldAndGetter(ToolParam.class);
@@ -90,10 +87,10 @@ public class ToolSchemaModule implements Module {
     }
 
     /**
-     * Returns {@code @ToolParam.required()}, falling back to {@link #requiredByDefault}.
+     * 返回 {@code @ToolParam.required()}；缺失时回退到 {@link #requiredByDefault}。
      *
-     * @param member the field or getter being processed
-     * @return {@code true} if the field should be required
+     * @param member 正在处理的字段或 getter
+     * @return 字段应为必填时返回 {@code true}
      */
     private boolean checkRequired(MemberScope<?, ?> member) {
         ToolParam toolParam = member.getAnnotationConsideringFieldAndGetter(ToolParam.class);
@@ -104,19 +101,19 @@ public class ToolSchemaModule implements Module {
     }
 
     /**
-     * Returns {@code true} if the string is non-null and non-blank.
+     * 字符串非 null 且非空白时返回 {@code true}。
      */
     private static boolean hasText(String str) {
         return str != null && !str.isBlank();
     }
 
     /**
-     * Options for customizing module behavior.
+     * 定制模块行为的选项。
      */
     public enum Option {
 
         /**
-         * Treat un-annotated fields as optional instead of required.
+         * 将无注解字段视为可选，而不是必填。
          */
         PROPERTY_REQUIRED_FALSE_BY_DEFAULT
     }

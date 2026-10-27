@@ -32,14 +32,13 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Reasoning context that manages all state and content accumulation for a single reasoning round.
+ * 管理单轮推理全部状态和内容累积的推理上下文。
  *
- * <p>Responsibilities:
- *
+ * <p>职责：
  * <ul>
- *   <li>Accumulate various content types (text, thinking, tool calls) from streaming responses
- *   <li>Generate real-time streaming messages (for Hook notifications)
- *   <li>Build final aggregated message (for saving to memory)
+ * <li>累积流式响应中的各种内容类型（文本、思考、工具调用）</li>
+ * <li>生成实时流式消息（用于 Hook 通知）</li>
+ * <li>构建最终汇总消息（用于保存到记忆）</li>
  * </ul>
  * @hidden
  */
@@ -64,7 +63,7 @@ public class ReasoningContext {
     private int toolUsePromptTokens = 0;
     private double time = 0;
 
-    // Provider-specific response metadata to propagate to the final message
+    // 需要传播到最终消息的提供方特定响应元数据
     private final Map<String, Object> responseMetadata = new HashMap<>();
 
     public ReasoningContext(String agentName) {
@@ -72,18 +71,17 @@ public class ReasoningContext {
     }
 
     /**
-     * Process a response chunk and return messages that can be sent immediately.
+     * 处理响应片段并返回可立即发送的消息。
      *
-     * <p>Strategy:
-     *
+     * <p>策略：
      * <ul>
-     *   <li>TextBlock/ThinkingBlock: Emit immediately for real-time display
-     *   <li>ToolUseBlock: Accumulate and emit immediately for real-time streaming
+     * <li>TextBlock/ThinkingBlock：立即发出，供实时展示</li>
+     * <li>ToolUseBlock：累积后立即发出，支持实时流式处理</li>
      * </ul>
      *
      * @hidden
-     * @param chunk Response chunk from the model
-     * @return List of messages that can be sent immediately
+     * @param chunk 模型返回的响应片段
+     * @return 可立即发送的消息列表
      */
     public List<Msg> processChunk(ChatResponse chunk) {
         this.messageId = chunk.getId();
@@ -91,7 +89,7 @@ public class ReasoningContext {
             finishReason = chunk.getFinishReason();
         }
 
-        // Accumulate ChatUsage
+        // 累积 ChatUsage
         ChatUsage usage = chunk.getUsage();
         if (usage != null) {
             inputTokens = usage.getInputTokens();
@@ -103,7 +101,7 @@ public class ReasoningContext {
             time = usage.getTime();
         }
 
-        // Propagate provider-specific metadata
+        // 传播提供方特定元数据
         if (chunk.getMetadata() != null && !chunk.getMetadata().isEmpty()) {
             responseMetadata.putAll(chunk.getMetadata());
         }
@@ -114,33 +112,33 @@ public class ReasoningContext {
             if (block instanceof TextBlock tb) {
                 textAcc.add(tb);
 
-                // Emit text block immediately
+                // 立即发出文本块
                 Msg msg = buildChunkMsg(tb);
                 streamingMsgs.add(msg);
 
             } else if (block instanceof ThinkingBlock tb) {
                 thinkingAcc.add(tb);
 
-                // Emit thinking block immediately
+                // 立即发出思考块
                 Msg msg = buildChunkMsg(tb);
                 streamingMsgs.add(msg);
 
             } else if (block instanceof ToolUseBlock tub) {
-                // Accumulate tool calls and emit immediately for real-time streaming
+                // 累积工具调用并立即发出，支持实时流式处理
                 toolCallsAcc.add(tub);
 
-                // Emit ToolUseBlock chunk immediately for real-time display
-                // Each tool call chunk is emitted separately, supporting multiple parallel tool
-                // calls
-                // For fragments (placeholder names like "__fragment__"), we need to include
-                // the correct tool call ID so users can properly concatenate the chunks
+                // 立即发出 ToolUseBlock 片段，供实时展示
+                // 每个工具调用片段分别发出，以支持多个并行
+                // 工具调用
+                // 对于片段（例如 "__fragment__" 之类的占位名称），需要包含
+                // 正确的工具调用 ID，用户才能正确连接片段
                 ToolUseBlock outputBlock = enrichToolUseBlockWithId(tub);
                 Msg msg = buildChunkMsg(outputBlock);
                 streamingMsgs.add(msg);
 
             } else if (block instanceof ToolResultBlock trb && trb.isServerTool()) {
-                // Server tool results arrive as part of the assistant response; keep them so
-                // they end up in the final message and can be echoed back on later turns.
+                // 服务端工具结果随助手响应到达；保留它们，
+                // 使其进入最终消息，并能在后续轮次回传。
                 serverToolResults.add(trb);
 
                 Msg msg = buildChunkMsg(trb);
@@ -152,47 +150,45 @@ public class ReasoningContext {
     }
 
     /**
-     * Build the final reasoning message with all content blocks.
-     * This includes text, thinking, AND tool calls in ONE message.
+     * 构建包含所有内容块的最终推理消息。
+     * 将文本、思考和工具调用合并在同一条消息中。
      *
-     * <p>This method ensures that a single reasoning round produces one message
-     * that may contain multiple content blocks.
+     * <p>确保单轮推理只产生一条消息，该消息可以包含多个内容块。
      *
-     * <p>Strategy:
-     *
+     * <p>策略：
      * <ol>
-     *   <li>Add text content if present
-     *   <li>Add thinking content if present
-     *   <li>Add all tool calls
+     * <li>存在文本内容时添加文本</li>
+     * <li>存在思考内容时添加思考</li>
+     * <li>添加全部工具调用</li>
      * </ol>
      *
      * @hidden
-     * @return The complete reasoning message with all blocks, or null if no content
+     * @return 包含所有块的完整推理消息；没有内容时为 null
      */
     public Msg buildFinalMessage() {
         List<ContentBlock> blocks = new ArrayList<>();
 
-        // Add thinking content if present
+        // 存在思考内容时添加
         if (thinkingAcc.hasContent()) {
             blocks.add(thinkingAcc.buildAggregated());
         }
 
-        // Add text content if present
+        // 存在文本内容时添加
         if (textAcc.hasContent()) {
             blocks.add(textAcc.buildAggregated());
         }
 
-        // Add all tool calls, placing server tool results right after their calls
+        // 添加所有工具调用，并将服务端工具结果紧接在对应调用之后
         boolean outputLimitReached = isTruncated();
         List<ToolUseBlock> toolCalls = toolCallsAcc.buildAllToolCalls(outputLimitReached);
         blocks.addAll(serverToolResults.placeAfterToolCalls(toolCalls));
 
-        // If no content at all, return null
+        // 完全没有内容时返回 null
         if (blocks.isEmpty()) {
             return null;
         }
 
-        // Build metadata: start with propagated response metadata, then add ChatUsage
+        // 构建元数据：先使用传播的响应元数据，再添加 ChatUsage
         Map<String, Object> metadata = new HashMap<>(responseMetadata);
         if (outputLimitReached) {
             metadata.put(MessageMetadataKeys.OUTPUT_LIMIT_REACHED, true);
@@ -222,8 +218,8 @@ public class ReasoningContext {
     }
 
     private boolean isTruncated() {
-        // OpenAI Chat Completions and DashScope report "length"; Anthropic and Gemini report
-        // "max_tokens" or "MAX_TOKENS".
+        // OpenAI Chat Completions 与 DashScope 报告 "length"；Anthropic 和 Gemini 报告
+        // "max_tokens" 或 "MAX_TOKENS"。
         return "length".equalsIgnoreCase(finishReason)
                 || "max_tokens".equalsIgnoreCase(finishReason)
                 || isOpenAiResponsesOutputLimit();
@@ -239,7 +235,7 @@ public class ReasoningContext {
     }
 
     /**
-     * Build a chunk message from a content block.
+     * 根据内容块构建片段消息。
      * @hidden
      */
     private Msg buildChunkMsg(ContentBlock block) {
@@ -247,28 +243,27 @@ public class ReasoningContext {
     }
 
     /**
-     * Enrich a ToolUseBlock with the correct tool call ID.
+     * 为 ToolUseBlock 补上正确的工具调用 ID。
      *
-     * <p>For fragments (placeholder names like "__fragment__"), the original block may not have
-     * the correct ID. This method retrieves the ID from the accumulator and creates a new block
-     * with the correct ID, allowing users to properly concatenate chunks.
+     * <p>片段（例如 "__fragment__" 占位名称）的原始块可能没有正确 ID。
+     * 此方法从累积器取出 ID 并创建带正确 ID 的新块，使用户能正确连接片段。
      *
-     * @param block The original ToolUseBlock
-     * @return A ToolUseBlock with the correct ID
+     * @param block 原始 ToolUseBlock
+     * @return 带正确 ID 的 ToolUseBlock
      */
     private ToolUseBlock enrichToolUseBlockWithId(ToolUseBlock block) {
-        // If the block already has an ID, return it as-is
+        // 已有 ID 时原样返回该块
         if (block.getId() != null && !block.getId().isEmpty()) {
             return block;
         }
 
-        // Get the current tool call ID from the accumulator
+        // 从累积器获取当前工具调用 ID
         String currentId = toolCallsAcc.getCurrentToolCallId();
         if (currentId == null || currentId.isEmpty()) {
             return block;
         }
 
-        // Create a new block with the correct ID
+        // 创建带正确 ID 的新块
         return ToolUseBlock.builder()
                 .id(currentId)
                 .name(block.getName())
@@ -280,61 +275,60 @@ public class ReasoningContext {
     }
 
     /**
-     * Get the accumulated text content.
+     * 获取已累积的文本内容。
      *
      * @hidden
-     * @return accumulated text as string
+     * @return 以字符串形式返回累积的文本
      */
     public String getAccumulatedText() {
         return textAcc.getAccumulated();
     }
 
     /**
-     * Replace accumulated text after {@code onModelCall} middleware transforms text delta events.
+     * {@code onModelCall} 中间件转换文本增量事件后，替换已累积文本。
      *
      * @hidden
-     * @param text text reconstructed from the transformed event stream
+     * @param text 从转换后事件流重建的文本
      */
     public void replaceAccumulatedText(String text) {
         textAcc.replace(text);
     }
 
     /**
-     * Get the accumulated thinking content.
+     * 获取已累积的思考内容。
      *
      * @hidden
-     * @return accumulated thinking as string
+     * @return 以字符串形式返回累积的思考内容
      */
     public String getAccumulatedThinking() {
         return thinkingAcc.getAccumulated();
     }
 
     /**
-     * Get accumulated tool call by ID.
+     * 按 ID 获取已累积工具调用。
      *
-     * <p>If the ID is null or empty, or if no builder is found for the given ID,
-     * this method falls back to using the last tool call.
+     * <p>ID 为 null／空，或找不到对应构建器时，回退到最后一个工具调用。
      *
-     * @param id The tool call ID to look up
-     * @return The accumulated ToolUseBlock, or null if not found
+     * @param id 要查找的工具调用 ID
+     * @return 已累积的 ToolUseBlock；未找到时为 null
      */
     public ToolUseBlock getAccumulatedToolCall(String id) {
         return toolCallsAcc.getAccumulatedToolCall(id);
     }
 
     /**
-     * Get all accumulated tool calls.
+     * 获取全部已累积工具调用。
      *
-     * @return List of all accumulated ToolUseBlocks
+     * @return 全部已累积 ToolUseBlock 的列表
      */
     public List<ToolUseBlock> getAllAccumulatedToolCalls() {
         return toolCallsAcc.getAllAccumulatedToolCalls();
     }
 
     /**
-     * Get the accumulated ChatUsage.
+     * 获取已累积的 ChatUsage。
      *
-     * @return ChatUsage with accumulated tokens, or null if no usage data
+     * @return 包含累积 token 数的 ChatUsage；没有用量数据时为 null
      */
     public ChatUsage getChatUsage() {
         if (inputTokens > 0 || outputTokens > 0 || time > 0) {

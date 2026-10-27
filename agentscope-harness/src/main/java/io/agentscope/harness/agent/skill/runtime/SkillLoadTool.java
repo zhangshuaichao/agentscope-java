@@ -32,24 +32,16 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * The harness-native {@code load_skill_through_path} {@link AgentTool}.
+ * harness 原生的 {@code load_skill_through_path} {@link AgentTool}。
  *
- * <p>Query order for any {@code path} other than {@code SKILL.md}:
- *
+ * <p>除 {@code SKILL.md} 以外的任意 {@code path}，查询顺序如下：
  * <ol>
- *   <li>{@code skill.getResources().get(path)} — in-memory map (Layer 1/3 host repositories and
- *       marketplace repositories that preload everything)
- *   <li>{@code entry.lazyResources().read(path)} — filesystem fallback for sources that
- *       implement {@link io.agentscope.harness.agent.skill.LazyResourceCapable}
- *       (e.g. {@code WorkspaceSkillRepository})
- *   <li>Not found → error with a deduped enumeration of {@code SKILL.md} + in-memory keys +
- *       lazy listing
+ * <li>{@code skill.getResources().get(path)}：内存映射（第 1/3 层宿主仓库，以及预加载全部资源的市场仓库）。
+ * <li>{@code entry.lazyResources().read(path)}：实现 {@link io.agentscope.harness.agent.skill.LazyResourceCapable} 的来源（例如 {@code WorkspaceSkillRepository}）所提供的文件系统回退。
+ * <li>未找到：返回错误，并附上 {@code SKILL.md}、内存键及懒加载列表合并去重后的枚举。
  * </ol>
  *
- * <p>The registered tool resolves the filtered catalog from each {@link
- * ToolCallParam#getRuntimeContext() tool call's RuntimeContext}, keeping concurrent calls and
- * sessions isolated without re-registering the tool. A legacy catalog reference is consulted only
- * for deprecated callers that invoke the tool without any RuntimeContext.
+ * <p>已注册工具从每次{@link ToolCallParam#getRuntimeContext() tool call's RuntimeContext}解析过滤目录，无需重新注册即可隔离并发调用和会话。只有已弃用的调用方完全未提供 RuntimeContext 时，才查阅旧目录引用。
  */
 @SuppressWarnings("deprecation")
 public final class SkillLoadTool implements AgentTool {
@@ -62,21 +54,19 @@ public final class SkillLoadTool implements AgentTool {
     private final AtomicReference<SkillCatalog> legacyCatalogRef;
     private final boolean exposeLegacyCatalogInSchema;
 
-    /** Creates a context-scoped loader with an empty context-free compatibility catalog. */
+    /**
+     * 创建上下文限定的加载器，其无上下文兼容目录为空。
+     */
     public SkillLoadTool() {
         this(new AtomicReference<>(SkillCatalog.empty()), false);
     }
 
     /**
-     * Creates a loader backed by a legacy context-free catalog reference.
+     * 创建使用旧无上下文目录引用的加载器。
      *
-     * <p>This constructor is retained for source and binary compatibility. The supplied reference
-     * is never used when a tool call carries a RuntimeContext, preventing it from bypassing the
-     * request-scoped skill filter.
+     * <p>保留此构造方法以兼容源码和二进制。工具调用携带 RuntimeContext 时绝不使用该引用，避免绕过请求级技能过滤器。
      *
-     * @deprecated Prefer {@link #SkillLoadTool()} and bind catalogs through {@link
-     *     SkillRuntime#install(SkillCatalog, io.agentscope.core.agent.RuntimeContext,
-     *     io.agentscope.core.tool.Toolkit)}.
+     * @deprecated 优先使用 {@link #SkillLoadTool()}，并通过 {@link SkillRuntime#install(SkillCatalog, io.agentscope.core.agent.RuntimeContext, io.agentscope.core.tool.Toolkit)} 绑定目录。
      */
     @Deprecated(since = "2.2.0")
     public SkillLoadTool(AtomicReference<SkillCatalog> catalogRef) {
@@ -195,18 +185,18 @@ public final class SkillLoadTool implements AgentTool {
     private ToolResultBlock loadOne(HarnessSkillEntry entry, String path) {
         AgentSkill skill = entry.skill();
 
-        // 1. Special case: SKILL.md returns the parsed body text.
+        // 1. 特殊处理：SKILL.md 通过格式化方法返回完整技能文档。
         if (SKILL_FILE.equals(path)) {
             return ToolResultBlock.text(formatSkillMarkdown(entry));
         }
 
-        // 2. In-memory map (Layer 1/3 host repos + marketplace fully-loaded resources).
+        // 2. 内存映射（第 1/3 层宿主仓库及预加载全部资源的市场）。
         Map<String, String> mem = skill.getResources();
         if (mem != null && mem.containsKey(path)) {
             return ToolResultBlock.text(formatResource(entry, path, mem.get(path)));
         }
 
-        // 3. Lazy fallback (WorkspaceSkillRepository and other LazyResourceCapable sources).
+        // 3. 懒加载回退（WorkspaceSkillRepository 及其他 LazyResourceCapable 来源）。
         if (entry.lazyResources() != null) {
             Optional<String> lazy = entry.lazyResources().read(path);
             if (lazy.isPresent()) {
@@ -214,18 +204,17 @@ public final class SkillLoadTool implements AgentTool {
             }
         }
 
-        // 4. Not found: enumerate both sources so the model sees real options.
+        // 4. 未找到：枚举两种来源，让模型看到实际可选项。
         return ToolResultBlock.error(formatNotFound(entry, path));
     }
 
     // ---------------------------------------------------------------------
-    //  Formatting helpers
+    // 格式化辅助方法
     // ---------------------------------------------------------------------
 
     /**
-     * Wrapping fence used to demarcate file content from the surrounding tool-result header.
-     * Four backticks so it stays unambiguous even when the wrapped body contains the more common
-     * triple-backtick code fences.
+     * 用于分隔文件内容与外围工具结果头部的围栏。
+     * 使用四个反引号，因此即使正文中包含更常见的三个反引号代码围栏，也不会混淆。
      */
     private static final String CONTENT_FENCE = "````";
 
@@ -239,10 +228,10 @@ public final class SkillLoadTool implements AgentTool {
         if (entry.filesRoot() != null && !entry.filesRoot().isBlank()) {
             sb.append("Files root: ").append(entry.filesRoot()).append("\n");
         }
-        // Emit the full SKILL.md document (YAML frontmatter + body) so the view the LLM reads
-        // matches the bytes that skill_manage(action=patch) operates on. Returning body-only
-        // (the previous behaviour) drove patch failures whenever the LLM tried to old_string
-        // anything near the frontmatter boundary, since the parser eats that whitespace.
+        // 输出完整 SKILL.md 文档（YAML frontmatter 加正文），让 LLM 读取的视图
+        // 与 skill_manage(action=patch) 操作的字节一致。只返回正文
+        // （旧行为）会让 LLM 在 frontmatter 边界附近使用 old_string 时
+        // 补丁失败，因为解析器会消耗那里的空白。
         String fullMarkdown =
                 MarkdownSkillParser.generate(skill.getMetadata(), skill.getSkillContent());
         sb.append("\nContent (").append("SKILL.md").append("):\n");

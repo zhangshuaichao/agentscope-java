@@ -21,8 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
 /**
- * Persistent state for {@link SkillCurator} — kept in {@code skills/.curator_state.json}.
- * Records the last run timestamp, run count, paused flag, and a brief human-readable summary.
+ * {@link SkillCurator} 的持久状态，保存于 {@code skills/.curator_state.json}。
+ * 记录上次运行时间戳、运行次数、暂停标志及简短可读摘要。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SkillCuratorState(

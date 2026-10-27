@@ -20,23 +20,25 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * Discriminated union describing how a background subagent task should execute.
+ * 描述后台子智能体任务执行方式的判别联合类型。
  *
- * <p>{@link LocalTaskRunSpec} runs the supplier on a local executor. {@link RemoteTaskRunSpec}
- * delegates to an AgentScope task HTTP API (see {@code agentscope-extensions-agent-protocol}).
- * {@link AdoptedTaskRunSpec} wraps an already-running {@link CompletableFuture} (used when a sync
- * execution is promoted to async on timeout).
+ * <p>{@link LocalTaskRunSpec} 在本地执行器运行 supplier。
+ * {@link RemoteTaskRunSpec} 委托给 AgentScope 任务 HTTP API
+ * （参见 {@code agentscope-extensions-agent-protocol}）。
+ * {@link AdoptedTaskRunSpec} 包装已经运行的 {@link CompletableFuture}
+ * （用于同步执行超时后提升为异步的情况）。
  */
 public sealed interface TaskRunSpec {
 
-    /** In-process execution via {@link Supplier}. */
+    /**
+     * 通过 {@link Supplier} 在进程内执行。
+     */
     record LocalTaskRunSpec(Supplier<String> execution) implements TaskRunSpec {}
 
     /**
-     * Remote HTTP task execution. The {@code taskId} is chosen by the client and used as the
-     * remote task key end-to-end. {@code context} carries submission-time metadata (streaming
-     * preference, propagated deny rules, parent identity); defaults to
-     * {@link RemoteSubmitContext#empty()} for callers that predate this field.
+     * 远程 HTTP 任务执行。{@code taskId} 由客户端选择，并端到端用作远程任务键。
+     * {@code context} 携带提交时元数据（流式偏好、传播的拒绝规则、父级身份）；
+     * 对于早于此字段出现的调用方，默认为 {@link RemoteSubmitContext#empty()}。
      */
     record RemoteTaskRunSpec(
             String baseUrl,
@@ -53,9 +55,9 @@ public sealed interface TaskRunSpec {
     }
 
     /**
-     * Adopts an already-running {@link CompletableFuture} as a tracked background task. Used when
-     * a sync execution exceeds its timeout and is promoted to async: the future is still in
-     * progress and only needs status-tracking callbacks, not a new executor submission.
+     * 将已经运行的 {@link CompletableFuture} 接管为受跟踪的后台任务。
+     * 用于同步执行超时后提升为异步：future 仍在进行，只需要连接状态跟踪回调，
+     * 无需再次提交给执行器。
      */
     record AdoptedTaskRunSpec(CompletableFuture<String> future) implements TaskRunSpec {}
 }

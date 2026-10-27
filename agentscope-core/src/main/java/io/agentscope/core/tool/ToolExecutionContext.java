@@ -21,13 +21,13 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Facade for passing custom POJOs to tool methods via priority-based resolution.
+ * 通过按优先级解析，将自定义 POJO 传递给工具方法的门面。
  *
- * <p>Two-layer architecture: External interface + Storage layer ({@link ContextStore}).
+ * <p>两层架构：对外接口与存储层（{@link ContextStore}）。
  *
- * <p>Priority chain: Call → Agent → Toolkit → Spring (highest to lowest)
+ * <p>优先级链从高到低：Call → Agent → Toolkit → Spring。
  *
- * <p>Example:
+ * <p>示例：
  *
  * <pre>{@code
  * // Register custom POJO
@@ -44,9 +44,7 @@ import java.util.Objects;
  *
  * @see ContextStore
  * @see DefaultContextStore
- * @deprecated Use {@link io.agentscope.core.agent.RuntimeContext} instead.
- *     Register POJOs via {@code RuntimeContext.builder().put(Type.class, value).build()}
- *     and pass to {@code agent.call(msg, runtimeContext)}.
+ * @deprecated 请改用 {@link io.agentscope.core.agent.RuntimeContext}。通过 {@code RuntimeContext.builder().put(Type.class, value).build()} 注册 POJO，并传给 {@code agent.call(msg, runtimeContext)}。
  */
 @Deprecated
 public class ToolExecutionContext {
@@ -61,15 +59,15 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Retrieves an object by key and type (for multi-instance scenarios).
+     * 按键和类型检索对象（多实例场景）。
      *
-     * @param key The key identifying the instance
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param key 标识实例的键
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     public <T> T get(String key, Class<T> type) {
-        // Query all stores in priority order
+        // 按优先级顺序查询全部存储
         for (ContextStore store : stores) {
             T obj = store.get(key, type);
             if (obj != null) {
@@ -80,14 +78,14 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Retrieves an object by type only (for singleton scenarios).
+     * 仅按类型检索对象（单例场景）。
      *
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     public <T> T get(Class<T> type) {
-        // Query all stores in priority order
+        // 按优先级顺序查询全部存储
         for (ContextStore store : stores) {
             T obj = store.get(type);
             if (obj != null) {
@@ -98,11 +96,11 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Checks whether an object with the specified key and type exists in any store.
+     * 检查任意存储中是否存在指定键和类型的对象。
      *
-     * @param key The key identifying the instance
-     * @param type The class type to check
-     * @return true if any store contains the object, false otherwise
+     * @param key 标识实例的键
+     * @param type 要检查的类类型
+     * @return 任意存储包含该对象时为 true，否则为 false
      */
     public boolean contains(String key, Class<?> type) {
         for (ContextStore store : stores) {
@@ -114,10 +112,10 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Checks whether an object of the specified type exists in any store (regardless of key).
+     * 检查任意存储中是否存在指定类型的对象（不论键为何）。
      *
-     * @param type The class type to check
-     * @return true if any store contains the object, false otherwise
+     * @param type 要检查的类类型
+     * @return 任意存储包含该对象时为 true，否则为 false
      */
     public boolean contains(Class<?> type) {
         for (ContextStore store : stores) {
@@ -129,28 +127,28 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Gets all stores in priority order.
+     * 按优先级顺序获取全部存储。
      *
-     * @return Unmodifiable list of stores (never null, may be empty)
+     * @return 不可修改的存储列表（永不为 null，可以为空）
      */
     public List<ContextStore> getStores() {
         return stores;
     }
 
     /**
-     * Merges multiple contexts into priority-based resolution chain.
+     * 将多个上下文合并为按优先级解析的链。
      *
-     * <p>Earlier contexts have higher priority.
+     * <p>越靠前的上下文优先级越高。
      *
-     * @param contexts The contexts to merge, in priority order (highest first)
-     * @return A new merged context
+     * @param contexts 按优先级排列的待合并上下文（最高优先级在前）
+     * @return 合并后的新上下文
      */
     public static ToolExecutionContext merge(ToolExecutionContext... contexts) {
         if (contexts == null || contexts.length == 0) {
             return empty();
         }
 
-        // Collect all stores from all contexts in priority order
+        // 按优先级顺序收集所有上下文的存储
         List<ContextStore> mergedStores = new ArrayList<>();
         for (ToolExecutionContext ctx : contexts) {
             if (ctx != null && !ctx.stores.isEmpty()) {
@@ -166,18 +164,18 @@ public class ToolExecutionContext {
     }
 
     /**
-     * Creates a new builder for constructing ToolExecutionContext instances.
+     * 创建用于构造 ToolExecutionContext 实例的构建器。
      *
-     * @return A new builder
+     * @return 新的构建器
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Creates an empty context.
+     * 创建空上下文。
      *
-     * @return An empty ToolExecutionContext
+     * @return 空的 ToolExecutionContext
      */
     public static ToolExecutionContext empty() {
         return new Builder().build();
@@ -201,7 +199,9 @@ public class ToolExecutionContext {
         return "ToolExecutionContext{" + "stores=" + stores.size() + " stores}";
     }
 
-    /** Builder for ToolExecutionContext. */
+    /**
+     * ToolExecutionContext 的构建器。
+     */
     public static class Builder {
         private DefaultContextStore.Builder storeBuilder = DefaultContextStore.builder();
         private List<ContextStore> stores;
@@ -209,10 +209,10 @@ public class ToolExecutionContext {
         private Builder() {}
 
         /**
-         * Registers an object by its runtime type (singleton pattern).
+         * 按运行时类型注册对象（单例模式）。
          *
-         * @param object The object to register
-         * @return This builder
+         * @param object 要注册的对象
+         * @return 当前构建器
          */
         public Builder register(Object object) {
             this.storeBuilder.register(object);
@@ -220,12 +220,12 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Registers an object with explicit type (e.g., by interface).
+         * 使用显式类型注册对象（例如按接口注册）。
          *
-         * @param type The type key
-         * @param object The object to register
-         * @param <T> The object type
-         * @return This builder
+         * @param type 类型键
+         * @param object 要注册的对象
+         * @param <T> 对象类型
+         * @return 当前构建器
          */
         public <T> Builder register(Class<T> type, T object) {
             this.storeBuilder.register(type, object);
@@ -233,13 +233,13 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Registers an object with key and type (multi-instance pattern).
+         * 使用键和类型注册对象（多实例模式）。
          *
-         * @param key The key identifying this instance
-         * @param type The type key
-         * @param object The object to register
-         * @param <T> The object type
-         * @return This builder
+         * @param key 标识此实例的键
+         * @param type 类型键
+         * @param object 要注册的对象
+         * @param <T> 对象类型
+         * @return 当前构建器
          */
         public <T> Builder register(String key, Class<T> type, T object) {
             this.storeBuilder.register(key, type, object);
@@ -247,11 +247,11 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Registers an object with key (type inferred from runtime).
+         * 使用键注册对象（类型从运行时推断）。
          *
-         * @param key The key identifying this instance
-         * @param object The object to register
-         * @return This builder
+         * @param key 标识此实例的键
+         * @param object 要注册的对象
+         * @return 当前构建器
          */
         public Builder register(String key, Object object) {
             this.storeBuilder.register(key, object);
@@ -259,13 +259,12 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Sets the store list directly (replaces all previous registrations).
+         * 直接设置存储列表（替换之前全部注册内容）。
          *
-         * <p>This is primarily used internally by {@link #merge(ToolExecutionContext...)} to
-         * combine stores from multiple contexts.
+         * <p>主要由 {@link #merge(ToolExecutionContext...)} 在内部使用，组合多个上下文的存储。
          *
-         * @param stores The list of stores in priority order
-         * @return This builder
+         * @param stores 按优先级排列的存储列表
+         * @return 当前构建器
          */
         Builder stores(List<ContextStore> stores) {
             this.stores = stores;
@@ -273,12 +272,12 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Adds a single store to the store list.
+         * 向列表添加单个存储。
          *
-         * <p>This allows adding custom {@link ContextStore} implementations.
+         * <p>支持添加自定义 {@link ContextStore} 实现。
          *
-         * @param store The context store to add
-         * @return This builder
+         * @param store 要添加的上下文存储
+         * @return 当前构建器
          */
         public Builder addStore(ContextStore store) {
             if (this.stores == null) {
@@ -289,13 +288,13 @@ public class ToolExecutionContext {
         }
 
         /**
-         * Builds the ToolExecutionContext.
+         * 构建 ToolExecutionContext。
          *
-         * @return A new ToolExecutionContext
+         * @return 新的 ToolExecutionContext
          */
         public ToolExecutionContext build() {
             if (stores == null) {
-                // No explicit stores set, build from registered objects
+                // 未显式设置存储时，从已注册对象构建
                 ContextStore store = storeBuilder.build();
                 if (store != null
                         && !(store instanceof DefaultContextStore

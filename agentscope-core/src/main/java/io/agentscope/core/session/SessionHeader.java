@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.session;
 
-/** Immutable coverage/format marker. A checkpoint baseline does not pretend to contain earlier history. */
+/** 不可变的覆盖范围／格式标记。以检查点为基线并不假装包含更早历史。 */
 public record SessionHeader(
         int formatVersion, String authority, String replayCoverage, long createdAt) {
     public static SessionHeader current() {

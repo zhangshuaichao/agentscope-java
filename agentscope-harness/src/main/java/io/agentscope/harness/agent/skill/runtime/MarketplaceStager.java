@@ -46,33 +46,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Materialises non-workspace skill resources (Layer 1 / Layer 2 / marketplace) to
- * {@code <wsRoot>/.skills-cache/<source-ns>/<skill-name>/} so that:
- *
+ * 将非工作区技能资源（第 1 层/第 2 层/市场）物化到 {@code <wsRoot>/.skills-cache/<source-ns>/<skill-name>/}，使：
  * <ul>
- *   <li>shell-mode HarnessAgents (sandbox or Local-with-shell) can execute the staged scripts
- *       via absolute paths
- *   <li>sandbox projection (which includes {@code .skills-cache} in
- *       {@code DEFAULT_WORKSPACE_PROJECTION_ROOTS}) hydrates the staged content into the
- *       sandbox at start time
+ * <li>启用 Shell 的 HarnessAgent（沙箱或本地带 Shell）能通过绝对路径执行暂存脚本。
+ * <li>沙箱投影（在 {@code DEFAULT_WORKSPACE_PROJECTION_ROOTS} 中包含 {@code .skills-cache}）能在启动时将暂存内容同步进沙箱。
  * </ul>
  *
- * <p>The stager keeps no cross-call state: each invocation rebuilds the white-list of
- * directories that should remain under {@code .skills-cache}, materialises any files whose
- * SHA-256 has changed, and deletes orphan directories not present in the white-list.
+ * <p>暂存器不保留跨调用状态：每次调用重新构建 {@code .skills-cache} 下应保留目录的允许名单，仅物化 SHA-256 已变化的文件，并清理不在名单中的孤立目录。
  *
- * <p><b>The cache is shared.</b> One stager instance serves every concurrent call against a
- * workspace root, and on a shared volume other replicas write into the same tree. A white-list
- * built from one call's visible skills therefore says nothing about what other in-flight calls
- * still need: with per-user skill visibility, call B's "orphan" is call A's live
- * {@code filesRoot}. Orphan GC is consequently gated on {@link #DEFAULT_ORPHAN_GRACE} — a
- * directory is deleted only after sitting untouched for that long, and every retained directory
- * is touched on each pass — and every traversal tolerates entries deleted underneath it.
+ * <p>【学习提示】scope 解决不同身份的目录隔离，宽限期缓解共享范围内并发调用的清理冲突，两者用途不同。时间戳不是持有者租约，也不是文件内容快照；若调用超过宽限期或同范围内发生重写，不能仅靠这些机制推导出绝对并发隔离。
  *
- * <p>Workspace-native skills (those produced by {@link WorkspaceSkillRepository}) are NOT
- * staged: they already live under {@code <wsRoot>/skills/} (or are produced lazily from the
- * sandbox-backed filesystem) and projection covers them through the regular {@code skills}
- * root.
+ * <p><b>缓存是共享的。</b>一个暂存器实例服务同一工作区根目录上的所有并发调用，共享卷上的其他副本也写入同一目录树。因此，一个调用可见技能构成的允许名单无法说明其他进行中调用的需求：按用户划分技能可见性时，调用 B 的“孤立目录”可能是调用 A 正使用的 {@code filesRoot}。孤立目录回收因此受 {@link #DEFAULT_ORPHAN_GRACE} 限制：只有目录在整个宽限期内未被触碰才会删除，每次处理都会刷新保留目录的时间戳，遍历也容忍条目在过程中被删除。
+ *
+ * <p>工作区原生技能（由 {@link WorkspaceSkillRepository} 提供）不暂存：它们已在 {@code <wsRoot>/skills/} 下（或由沙箱文件系统懒加载），常规 {@code skills} 根投影已覆盖它们。
  */
 @SuppressWarnings("deprecation")
 public final class MarketplaceStager {
@@ -83,15 +69,13 @@ public final class MarketplaceStager {
     public static final String GLOBAL_NAMESPACE = "_global";
 
     /**
-     * How long an orphan must sit untouched before it may be deleted. The window has to outlast
-     * the longest call that could still shell out to a staged script, because a staged path is
-     * handed to the model in the system prompt and used much later in the call. Leaving a stale
-     * directory costs a few KB; deleting a live one breaks another user's call, so the default
-     * errs long.
+     * 孤立目录必须持续未被触碰多久才允许删除。此窗口应长于任何仍可能通过 Shell 执行暂存脚本的调用，因为暂存路径在系统提示中交给模型后，可能很晚才被使用。保留旧目录只花费少量空间，删除活动目录却会破坏其他用户调用，因此默认值倾向于更长。
      */
     public static final Duration DEFAULT_ORPHAN_GRACE = Duration.ofMinutes(30);
 
-    /** Segment used when the caller has no isolation identity to key on. */
+    /**
+     * 调用方未提供隔离身份时使用的路径段。
+     */
     public static final String SHARED_SCOPE = "_shared";
 
     private final Path workspaceRoot;
@@ -101,7 +85,9 @@ public final class MarketplaceStager {
         this(workspaceRoot, DEFAULT_ORPHAN_GRACE);
     }
 
-    /** Overload for callers (and tests) that need a non-default orphan grace window. */
+    /**
+     * 供调用方及测试指定非默认孤立目录宽限期的重载。
+     */
     public MarketplaceStager(Path workspaceRoot, Duration orphanGrace) {
         this.workspaceRoot = workspaceRoot;
         this.orphanGrace =
@@ -111,46 +97,33 @@ public final class MarketplaceStager {
     }
 
     /**
-     * Stage all eligible inputs and return a map from {@code skill.name} to its resolved
-     * {@link StageResult}. Inputs whose source repository is a
-     * {@link WorkspaceSkillRepository} are returned as {@link StageResult.WorkspaceNative}
-     * — they need no staging because the workspace tree already contains them.
+     * 暂存全部符合条件的输入，并返回从 {@code skill.name} 到解析后的 {@link StageResult} 的映射。来源仓库为 {@link WorkspaceSkillRepository} 的输入返回 {@link StageResult.WorkspaceNative}，因为工作区树已包含它们，无需暂存。
      *
-     * <p>The white-list of staged directories is rebuilt every call; any pre-existing
-     * directory under {@code .skills-cache/<source-ns>/} not in the white-list is removed
-     * (cheap orphan GC: marketplace repos that no longer publish a given skill leave no
-     * residue).
+     * <p>每次调用重建暂存目录允许名单；{@code .skills-cache/<source-ns>/} 下不在名单中的现有目录将进入孤立回收流程，满足宽限期后才删除，避免市场仓库不再发布的技能永久残留。
      *
-     * @param visible       skill+repository pairs in compose order (winner per name already
-     *                      deduped upstream)
-     * @param sourceNs      map from repository identity to its resolved source namespace
-     *                      (handles repos with colliding {@code getSource()} via {@code _idx}
-     *                      suffix)
-     * @return ordered map (insertion-order preserved) keyed by {@code skill.name}
+     * @param visible 按组合顺序排列的技能与仓库对（上游已按名称去重，只保留胜出者）
+     * @param sourceNs 仓库身份到解析后来源命名空间的映射（通过 {@code _idx} 后缀处理 {@code getSource()} 冲突）
+     * @return 以 {@code skill.name} 为键的有序映射（保留插入顺序）
      */
     public Map<String, StageResult> stage(
             List<RepoBound> visible, Map<AgentSkillRepository, String> sourceNs) {
-        // null means "no identity to key on", which is distinct from an identity that
-        // happens to be spelled like the shared bucket.
+        // null 表示“没有可用身份”，不同于某个身份的拼写
+        // 恰好与共享桶名称相同。
         return stage(visible, sourceNs, null);
     }
 
     /**
-     * Stages into this call's isolation scope. Every directory GC may remove lives under
-     * {@code .skills-cache/<scope>/}, and only calls that share a scope share that subtree —
-     * so a white-list built from one call's visible skills is authoritative for everything it
-     * can reach, which is the property the flat layout never had.
+     * 暂存到本次调用的隔离范围。GC 可能删除的每个目录都位于 {@code .skills-cache/<scope>/} 下；只有共享 scope 的调用才共享此子树，因此单次调用可见技能构成的允许名单限定在该范围内，而不像扁平布局那样涉及其他范围。
      *
-     * @param scope per-call isolation key (typically {@code userId} or {@code sessionId});
-     *     blank collapses to {@value #SHARED_SCOPE}
+     * @param scope 单次调用隔离键（通常为 {@code userId} 或 {@code sessionId}）；空白值归入 {@value #SHARED_SCOPE}
      */
     public Map<String, StageResult> stage(
             List<RepoBound> visible, Map<AgentSkillRepository, String> sourceNs, String scope) {
         Map<String, StageResult> roots = new HashMap<>(visible.size());
         if (workspaceRoot == null) {
-            // No host workspace available (rare; e.g. classpath-only build). Skip staging
-            // and report no filesRoot for the affected skills; shell-mode rendering will
-            // omit them gracefully.
+            // 无宿主工作区（少见，例如仅 classpath 的构建）时，跳过暂存，
+            // 对相关技能报告没有 filesRoot；Shell 模式渲染
+            // 会正常省略它们。
             for (RepoBound bound : visible) {
                 if (bound.repo() instanceof WorkspaceSkillRepository) {
                     roots.put(bound.skill().getName(), new StageResult.WorkspaceNative());
@@ -169,22 +142,20 @@ public final class MarketplaceStager {
         try {
             garbageCollectOrphans(scopeRoot, retained);
         } catch (Exception e) {
-            // Cache hygiene is best-effort and must never fail the agent call — the same
-            // fallback the per-skill materialisation applies.
+            // 缓存清理尽力而为，绝不能让智能体调用失败，
+            // 与单技能物化采用相同回退原则。
             log.warn("Orphan GC under {} skipped: {}", scopeRoot, e.getMessage());
         }
         return roots;
     }
 
-    /** Blank scopes collapse to one shared segment so GC always has exactly one subtree. */
+    /**
+     * 空白 scope 归入同一个共享路径段，使 GC 始终只面对一个子树。
+     */
     private static final int MAX_SCOPE_SEGMENT = 64;
 
     /**
-     * Maps a caller-supplied identity to one path segment, injectively. Sanitising alone would
-     * not do: {@code alice@corp.com} and {@code alice#corp.com} both flatten to
-     * {@code alice_corp.com}, and two identities sharing a subtree is exactly what the scope
-     * exists to prevent. Anything that is not already a distinct, filesystem-safe segment keeps
-     * a readable prefix and is disambiguated by a digest of the original.
+     * 将调用方身份映射为单个路径段，并避免仅清理字符带来的碰撞。仅做清理不够：{@code alice@corp.com} 和 {@code alice#corp.com} 都会变成 {@code alice_corp.com}，两个身份共享子树正是 scope 要避免的问题。对并非天然独立且文件系统安全的路径段，保留可读前缀，并使用原始身份摘要消歧。
      */
     private static String scopeSegment(String scope) {
         if (scope == null || scope.isBlank()) {
@@ -195,7 +166,7 @@ public final class MarketplaceStager {
                 safe.equals(scope)
                         && !safe.equals(SHARED_SCOPE)
                         && safe.length() <= MAX_SCOPE_SEGMENT
-                        // Windows rejects a trailing dot or space in a path component.
+                        // Windows 不接受路径分量末尾的点或空格。
                         && !safe.endsWith(".");
         if (lossless) {
             return safe;
@@ -205,7 +176,9 @@ public final class MarketplaceStager {
         return safe.substring(0, Math.max(keep, 0)) + "-" + digest;
     }
 
-    /** Materialises every eligible input under this call's scope subtree. */
+    /**
+     * 将全部符合条件的输入物化到本次调用的 scope 子树下。
+     */
     private void stageAll(
             List<RepoBound> visible,
             Map<AgentSkillRepository, String> sourceNs,
@@ -220,7 +193,7 @@ public final class MarketplaceStager {
             }
 
             if (bound.repo() instanceof WorkspaceSkillRepository) {
-                // Workspace-native: skills/<name>/ already on the right path.
+                // 工作区原生技能：skills/<name>/ 已在正确路径上。
                 roots.put(name, new StageResult.WorkspaceNative());
                 continue;
             }
@@ -236,16 +209,16 @@ public final class MarketplaceStager {
             Path stagedDir = scopeRoot.resolve(ns).resolve(name);
             try {
                 if (!materializeIfChanged(stagedDir, skill.getResources())) {
-                    // Nothing was materialised, which is what a lazy repository produces:
-                    // it publishes no in-memory resources. Reporting Cached here would
-                    // render a <files-root> for a directory that stays permanently empty,
-                    // so report NONE and let shell-mode rendering omit the skill.
+                    // 未物化任何内容，符合懒加载仓库的输出：
+                    // 它没有发布内存资源。此时若报告 Cached，
+                    // 就会为始终为空的目录渲染 <files-root>，
+                    // 因此报告 NONE，让 Shell 模式渲染省略此技能。
                     log.debug("Skill '{}' (source-ns={}) staged no resources", name, ns);
                     roots.put(name, StageResult.NONE);
                     continue;
                 }
-                // Mark as live before GC runs: this is what stops a concurrent call — or
-                // another replica sharing the volume — from treating it as an orphan.
+                // 在 GC 之前标记为活动状态，避免并发调用或
+                // 共享卷的其他副本将其视为孤立目录。
                 touch(stagedDir);
                 retained.add(stagedDir);
                 roots.put(
@@ -257,7 +230,9 @@ public final class MarketplaceStager {
         }
     }
 
-    /** Convenience for callers that don't care about return values. */
+    /**
+     * 供不关心返回值的调用方使用的便捷方法。
+     */
     public void invalidateAll() {
         if (workspaceRoot == null) {
             return;
@@ -274,20 +249,20 @@ public final class MarketplaceStager {
     }
 
     // =========================================================================
-    //  Internals
+    // 内部实现
     // =========================================================================
 
     private boolean materializeIfChanged(Path stagedDir, Map<String, String> resources)
             throws IOException {
         if (resources == null || resources.isEmpty()) {
-            // Nothing to write: leave no directory behind, so the caller can tell a
-            // staged skill apart from one whose content is unavailable.
+            // 没有内容可写时不留下目录，让调用方能够区分
+            // 已暂存技能和内容不可用的技能。
             return false;
         }
-        // The staged directory is created lazily by writeIfChanged, on the first entry that
-        // survives the filter below. Creating it here instead would materialise a directory
-        // for a map whose entries are all rejected, contradicting the contract above.
-        // Track files we expect; remove any extras under stagedDir afterwards.
+        // 暂存目录由 writeIfChanged 在首个通过下方过滤的条目处延迟创建。
+        // 若在此提前创建，会为所有条目均被拒绝的映射生成目录，
+        // 违背上述约定。
+        // 记录预期文件，之后移除 stagedDir 下的多余文件。
         Set<Path> expected = new HashSet<>();
         for (Map.Entry<String, String> e : resources.entrySet()) {
             String rel = e.getKey();
@@ -308,8 +283,8 @@ public final class MarketplaceStager {
             writeIfChanged(target, bytes);
             expected.add(target);
         }
-        // Remove stale files under the staged dir that no longer correspond to a published
-        // resource for this skill. Keeps stage idempotent and self-cleaning per skill.
+        // 移除暂存目录中已不再对应此技能已发布资源的旧文件，
+        // 使每个技能的暂存操作幂等并自行清理。
         removeUnexpected(stagedDir, expected);
         return !expected.isEmpty();
     }
@@ -323,15 +298,14 @@ public final class MarketplaceStager {
             }
         }
         Files.write(target, bytes);
-        // Heuristic exec-bit recovery: the ingestion path turns files into Strings and discards
-        // POSIX mode, so we re-derive +x from a shebang / known script extension. Not a true
-        // mode preservation — pure-static skill assets (.json/.md/.txt) stay 644.
+        // 启发式恢复执行位：摄入路径将文件转换为字符串，丢弃了
+        // POSIX 模式，因此从 shebang 或已知脚本扩展名重新推导 +x。这不是真正的
+        // 模式保留；纯静态技能素材（.json/.md/.txt）仍保持 644。
         maybeMarkExecutable(target, bytes);
     }
 
     /**
-     * Script-detection heuristic: shebang at byte 0/1 OR a known-script suffix. Match → add
-     * owner-exec on POSIX filesystems. Non-POSIX (Windows) silently no-op.
+     * 脚本检测启发式：字节 0/1 处存在 shebang，或使用已知脚本后缀。匹配时在 POSIX 文件系统添加执行权限；非 POSIX（Windows）静默不操作。
      */
     private static void maybeMarkExecutable(Path target, byte[] bytes) {
         if (!shouldBeExecutable(target, bytes)) {
@@ -339,8 +313,8 @@ public final class MarketplaceStager {
         }
         try {
             Set<PosixFilePermission> current = new HashSet<>(Files.getPosixFilePermissions(target));
-            // Only flip the exec bits the file already has *read* on, mirroring how `chmod +x`
-            // behaves: a 640 file gets 750, not 751.
+            // 只为已有读取权限的用户类别增加执行位，类似 `chmod +x`：
+            // 640 文件变为 750，而不是 751。
             EnumSet<PosixFilePermission> toAdd = EnumSet.noneOf(PosixFilePermission.class);
             if (current.contains(PosixFilePermission.OWNER_READ)) {
                 toAdd.add(PosixFilePermission.OWNER_EXECUTE);
@@ -357,23 +331,27 @@ public final class MarketplaceStager {
             current.addAll(toAdd);
             Files.setPosixFilePermissions(target, current);
         } catch (UnsupportedOperationException e) {
-            // POSIX permissions unavailable (Windows default FS); intentional no-op.
+            // POSIX 权限不可用（Windows 默认文件系统），有意不操作。
         } catch (IOException e) {
             log.debug("Failed to set exec bit on {}: {}", target, e.getMessage());
         }
     }
 
-    /** Known interpreter / script suffixes. Conservative — we only mark "obvious" scripts. */
+    /**
+     * 已知解释器/脚本后缀；采取保守策略，仅标记明显的脚本。
+     */
     private static final Set<String> SCRIPT_SUFFIXES =
             Set.of(".sh", ".bash", ".zsh", ".ksh", ".py", ".rb", ".pl", ".js", ".mjs");
 
-    /** Package-private for direct heuristic testing without spinning up {@link #stage}. */
+    /**
+     * 包级可见，便于不启动 {@link #stage} 就直接测试启发式规则。
+     */
     static boolean shouldBeExecutable(Path target, byte[] bytes) {
-        // 1. Shebang detection — strongest signal regardless of filename.
+        // 1. shebang 检测：不依赖文件名的最强信号。
         if (bytes != null && bytes.length >= 2 && bytes[0] == '#' && bytes[1] == '!') {
             return true;
         }
-        // 2. Filename suffix.
+        // 2. 文件名后缀。
         String fileName = target.getFileName().toString().toLowerCase(Locale.ROOT);
         int dot = fileName.lastIndexOf('.');
         if (dot < 0) {
@@ -391,14 +369,14 @@ public final class MarketplaceStager {
             for (Path p : toDelete) {
                 deleteQuietly(p);
             }
-            // Prune now-empty subdirectories left after file removal.
+            // 清理移除文件后留下的空子目录。
             try (var dirStream = Files.walk(stagedDir)) {
                 List<Path> dirs = new ArrayList<>();
                 dirStream
                         .filter(Files::isDirectory)
                         .filter(p -> !p.equals(stagedDir))
                         .forEach(dirs::add);
-                // Walk leaf-to-root so deletion succeeds.
+                // 从叶子到根遍历，确保能够删除。
                 dirs.sort((a, b) -> b.getNameCount() - a.getNameCount());
                 for (Path d : dirs) {
                     try (var probe = Files.list(d)) {
@@ -409,8 +387,8 @@ public final class MarketplaceStager {
                 }
             }
         } catch (IOException | UncheckedIOException e) {
-            // Files.walk / Files.list wrap mid-iteration IO errors (an entry deleted by a
-            // concurrent call) in UncheckedIOException, which is NOT an IOException.
+            // Files.walk / Files.list 会将迭代中的 I/O 错误（条目被并发调用删除）
+            // 包装为 UncheckedIOException，它不是 IOException。
             log.debug("Cleanup of {} failed: {}", stagedDir, e.getMessage());
         }
     }
@@ -419,10 +397,10 @@ public final class MarketplaceStager {
         if (!Files.isDirectory(cacheRoot)) {
             return;
         }
-        // `retained` reflects ONE call's visible skills; the cache is shared. Only delete
-        // entries that no call has staged for a full grace window.
+        // `retained` 只反映一次调用的可见技能，而缓存是共享的；仅删除
+        // 整个宽限期内没有任何调用暂存过的条目。
         Instant cutoff = Instant.now().minus(orphanGrace);
-        // Two-level layout: <source-ns>/<skill-name>/
+        // 两层布局：<source-ns>/<skill-name>/
         try (var nsStream = Files.list(cacheRoot)) {
             List<Path> nsDirs = new ArrayList<>();
             nsStream.filter(Files::isDirectory).forEach(nsDirs::add);
@@ -437,7 +415,7 @@ public final class MarketplaceStager {
                         deleteRecursively(skillDir);
                     }
                 }
-                // Clean up empty namespace dir.
+                // 清理空命名空间目录。
                 try (var probe = Files.list(nsDir)) {
                     if (probe.findAny().isEmpty()) {
                         deleteQuietly(nsDir);
@@ -449,7 +427,9 @@ public final class MarketplaceStager {
         }
     }
 
-    /** Refreshes the mtime GC reads, so a live directory is never mistaken for an orphan. */
+    /**
+     * 刷新 GC 读取的修改时间，降低活动目录被误判为孤立目录的风险。
+     */
     private static void touch(Path dir) {
         try {
             Files.setLastModifiedTime(dir, FileTime.from(Instant.now()));
@@ -458,7 +438,9 @@ public final class MarketplaceStager {
         }
     }
 
-    /** Unreadable mtime means we cannot prove the entry is dead, so we keep it. */
+    /**
+     * 修改时间不可读就无法证明条目已失效，因此保留它。
+     */
     private static boolean isStale(Path dir, Instant cutoff) {
         try {
             return Files.getLastModifiedTime(dir).toInstant().isBefore(cutoff);
@@ -468,7 +450,9 @@ public final class MarketplaceStager {
         }
     }
 
-    /** Delete one entry, tolerating a concurrent call having deleted or replaced it already. */
+    /**
+     * 删除一个条目，容忍它已被并发调用删除或替换。
+     */
     private static void deleteQuietly(Path p) {
         try {
             Files.deleteIfExists(p);
@@ -478,10 +462,7 @@ public final class MarketplaceStager {
     }
 
     /**
-     * Recursive delete that tolerates the tree changing underneath it. Uses
-     * {@link Files#walkFileTree} rather than {@link Files#walk}: the lazy stream aborts the
-     * whole traversal with an {@link UncheckedIOException} the moment an entry vanishes, while
-     * the visitor reports it through {@code visitFileFailed} and we simply carry on.
+     * 容忍遍历过程中目录树变化的递归删除。使用 {@link Files#walkFileTree} 而不是 {@link Files#walk}：后者的懒加载流一遇到条目消失就以 {@link UncheckedIOException} 中止整个遍历；访问器则通过 {@code visitFileFailed} 报告，允许我们继续。
      */
     private void deleteRecursively(Path root) throws IOException {
         if (!Files.exists(root)) {
@@ -498,7 +479,7 @@ public final class MarketplaceStager {
 
                     @Override
                     public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                        // Gone or unreadable — nothing left for us to remove.
+                        // 已消失或不可读，无需继续移除。
                         return FileVisitResult.CONTINUE;
                     }
 
@@ -533,10 +514,7 @@ public final class MarketplaceStager {
     }
 
     /**
-     * Resolves per-repository {@code source} namespaces. When two repositories report the same
-     * {@code getSource()}, the second and subsequent ones receive an {@code _<idx>} suffix
-     * (with a warning log). Layer-1 host repositories whose source string is empty get
-     * {@link #GLOBAL_NAMESPACE}.
+     * 解析每个仓库的 {@code source} 命名空间。若多个仓库报告相同 {@code getSource()}，第二个及之后的仓库获得 {@code _<idx>} 后缀，并记录警告。第 1 层宿主仓库来源字符串为空时使用 {@link #GLOBAL_NAMESPACE}。
      */
     public static Map<AgentSkillRepository, String> resolveSourceNamespaces(
             List<AgentSkillRepository> repos) {
@@ -580,32 +558,37 @@ public final class MarketplaceStager {
         if (s == null || s.isBlank()) {
             return GLOBAL_NAMESPACE;
         }
-        // WorkspaceSkillRepository does not consume a source-ns slot, but we still index it
-        // for completeness so callers can pass a uniform map.
+        // WorkspaceSkillRepository 不占用来源命名空间槽位，但仍记录其索引，
+        // 让调用方可以统一传递映射。
         return s;
     }
 
-    /** Pairs a skill with the repository that produced it. */
+    /**
+     * 将技能与产生它的仓库配对。
+     */
     public record RepoBound(AgentSkill skill, AgentSkillRepository repo) {}
 
-    /** Outcome of staging one skill. */
+    /**
+     * 暂存单个技能的结果。
+     */
     public sealed interface StageResult {
         StageResult NONE = new None();
 
         /**
-         * No staging applied — skill source has no shell-reachable representation.
+         * 未执行暂存，技能来源没有 Shell 可达的表示。
          *
-         * <p>Also returned when a repository published no resources that could be staged. Nothing
-         * was staged and nothing is retained for the skill on this pass, so a directory written by
-         * an earlier call becomes orphan-GC eligible: {@code NONE} does not mean "the files cached
-         * earlier are still there".
+         * <p>仓库未发布任何可暂存资源时也返回此值。本轮既未暂存也未保留该技能内容，因此早先调用写入的目录会成为孤立回收候选。{@code NONE} 不表示“之前缓存的文件仍然存在”。
          */
         record None() implements StageResult {}
 
-        /** Skill comes from {@link WorkspaceSkillRepository} (already in workspace/skills/). */
+        /**
+         * 技能来自 {@link WorkspaceSkillRepository}（已在 workspace/skills/ 中）。
+         */
         record WorkspaceNative() implements StageResult {}
 
-        /** Skill staged under {@code .skills-cache/<sourceNs>/<skillName>/}. */
+        /**
+         * 技能暂存于 {@code .skills-cache/<sourceNs>/<skillName>/} 下。
+         */
         record Cached(String scopeSegment, String sourceNamespace, String skillName)
                 implements StageResult {}
     }

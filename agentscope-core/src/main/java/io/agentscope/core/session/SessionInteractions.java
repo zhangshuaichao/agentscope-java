@@ -20,11 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-/** Outstanding typed requests at a committed prefix; callers cannot invent tool outcomes. */
+/** 已提交前缀处尚待处理的类型化请求；调用方不能凭空构造工具结果。 */
 public final class SessionInteractions {
     private SessionInteractions() {}
 
-    /** Resolve a tool continuation against committed pending requests, never caller-invented IDs. */
+    /** 依据已提交的待处理请求解析工具续执行，绝不接受调用方虚构的 ID。 */
     public static String continuationTurn(SessionLog log, Set<String> requestIds) {
         if (requestIds.isEmpty())
             throw new IllegalArgumentException("Tool result IDs are required");

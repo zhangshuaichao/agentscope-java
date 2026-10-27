@@ -18,27 +18,27 @@ package io.agentscope.core.model.spi;
 import io.agentscope.core.model.Model;
 import io.agentscope.core.model.ModelCreationContext;
 
-/** Service Provider Interface for model adapters discovered from extension modules. */
+/** 从扩展模块发现模型适配器的服务提供者接口（SPI）。 */
 public interface ModelProvider {
 
-    /** Provider identifier, for example {@code openai}. */
+    /** 服务商标识，例如 {@code openai}。 */
     String providerId();
 
     /**
-     * Returns whether this provider can create a model for the full model id,
-     * for example {@code openai:gpt-4o}.
+     * 返回此服务商是否能够为完整模型 ID 创建模型，
+     * 例如 {@code openai:gpt-4o}。
      */
     boolean supports(String modelId);
 
-    /** Returns whether this provider can create a model for the full model id and context. */
+    /** 返回此服务商是否能够根据完整模型 ID 和上下文创建模型。 */
     default boolean supports(String modelId, ModelCreationContext context) {
         return supports(modelId);
     }
 
-    /** Creates a model for the full model id. */
+    /** 根据完整模型 ID 创建模型。 */
     Model create(String modelId);
 
-    /** Creates a model for the full model id using a provider-neutral context. */
+    /** 根据完整模型 ID 和与服务商无关的上下文创建模型。 */
     default Model create(String modelId, ModelCreationContext context) {
         return create(modelId);
     }

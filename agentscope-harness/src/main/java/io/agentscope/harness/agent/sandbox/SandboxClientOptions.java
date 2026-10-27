@@ -20,12 +20,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.agentscope.harness.agent.sandbox.impl.docker.DockerSandboxClientOptions;
 
 /**
- * Base class for sandbox client configuration options.
+ * 沙箱客户端配置选项基类。
  *
- * <p>Each concrete subclass describes a specific sandbox backend (e.g. Docker) and can
- * self-instantiate the corresponding {@link SandboxClient} via {@link #createClient()}.
- * This allows callers to configure only the options object and rely on
- * {@link io.agentscope.harness.agent.HarnessAgent.Builder} to derive the client automatically.
+ * <p>每个具体子类描述一种沙箱后端（例如 Docker），并能通过 {@link #createClient()} 自行实例化对应的 {@link SandboxClient}。调用方因此只需配置选项对象，由 {@link io.agentscope.harness.agent.HarnessAgent.Builder} 自动推导客户端。
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -34,29 +31,27 @@ import io.agentscope.harness.agent.sandbox.impl.docker.DockerSandboxClientOption
 public abstract class SandboxClientOptions {
 
     /**
-     * Returns the type discriminator used in JSON serialization.
+     * 返回 JSON 序列化使用的类型判别标记。
      *
-     * @return type string (e.g. "docker")
+     * @return 类型字符串（例如 "docker"）
      */
     public abstract String getType();
 
     /**
-     * Creates the {@link SandboxClient} implementation that corresponds to these options.
+     * 创建与这些选项对应的 {@link SandboxClient} 实现。
      *
-     * <p>Called by {@link io.agentscope.harness.agent.HarnessAgent.Builder} when no explicit
-     * client has been provided, so callers only need to configure the options object.
+     * <p>未显式提供客户端时，由 {@link io.agentscope.harness.agent.HarnessAgent.Builder} 调用，因此调用方只需配置选项对象。
      *
-     * @return a new client instance ready for use
+     * @return 可直接使用的新客户端实例
      */
     public abstract SandboxClient<? extends SandboxClientOptions> createClient();
 
     /**
-     * Returns the absolute workspace root path inside the sandbox container.
+     * 返回沙箱容器内的工作区绝对根路径。
      *
-     * <p>Defaults to {@code /workspace}. Concrete subclasses override this when the sandbox
-     * backend uses a different root (e.g. AgentRun uses {@code /home/agentscope/workspace}).
+     * <p>默认为 {@code /workspace}。后端使用不同根目录时，由具体子类覆盖（例如 AgentRun 使用 {@code /home/agentscope/workspace}）。
      *
-     * @return workspace root path string
+     * @return 工作区根路径字符串
      */
     public String getWorkspaceRoot() {
         return "/workspace";

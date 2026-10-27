@@ -23,28 +23,31 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * Utility methods shared by text file tools.
+ * 文本文件工具共用的辅助方法。
  */
 public class FileToolUtils {
 
     private FileToolUtils() {
-        // Utility class, prevent instantiation
+        // 工具类，禁止实例化
     }
 
     /**
-     * Validate that the given file path is within the base directory.
-     * This prevents path traversal attacks and unauthorized file access.
+     * 验证给定文件路径位于基目录内，防止路径遍历和未授权文件访问。
      *
-     * <p>When baseDir is specified:
+     * <p>【学习提示】这里使用 normalize() 和 startsWith() 检查词法路径边界，并未调用
+     * toRealPath() 解析符号链接。因此不能把本方法单独视为完整文件系统沙箱；实际访问仍需
+     * 结合权限层和运行环境隔离。学习时应区分路径字符串规范化与真实文件身份解析。
+     *
+     * <p>指定 baseDir 时：
      * <ul>
-     *   <li>Relative paths are resolved relative to baseDir</li>
-     *   <li>Absolute paths are validated to be within baseDir</li>
+     * <li>相对路径以 baseDir 为基准解析</li>
+     * <li>绝对路径必须位于 baseDir 内</li>
      * </ul>
      *
-     * @param filePath The file path to validate
-     * @param baseDir The base directory to restrict access to (null means no restriction)
-     * @return The normalized absolute path if valid
-     * @throws IOException if the path is invalid or outside the base directory
+     * @param filePath 待验证文件路径
+     * @param baseDir 限制访问的基目录（null 表示不限制）
+     * @return 验证通过后的规范化绝对路径
+     * @throws IOException 当路径无效或在基目录外时
      */
     static Path validatePath(String filePath, Path baseDir) throws IOException {
         if (filePath == null || filePath.trim().isEmpty()) {
@@ -53,17 +56,17 @@ public class FileToolUtils {
 
         Path inputPath = Paths.get(filePath);
 
-        // If baseDir is specified, relative paths should be resolved relative to baseDir
+        // 指定 baseDir 时，相对路径以其为基准解析
         Path path;
         if (baseDir != null && !inputPath.isAbsolute()) {
-            // Relative path: resolve relative to baseDir
+            // 相对路径：相对于 baseDir 解析
             path = baseDir.resolve(inputPath).normalize();
         } else {
-            // Absolute path or no baseDir: convert to absolute path
+            // 绝对路径或未指定 baseDir：转换为绝对路径
             path = inputPath.toAbsolutePath().normalize();
         }
 
-        // If baseDir is specified, ensure the path is within it
+        // 指定 baseDir 时，确保路径位于其中
         if (baseDir != null) {
             Path normalizedBaseDir = baseDir.toAbsolutePath().normalize();
             if (!path.startsWith(normalizedBaseDir)) {
@@ -79,14 +82,14 @@ public class FileToolUtils {
     }
 
     /**
-     * Calculate the view ranges for displaying file content after modifications.
+     * 计算修改后展示文件内容的行范围。
      *
-     * @param originalLineCount Original number of lines
-     * @param newLineCount New number of lines after modification
-     * @param modifyStart Start line of modification
-     * @param modifyEnd End line of modification
-     * @param extraViewLines Extra lines to show before and after
-     * @return Array of [viewStart, viewEnd]
+     * @param originalLineCount 原行数
+     * @param newLineCount 修改后新行数
+     * @param modifyStart 修改起始行
+     * @param modifyEnd 修改结束行
+     * @param extraViewLines 前后额外展示的行数
+     * @return [viewStart, viewEnd] 数组
      */
     static int[] calculateViewRanges(
             int originalLineCount,
@@ -108,12 +111,12 @@ public class FileToolUtils {
     }
 
     /**
-     * View a specific range of lines from a text file.
+     * 查看文本文件指定行范围。
      *
-     * @param filePath The file path
-     * @param startLine Start line number (1-based)
-     * @param endLine End line number (1-based, inclusive)
-     * @return The content with line numbers
+     * @param filePath 文件路径
+     * @param startLine 起始行号（从 1 开始）
+     * @param endLine 结束行号（从 1 开始，含端点）
+     * @return 带行号的内容
      */
     static String viewTextFile(String filePath, int startLine, int endLine) {
         try {
@@ -134,14 +137,14 @@ public class FileToolUtils {
     }
 
     /**
-     * Parse range string like "[1,5]" or "1,5" into [start, end] array.
+     * 将 "[1,5]" 或 "1,5" 等范围字符串解析为 [start, end] 数组。
      *
-     * @param ranges The range string
-     * @return Array of [start, end] or null if invalid
+     * @param ranges 范围字符串
+     * @return [start, end] 数组；无效时为 null
      */
     static int[] parseRanges(String ranges) {
         try {
-            // Remove brackets and spaces
+            // 移除方括号和空格
             String cleaned = ranges.trim().replaceAll("^\\[", "").replaceAll("\\]$", "").trim();
 
             String[] parts = cleaned.split(",");

@@ -19,14 +19,11 @@ import io.agentscope.core.message.ToolResultBlock;
 import java.lang.reflect.Type;
 
 /**
- * Converts tool method return values to ToolResultBlock.
- * Custom implementations can override conversion logic for specific tools.
+ * 将工具方法返回值转换为 ToolResultBlock。自定义实现可为特定工具覆写转换逻辑。
  *
- * <p>This interface allows users to customize how tool results are converted and presented to LLMs.
- * Implementations can control JSON serialization, add metadata, filter sensitive data, or compress
- * large outputs.
+ * <p>用户可定制工具结果的转换和呈现方式，包括 JSON 序列化、元数据添加、敏感数据过滤或大型输出压缩。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * public class CustomConverter implements ToolResultConverter {
  *     @Override
@@ -48,11 +45,11 @@ import java.lang.reflect.Type;
 public interface ToolResultConverter {
 
     /**
-     * Convert tool call result to ToolResultBlock.
+     * 将工具调用结果转换为 ToolResultBlock。
      *
-     * @param result the tool call result (may be null)
-     * @param returnType the return type of the tool method (may be null)
-     * @return ToolResultBlock containing the converted result (never null)
+     * @param result 工具调用结果（可为 null）
+     * @param returnType 工具方法返回类型（可为 null）
+     * @return 包含转换结果的 ToolResultBlock（永不为 null）
      */
     ToolResultBlock convert(Object result, Type returnType);
 }

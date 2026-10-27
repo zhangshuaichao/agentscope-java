@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 
 /**
- * A single remote tool call awaiting user confirmation (HITL).
+ * 一个等待用户确认（HITL）的远程工具调用。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)

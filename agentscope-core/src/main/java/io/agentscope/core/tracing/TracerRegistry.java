@@ -23,26 +23,18 @@ import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
 /**
- * Registry for the global {@link Tracer} instance.
- * <p>
- * <b>Reactor global hook:</b> This class provides methods to enable or disable
- * a global Reactor
- * hook (via {@link #enableTracingHook()} and {@link #disableTracingHook()})
- * that propagates
- * tracing context across Reactor operators. Enabling this hook affects
- * <i>all</i> Reactor
- * operations in the JVM, which may have performance implications even for code
- * unrelated to tracing.
- * Use with care, and only enable the hook if you require tracing context
- * propagation for all
- * Reactor pipelines.
+ * 全局 {@link Tracer} 实例注册表。
  *
- * <p><b>Migration:</b> New applications should configure an OpenTelemetry SDK through
- * {@code OpenTelemetrySdk.builder().setTracerProvider(...).buildAndRegisterGlobal()}, then attach
- * {@link OtelTracingMiddleware} to each agent. The middleware reads the globally registered
- * OpenTelemetry instance directly, so new code should not call {@link #register(Tracer)}.
+ * <p><b>Reactor 全局钩子：</b>通过 {@link #enableTracingHook()} 和 {@link #disableTracingHook()}
+ * 启用或禁用跨 Reactor 操作符传播追踪上下文的全局钩子。
+ * 启用后影响 JVM 内所有 Reactor 操作，即使与追踪无关的代码也可能承担性能开销。
+ * 请谨慎使用，仅在全部 Reactor 管道都需要追踪上下文传播时启用。
  *
- * @deprecated since 2.0.0. Use {@link OtelTracingMiddleware} instead.
+ * <p><b>迁移：</b>新应用应通过 {@code OpenTelemetrySdk.builder().setTracerProvider(...).buildAndRegisterGlobal()}
+ * 配置 OpenTelemetry SDK，再为每个智能体附加 {@link OtelTracingMiddleware}。
+ * 该中间件直接读取全局 OpenTelemetry 实例，新代码不应调用 {@link #register(Tracer)}。
+ *
+ * @deprecated 自 2.0.0 起弃用，请改用 {@link OtelTracingMiddleware}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 @SuppressWarnings("deprecation")
@@ -51,34 +43,19 @@ public class TracerRegistry {
     private static volatile boolean hookEnabled = false;
 
     /**
-     * Enables the global Reactor hook for tracing context propagation.
-     * <p>
-     * <b>Mechanism:</b> This registers a global hook using
-     * {@link Hooks#onEachOperator(String, Function)}
-     * that intercepts <i>every</i> Reactor operator creation involved in
-     * {@code Flux} and {@code Mono}
-     * chains. It wraps the {@code Subscriber} to ensure that downstream signals
-     * ({@code onNext},
-     * {@code onError}, {@code onComplete}) are processed within the tracing context
-     * captured
-     * at assembly time or from upstream.
-     * <p>
-     * <b>Activation:</b> The hook is active immediately after calling this method.
-     * It affects all
-     * subsequently assembled Reactor streams in the JVM.
-     * <p>
-     * <b>Performance:</b> Enabling this hook introduces overhead for every Reactor
-     * operator
-     * in the application, even those not strictly related to AgentScope tracing. It
-     * involves
-     * object allocation (wrapper subscribers) and context context
-     * capturing/restoring.
-     * It should be enabled only when automatic context propagation across
-     * asynchronous boundaries
-     * is required.
-     * <p>
-     * This method is safe to call multiple times; the hook will only be registered
-     * once.
+     * 启用用于追踪上下文传播的全局 Reactor 钩子。
+     *
+     * <p><b>机制：</b>通过 {@link Hooks#onEachOperator(String, Function)} 注册全局钩子，
+     * 拦截 {@code Flux} 与 {@code Mono} 链中每个 Reactor 操作符的创建。
+     * 包装 {@code Subscriber}，确保下游信号（{@code onNext}、{@code onError}、{@code onComplete}）
+     * 在组装时捕获或来自上游的追踪上下文中处理。
+     *
+     * <p><b>激活：</b>调用后立即生效，影响 JVM 中随后组装的所有 Reactor 流。
+     *
+     * <p><b>性能：</b>为应用中的每个 Reactor 操作符增加开销，包括与 AgentScope 追踪无关的操作符。
+     * 涉及包装订阅者的对象分配及上下文捕获／恢复，仅在需要跨异步边界自动传播上下文时启用。
+     *
+     * <p>可以安全多次调用，钩子只注册一次。
      */
     public static synchronized void enableTracingHook() {
         if (!hookEnabled) {
@@ -135,8 +112,8 @@ public class TracerRegistry {
     }
 
     /**
-     * Disables the global Reactor hook for tracing context propagation.
-     * This removes the hook for all Reactor operators in the JVM.
+     * 禁用用于追踪上下文传播的全局 Reactor 钩子。
+     * 从 JVM 中所有 Reactor 操作符移除此钩子。
      */
     public static synchronized void disableTracingHook() {
         if (hookEnabled) {
@@ -148,10 +125,9 @@ public class TracerRegistry {
     private static volatile Tracer tracer = new NoopTracer();
 
     /**
-     * Registers a tracer for the legacy global tracing path.
+     * 为旧版全局追踪路径注册 tracer。
      *
-     * <p>New code should register an OpenTelemetry SDK globally and attach {@link
-     * OtelTracingMiddleware} to the agent instead.
+     * <p>新代码应全局注册 OpenTelemetry SDK，并为智能体附加 {@link OtelTracingMiddleware}。
      */
     public static void register(Tracer tracer) {
         TracerRegistry.tracer = tracer;

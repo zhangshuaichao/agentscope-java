@@ -21,23 +21,24 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 /**
- * Deterministic session-ID derivation. Produces a 12-character hex string from arbitrary input
- * parts using SHA-256, guaranteeing the same inputs always yield the same output regardless of
- * JVM instance or machine.
+ * 确定性的会话 ID 派生。使用 SHA-256 从任意输入片段生成 12 位十六进制字符串，
+ * 相同输入总能得到相同输出，与 JVM 实例或机器无关。
  */
 public final class SessionIdUtils {
 
     private SessionIdUtils() {}
 
     /**
-     * Returns a 12-character lowercase hex hash derived from the given parts joined by {@code "/"}.
+     * 将给定片段用 {@code "/"} 连接，派生出 12 位小写十六进制哈希。
      *
-     * <p>The hash is deterministic: identical inputs produce identical output on any machine. The
-     * output is filename-safe (lowercase hex only). Collision probability is negligible for
-     * practical session counts (2^48 space).
+     * <p>哈希是确定性的：相同输入在任意机器上产生相同输出。
+     * 输出仅含小写十六进制字符，可安全用于文件名；空间为 2^48。
      *
-     * @param parts one or more non-null seed values
-     * @return 12-char hex string
+     * <p>【学习提示】确定性不等于唯一性：截断到 48 位仍可能碰撞，且分隔符连接也不是
+     * 通用的无歧义元组编码。此方法用于稳定寻址，不应当作认证令牌或绝对无碰撞的身份保证。
+     *
+     * @param parts 一个或多个非 null 种子值
+     * @return 12 位十六进制字符串
      */
     public static String deterministicHash(String... parts) {
         String seed = String.join("/", parts);

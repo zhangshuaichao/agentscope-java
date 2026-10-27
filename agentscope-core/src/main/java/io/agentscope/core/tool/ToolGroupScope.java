@@ -16,27 +16,22 @@
 package io.agentscope.core.tool;
 
 /**
- * Defines who manages a {@link ToolGroup}'s activation lifecycle.
+ * 定义谁管理 {@link ToolGroup} 的激活生命周期。
  *
  * <ul>
- *   <li>{@link #META} — managed by the agent via the {@code reset_equipped_tools} meta tool.
- *       These groups appear in the meta tool's parameter enum and follow replacement semantics:
- *       only groups explicitly listed in the {@code to_activate} parameter remain active.</li>
- *   <li>{@link #EXTERNAL} — managed by developer code (e.g., programmatic activation/deactivation).
- *       These groups are invisible to the meta tool and unaffected by its calls.</li>
+ * <li>{@link #META}：由智能体通过 {@code reset_equipped_tools} 元工具管理。这些组出现在元工具参数枚举中，遵循替换语义：只有 {@code to_activate} 参数显式列出的组保持激活。</li>
+ * <li>{@link #EXTERNAL}：由开发者代码管理（例如程序化激活或停用）。对元工具不可见，也不受其调用影响。</li>
  * </ul>
  */
 public enum ToolGroupScope {
 
     /**
-     * The group is managed by the meta tool ({@code reset_equipped_tools}).
-     * The agent can activate/deactivate it at runtime.
+     * 由元工具 {@code reset_equipped_tools} 管理的组，智能体可在运行时激活或停用。
      */
     META,
 
     /**
-     * The group is managed externally by developer code.
-     * The meta tool cannot see or modify it.
+     * 由外部开发者代码管理的组，元工具不能查看或修改。
      */
     EXTERNAL
 }

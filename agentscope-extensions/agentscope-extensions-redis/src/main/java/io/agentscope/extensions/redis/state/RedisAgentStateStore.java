@@ -34,41 +34,30 @@ import org.redisson.api.RedissonClient;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * Redis-based session implementation supporting multiple Redis clients.
+ * 支持多种 Redis 客户端的会话状态存储实现。
  *
- * <p>This implementation provides a unified interface for Redis-based session storage, supporting
- * multiple Redis client implementations:
+ * <p>统一以下客户端：
+ * <ul><li>Jedis：单机、集群、哨兵。</li><li>Lettuce：单机、集群、哨兵。</li>
+ * <li>Redisson：单机、集群、哨兵、主从。</li></ul>
  *
- * <ul>
- *   <li>Jedis - Standalone, Cluster, Sentinel</li>
- *   <li>Lettuce - Standalone, Cluster, Sentinel</li>
- *   <li>Redisson - Standalone, Cluster, Sentinel, Master/Slave</li>
- * </ul>
+ * <p>会话段为 {@code userId/sessionId}，缺省用户时为 {@code __anon__/sessionId}。
+ * 默认采用原始 V0 布局；显式选择 V1 后，会话段包裹 Redis 哈希标签以支持集群同槽操作。
+ * 共享同一键前缀的所有存储必须配置相同布局。
  *
- * <p>The session state is stored in Redis with the following key structure. The session segment is
- * {@code userId/sessionId} (or {@code __anon__/sessionId} when user id is absent). By default the
- * store uses the original V0 layout. V1 is an explicit, Redis Cluster-safe alternative that wraps
- * the session segment in a Redis hash tag. Configure the same layout on every store sharing a key
- * prefix.
+ * <ul><li>单值状态：{@code {prefix}{sessionSegment}:{stateKey}}，保存 JSON 的 Redis 字符串。</li>
+ * <li>版本：{@code {prefix}{sessionSegment}:{stateKey}:ver}，保存乐观版本的字符串。</li>
+ * <li>列表状态：{@code {prefix}{sessionSegment}:{stateKey}:list}，保存 JSON 项的列表。</li>
+ * <li>列表哈希：{@code {prefix}{sessionSegment}:{stateKey}:list:_hash}，用于变化检测。</li>
+ * <li>会话标记：{@code {prefix}{sessionSegment}:_keys}，跟踪全部状态键的集合。</li></ul>
  *
- * <ul>
- *   <li>Single state: {@code {prefix}{sessionSegment}:{stateKey}} - Redis String containing JSON
- *   <li>Version: {@code {prefix}{sessionSegment}:{stateKey}:ver} - Redis String containing the
- *       optimistic version
- *   <li>List state: {@code {prefix}{sessionSegment}:{stateKey}:list} - Redis List containing JSON
- *       items
- *   <li>List hash: {@code {prefix}{sessionSegment}:{stateKey}:list:_hash} - Hash for change detection
- *   <li>AgentStateStore marker: {@code {prefix}{sessionSegment}:_keys} - Redis Set tracking all
- *       state keys
- * </ul>
+ * <p>所有状态的 {@code {sessionSegment}} 根据布局为 V0 的 {@code userId/sessionId}
+ * 或 V1 的 {@code {userId/sessionId}}。
  *
- * <p>For all state, {@code {sessionSegment}} is either V0 {@code userId/sessionId} or V1
- * {@code {userId/sessionId}}, according to the configured key layout version.
+ * <p>【学习提示】单值版本写入经 Lua 原子执行；列表保存则分步读长度、计算哈希、重建或追加、更新索引，
+ * 不能将单值 CAS 的原子保证推广到整个列表或整个会话。共享命名空间切换布局不是自动数据迁移。
  *
- * <p><strong>Jedis Usage Examples:</strong></p>
- *
- * <p>Jedis Standalone (using RedisClient):
- *
+ * <p><strong>Jedis 示例：</strong>
+ * <p>单机 RedisClient：
  * <pre>{@code
  * // Create Jedis RedisClient (new API)
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
@@ -78,9 +67,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .jedisClient(redisClient)
  *     .build();
  * }</pre>
- *
- * <p>Jedis Cluster (using RedisClusterClient):
- *
+ * <p>集群 RedisClusterClient：
  * <pre>{@code
  * // Create Jedis RedisClusterClient
  * Set<HostAndPort> nodes = new HashSet<>();
@@ -95,9 +82,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
  *     .build();
  * }</pre>
- *
- * <p>Jedis Sentinel (using RedisSentinelClient):
- *
+ * <p>哨兵 RedisSentinelClient：
  * <pre>{@code
  * // Create Jedis RedisSentinelClient
  * Set<String> sentinelNodes = new HashSet<>();
@@ -111,10 +96,8 @@ import redis.clients.jedis.UnifiedJedis;
  *     .build();
  * }</pre>
  *
- * <p><strong>Lettuce Usage Examples:</strong></p>
- *
- * <p>Lettuce Standalone:
- *
+ * <p><strong>Lettuce 示例：</strong>
+ * <p>单机：
  * <pre>{@code
  * // Create Lettuce RedisClient
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
@@ -124,9 +107,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .lettuceClient(redisClient)
  *     .build();
  * }</pre>
- *
- * <p>Lettuce Cluster:
- *
+ * <p>集群：
  * <pre>{@code
  * // Create Lettuce RedisClusterClient for cluster mode
  * RedisClusterClient clusterClient = RedisClusterClient.create(
@@ -138,9 +119,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
  *     .build();
  * }</pre>
- *
- * <p>Lettuce Sentinel:
- *
+ * <p>哨兵：
  * <pre>{@code
  * // Create Lettuce RedisClient for sentinel
  * RedisURI sentinelUri = RedisURI.builder()
@@ -156,8 +135,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .build();
  * }</pre>
  *
- * <p><strong>Redisson Usage Example:</strong></p>
- *
+ * <p><strong>Redisson 示例：</strong>
  * <pre>{@code
  * // Create RedissonClient (configure as needed for your deployment mode)
  * Config config = new Config();
@@ -173,8 +151,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .build();
  * }</pre>
  *
- * <p><strong>Custom Key Prefix Example:</strong></p>
- *
+ * <p><strong>自定义键前缀：</strong>
  * <pre>{@code
  * // Create Redis client
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
@@ -188,11 +165,17 @@ import redis.clients.jedis.UnifiedJedis;
  */
 public class RedisAgentStateStore implements AgentStateStore {
 
-    /** Redis key layout used by this store instance. */
+    /**
+     * 此存储实例采用的 Redis 键布局。
+     */
     public enum KeyLayoutVersion {
-        /** Default, original key layout without a Redis Cluster hash tag. */
+        /**
+         * 默认的原始键布局，不含 Redis Cluster 哈希标签。
+         */
         V0,
-        /** Cluster-safe key layout with the session segment in a Redis hash tag. */
+        /**
+         * 将会话段放入 Redis 哈希标签、支持集群同槽操作的布局。
+         */
         V1
     }
 
@@ -225,9 +208,8 @@ public class RedisAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Creates a new builder for {@link RedisAgentStateStore}.
-     *
-     * @return a new Builder instance
+     * 创建 {@link RedisAgentStateStore} 构建器。
+     * @return 新构建器实例
      */
     public static Builder builder() {
         return new Builder();
@@ -294,9 +276,9 @@ public class RedisAgentStateStore implements AgentStateStore {
     public long saveIfVersion(
             String userId, String sessionId, String key, State value, long expectedVersion) {
         if (expectedVersion == UNVERSIONED) {
-            // saveVersioned returns the new version directly — no read-back needed (and reading
-            // back via State.class is impossible because `State` is a marker interface Jackson
-            // cannot instantiate).
+            // saveVersioned 直接返回新版本，无需回读；
+            // 也不能用 State.class 回读，因为 State 是标记接口，
+            // Jackson 无法直接实例化它。
             return saveVersioned(userId, sessionId, key, value, UNCONDITIONAL_EXPECTED);
         }
         RedisAgentStateKeyLayout keyLayout = resolveKeyLayout(userId, sessionId);
@@ -323,34 +305,34 @@ public class RedisAgentStateStore implements AgentStateStore {
         String hashKey = listKey + HASH_SUFFIX;
         String keysKey = keyLayout.getKeysKey();
         try {
-            // Compute current hash
+            // 计算当前哈希。
             String currentHash = ListHashUtil.computeHash(values);
-            // Get stored hash
+            // 读取已存哈希。
             String storedHash = client.get(hashKey);
-            // Get current list length
+            // 读取当前列表长度。
             long existingCount = client.getListLength(listKey);
-            // Determine if full rewrite is needed
+            // 判断是否需要完整重写。
             boolean needsFullRewrite =
                     ListHashUtil.needsFullRewrite(values, storedHash, (int) existingCount);
             if (needsFullRewrite) {
-                // Delete and recreate the list
+                // 删除并重建列表。
                 client.deleteKeys(listKey);
                 for (State item : values) {
                     String json = JsonUtils.getJsonCodec().toJson(item);
                     client.rightPushList(listKey, json);
                 }
             } else if (values.size() > existingCount) {
-                // Incremental append
+                // 增量追加。
                 List<? extends State> newItems = values.subList((int) existingCount, values.size());
                 for (State item : newItems) {
                     String json = JsonUtils.getJsonCodec().toJson(item);
                     client.rightPushList(listKey, json);
                 }
             }
-            // else: no change, skip
-            // Update hash
+            // 否则没有变化，跳过。
+            // 更新哈希。
             client.set(hashKey, currentHash);
-            // Track this key in the session's key set
+            // 在会话键集合中跟踪此键。
             client.addToSet(keysKey, keyLayout.getListTrackKey(key));
         } catch (Exception e) {
             throw new RuntimeException("Failed to save list: " + key, e);
@@ -434,7 +416,7 @@ public class RedisAgentStateStore implements AgentStateStore {
                     }
                 }
 
-                // Delete one key per command to avoid crossing unknown Cluster slots.
+                // 每条命令只删除一个键，避免跨越未知集群槽。
                 for (String keyToDelete : keysToDelete) {
                     client.deleteKeys(keyToDelete);
                 }
@@ -478,7 +460,9 @@ public class RedisAgentStateStore implements AgentStateStore {
         }
     }
 
-    /** Resolve keys in the configured layout. */
+    /**
+     * 按已配置布局解析键。
+     */
     private RedisAgentStateKeyLayout resolveKeyLayout(String userId, String sessionId) {
         return switch (keyLayoutVersion) {
             case V0 -> RedisAgentStateKeyLayout.v0(keyPrefix, userId, sessionId);
@@ -492,18 +476,15 @@ public class RedisAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Builder for {@link RedisAgentStateStore}.
+     * {@link RedisAgentStateStore} 构建器。
      *
-     * <p>The builder supports multiple Redis client types. Only one client type should be set.
-     *
-     * <p>Supported client types:
-     * <ul>
-     *   <li>Jedis: {@link #jedisClient(UnifiedJedis)}
-     *   <li>Lettuce Standalone/Sentinel: {@link #lettuceClient(RedisClient)}
-     *   <li>Lettuce Cluster: {@link #lettuceClusterClient(RedisClusterClient)}
-     *   <li>Redisson: {@link #redissonClient(RedissonClient)}
-     *   <li>Custom: {@link #clientAdapter(RedisClientAdapter)}
-     * </ul>
+     * <p>支持多种 Redis 客户端，每次仅应配置一种。
+     * <p>支持类型：
+     * <ul><li>Jedis：{@link #jedisClient(UnifiedJedis)}</li>
+     * <li>Lettuce 单机／哨兵：{@link #lettuceClient(RedisClient)}</li>
+     * <li>Lettuce 集群：{@link #lettuceClusterClient(RedisClusterClient)}</li>
+     * <li>Redisson：{@link #redissonClient(RedissonClient)}</li>
+     * <li>自定义：{@link #clientAdapter(RedisClientAdapter)}</li></ul>
      */
     public static class Builder {
 
@@ -519,13 +500,10 @@ public class RedisAgentStateStore implements AgentStateStore {
         }
 
         /**
-         * Select the key layout for this store.
-         *
-         * <p>V0 is the default for compatibility. V1 must be selected explicitly and used
-         * consistently by every store instance sharing the Redis namespace.
-         *
-         * @param keyLayoutVersion key layout version, never {@code null}
-         * @return this builder
+         * 选择此存储的键布局。
+         * <p>为兼容旧数据默认使用 V0；V1 必须显式选择，共享 Redis 命名空间的所有实例须保持一致。
+         * @param keyLayoutVersion 键布局版本，不得为 {@code null}
+         * @return 当前构建器
          */
         public Builder keyLayoutVersion(KeyLayoutVersion keyLayoutVersion) {
             this.keyLayoutVersion = keyLayoutVersion;

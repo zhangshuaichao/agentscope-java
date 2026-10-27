@@ -18,54 +18,54 @@ package io.agentscope.harness.agent.gateway;
 import java.util.Optional;
 
 /**
- * Durable registry of exposed subagents, keyed by {@code subagentId}.
+ * 以 {@code subagentId} 为键的已公开子智能体持久化注册表。
  *
- * <p>Decouples a subagent's user-facing handle from any single process: the in-memory
- * {@link HarnessGateway} keeps a live-agent cache for the fast same-node path, while this registry
- * persists the {@link SubagentRecord} recipe so that any node (or the same node after a restart)
- * can resolve the handle and re-materialize the agent.
+ * <p>将子智能体的用户句柄与单一进程解耦：内存中的 {@link HarnessGateway}
+ * 保留活跃智能体缓存以加速同节点访问，此注册表则持久化 {@link SubagentRecord} 配方，
+ * 使任意节点（或重启后的原节点）都可解析句柄并重建智能体。
  *
- * <p>Implementations:
+ * <p>实现：
  *
  * <ul>
- *   <li>{@link InMemorySubagentRegistry} — default, single-process, equivalent to the legacy
- *       behaviour.
- *   <li>{@link StoreBackedSubagentRegistry} — backed by a distributed
- *       {@link io.agentscope.harness.agent.filesystem.remote.store.BaseStore} (Redis / OSS / MySQL
- *       via {@link io.agentscope.harness.agent.DistributedStore#baseStore()}).
+ *   <li>{@link InMemorySubagentRegistry} — 默认单进程实现，与旧行为一致。
+ *   <li>{@link StoreBackedSubagentRegistry} — 由分布式
+ *       {@link io.agentscope.harness.agent.filesystem.remote.store.BaseStore} 支持，
+ *       通过 {@link io.agentscope.harness.agent.DistributedStore#baseStore()} 接入 Redis／OSS／MySQL。
  * </ul>
  *
- * <p>Implementations must be thread-safe.
+ * <p>实现必须线程安全。
  */
 public interface SubagentRegistry {
 
     /**
-     * Persists an exposure record. Idempotent on {@link SubagentRecord#subagentId()} — re-registering
-     * the same id overwrites the previous record.
+     * 持久化公开记录。按 {@link SubagentRecord#subagentId()} 幂等：
+     * 重复注册同一 ID 会覆盖旧记录。
      *
-     * @param record the record to persist (must carry a non-null {@code subagentId})
+     * @param record 要持久化的记录（必须带非 null 的 {@code subagentId}）
      */
     void register(SubagentRecord record);
 
     /**
-     * Resolves a subagent handle. Implementations should treat an expired record (see
-     * {@link SubagentRecord#isExpired}) as absent and may evict it lazily.
+     * 解析子智能体句柄。实现应将过期记录（见 {@link SubagentRecord#isExpired}）视为不存在，
+     * 并可惰性移除。
      *
-     * @param subagentId the handle to resolve
-     * @return the record, or {@link Optional#empty()} if unknown or expired
+     * @param subagentId 要解析的句柄
+     * @return 对应记录；未知或过期时为 {@link Optional#empty()}
      */
     Optional<SubagentRecord> find(String subagentId);
 
-    /** Removes a single exposure record. No-op when the id is unknown. */
+    /**
+     * 移除单条公开记录。未知 ID 不执行任何操作。
+     */
     void revoke(String subagentId);
 
     /**
-     * Removes all exposure records associated with the given parent session. Used to clean up when a
-     * parent conversation ends. Implementations that cannot enumerate by parent may no-op.
+     * 移除关联指定父会话的全部公开记录，用于父对话结束时清理。
+     * 无法按父会话枚举的实现可以不执行操作。
      *
-     * @param parentSessionId the parent session whose exposed subagents should be revoked
+     * @param parentSessionId 要撤销其已公开子智能体的父会话
      */
     default void revokeByParentSession(String parentSessionId) {
-        // optional capability
+        // 可选能力
     }
 }

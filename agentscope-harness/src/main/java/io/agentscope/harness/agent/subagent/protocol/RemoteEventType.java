@@ -16,10 +16,9 @@
 package io.agentscope.harness.agent.subagent.protocol;
 
 /**
- * Stable wire event types for remote subagent streaming over Agent Protocol.
+ * 通过 Agent Protocol 流式传输远程子智能体事件的稳定传输事件类型。
  *
- * <p>These values must remain backward-compatible across versions; unknown types should be ignored
- * by older clients.
+ * <p>这些值必须跨版本保持向后兼容；旧客户端应忽略未知类型。
  */
 public enum RemoteEventType {
     RUN_STARTED,
@@ -34,9 +33,9 @@ public enum RemoteEventType {
     STATUS,
 
     /**
-     * Carries an {@link io.agentscope.core.event.AgentEvent} that has no dedicated wire type, fully
-     * serialized in {@link RemoteAgentEvent#getPayload()}. Emitted only at {@code detail=verbose};
-     * clients that predate this type skip it.
+     * 携带没有专属传输类型的 {@link io.agentscope.core.event.AgentEvent}，
+     * 完整序列化到 {@link RemoteAgentEvent#getPayload()}。仅在 {@code detail=verbose}
+     * 时发出；早于此类型的客户端会跳过它。
      */
     AGENT_EVENT
 }

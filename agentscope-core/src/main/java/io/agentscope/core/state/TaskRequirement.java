@@ -17,7 +17,7 @@ package io.agentscope.core.state;
 
 import java.util.Objects;
 
-/** Immutable requirement. Confirmation establishes authority, not satisfaction or verification. */
+/** 不可变需求。确认用于确立授权依据，不代表需求已满足或已验证。 */
 public record TaskRequirement(
         String id,
         Kind kind,
@@ -41,7 +41,7 @@ public record TaskRequirement(
         CALLER
     }
 
-    /** Supplied by trusted application code after an explicit decision, never by a model tool. */
+    /** 由可信应用代码在明确决策后提供，绝不由模型工具提供。 */
     public record Decision(Authority authority, String sourceRef) {
         public Decision {
             Objects.requireNonNull(authority, "authority");

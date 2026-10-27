@@ -19,10 +19,10 @@ import io.agentscope.core.state.State;
 import java.util.List;
 
 /**
- * Deserialization shape for the v1 {@code toolkit_activeGroups} session entry.
+ * 用于反序列化 v1 {@code toolkit_activeGroups} 会话条目的数据结构。
  *
- * <p>Retained only so {@link io.agentscope.core.state.LegacyStateLoader} can read v1 sessions
- * during the one-time migration to {@link io.agentscope.core.state.AgentState}. New writes never
- * use this type.
+ * <p>保留此类型仅供 {@link io.agentscope.core.state.LegacyStateLoader} 读取 v1 会话，
+ * 完成向 {@link io.agentscope.core.state.AgentState} 的一次性迁移。
+ * 新写入的数据绝不使用此类型。
  */
 public record ToolkitState(List<String> activeGroups) implements State {}

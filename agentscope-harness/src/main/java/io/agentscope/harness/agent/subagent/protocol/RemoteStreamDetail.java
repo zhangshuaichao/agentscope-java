@@ -18,39 +18,48 @@ package io.agentscope.harness.agent.subagent.protocol;
 import java.util.Locale;
 
 /**
- * How much of a remote subagent's event stream the caller wants, sent as {@code context.detail}.
+ * 调用方期望的远程子智能体事件流详细程度，通过 {@code context.detail} 发送。
  *
- * <p>Each level is a superset of the previous one. The wire value is the lower-case enum name.
+ * <p>每一级都是前一级的超集。传输值为小写枚举名称。
  */
 public enum RemoteStreamDetail {
 
-    /** Lifecycle, tool call boundaries, tool results and confirmation requests. */
+    /**
+     * 生命周期、工具调用边界、工具结果和确认请求。
+     */
     STATUS,
 
-    /** {@link #STATUS} plus text and thinking deltas. The default for a streaming parent. */
+    /**
+     * {@link #STATUS} 加上文本和思考增量。流式父级的默认级别。
+     */
     FULL,
 
     /**
-     * {@link #FULL} plus every remaining {@link io.agentscope.core.event.AgentEvent} — block
-     * boundaries, tool argument and tool output deltas, model calls with token usage, hints,
-     * custom events — forwarded as {@link RemoteEventType#AGENT_EVENT}.
+     * {@link #FULL} 加上其余所有 {@link io.agentscope.core.event.AgentEvent}：
+     * 块边界、工具参数和工具输出增量、带 token 用量的模型调用、提示、自定义事件，
+     * 均以 {@link RemoteEventType#AGENT_EVENT} 转发。
      *
-     * <p>This is the only level that reproduces a local subagent's stream in full, at the cost of
-     * noticeably more traffic on high-frequency runs.
+     * <p>这是唯一能完整重现本地子智能体流的级别，代价是高频运行中明显增加的流量。
      */
     VERBOSE;
 
-    /** Lower-case wire value, e.g. {@code "verbose"}. */
+    /**
+     * 小写传输值，例如 {@code "verbose"}。
+     */
     public String wireValue() {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    /** Whether this level includes events requiring at least {@code required}. */
+    /**
+     * 此级别是否包含至少需要 {@code required} 级别的事件。
+     */
     public boolean includes(RemoteStreamDetail required) {
         return required != null && ordinal() >= required.ordinal();
     }
 
-    /** Parses a wire value, falling back to {@link #STATUS} for null or unknown input. */
+    /**
+     * 解析传输值，null 或未知输入回退到 {@link #STATUS}。
+     */
     public static RemoteStreamDetail parse(String value) {
         if (value == null || value.isBlank()) {
             return STATUS;

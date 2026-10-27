@@ -49,14 +49,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * OkHttp implementation of the HttpTransport interface.
+ * HttpTransport 接口的 OkHttp 实现。
  *
- * <p>This implementation uses OkHttp for HTTP communication and supports:
+ * <p>使用 OkHttp 进行 HTTP 通信，支持：
  * <ul>
- *   <li>Synchronous HTTP requests</li>
- *   <li>Server-Sent Events (SSE) streaming</li>
- *   <li>Connection pooling</li>
- *   <li>Configurable timeouts</li>
+ *   <li>同步 HTTP 请求</li>
+ *   <li>服务器发送事件（SSE）流</li>
+ *   <li>连接池</li>
+ *   <li>可配置超时</li>
  * </ul>
  */
 public class OkHttpTransport implements HttpTransport {
@@ -70,17 +70,15 @@ public class OkHttpTransport implements HttpTransport {
     private final OkHttpClient client;
     private final HttpTransportConfig config;
 
-    /**
-     * Create a new OkHttpTransport with default configuration.
-     */
+    /** 使用默认配置创建新的 OkHttpTransport。 */
     public OkHttpTransport() {
         this(HttpTransportConfig.defaults());
     }
 
     /**
-     * Create a new OkHttpTransport with custom configuration.
+     * 使用自定义配置创建新的 OkHttpTransport。
      *
-     * @param config the transport configuration
+     * @param config 传输配置
      */
     public OkHttpTransport(HttpTransportConfig config) {
         this.config = config;
@@ -88,13 +86,12 @@ public class OkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a new OkHttpTransport with an existing OkHttpClient.
+     * 使用现有 OkHttpClient 创建新的 OkHttpTransport。
      *
-     * <p>Use this constructor when you want to share an OkHttpClient instance
-     * across multiple components.
+     * <p>需要在多个组件之间共享 OkHttpClient 实例时使用此构造方法。
      *
-     * @param client the OkHttpClient to use
-     * @param config the transport configuration (used for reference only)
+     * @param client 要使用的 OkHttpClient
+     * @param config 传输配置（仅供参考）
      */
     public OkHttpTransport(OkHttpClient client, HttpTransportConfig config) {
         this.client = client;
@@ -106,9 +103,9 @@ public class OkHttpTransport implements HttpTransport {
                 new OkHttpClient.Builder()
                         .connectTimeout(
                                 config.getConnectTimeout().toMillis(), TimeUnit.MILLISECONDS)
-                        // OkHttp readTimeout is a socket-read idle timeout. It remains suitable
-                        // for streaming reads and is distinct from JDK streaming response/idle
-                        // timeouts in HttpTransportConfig.
+                        // OkHttp 的 readTimeout 是套接字读取空闲超时，仍适用于流式读取，
+                        // 与 HttpTransportConfig 中 JDK 流式响应的首块超时和空闲超时
+                        // 是不同的配置。
                         .readTimeout(config.getReadTimeout().toMillis(), TimeUnit.MILLISECONDS)
                         .writeTimeout(config.getWriteTimeout().toMillis(), TimeUnit.MILLISECONDS)
                         .connectionPool(
@@ -117,7 +114,7 @@ public class OkHttpTransport implements HttpTransport {
                                         config.getKeepAliveDuration().toMillis(),
                                         TimeUnit.MILLISECONDS));
 
-        // Configure SSL (optionally ignore certificate verification)
+        // 配置 SSL（可选地忽略证书验证）
         if (config.isIgnoreSsl()) {
             log.error(
                     "SSL certificate verification has been disabled for this WebSocket client. This"
@@ -130,7 +127,7 @@ public class OkHttpTransport implements HttpTransport {
                             .hostnameVerifier((hostname, session) -> true);
         }
 
-        // Configure proxy
+        // 配置代理
         if (config.getProxyConfig() != null) {
             ProxyConfig proxyConfig = config.getProxyConfig();
 
@@ -147,7 +144,7 @@ public class OkHttpTransport implements HttpTransport {
                 builder.proxyAuthenticator(
                         (route, response) -> {
                             if (response.request().header("Proxy-Authorization") != null) {
-                                return null; // Avoid infinite retry
+                                return null; // 避免无限重试
                             }
                             String credential = Credentials.basic(username, password);
                             return response.request()
@@ -162,9 +159,9 @@ public class OkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a trust-all SSL socket factory.
+     * 创建信任所有证书的 SSL 套接字工厂。
      *
-     * @return the SSL socket factory
+     * @return SSL 套接字工厂
      */
     private static SSLSocketFactory createTrustAllSslSocketFactory() {
         try {
@@ -178,20 +175,20 @@ public class OkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a trust-all X509 trust manager.
+     * 创建信任所有证书的 X509 信任管理器。
      *
-     * @return the trust manager
+     * @return 信任管理器
      */
     private static X509TrustManager createTrustAllTrustManager() {
         return new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
@@ -262,23 +259,23 @@ public class OkHttpTransport implements HttpTransport {
                                         break;
                                     }
 
-                                    // Skip empty lines
+                                    // 跳过空行
                                     if (line.isEmpty()) {
                                         continue;
                                     }
 
-                                    // Handle NDJSON format
+                                    // 处理 NDJSON 格式
                                     if (isNdjson) {
                                         sink.next(line);
                                         continue;
                                     }
 
-                                    // Parse SSE data lines
+                                    // 解析 SSE 数据行
                                     if (line.startsWith(SSE_DATA_PREFIX)) {
                                         String data =
                                                 line.substring(SSE_DATA_PREFIX.length()).trim();
 
-                                        // Check for stream end marker
+                                        // 检查流结束标记
                                         if (SSE_DONE_MARKER.equals(data)) {
                                             log.debug("Received SSE [DONE] marker");
                                             break;
@@ -288,7 +285,7 @@ public class OkHttpTransport implements HttpTransport {
                                             sink.next(data);
                                         }
                                     }
-                                    // Skip other SSE fields (event:, id:, retry:, comments)
+                                    // 跳过其他 SSE 字段（event:、id:、retry:、注释）
                                 }
 
                                 sink.complete();
@@ -317,20 +314,20 @@ public class OkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Get the underlying OkHttpClient instance.
+     * 获取底层 OkHttpClient 实例。
      *
-     * <p>This can be useful for advanced configuration or debugging.
+     * <p>可用于高级配置或调试。
      *
-     * @return the OkHttpClient
+     * @return OkHttpClient
      */
     public OkHttpClient getClient() {
         return client;
     }
 
     /**
-     * Get the transport configuration.
+     * 获取传输配置。
      *
-     * @return the configuration
+     * @return 配置
      */
     public HttpTransportConfig getConfig() {
         return config;
@@ -339,12 +336,12 @@ public class OkHttpTransport implements HttpTransport {
     private Request buildOkHttpRequest(HttpRequest request) {
         Request.Builder builder = new Request.Builder().url(request.getUrl());
 
-        // Add headers
+        // 添加请求头
         for (Map.Entry<String, String> header : request.getHeaders().entrySet()) {
             builder.addHeader(header.getKey(), header.getValue());
         }
 
-        // Set method and body
+        // 设置方法和请求体
         String method = request.getMethod().toUpperCase();
         String body = request.getBody();
 
@@ -385,7 +382,7 @@ public class OkHttpTransport implements HttpTransport {
                         .statusCode(response.code())
                         .body(getResponseBodyString(response));
 
-        // Copy headers
+        // 复制响应头
         for (String name : response.headers().names()) {
             builder.header(name, response.header(name));
         }
@@ -414,26 +411,24 @@ public class OkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a new builder for OkHttpTransport.
+     * 创建新的 OkHttpTransport 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for OkHttpTransport.
-     */
+    /** OkHttpTransport 的建造者。 */
     public static class Builder {
         private HttpTransportConfig config = HttpTransportConfig.defaults();
         private OkHttpClient existingClient = null;
 
         /**
-         * Set the transport configuration.
+         * 设置传输配置。
          *
-         * @param config the configuration
-         * @return this builder
+         * @param config 配置
+         * @return 当前建造者
          */
         public Builder config(HttpTransportConfig config) {
             this.config = config;
@@ -441,13 +436,12 @@ public class OkHttpTransport implements HttpTransport {
         }
 
         /**
-         * Use an existing OkHttpClient instance.
+         * 使用现有 OkHttpClient 实例。
          *
-         * <p>When set, the configuration will only be used for reference,
-         * and the provided client will be used as-is.
+         * <p>设置后，配置仅供参考，传入的客户端会原样使用。
          *
-         * @param client the existing OkHttpClient
-         * @return this builder
+         * @param client 现有 OkHttpClient
+         * @return 当前建造者
          */
         public Builder client(OkHttpClient client) {
             this.existingClient = client;
@@ -455,9 +449,9 @@ public class OkHttpTransport implements HttpTransport {
         }
 
         /**
-         * Build the OkHttpTransport.
+         * 构建 OkHttpTransport。
          *
-         * @return a new OkHttpTransport instance
+         * @return 新的 OkHttpTransport 实例
          */
         public OkHttpTransport build() {
             if (existingClient != null) {
@@ -467,9 +461,7 @@ public class OkHttpTransport implements HttpTransport {
         }
     }
 
-    /**
-     * ProxySelector that respects non-proxy hosts configuration.
-     */
+    /** 遵循非代理主机配置的 ProxySelector。 */
     private static class NonProxyHostsSelector extends ProxySelector {
         private final ProxyConfig proxyConfig;
         private final List<Proxy> proxyList;

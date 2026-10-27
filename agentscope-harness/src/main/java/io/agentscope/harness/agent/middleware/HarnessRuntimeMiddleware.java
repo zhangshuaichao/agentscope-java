@@ -18,8 +18,8 @@ package io.agentscope.harness.agent.middleware;
 import io.agentscope.core.middleware.MiddlewareBase;
 
 /**
- * Marker for middleware installed by harness runtime wiring.
+ * 标记由 Harness 运行时装配安装的中间件。
  *
- * <p>These instances are framework-owned and should not be copied by {@code fromAgent(...)}.
+ * <p>这些实例由框架拥有，不应被 {@code fromAgent(...)} 复制。
  */
 public interface HarnessRuntimeMiddleware extends MiddlewareBase {}

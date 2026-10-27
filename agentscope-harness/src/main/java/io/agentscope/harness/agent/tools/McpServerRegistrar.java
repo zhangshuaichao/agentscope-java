@@ -25,15 +25,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Registers MCP servers declared under {@code mcpServers} in {@code workspace/tools.json} into a
- * {@link Toolkit}.
+ * 将 {@code mcpServers} 声明的 MCP 服务器从 {@code workspace/tools.json}
+ * 注册到 {@link Toolkit}。
  *
- * <p>Each entry is built into an {@link McpClientWrapper} via {@link McpClientBuilder} according
- * to its {@code transport} ({@code stdio} / {@code sse} / {@code http}) and then registered through
- * {@link Toolkit#registration()} so that per-server {@code enableTools} allowlists are honoured.
+ * <p>每项配置构建为 {@link McpClientWrapper}，通过 {@link McpClientBuilder} 按其 {@code transport}
+ * （{@code stdio} / {@code sse} / {@code http}）选择连接方式，
+ * 随后通过 {@link Toolkit#registration()} 注册，遵守各服务器的 {@code enableTools} 允许列表。
  *
- * <p>Required connections abort bootstrap. Optional failures are reported through the configured
- * callback and do not prevent other connections from registering.
+ * <p>必需连接失败会中止引导。可选连接失败经配置的回调报告，但不会阻止其他连接注册。
+ *
+ * <p>【学习提示】注册结果描述连接与工具导入是否完成，不等于赋予工具无限操作权限。
+ * 工具导入选择、目录过滤和实际执行授权应分层理解。
  */
 public final class McpServerRegistrar {
 
@@ -42,20 +44,18 @@ public final class McpServerRegistrar {
     private McpServerRegistrar() {}
 
     /**
-     * Registers every entry in {@code servers} into {@code toolkit}. Synchronous: each server is
-     * built and registered before the next is attempted. {@code servers} may be {@code null} or
-     * empty (no-op).
+     * 将 {@code servers} 中的所有配置注册到 {@code toolkit}。
+     * 同步执行：先构建并注册当前服务器，再尝试下一个。{@code servers} 可以为 {@code null} 或空，此时不操作。
      */
     public static void register(Toolkit toolkit, Map<String, McpServerConfig> servers) {
         register(toolkit, servers, null);
     }
 
     /**
-     * Registers every entry in {@code servers} into {@code toolkit} and reports each terminal
-     * result to {@code listener}. Synchronous: each server is built and registered before the next
-     * is attempted. {@code servers} or {@code listener} may be {@code null}.
+     * 将 {@code servers} 中的所有配置注册到 {@code toolkit}，并将每项终态结果报告给 {@code listener}。
+     * 同步执行：先构建并注册当前服务器，再尝试下一个。{@code servers} 或 {@code listener} 可以为 {@code null}。
      *
-     * <p>Listener failures are logged and do not affect registration or later entries.
+     * <p>监听器失败只记录日志，不影响注册或后续配置项。
      */
     public static void register(
             Toolkit toolkit,

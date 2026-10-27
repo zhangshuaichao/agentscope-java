@@ -19,7 +19,7 @@ import io.agentscope.core.message.Msg;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-/** A runtime-only cooperative interrupt signal owned by one execution, never by a session. */
+/** 仅在运行时存在的协作式中断信号，归属于单次执行，而非会话。 */
 public final class InterruptControl {
 
     private final AtomicBoolean flag = new AtomicBoolean(false);
@@ -28,11 +28,10 @@ public final class InterruptControl {
             new AtomicReference<>(InterruptSource.USER);
 
     /**
-     * Raise the interrupt signal.
+     * 发出中断信号。
      *
-     * @param src the interrupt source; {@code null} is treated as {@link InterruptSource#USER}
-     * @param msg an optional user message associated with the interruption (ignored when {@code
-     *     null})
+     * @param src 中断来源；{@code null} 按 {@link InterruptSource#USER} 处理
+     * @param msg 与中断关联的可选用户消息（为 {@code null} 时忽略）
      */
     public void trigger(InterruptSource src, Msg msg) {
         this.source.set(src != null ? src : InterruptSource.USER);
@@ -42,29 +41,29 @@ public final class InterruptControl {
         this.flag.set(true);
     }
 
-    /** @return {@code true} if this execution has been interrupted and not yet reset */
+    /** @return 此次执行已中断且尚未重置时返回 {@code true} */
     public boolean isInterrupted() {
         return flag.get();
     }
 
-    /** @return the current interrupt source */
+    /** @return 当前中断来源 */
     public InterruptSource getSource() {
         return source.get();
     }
 
-    /** @return the user message associated with the interruption, or {@code null} */
+    /** @return 与中断关联的用户消息，或 {@code null} */
     public Msg getUserMessage() {
         return userMessage.get();
     }
 
-    /** Clear the interrupt signal back to its initial (non-interrupted) state. */
+    /** 清除中断信号，恢复为初始的未中断状态。 */
     public void reset() {
         flag.set(false);
         userMessage.set(null);
         source.set(InterruptSource.USER);
     }
 
-    /** Build an {@link InterruptContext} snapshot of the current signal. */
+    /** 根据当前信号构建 {@link InterruptContext} 快照。 */
     public InterruptContext toContext() {
         return InterruptContext.builder()
                 .source(source.get())

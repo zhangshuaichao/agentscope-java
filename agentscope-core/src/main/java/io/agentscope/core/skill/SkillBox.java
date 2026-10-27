@@ -37,10 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Manages a collection of {@link AgentSkill} instances and exposes them as tools.
+ * 管理一组 {@link AgentSkill} 实例并将其作为工具暴露。
  *
- * Since 2.0.0, SkillBox is intended for internal use only; prefer skill repositories
- * ({@code AgentSkillRepository}) for defining and loading skills.
+ * 自 2.0.0 起，SkillBox 仅供内部使用；定义和加载技能时应优先使用技能仓库（{@code AgentSkillRepository}）。
  */
 public class SkillBox {
     private static final Logger logger = LoggerFactory.getLogger(SkillBox.class);
@@ -56,15 +55,7 @@ public class SkillBox {
     private boolean autoUploadSkill = true;
 
     /**
-     * Number of lock stripes guarding concurrent {@code uploadSkillFiles} writes. A fixed stripe
-     * table replaces the former per-path lock map, which accumulated one lock object per
-     * materialised path and never released them in long-lived processes. Mutual exclusion for a
-     * given path does not depend on this value (same path always maps to the same stripe); a
-     * collision only serialises one extra file write. 256 keeps worst-case stripe occupancy —
-     * storm-level materialisation bursts over digit-heavy path families, whose 31-polynomial
-     * hashes cluster more at smaller power-of-two moduli — below one waiting writer, with room
-     * for the longer write critical sections the planned temp-file-plus-rename convergence will
-     * introduce; the table costs a few KB.
+     * 保护并发 {@code uploadSkillFiles} 写入的分段锁数量。固定大小的锁表取代原先按路径保存锁的映射，避免长生命周期进程为每个物化路径永久积累锁对象。同一路径始终映射到同一锁段，因此互斥性不依赖此数值；冲突只会让额外的文件写入串行化。选择 256 可将极端物化突发下的最坏锁段占用控制在一个等待写入者以下：数字密集路径族的 31 多项式哈希在较小的二次幂模数下更易聚集。这也为计划采用临时文件加重命名后更长的写临界区预留空间，锁表只需数 KB。
      */
     static final int FILE_LOCK_STRIPES = 256;
 
@@ -79,19 +70,12 @@ public class SkillBox {
     }
 
     /**
-     * Returns the lock stripe guarding writes to the given target path. The stripe index is
-     * {@code floorMod(pathHash, FILE_LOCK_STRIPES)}, so a given path always maps to the same
-     * stripe (mutual exclusion for that path is preserved) while the table stays fixed-size no
-     * matter how many distinct paths are written; unrelated paths colliding on a stripe are
-     * merely serialised behind each other, which does not affect correctness.
+     * 返回保护给定目标路径写入的锁段。索引为 {@code floorMod(pathHash, FILE_LOCK_STRIPES)}，同一路径始终映射到相同锁段，保持该路径的互斥性；无论写入多少不同路径，锁表大小都固定。无关路径碰撞到同一锁段时仅会依次执行，不影响正确性。
      *
-     * <p>Callers must not hold more than one stripe at a time: acquire the stripe, finish the
-     * write, and release it before locking another path. Nested stripe acquisitions in
-     * differing orders can deadlock, and stripe collisions between unrelated paths only widen
-     * that hazard.
+     * <p>调用方不得同时持有多个锁段：获取锁、完成写入、释放后才能锁定另一条路径。以不同顺序嵌套获取锁可能死锁，无关路径的锁段碰撞会扩大风险。
      *
-     * @param path the target file path being written
-     * @return the stripe object to {@code synchronized} on for that path
+     * @param path 正在写入的目标文件路径
+     * @return 此路径用于 {@code synchronized} 的锁段对象
      */
     static Object fileLockFor(Path path) {
         return FILE_LOCK_TABLE[Math.floorMod(path.hashCode(), FILE_LOCK_STRIPES)];
@@ -102,10 +86,10 @@ public class SkillBox {
     }
 
     /**
-     * Creates a SkillBox with a toolkit and custom skill prompt instruction.
+     * 使用工具包和自定义技能提示指令创建 SkillBox。
      *
-     * @param toolkit The toolkit to bind
-     * @param instruction Custom instruction header (null or blank uses default)
+     * @param toolkit 要绑定的工具包
+     * @param instruction 自定义指令头（null 或空白使用默认值）
      */
     public SkillBox(Toolkit toolkit, String instruction) {
         this.skillPromptProvider = new AgentSkillPromptProvider(skillRegistry, instruction);
@@ -127,55 +111,52 @@ public class SkillBox {
     }
 
     /**
-     * Creates an agent-owned registry, prompt provider and loader bound to the given toolkit.
-     * Registered skill values and caller-owned resource directories are shared.
+     * 创建属于智能体自身、绑定到给定工具包的注册表、提示提供者和加载器。
+     * 已注册的技能值及调用方拥有的资源目录仍然共享。
      *
-     * @param toolkit the agent's toolkit
-     * @return an independent skill box
+     * @param toolkit 智能体的工具包
+     * @return 独立的技能 box
      */
     public SkillBox copyForToolkit(Toolkit toolkit) {
         return new SkillBox(this, java.util.Objects.requireNonNull(toolkit, "toolkit"));
     }
 
     /**
-     * Gets the skill system prompt for registered skills.
+     * 获取已注册技能的系统提示。
      *
-     * <p>This prompt provides information about available skills that the agent
-     * can dynamically load and use during execution.
+     * <p>提示提供可用技能的信息，智能体可在执行过程中动态加载和使用这些技能。
      *
-     * @return The skill system prompt, or empty string if no skills exist
+     * @return 技能系统提示；无技能时为空字符串
      */
     public String getSkillPrompt() {
         return skillPromptProvider.getSkillSystemPrompt();
     }
 
     /**
-     * Gets the skill system prompt filtered by the given {@link SkillFilter}.
+     * 获取经给定 {@link SkillFilter} 过滤后的技能系统提示。
      *
-     * @param filter the filter deciding which skills to include (null treated as all)
-     * @return The skill system prompt, or empty string if no skills pass the filter
+     * @param filter 决定包含哪些技能的过滤器（null 视为全部）
+     * @return 技能系统提示；无技能通过过滤时为空字符串
      */
     public String getSkillPrompt(SkillFilter filter) {
         return skillPromptProvider.getSkillSystemPrompt(filter);
     }
 
     /**
-     * Controls whether the skill prompt exposes all metadata fields or only the core fields.
+     * 控制技能提示暴露全部元数据字段，还是仅暴露核心字段。
      *
-     * <p>When disabled, only {@code name}, {@code description}, and {@code skill-id}
-     * are included in the skill prompt.
+     * <p>禁用时，技能提示仅包含 {@code name}、{@code description} 和 {@code skill-id}。
      *
-     * @param exposeAllMetadata {@code true} to expose all metadata, {@code false} to expose only
-     *                          the core fields
+     * @param exposeAllMetadata {@code true} 暴露全部元数据，{@code false} 仅暴露核心字段
      */
     public void setExposeAllSkillMetadata(boolean exposeAllMetadata) {
         skillPromptProvider.setExposeAllMetadata(exposeAllMetadata);
     }
 
     /**
-     * Create a fluent builder for registering skills with optional configuration.
+     * 创建用于注册技能并提供可选配置的流式构建器。
      *
-     * <p>Example usage:
+     * <p>用法示例：
      * <pre>{@code
      * // Register skill
      * skillBox.registration()
@@ -189,17 +170,17 @@ public class SkillBox {
      *     .apply();
      * }</pre>
      *
-     * @return A new ToolRegistration builder
+     * @return 新的 ToolRegistration 构建器
      */
     public SkillRegistration registration() {
         return new SkillRegistration(this);
     }
 
     /**
-     * Binds the shared toolkit to this skill box and its internal skill tool factory.
+     * 将共享工具包绑定到此技能 box 及其内部技能工具工厂。
      *
-     * @param toolkit The toolkit to bind to the skill box
-     * @throws IllegalArgumentException if the toolkit is null
+     * @param toolkit 要绑定的工具包
+     * @throws IllegalArgumentException 当工具包为 null 时
      */
     public void bindToolkit(Toolkit toolkit) {
         if (toolkit == null) {
@@ -209,23 +190,21 @@ public class SkillBox {
         this.skillToolFactory.bindToolkit(toolkit);
     }
 
-    // ==================== Skill Management ====================
+    // ==================== 技能管理 ====================
 
     /**
-     * Registers an agent skill.
+     * 注册智能体技能。
      *
-     * <p>Skills can be dynamically loaded by agents using skill access tools.
-     * Loading a skill returns its content; activation of its tool groups is reflected in the
-     * per-session activated-groups state, not on this box.
+     * <p>智能体可使用技能访问工具动态加载技能。加载技能会返回其内容；工具分组的激活反映在会话级激活分组状态中，而不保存在此 box 上。
      *
-     * <p><b>Version Management:</b>
+     * <p><b>注册与覆盖：</b>
      * <ul>
-     *   <li>First registration: Creates initial version of the skill</li>
-     *   <li>Subsequent registrations with same skill object (by reference): No new version created</li>
-     *   <li>Registrations with different skill object: Creates new version (snapshot)</li>
+     * <li>首次注册：按技能 ID 保存技能。</li>
+     * <li>再次注册相同技能对象：同 ID 仍指向该对象。</li>
+     * <li>注册同 ID 的不同技能对象：覆盖旧引用；此处不保存历史版本快照。</li>
      * </ul>
      *
-     * <p><b>Usage example:</b>
+     * <p><b>用法示例：</b>
      * <pre>{@code
      * AgentSkill mySkill = new AgentSkill("my-skill", "Description", "Content", null);
      *
@@ -233,8 +212,8 @@ public class SkillBox {
      * skillBox.registerSkill(mySkill); // do nothing
      * }</pre>
      *
-     * @param skill The agent skill to register
-     * @throws IllegalArgumentException if skill is null
+     * @param skill 要注册的智能体技能
+     * @throws IllegalArgumentException 当 skill 为 null 时
      */
     public void registerSkill(AgentSkill skill) {
         if (skill == null) {
@@ -247,20 +226,18 @@ public class SkillBox {
     }
 
     /**
-     * Gets all skill IDs.
-     * @return All skill IDs
+     * 获取全部技能 ID。
+     * @return 全部技能 ID
      */
     public Set<String> getAllSkillIds() {
         return skillRegistry.getSkillIds();
     }
 
     /**
-     * Loads the skill resource identified by the given tool-call parameters. Package-private entry
-     * point used by the shared {@code load_skill_through_path} tool: skill activation is written to
-     * the per-session tool context, never to the shared group manager.
+     * 加载给定工具调用参数标识的技能资源。这是共享 {@code load_skill_through_path} 工具使用的包级入口：技能激活写入会话级工具上下文，绝不写入共享分组管理器。
      *
-     * @param param the tool call parameters carrying {@code skillId} and {@code path}
-     * @return the formatted resource content, or a message describing the failure
+     * @param param 携带 {@code skillId} 和 {@code path} 的工具调用参数
+     * @return 格式化资源内容，或描述失败的消息
      */
     String loadSkillResource(ToolCallParam param) {
         Map<String, Object> input = param.getInput();
@@ -277,11 +254,11 @@ public class SkillBox {
     }
 
     /**
-     * Gets a skill by ID (latest version).
+     * 按 ID 获取技能（最新版本）。
      *
-     * @param skillId The skill ID
-     * @return The skill instance, or null if not found
-     * @throws IllegalArgumentException if skillId is null
+     * @param skillId 技能 ID
+     * @return 技能实例；未找到时为 null
+     * @throws IllegalArgumentException 当 skillId 为 null 时
      */
     public AgentSkill getSkill(String skillId) {
         if (skillId == null) {
@@ -291,10 +268,10 @@ public class SkillBox {
     }
 
     /**
-     * Removes a skill completely.
+     * 完全移除技能。
      *
-     * @param skillId The skill ID
-     * @throws IllegalArgumentException if skillId is null
+     * @param skillId 技能 ID
+     * @throws IllegalArgumentException 当 skillId 为 null 时
      */
     public void removeSkill(String skillId) {
         if (skillId == null) {
@@ -305,11 +282,11 @@ public class SkillBox {
     }
 
     /**
-     * Checks if a skill exists.
+     * 检查技能是否存在。
      *
-     * @param skillId The skill ID
-     * @return true if the skill exists, false otherwise
-     * @throws IllegalArgumentException if skillId is null
+     * @param skillId 技能 ID
+     * @return 存在时为 true，否则为 false
+     * @throws IllegalArgumentException 当 skillId 为 null 时
      */
     public boolean exists(String skillId) {
         if (skillId == null) {
@@ -319,10 +296,9 @@ public class SkillBox {
     }
 
     /**
-     * Fluent builder for registering skills with optional configuration.
+     * 用于注册技能并提供可选配置的流式构建器。
      *
-     * <p>This builder provides a clear, type-safe way to register skills with various options
-     * without method proliferation.
+     * <p>以清晰、类型安全的方式组合各项注册选项，避免方法数量膨胀。
      */
     public static class SkillRegistration {
         private final SkillBox skillBox;
@@ -343,10 +319,10 @@ public class SkillBox {
         }
 
         /**
-         * Set the skill to register.
+         * 设置要注册的技能。
          *
-         * @param skill The skill to register
-         * @return This builder for chaining
+         * @param skill 要注册的技能
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration skill(AgentSkill skill) {
             this.skill = skill;
@@ -359,10 +335,10 @@ public class SkillBox {
         }
 
         /**
-         * Set the tool object to register (scans for @Tool methods).
+         * 设置要注册的工具对象（扫描 @Tool 方法）。
          *
-         * @param toolObject Object containing @Tool annotated methods
-         * @return This builder for chaining
+         * @param toolObject 包含 @Tool 注解方法的对象
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration tool(Object toolObject) {
             this.toolObject = toolObject;
@@ -370,10 +346,10 @@ public class SkillBox {
         }
 
         /**
-         * Set the AgentTool instance to register.
+         * 设置要注册的 AgentTool 实例。
          *
-         * @param agentTool The AgentTool instance
-         * @return This builder for chaining
+         * @param agentTool AgentTool 实例
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration agentTool(AgentTool agentTool) {
             this.agentTool = agentTool;
@@ -381,10 +357,10 @@ public class SkillBox {
         }
 
         /**
-         * Set the MCP client to register.
+         * 设置要注册的 MCP 客户端。
          *
-         * @param mcpClientWrapper The MCP client wrapper
-         * @return This builder for chaining
+         * @param mcpClientWrapper MCP 客户端包装器
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration mcpClient(McpClientWrapper mcpClientWrapper) {
             this.mcpClientWrapper = mcpClientWrapper;
@@ -392,13 +368,11 @@ public class SkillBox {
         }
 
         /**
-         * Register a sub-agent as a tool with default configuration.
+         * 使用默认配置将子智能体注册为工具。
          *
-         * <p>The tool name and description are derived from the agent's properties. Uses a single
-         * "task" string parameter by default.
+         * <p>工具名称和描述从智能体属性推导。实际参数为必填 message 和可选 session_id，与自定义配置重载一致。
          *
-         * <p>Example:
-         *
+         * <p>示例：
          * <pre>{@code
          * toolkit.registration()
          *     .subAgent(() -> ReActAgent.builder()
@@ -408,22 +382,19 @@ public class SkillBox {
          *     .apply();
          * }</pre>
          *
-         * @param provider Factory for creating agent instances (called for each invocation)
-         * @return This builder for chaining
+         * @param provider 创建智能体实例的工厂（每次调用都会执行）
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration subAgent(SubAgentProvider<?> provider) {
             return subAgent(provider, null);
         }
 
         /**
-         * Register a sub-agent as a tool with custom configuration.
+         * 使用自定义配置将子智能体注册为工具。
          *
-         * <p>Sub-agents support multi-turn conversation with session-based state management. The
-         * tool exposes two parameters: {@code message} (required) and {@code session_id} (optional,
-         * for continuing existing conversations).
+         * <p>子智能体通过会话状态管理支持多轮对话。工具暴露两个参数：{@code message}（必填）和 {@code session_id}（可选，用于继续已有对话）。
          *
-         * <p>Example with custom tool name and description:
-         *
+         * <p>自定义工具名称和描述的示例：
          * <pre>{@code
          * toolkit.registration()
          *     .subAgent(
@@ -435,8 +406,7 @@ public class SkillBox {
          *     .apply();
          * }</pre>
          *
-         * <p>Example with persistent session for cross-process conversations:
-         *
+         * <p>使用持久化会话支持跨进程对话的示例：
          * <pre>{@code
          * toolkit.registration()
          *     .subAgent(
@@ -448,10 +418,9 @@ public class SkillBox {
          *     .apply();
          * }</pre>
          *
-         * @param provider Factory for creating agent instances (called for each session)
-         * @param config Configuration for the sub-agent tool, or null to use defaults (tool name
-         *     derived from agent name, InMemoryAgentStateStore for state, events forwarded)
-         * @return This builder for chaining
+         * @param provider 创建智能体实例的工厂（每次调用都会执行）
+         * @param config 子智能体工具配置；null 使用默认值（从智能体名称推导工具名，使用 InMemoryAgentStateStore 保存状态，并转发事件）
+         * @return 当前构建器，支持链式调用
          * @see SubAgentConfig
          * @see SubAgentConfig#defaults()
          */
@@ -469,12 +438,12 @@ public class SkillBox {
         }
 
         /**
-         * Set the list of tools to enable from the MCP client.
+         * 设置从 MCP 客户端启用的工具列表。
          *
-         * <p>Only applicable when using mcpClient(). If not specified, all tools are enabled.
+         * <p>仅在使用 mcpClient() 时适用。未指定时启用全部工具。
          *
-         * @param enableTools List of tool names to enable
-         * @return This builder for chaining
+         * @param enableTools 要启用的工具名称列表
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration enableTools(List<String> enableTools) {
             this.enableTools = enableTools;
@@ -482,12 +451,12 @@ public class SkillBox {
         }
 
         /**
-         * Set the list of tools to disable from the MCP client.
+         * 设置从 MCP 客户端禁用的工具列表。
          *
-         * <p>Only applicable when using mcpClient().
+         * <p>仅在使用 mcpClient() 时适用。
          *
-         * @param disableTools List of tool names to disable
-         * @return This builder for chaining
+         * @param disableTools 要禁用的工具名称列表
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration disableTools(List<String> disableTools) {
             this.disableTools = disableTools;
@@ -495,11 +464,11 @@ public class SkillBox {
         }
 
         /**
-         * Set preset parameters that will be automatically injected during tool execution.
+         * 设置工具执行时自动注入的预设参数。
          *
-         * <p>These parameters are not exposed in the JSON schema.
+         * <p>这些参数不在 JSON 模式中暴露。
          *
-         * <p>The map should have tool names as keys and parameter maps as values:
+         * <p>映射以工具名称为键、参数映射为值：
          * <pre>{@code
          * Map.of(
          *     "toolName1", Map.of("param1", "value1", "param2", "value2"),
@@ -507,8 +476,8 @@ public class SkillBox {
          * )
          * }</pre>
          *
-         * @param presetParameters Map from tool name to its preset parameters
-         * @return This builder for chaining
+         * @param presetParameters 工具名称到预设参数的映射
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration presetParameters(
                 Map<String, Map<String, Object>> presetParameters) {
@@ -517,10 +486,10 @@ public class SkillBox {
         }
 
         /**
-         * Set the extended model for dynamic schema extension.
+         * 设置用于动态模式扩展的扩展模型。
          *
-         * @param extendedModel The extended model
-         * @return This builder for chaining
+         * @param extendedModel 扩展模型
+         * @return 当前构建器，支持链式调用
          */
         public SkillRegistration extendedModel(ExtendedModel extendedModel) {
             this.extendedModel = extendedModel;
@@ -528,9 +497,9 @@ public class SkillBox {
         }
 
         /**
-         * Apply the registration with all configured options.
+         * 使用全部已配置选项执行注册。
          *
-         * @throws IllegalStateException if none of skill() was set, or toolkit() is required but not set
+         * @throws IllegalStateException 当未设置 skill()，或需要 toolkit() 但未设置时
          */
         public void apply() {
             if (skill == null) {
@@ -565,19 +534,17 @@ public class SkillBox {
         }
     }
 
-    // ==================== Skill Build-In Tools ====================
+    // ==================== 技能内置工具 ====================
 
     /**
-     * Registers skill access tools to the provided toolkit.
+     * 向给定工具包注册技能访问工具。
      *
-     * <p>This method registers the following tool:
+     * <p>注册以下工具：
      * <ul>
-     *   <li>load_skill_through_path - Load skill resources or SKILL.md content. When a resource
-     *       is not found, it automatically returns a list of available resources with SKILL.md
-     *       as the first item.</li>
+     * <li>load_skill_through_path：加载技能资源或 SKILL.md 内容。未找到资源时，自动返回以 SKILL.md 为首项的可用资源列表。</li>
      * </ul>
      *
-     * @throws IllegalArgumentException if toolkit is null
+     * @throws IllegalArgumentException 当 toolkit 为 null 时
      */
     public void registerSkillLoadTool() {
         if (toolkit == null) {
@@ -585,93 +552,86 @@ public class SkillBox {
         }
 
         if (toolkit.getTool(SkillToolFactory.LOAD_TOOL_NAME) != null) {
-            // Already registered by another path (e.g. the dynamic-skill middleware); avoid
-            // silently overwriting it. Mixing static skillBox() with dynamic skillRepositories()
-            // is not supported, so surface it for diagnosis.
+            // 已由其他路径注册（例如动态技能中间件），避免
+            // 静默覆盖。不支持混用静态 skillBox() 和动态 skillRepositories()，
+            // 因此明确报告以便诊断。
             logger.warn(
                     "load_skill_through_path already registered; skipping (a same-named tool is"
                             + " already present on this toolkit)");
             return;
         }
 
-        // Registered ungrouped so it is always visible/callable and is never dropped by the
-        // META-scoped reset_equipped_tools replacement.
+        // 注册为无分组工具，使其始终可见、可调用，且不会被
+        // META 范围的 reset_equipped_tools 替换操作移除。
         toolkit.registration().agentTool(skillToolFactory.createSkillAccessToolAgentTool()).apply();
 
         logger.info("Registered skill load tools to toolkit");
     }
 
     /**
-     * Sets whether skill files are automatically uploaded.
+     * 设置是否自动上传技能文件。
      *
-     * @param autoUploadSkill true to automatically upload skill files
+     * @param autoUploadSkill true 表示自动上传技能文件
      */
     public void setAutoUploadSkill(boolean autoUploadSkill) {
         this.autoUploadSkill = autoUploadSkill;
     }
 
     /**
-     * Checks whether skill files are automatically uploaded.
+     * 检查是否自动上传技能文件。
      *
-     * @return true if skill files are automatically uploaded
+     * @return 自动上传时为 true
      */
     public boolean isAutoUploadSkill() {
         return autoUploadSkill;
     }
 
     /**
-     * Gets the working directory for code execution.
+     * 获取代码执行的工作目录。
      *
-     * @return The working directory path, or null if using temporary directory
+     * @return 工作目录路径；使用临时目录时可为 null
      */
     public Path getCodeExecutionWorkDir() {
         return workDir;
     }
 
     /**
-     * Sets a stable working directory for resource uploads and code execution. Callers can use
-     * this to share one workDir across multiple SkillBox instances (e.g. {@code
-     * DynamicSkillMiddleware} rebuilds the box every call, but the workDir lives for the agent's
-     * lifetime so {@code uploadSkillFiles} no longer mints a fresh {@code agentscope-code-execution-*}
-     * tempdir each round).
+     * 为资源上传和代码执行设置稳定工作目录。调用方可让多个 SkillBox 实例共享一个 workDir（例如 {@code DynamicSkillMiddleware} 每次调用都会重建 box，但 workDir 在智能体生命周期内保持稳定，因此 {@code uploadSkillFiles} 不再每轮生成新的 {@code agentscope-code-execution-*} 临时目录）。
      *
-     * @param workDir the directory under which {@code skills/<skillId>/} subtrees are written;
-     *                {@code null} (the default) preserves the legacy per-instance tempdir behavior
+     * @param workDir 用于写入 {@code skills/<skillId>/} 子树的目录；{@code null}（默认）保留旧的按实例创建临时目录行为
      */
     public void setWorkDir(Path workDir) {
         this.workDir = workDir;
-        // The uploadDir derives from workDir lazily in ensureUploadDirExists(); clear the
-        // cached subdir so the next ensureUploadDirExists() recomputes against the new workDir.
+        // uploadDir 在 ensureUploadDirExists() 中从 workDir 延迟推导；清空
+        // 缓存子目录，让下次 ensureUploadDirExists() 根据新的 workDir 重新计算。
         this.uploadDir = null;
     }
 
     /**
-     * Exposes the skill prompt provider so callers (e.g. {@code DynamicSkillMiddleware}) can
-     * toggle {@code codeExecutionEnable}, swap the instruction template, or query the resolved
-     * uploadDir without re-walking the SkillBox internals.
+     * 暴露技能提示提供者，使调用方（例如 {@code DynamicSkillMiddleware}）无需深入 SkillBox 内部，即可切换 {@code codeExecutionEnable}、替换指令模板或查询解析后的 uploadDir。
      */
     public AgentSkillPromptProvider getSkillPromptProvider() {
         return skillPromptProvider;
     }
 
     /**
-     * Gets the upload directory for skill files.
+     * 获取技能文件的上传目录。
      *
-     * @return The upload directory path, or null if not configured
+     * @return 上传目录路径；未配置时为 null
      */
     public Path getUploadDir() {
         return uploadDir;
     }
 
     /**
-     * Ensures the working directory exists, creating it if necessary.
+     * 确保工作目录存在，必要时创建。
      *
-     * @return The working directory path
-     * @throws RuntimeException if failed to create the directory
+     * @return 工作目录路径
+     * @throws RuntimeException 当目录创建失败时
      */
     private Path ensureWorkDirExists() {
         if (this.workDir == null) {
-            // Create temporary directory
+            // 创建临时目录。
             try {
                 this.workDir = Files.createTempDirectory("agentscope-code-execution-");
 
@@ -682,7 +642,7 @@ public class SkillBox {
                 throw new RuntimeException("Failed to create temporary working directory", e);
             }
         } else {
-            // Create directory if it doesn't exist
+            // 目录不存在时创建。
             if (!Files.exists(workDir)) {
                 try {
                     Files.createDirectories(workDir);
@@ -697,9 +657,9 @@ public class SkillBox {
     }
 
     /**
-     * Ensures the upload directory exists, creating it if necessary.
+     * 确保上传目录存在，必要时创建。
      *
-     * @return The upload directory path
+     * @return 上传目录路径
      */
     private Path ensureUploadDirExists() {
         if (uploadDir == null) {
@@ -721,22 +681,17 @@ public class SkillBox {
     }
 
     /**
-     * Uploads skill files to the upload directory with the configured filter.
+     * 按配置的过滤器将技能文件上传到上传目录。
      *
-     * <p>Upload directory resolution:
+     * <p>上传目录的解析规则：
      * <ul>
-     *   <li>If uploadDir is configured, use it.</li>
-     *   <li>Otherwise, use workDir/skills (workDir may be a temporary directory).</li>
+     * <li>已配置 uploadDir 时直接使用。</li>
+     * <li>否则使用 workDir/skills（workDir 可能是临时目录）。</li>
      * </ul>
      *
-     * <p>Security gate: the skill directory (derived from the skill id, whose source part is
-     * free-form) and every resource path must pass {@link SkillUtil#resolveContainedPath(Path,
-     * String)} — an absolute or traversal-shaped segment would otherwise resolve outside the
-     * upload directory and is skipped with a warning. Skill names themselves are already
-     * validated at construction.
+     * <p>安全检查：技能目录（由技能 ID 推导，其中来源部分可自由填写）及每条资源路径都必须通过 {@link SkillUtil#resolveContainedPath(Path, String)}。绝对路径或含路径穿越的片段可能逃出上传目录，因此会跳过并记录警告。技能名称本身已在构造时校验。
      *
-     * <p>If a file already exists, it will be overwritten.
-     *
+     * <p>文件已存在时会被覆盖。
      */
     public void uploadSkillFiles() {
         Path targetDir = ensureUploadDirExists();
@@ -746,9 +701,9 @@ public class SkillBox {
         for (String skillId : getAllSkillIds()) {
             AgentSkill skill = getSkill(skillId);
 
-            // Skills with a populated originDir already live on disk at a known absolute path,
-            // which the prompt provider exposes as <files-root>. Re-materialising them under
-            // workDir would just be a redundant copy that the LLM never sees referenced.
+            // 设置了 originDir 的技能已位于磁盘上的已知绝对路径，
+            // 提示提供者将其作为 <files-root> 暴露。再物化到
+            // workDir 只会产生 LLM 不会引用的冗余副本。
             if (skill.getOriginDir().isPresent()) {
                 continue;
             }

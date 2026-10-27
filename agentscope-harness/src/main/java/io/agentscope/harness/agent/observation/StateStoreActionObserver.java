@@ -26,8 +26,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Persists immutable start/settlement records separately from the compactable conversation.
- * A start without settlement is an unresolved attempt, never authorization to replay it.
+ * 在可压缩对话之外，独立持久化不可变的开始／结束记录。
+ * 只有开始而没有结束记录表示尝试结果尚未确定，绝不构成重放执行的授权。
  */
 public final class StateStoreActionObserver implements ActionObserver {
     private final AgentStateStore store;

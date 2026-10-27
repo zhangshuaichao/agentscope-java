@@ -24,15 +24,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Persistent metadata for a background subagent task, stored as JSON in the workspace under
- * {@code agents/<parentAgentId>/tasks/<parentSessionId>.json}.
+ * 后台子智能体任务的持久化元数据，以 JSON 存储在工作区的
+ * {@code agents/<parentAgentId>/tasks/<parentSessionId>.json}。
  *
- * <p>This is the authoritative truth source for task state. In-memory {@link BackgroundTask}
- * handles are a local performance overlay; {@code TaskRecord} survives across JVM restarts and
- * request migrations in distributed deployments.
+ * <p>这是任务状态的权威事实来源。内存 {@link BackgroundTask} 句柄只是本地性能优化层；
+ * {@code TaskRecord} 可跨 JVM 重启及分布式部署中的请求迁移保留。
  *
- * <p>All fields use Jackson for JSON serialization. Unknown fields are silently ignored to
- * allow forward-compatible schema evolution.
+ * <p>所有字段使用 Jackson 进行 JSON 序列化。静默忽略未知字段，
+ * 以支持向前兼容的 schema 演进。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -52,14 +51,16 @@ public class TaskRecord {
     private Instant lastUpdatedAt;
 
     /**
-     * When this terminal-state task's result was pushed back to the parent agent as a synthetic
-     * {@code <system-reminder>} message, or {@code null} when not yet delivered. Used by
-     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware} to avoid re-delivering
-     * the same completion every reasoning round.
+     * 此终态任务结果以合成 {@code <system-reminder>} 消息推回父级智能体的时间；
+     * 尚未投递时为 {@code null}。
+     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware}
+     * 据此避免在每轮推理中重复投递同一个完成结果。
      */
     private Instant deliveredAt;
 
-    /** When {@code "agent-protocol"}, this task is driven by {@link AgentProtocolTaskClient}. */
+    /**
+     * 为 {@code "agent-protocol"} 时，此任务由 {@link AgentProtocolTaskClient} 驱动。
+     */
     private String transportType;
 
     private String remoteBaseUrl;
@@ -67,14 +68,16 @@ public class TaskRecord {
     private Map<String, String> remoteHeaders;
 
     /**
-     * When {@code true}, the remote (or local) agent is paused waiting for user tool confirmation.
-     * Status remains {@link TaskStatus#RUNNING} so barriers keep waiting.
+     * 为 {@code true} 时，远程或本地智能体暂停等待用户确认工具。
+     * 状态保持为 {@link TaskStatus#RUNNING}，使等待屏障继续等待。
      */
     private boolean awaitingConfirm;
 
     private List<RemotePendingConfirm> pendingConfirms;
 
-    /** Last remote event sequence observed by the parent (for SSE resume). */
+    /**
+     * 父级观察到的最后一个远程事件序号（用于 SSE 恢复）。
+     */
     private long lastEventSeq;
 
     public TaskRecord() {}
@@ -194,12 +197,16 @@ public class TaskRecord {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
-    /** Convenience: update lastUpdatedAt to now. */
+    /**
+     * 便捷方法：将 lastUpdatedAt 更新为当前时间。
+     */
     public void touch() {
         this.lastUpdatedAt = Instant.now();
     }
 
-    /** Convenience: update lastCheckedAt to now. */
+    /**
+     * 便捷方法：将 lastCheckedAt 更新为当前时间。
+     */
     public void touchChecked() {
         this.lastCheckedAt = Instant.now();
     }
@@ -212,7 +219,9 @@ public class TaskRecord {
         this.deliveredAt = deliveredAt;
     }
 
-    /** Whether this task's completion has been pushed back to the parent agent. */
+    /**
+     * 此任务的完成结果是否已经推回父级智能体。
+     */
     public boolean isDelivered() {
         return deliveredAt != null;
     }
@@ -244,7 +253,9 @@ public class TaskRecord {
                         : Collections.unmodifiableMap(Map.copyOf(remoteHeaders));
     }
 
-    /** Whether this task is executed via the HTTP task protocol. */
+    /**
+     * 此任务是否通过 HTTP 任务协议执行。
+     */
     public boolean isAgentProtocolTransport() {
         return transportType != null && "agent-protocol".equalsIgnoreCase(transportType);
     }

@@ -19,25 +19,21 @@ import io.agentscope.core.agent.RuntimeContext;
 import java.util.Objects;
 
 /**
- * Routing identity for {@link ChatUiChannel} requests. Replaces the need to understand
- * {@link io.agentscope.harness.agent.gateway.channel.DmScope} by letting the caller express
- * routing intent through simple business identifiers.
+ * {@link ChatUiChannel} 请求的路由身份。调用方使用简单业务标识表达路由意图，
+ * 无需理解 {@link io.agentscope.harness.agent.gateway.channel.DmScope}。
  *
  * <ul>
- *   <li>{@code userId} — identifies the user. Maps to
- *       {@link io.agentscope.harness.agent.gateway.MsgContext#userId()} for HarnessAgent
- *       namespace isolation, and is used as the default session key when {@code sessionId} is null.
- *   <li>{@code sessionId} — optional explicit conversation identifier. When provided, different
- *       sessions for the same user are kept separate. When null, one session per user is the
- *       default.
- *   <li>{@code agentId} — optional target agent override for multi-agent setups. When null, the
- *       channel's default agent is used.
- *   <li>{@code runtimeContext} — optional per-call {@link RuntimeContext} merged into the agent
- *       turn (attributes, typed values, force-sync flags, …). Gateway-owned identity fields still
- *       win on conflict.
+ *   <li>{@code userId} — 标识用户，映射到
+ *       {@link io.agentscope.harness.agent.gateway.MsgContext#userId()}，用于 HarnessAgent 命名空间隔离；
+ *       {@code sessionId} 为 null 时也用作默认会话键。
+ *   <li>{@code sessionId} — 可选的明确对话标识；提供时，同一用户的不同会话彼此分开。
+ *       为 null 时，默认每用户一个会话。
+ *   <li>{@code agentId} — 多智能体配置中的可选目标覆盖；为 null 时使用渠道默认智能体。
+ *   <li>{@code runtimeContext} — 合并到智能体轮次的可选调用级 {@link RuntimeContext}
+ *       （属性、类型化值、强制同步标志等）。冲突时网关身份字段仍优先。
  * </ul>
  *
- * <h2>Usage</h2>
+ * <h2>用法</h2>
  *
  * <pre>{@code
  * // One session per user (most common)
@@ -61,10 +57,10 @@ import java.util.Objects;
  *     "hello");
  * }</pre>
  *
- * @param userId the user identity (required)
- * @param sessionId optional conversation identifier; null means one session per user
- * @param agentId optional target agent override; null for default routing
- * @param runtimeContext optional caller-supplied runtime context; null when none
+ * @param userId 用户身份（必填）
+ * @param sessionId 可选对话标识；null 表示每用户一个会话
+ * @param agentId 可选目标智能体覆盖；null 表示默认路由
+ * @param runtimeContext 可选调用方运行上下文；没有时为 null
  */
 public record SendOptions(
         String userId, String sessionId, String agentId, RuntimeContext runtimeContext) {
@@ -73,33 +69,38 @@ public record SendOptions(
         Objects.requireNonNull(userId, "userId");
     }
 
-    /** One session per user — the most common case. */
+    /**
+     * 每用户一个会话，最常见的用法。
+     */
     public static SendOptions userId(String userId) {
         return new SendOptions(userId, null, null, null);
     }
 
-    /** Explicit user + session — multiple conversations for the same user. */
+    /**
+     * 明确指定用户和会话，同一用户可进行多段对话。
+     */
     public static SendOptions of(String userId, String sessionId) {
         Objects.requireNonNull(sessionId, "sessionId");
         return new SendOptions(userId, sessionId, null, null);
     }
 
-    /** Returns a copy with the given agent id override. */
+    /**
+     * 返回带指定智能体 ID 覆盖的副本。
+     */
     public SendOptions withAgentId(String agentId) {
         return new SendOptions(userId, sessionId, agentId, runtimeContext);
     }
 
     /**
-     * Returns a copy that carries the given {@link RuntimeContext} into the agent turn. Replaces
-     * any previously attached context.
+     * 返回携带指定 {@link RuntimeContext} 进入智能体轮次的副本，替换之前附加的上下文。
      */
     public SendOptions withRuntimeContext(RuntimeContext runtimeContext) {
         return new SendOptions(userId, sessionId, agentId, runtimeContext);
     }
 
     /**
-     * Returns a copy with a string attribute merged into the carried {@link RuntimeContext}.
-     * Creates a new context from empty when none is present yet.
+     * 返回将字符串属性合并到所携带 {@link RuntimeContext} 的副本。
+     * 尚无上下文时，从空上下文创建。
      */
     public SendOptions withAttribute(String key, Object value) {
         RuntimeContext next = RuntimeContext.builder(runtimeContext).put(key, value).build();
@@ -107,15 +108,17 @@ public record SendOptions(
     }
 
     /**
-     * Returns a copy with a typed attribute merged into the carried {@link RuntimeContext}.
-     * Creates a new context from empty when none is present yet.
+     * 返回将类型化属性合并到所携带 {@link RuntimeContext} 的副本。
+     * 尚无上下文时，从空上下文创建。
      */
     public <T> SendOptions withAttribute(Class<T> type, T value) {
         RuntimeContext next = RuntimeContext.builder(runtimeContext).put(type, value).build();
         return new SendOptions(userId, sessionId, agentId, next);
     }
 
-    /** The effective session key: sessionId if provided, otherwise userId. */
+    /**
+     * 实际会话键：提供 sessionId 时使用它，否则使用 userId。
+     */
     String effectiveSessionKey() {
         return sessionId != null ? sessionId : userId;
     }

@@ -36,8 +36,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Explicit caller-authorized verification over already persisted evidence. Never registered as
- * a model tool and never re-executes an action. Call inside the owning session transaction.
+ * 对已经持久化的证据执行调用方明确授权的验证。不会注册成模型工具，也绝不重新执行动作。
+ * 应在所属会话事务内调用。
+ *
+ * <p>【学习提示】deferContextual 在订阅时获取事件通道；阻塞验证和存储工作安排到 boundedElastic。
+ * 校验对象是已确认验收条件与已结束动作的证据，不能把检查结果当成重新执行工具的授权。
+ * 取消标志只在明确检查点生效，不等于中断已经开始的同步验证或撤销已提交的记录。
+ * 事件投递发生在状态处理之后；投递失败会记日志，不会撤回已保存的验证证据。
  */
 public final class VerificationService {
     public static final String EVENT_NAME = "task_verification";
@@ -227,8 +232,8 @@ public final class VerificationService {
                                                         verdict.reason(),
                                                         binding,
                                                         System.currentTimeMillis());
-                                        // Persist before updating the model-facing task state. A
-                                        // failed commit cannot pass.
+                                        // 先持久化，再更新模型可见的任务状态。
+                                        // 提交失败不能算验证通过。
                                         if (cancelled.get())
                                             throw new CancellationException(
                                                     "Verification cancelled");

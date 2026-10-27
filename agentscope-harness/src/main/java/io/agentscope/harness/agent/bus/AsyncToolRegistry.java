@@ -20,60 +20,47 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Registry for tracking async tool executions that have been offloaded to the background.
+ * 跟踪已转入后台的异步工具执行的注册表。
  *
- * <p>When a tool execution exceeds the configured timeout, {@code AsyncToolMiddleware} registers
- * it here. The registry tracks the tool's lifecycle so that:
- * <ul>
- *   <li>On normal completion, the record is updated and the result delivered via inbox</li>
- *   <li>On process crash/restart, stale RUNNING records can be detected and cleaned up</li>
- * </ul>
+ * <p>工具执行超过配置的等待时限后，{@code AsyncToolMiddleware} 在此注册它。注册表跟踪生命周期：
+ * <ul><li>正常完成时更新记录，并通过收件箱交付结果。</li>
+ * <li>进程崩溃或重启后，可以识别并清理过期的 RUNNING 记录。</li></ul>
  *
- * <p>Implementations:
- * <ul>
- *   <li>{@code WorkspaceAsyncToolRegistry} — single-process, suitable for testing</li>
- * </ul>
+ * <p>实现：<ul><li>{@code WorkspaceAsyncToolRegistry}：基于工作区文件系统的实现，适合测试；持久性取决于后端。</li></ul>
  */
 public interface AsyncToolRegistry {
 
     /**
-     * Register a new async tool execution.
-     *
-     * @param record the async tool record with status {@link AsyncToolRecord#RUNNING}
+     * 注册新的异步工具执行。
+     * @param record 状态为 {@link AsyncToolRecord#RUNNING} 的执行记录
      */
     Mono<Void> register(AsyncToolRecord record);
 
     /**
-     * Mark an async tool execution as completed.
-     *
-     * @param id     the async tool record id
-     * @param result the tool execution result text
+     * 将异步执行标记为完成。
+     * @param id 异步工具记录 ID
+     * @param result 工具执行结果文本
      */
     Mono<Void> complete(String id, String result);
 
     /**
-     * Mark an async tool execution as failed.
-     *
-     * @param id    the async tool record id
-     * @param error the error message
+     * 将异步执行标记为失败。
+     * @param id 异步工具记录 ID
+     * @param error 错误信息
      */
     Mono<Void> fail(String id, String error);
 
     /**
-     * Find async tool records for the given session that have been in RUNNING status longer
-     * than the specified TTL. These are likely orphaned due to process crash.
-     *
-     * @param sessionId the session to check
-     * @param ttl       records older than this duration are considered stale
-     * @return stale RUNNING records
+     * 查找指定会话中 RUNNING 持续时间超过 TTL 的记录。这些记录可能因进程崩溃而失去执行者。
+     * @param sessionId 待检查会话
+     * @param ttl 超过此时长的记录视为过期
+     * @return 过期的 RUNNING 记录
      */
     Mono<List<AsyncToolRecord>> findStale(String sessionId, Duration ttl);
 
     /**
-     * Mark a stale async tool record as timed out. Prevents it from being returned by
-     * subsequent {@link #findStale} calls.
-     *
-     * @param id the async tool record id
+     * 将过期记录标记为超时，避免后续 {@link #findStale} 再次返回它。
+     * @param id 异步工具记录 ID
      */
     Mono<Void> markTimeout(String id);
 }

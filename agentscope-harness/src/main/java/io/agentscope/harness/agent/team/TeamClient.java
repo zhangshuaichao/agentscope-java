@@ -19,16 +19,19 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Client for AgentTeams coordination (Claude-parity task board + mailbox).
+ * AgentTeams 协调客户端，提供与 Claude 对应的任务看板和邮箱机制。
  *
- * <p>Implementations: {@link LocalTeamClient} (BaseStore CAS) and control-plane HTTP.
+ * <p>实现包括 {@link LocalTeamClient}（BaseStore CAS）以及控制平面 HTTP 客户端。
+ *
+ * <p>【学习提示】负责人分配任务仍保持 pending；成员成功领取才进入 in_progress。
+ * “有拥有者”不等于“已经开始执行”，依赖未解除的任务也不能直接领取。
  */
 public interface TeamClient {
 
-    /** Lists all tasks on the team board. */
+    /** 列出团队看板上的全部任务。 */
     Mono<List<TeamTask>> listTasks(String namespace, String teamName);
 
-    /** Creates a pending task; {@code owner} may be blank (unassigned). */
+    /** 创建 pending 任务；{@code owner} 可为空白，表示尚未分配。 */
     Mono<TeamTask> createTask(
             String namespace,
             String teamName,
@@ -37,16 +40,15 @@ public interface TeamClient {
             List<String> blockedBy,
             String owner);
 
-    /** Lead-assigns a pending task to {@code owner} (stays pending). */
+    /** 负责人将 pending 任务分配给 {@code owner}，状态仍为 pending。 */
     Mono<TeamTask> assignTask(
             String namespace, String teamName, String taskId, String owner, long expectedVersion);
 
     /**
-     * Claims a pending unblocked task into in_progress when owner is empty (self-claim) or already
-     * equals {@code claimedBy} (assignee starts).
+     * 当拥有者为空（自行领取）或已等于 {@code claimedBy}（被指派成员开始）时，
+     * 将未阻塞的 pending 任务领取为 in_progress。
      *
-     * <p>{@code expectedVersion <= 0} means "claim at the current store version" (models often omit
-     * the optimistic lock token).
+     * <p>{@code expectedVersion <= 0} 表示按存储当前版本领取，因为模型经常省略乐观锁令牌。
      */
     Mono<TeamTask> claimTask(
             String namespace,
@@ -55,60 +57,60 @@ public interface TeamClient {
             String claimedBy,
             long expectedVersion);
 
-    /** Completes an in-progress task. Notifies the lead with the result. */
+    /** 完成正在执行的任务，并将结果通知负责人。 */
     Mono<TeamTask> completeTask(String namespace, String teamName, String taskId, String result);
 
-    /** Marks a non-terminal task failed. Notifies the lead with the reason. */
+    /** 将非终态任务标为失败，并将原因通知负责人。 */
     Mono<TeamTask> failTask(String namespace, String teamName, String taskId, String reason);
 
-    /** Unclaims an in-progress task back to pending. */
+    /** 放弃正在执行的任务，将其退回 pending。 */
     Mono<TeamTask> unclaimTask(
             String namespace, String teamName, String taskId, long expectedVersion);
 
     /**
-     * Returns unblocked pending tasks the caller can start: unassigned open-board tasks, plus (when
-     * {@code forMember} is non-blank) pending tasks already assigned to that member.
+     * 返回调用方可以开始、且未被阻塞的 pending 任务：未分配的开放看板任务，
+     * 以及在 {@code forMember} 非空白时已分配给该成员的 pending 任务。
      */
     Mono<List<TeamTask>> listClaimableTasks(String namespace, String teamName, String forMember);
 
-    /** Open-board claimable tasks only ({@code forMember} blank). */
+    /** 仅返回开放看板中可领取的任务，即 {@code forMember} 为空白。 */
     default Mono<List<TeamTask>> listClaimableTasks(String namespace, String teamName) {
         return listClaimableTasks(namespace, teamName, null);
     }
 
-    /** Point-to-point team mailbox message. */
+    /** 点对点团队邮箱消息。 */
     Mono<TeamMessage> sendMessage(
             String namespace, String teamName, String from, String to, String content);
 
-    /** Broadcast mailbox message to all other members ({@code to} empty on CP). */
+    /** 向其他全部成员广播邮箱消息；控制平面使用空的 {@code to}。 */
     Mono<List<TeamMessage>> broadcastMessage(
             String namespace, String teamName, String from, String content);
 
-    /** Lists recent team messages. */
+    /** 列出近期团队消息。 */
     Mono<List<TeamMessage>> listMessages(String namespace, String teamName, int limit);
 
-    /** Lists team members. */
+    /** 列出团队成员。 */
     Mono<List<TeamMemberInfo>> listMembers(String namespace, String teamName);
 
-    /** Dynamically spawn a teammate (lead). */
+    /** 动态创建队友，由负责人调用。 */
     Mono<Void> spawnMember(
             String namespace, String teamName, String name, String agentRef, String prompt);
 
-    /** Shutdown / remove a teammate (lead). */
+    /** 关闭或移除队友，由负责人调用。 */
     Mono<Void> shutdownMember(String namespace, String teamName, String memberName);
 
-    /** Worker submits a plan for lead approval. */
+    /** 工作成员提交计划供负责人审批。 */
     Mono<Void> submitPlan(String namespace, String teamName, String memberName, String planText);
 
-    /** Lead approves a member plan. */
+    /** 负责人批准成员计划。 */
     Mono<Void> approvePlan(String namespace, String teamName, String memberName);
 
-    /** Lead rejects a member plan. */
+    /** 负责人拒绝成员计划。 */
     Mono<Void> rejectPlan(String namespace, String teamName, String memberName);
 
-    /** Creates a store-backed team and seed members. */
+    /** 创建由存储支持的团队及初始成员。 */
     Mono<TeamInfo> createTeam(TeamCreateSpec spec);
 
-    /** Marks the team completed (retention TTL; not immediate delete). */
+    /** 将团队标记为完成，按保留 TTL 清理，而非立即删除。 */
     Mono<Void> completeTeam(String namespace, String teamName);
 }

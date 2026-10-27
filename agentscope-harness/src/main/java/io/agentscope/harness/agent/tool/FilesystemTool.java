@@ -32,8 +32,8 @@ import io.agentscope.harness.agent.workspace.WorkspacePathNormalizer;
 import java.util.List;
 
 /**
- * File system tools backed by a {@link AbstractFilesystem}, exposing read/write/edit/grep/glob
- * operations as agent-callable tools.
+ * 由 {@link AbstractFilesystem} 支持的文件系统工具，
+ * 将读取、写入、编辑、grep 和 glob 操作暴露为智能体可调用工具。
  */
 public class FilesystemTool {
 
@@ -246,7 +246,9 @@ public class FilesystemTool {
                         "matches"));
     }
 
-    /** Search using the default result limit. */
+    /**
+     * 使用默认结果数量限制进行搜索。
+     */
     public ToolResultBlock grepFiles(
             RuntimeContext runtimeContext, String pattern, String path, String glob) {
         return grepFiles(runtimeContext, pattern, path, glob, null);
@@ -302,7 +304,9 @@ public class FilesystemTool {
                         "files"));
     }
 
-    /** Search using the default result limit. */
+    /**
+     * 使用默认结果数量限制进行搜索。
+     */
     public ToolResultBlock globFiles(RuntimeContext runtimeContext, String pattern, String path) {
         return globFiles(runtimeContext, pattern, path, null);
     }

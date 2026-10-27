@@ -21,25 +21,19 @@ import io.agentscope.core.hook.PreCallEvent;
 import reactor.core.publisher.Mono;
 
 /**
- * Injects the skill catalog prompt into the unified system message on {@link PreCallEvent} via
- * {@link PreCallEvent#appendSystemContent(String)}.
+ * 在 {@link PreCallEvent} 上通过 {@link PreCallEvent#appendSystemContent(String)} 将技能目录提示注入统一系统消息。
  *
- * <p>Uses priority {@link #SKILL_HOOK_PRIORITY} so that, in typical {@code HarnessAgent} wiring,
- * this hook runs after {@code SubagentsHook} (80) and before {@code WorkspaceContextHook} (900),
- * yielding append order: base prompt → subagents → skills → workspace context.
+ * <p>使用优先级 {@link #SKILL_HOOK_PRIORITY}，因此在典型 {@code HarnessAgent} 配置中，此钩子在 {@code SubagentsHook}（80）之后、{@code WorkspaceContextHook}（900）之前执行，追加顺序为：基础提示 → 子智能体 → 技能 → 工作区上下文。
  *
- * <p>The skill prompt is appended to the transient system message and is never stored in
- * the agent's persistent {@code Memory}.
+ * <p>技能提示追加到临时系统消息中，不会存入智能体的持久 {@code Memory}。
  *
- * @deprecated since 2.0.0. The skill package and the hook system are removed; manage markdown
- *     skill catalogs in application code or via {@code MiddlewareBase}.
+ * @deprecated 自 2.0.0 起弃用。技能包和钩子系统已移除；请在应用代码中或通过 {@code MiddlewareBase} 管理 Markdown 技能目录。
  */
 @Deprecated(since = "2.0.0")
 public class SkillHook implements Hook {
 
     /**
-     * Runs after subagent prompt injection and before workspace context injection in the default
-     * harness hook chain.
+     * 在默认 harness 钩子链中，于子智能体提示注入之后、工作区上下文注入之前运行。
      */
     public static final int SKILL_HOOK_PRIORITY = 85;
 

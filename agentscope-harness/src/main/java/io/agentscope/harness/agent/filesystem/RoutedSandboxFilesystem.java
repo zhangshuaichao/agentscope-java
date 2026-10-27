@@ -32,12 +32,12 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Prefix-routed filesystem that preserves shell execution on the primary sandbox backend.
+ * 按前缀路由文件操作，同时保留主沙箱后端 Shell 执行能力的文件系统。
  *
- * <p>File operations are delegated to an internal {@link CompositeFilesystem} (primary as default
- * backend + optional prefix routes). {@link #execute} and {@link #id} always go to {@code
- * primary}, so Managed Agents can mount JPA-backed {@code memory-stores/} routes alongside a
- * {@code SandboxBackedFilesystem} without losing {@code shell_execute}.
+ * <p>文件操作委托给内部 {@link CompositeFilesystem}（主后端作为默认后端，附加可选前缀路由）。
+ * {@link #execute} 和 {@link #id} 始终交给 {@code
+ * primary}，因此受管智能体可在 {@code SandboxBackedFilesystem} 旁挂载 JPA 支持的
+ * {@code memory-stores/} 路由，而不丢失 {@code shell_execute} 能力。
  */
 public final class RoutedSandboxFilesystem implements AbstractSandboxFilesystem {
 
@@ -50,14 +50,16 @@ public final class RoutedSandboxFilesystem implements AbstractSandboxFilesystem 
         this.composite = new CompositeFilesystem(primary, routes);
     }
 
-    /** Returns the primary sandbox filesystem (lifecycle middleware injects into this). */
+    /**
+     * 返回主沙箱文件系统（生命周期中间件向它注入沙箱）。
+     */
     public AbstractSandboxFilesystem primary() {
         return primary;
     }
 
     /**
-     * Returns the backend that would serve {@code path}: the longest matching prefix route, or
-     * the primary sandbox filesystem when no route matches.
+     * 返回处理 {@code path} 的后端：最长前缀匹配路由的后端；
+     * 没有匹配路由时使用主沙箱文件系统。
      */
     public AbstractFilesystem backendFor(String path) {
         return composite.filesystemFor(path);

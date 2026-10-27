@@ -22,43 +22,35 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Normalized inbound message produced by a {@link Channel} adapter before routing. Carries all
- * identity and context metadata needed by {@link ChannelRouter} to resolve an agent and build a
- * stable session key.
+ * 由 {@link Channel} 适配器在路由前生成的规范化入站消息。
+ * 携带 {@link ChannelRouter} 解析智能体及构建稳定会话键所需的全部身份与上下文元数据。
  *
- * <p>Two identity fields are deliberately separate:
+ * <p>两个身份字段刻意分开：
  * <ul>
- *   <li>{@link #peer} — the <em>conversation</em> identifier used to construct the session key
- *       (DM user id, group chat id, channel id)
- *   <li>{@link #senderId} — the <em>message sender's</em> identity, used as {@code userId} for
- *       HarnessAgent namespace isolation. In DM scenarios these are equal; in group/channel
- *       scenarios {@code peer.id} is the group and {@code senderId} is the individual author.
+ *   <li>{@link #peer} — 用于构建会话键的<em>对话</em>标识（私聊用户 ID、群聊 ID、频道 ID）
+ *   <li>{@link #senderId} — <em>消息发送者</em>身份，作为 HarnessAgent 命名空间隔离的
+ *       {@code userId}。私聊中二者相等；群组／频道中 {@code peer.id} 是群组，
+ *       {@code senderId} 是具体作者。
  * </ul>
  *
- * <p>{@link #runtimeContext()} is <em>not</em> used for routing and does not participate in session
- * key computation. It is forwarded to the Gateway as the caller merge base for the agent turn.
+ * <p>{@link #runtimeContext()} <em>不</em>用于路由，也不参与会话键计算。
+ * 它转发给网关，作为智能体轮次的调用方上下文合并基础。
  *
- * @param channelId identifier of the originating channel (e.g. {@code "chatui"}, {@code "slack"})
- * @param accountId optional multi-account identifier (e.g. Slack app installation id); null for
- *     single-account channels
- * @param peer the conversation peer (DM partner, channel, group, or thread) — used for session key
- * @param senderId optional sender identity for user-level isolation; if null, {@link #peer}'s id is
- *     used as fallback in DM contexts
- * @param parentPeer optional parent peer for thread-nested messages; used for
- *     {@code binding.peer.parent} inheritance
- * @param guild optional guild / server / workspace id (Discord guild, Slack workspace)
- * @param team optional team id (Slack team, MS Teams team)
- * @param roles optional set of role ids the sender holds within the guild; used for
- *     {@code binding.guild+roles} tier evaluation
- * @param messages the actual message content to forward to the agent
- * @param preferredAgentId optional explicit agent override evaluated by {@link ChannelRouter} as a
- *     tier-0 short-circuit before any binding tier. Set this when the caller already knows which
- *     agent should handle the request (e.g. a path-mapped Web UI where the user clicked an agent
- *     card); the router still builds session and outbound context normally so bindings continue to
- *     control {@code sessionScope} and outbound addressing. {@code null} for normal binding-driven
- *     routing.
- * @param runtimeContext optional caller-supplied {@link RuntimeContext} merged into the agent
- *     turn; {@code null} when none. Not part of routing / session identity.
+ * @param channelId 来源渠道标识（例如 {@code "chatui"}、{@code "slack"}）
+ * @param accountId 可选多账户标识（例如 Slack 应用安装 ID）；单账户渠道为 null
+ * @param peer 对话对端（私聊伙伴、频道、群组或线程），用于会话键
+ * @param senderId 用户级隔离的可选发送者身份；null 时，私聊上下文回退使用 {@link #peer} 的 ID
+ * @param parentPeer 线程内消息的可选父对端，用于 {@code binding.peer.parent} 继承
+ * @param guild 可选社区／服务器／工作区 ID（Discord 社区、Slack 工作区）
+ * @param team 可选团队 ID（Slack 团队、MS Teams 团队）
+ * @param roles 发送者在社区中持有的可选角色 ID 集合，用于 {@code binding.guild+roles} 层评估
+ * @param messages 要转发给智能体的实际消息内容
+ * @param preferredAgentId 可选的明确智能体覆盖，{@link ChannelRouter} 在绑定层之前作为第 0 层短路目标选择。
+ *     调用方已知道处理请求的智能体时设置，例如路径映射的 Web UI 中用户点击了智能体卡片；
+ *     路由器仍正常构建会话与出站上下文，绑定继续控制 {@code sessionScope} 和出站地址。
+ *     {@code null} 表示常规绑定路由。
+ * @param runtimeContext 合并到智能体轮次的可选调用方 {@link RuntimeContext}；没有时为 {@code null}。
+ *     不属于路由／会话身份。
  */
 public record InboundMessage(
         String channelId,
@@ -81,10 +73,9 @@ public record InboundMessage(
     }
 
     /**
-     * Single-turn DM with no guild/team/role metadata (typical for direct chat UI use).
+     * 不带社区／团队／角色元数据的单轮私聊，常用于直接聊天 UI。
      *
-     * <p>In DM context {@code senderId} equals {@code peerId} — the conversation partner is also
-     * the message author.
+     * <p>私聊上下文中 {@code senderId} 等于 {@code peerId}，对话伙伴也是消息作者。
      */
     public static InboundMessage dm(String channelId, String peerId, List<Msg> messages) {
         return new InboundMessage(
@@ -102,8 +93,8 @@ public record InboundMessage(
     }
 
     /**
-     * Single-turn DM with an explicit {@link #preferredAgentId()} override — the router will use
-     * the supplied {@code agentId} as a tier-0 short-circuit instead of evaluating bindings.
+     * 明确覆盖 {@link #preferredAgentId()} 的单轮私聊：路由器将给定 {@code agentId}
+     * 作为第 0 层短路目标选择，不再由绑定决定目标智能体。
      */
     public static InboundMessage dmFor(
             String channelId, String peerId, String agentId, List<Msg> messages) {
@@ -123,8 +114,8 @@ public record InboundMessage(
     }
 
     /**
-     * Channel / group message with optional guild context. The {@code senderId} identifies the
-     * individual author separately from the {@code roomId} conversation peer.
+     * 带可选社区上下文的频道／群组消息。{@code senderId} 标识具体作者，
+     * 与 {@code roomId} 对话对端分开。
      */
     public static InboundMessage channel(
             String channelId, String roomId, String senderId, String guild, List<Msg> messages) {
@@ -143,8 +134,10 @@ public record InboundMessage(
     }
 
     /**
-     * Channel message with optional guild context (no explicit senderId — sender identity unknown,
-     * falls back to room peer for isolation).
+     * 带可选社区上下文的频道消息；未明确提供 senderId，发送者身份为 null。
+     *
+     * <p>【学习提示】上游旧描述称回退到房间对端，但 ChannelRouter 只对私聊做 peer ID 回退。
+     * 此频道消息不会自动把 roomId 作为 userId；需要用户隔离时应显式传入可信发送者身份。
      */
     public static InboundMessage channel(
             String channelId, String roomId, String guild, List<Msg> messages) {
@@ -162,17 +155,23 @@ public record InboundMessage(
                 null);
     }
 
-    /** Whether this message originates from a direct / DM peer. */
+    /**
+     * 此消息是否来自直接／私聊对端。
+     */
     public boolean isDm() {
         return peer.kind().isDirect();
     }
 
-    /** Whether this message is a thread-nested reply. */
+    /**
+     * 此消息是否是线程内回复。
+     */
     public boolean isThread() {
         return peer.kind().isThread();
     }
 
-    /** Returns a copy carrying the given {@link RuntimeContext}. */
+    /**
+     * 返回携带指定 {@link RuntimeContext} 的副本。
+     */
     public InboundMessage withRuntimeContext(RuntimeContext runtimeContext) {
         return new InboundMessage(
                 channelId,
@@ -188,7 +187,9 @@ public record InboundMessage(
                 runtimeContext);
     }
 
-    /** Returns a builder for constructing messages with all optional fields. */
+    /**
+     * 返回可设置全部可选字段的消息构建器。
+     */
     public static Builder builder(String channelId, Peer peer, List<Msg> messages) {
         return new Builder(channelId, peer, messages);
     }

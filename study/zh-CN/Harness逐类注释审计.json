@@ -1,0 +1,5646 @@
+{
+  "generated_utc": "2026-10-27T17:04:31.332099+00:00",
+  "scope": "agentscope-harness/src/main/java/**/*.java",
+  "method": "逐文件与逐类型提取非许可证注释，排除原样代码示例与Javadoc符号；英文说明启发式候选逐条人工复核。4处均为方法调用、原样字面值或工具动作名称；零遗漏候选不证明译文绝对无误。",
+  "summary": {
+    "files": 294,
+    "files_with_candidates": 4,
+    "candidate_lines": 4,
+    "classes_with_english_candidates": 1,
+    "types": 420,
+    "raw_candidate_lines": 4,
+    "untranslated_prose_after_review": 0
+  },
+  "files": [
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/DistributedStore.java",
+      "nonlicense_comment_blocks": 20,
+      "chinese_comment_blocks": 20,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DistributedStore",
+          "declaration_line": 72,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 200,
+          "comment_index": 12,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CompositeDistributedStore",
+          "declaration_line": 323,
+          "comment_index": 20,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+      "nonlicense_comment_blocks": 231,
+      "chinese_comment_blocks": 228,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessAgent",
+          "declaration_line": 190,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 1273,
+          "comment_index": 87,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgentBuilderSupport.java",
+      "nonlicense_comment_blocks": 81,
+      "chinese_comment_blocks": 69,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessAgentBuilderSupport",
+          "declaration_line": 68,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SubagentFactoryEntry",
+          "declaration_line": 138,
+          "comment_index": 10,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/IsolationScope.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "IsolationScope",
+          "declaration_line": 46,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/artifact/ArtifactDeliveryRequest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ArtifactDeliveryRequest",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/artifact/ArtifactDeliveryResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ArtifactDeliveryResult",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/artifact/ArtifactDeliveryTarget.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ArtifactDeliveryTarget",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/AsyncToolRecord.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AsyncToolRecord",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/AsyncToolRegistry.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AsyncToolRegistry",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/BusEntry.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BusEntry",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/MessageBus.java",
+      "nonlicense_comment_blocks": 28,
+      "chinese_comment_blocks": 28,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MessageBus",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/WorkspaceAsyncToolRegistry.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceAsyncToolRegistry",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "at",
+          "declaration_line": 168,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/WorkspaceMessageBus.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceMessageBus",
+          "declaration_line": 58,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextBlock.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextBlock",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextBudgetExceededException.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextBudgetExceededException",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextItem.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextItem",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Placement",
+          "declaration_line": 33,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextManifest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextManifest",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Item",
+          "declaration_line": 55,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextModelCalls.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextModelCalls",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextPolicy.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextPolicy",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextRenderer.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextRenderer",
+          "declaration_line": 22,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextRequest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextRequest",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextSelectionPolicy.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextSelectionPolicy",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextSource.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextSource",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextSourceOptions.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextSourceOptions",
+          "declaration_line": 22,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 38,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextSources.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextSources",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Registration",
+          "declaration_line": 28,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Materials",
+          "declaration_line": 30,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Loaded",
+          "declaration_line": 155,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/ContextTokenEstimator.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextTokenEstimator",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Estimate",
+          "declaration_line": 31,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/HarnessContextBuilder.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessContextBuilder",
+          "declaration_line": 58,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ProjectionSnapshot",
+          "declaration_line": 101,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/SourceFailurePolicy.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SourceFailurePolicy",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/TaskContextOptions.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskContextOptions",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 35,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/context/WorkspaceContextMaterials.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceContextMaterials",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/coordination/LocalPeriodicGate.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalPeriodicGate",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/coordination/PeriodicGate.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PeriodicGate",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/coordination/StoreBackedPeriodicGate.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoreBackedPeriodicGate",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/AbstractFilesystem.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 15,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AbstractFilesystem",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/BakedContextFilesystem.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BakedContextFilesystem",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/CompositeFilesystem.java",
+      "nonlicense_comment_blocks": 29,
+      "chinese_comment_blocks": 29,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "CompositeFilesystem",
+          "declaration_line": 62,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RouteEntry",
+          "declaration_line": 98,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "RouteResult",
+          "declaration_line": 100,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "IndexedFile",
+          "declaration_line": 529,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/OverlayFilesystem.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OverlayFilesystem",
+          "declaration_line": 53,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ShellAwareOverlay",
+          "declaration_line": 119,
+          "comment_index": 6,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/ProjectAwareOverlay.java",
+      "nonlicense_comment_blocks": 10,
+      "chinese_comment_blocks": 10,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ProjectAwareOverlay",
+          "declaration_line": 53,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/RoutedSandboxFilesystem.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RoutedSandboxFilesystem",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/local/LocalFilesystem.java",
+      "nonlicense_comment_blocks": 33,
+      "chinese_comment_blocks": 33,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalFilesystem",
+          "declaration_line": 76,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/local/LocalFilesystemWithShell.java",
+      "nonlicense_comment_blocks": 24,
+      "chinese_comment_blocks": 24,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalFilesystemWithShell",
+          "declaration_line": 51,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/EditResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "EditResult",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/ExecuteResponse.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ExecuteResponse",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/FileData.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FileData",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/FileDownloadResponse.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FileDownloadResponse",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/FileInfo.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FileInfo",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/FileUploadResponse.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FileUploadResponse",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/GlobResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GlobResult",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/GrepMatch.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GrepMatch",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/GrepResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GrepResult",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/LsResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LsResult",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/ReadResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ReadResult",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/model/WriteResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WriteResult",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/RemoteFilesystem.java",
+      "nonlicense_comment_blocks": 41,
+      "chinese_comment_blocks": 41,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteFilesystem",
+          "declaration_line": 62,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/store/BaseStore.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BaseStore",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/store/InMemoryStore.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "InMemoryStore",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/store/NamespaceFactory.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "NamespaceFactory",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/store/StoreItem.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoreItem",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/sandbox/AbstractSandboxFilesystem.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AbstractSandboxFilesystem",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystem.java",
+      "nonlicense_comment_blocks": 34,
+      "chinese_comment_blocks": 34,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BaseSandboxFilesystem",
+          "declaration_line": 61,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "NativeScriptResult",
+          "declaration_line": 535,
+          "comment_index": 24,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/sandbox/PinnedSandboxFilesystem.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PinnedSandboxFilesystem",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "MirrorGate",
+          "declaration_line": 185,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "IdentityWeakReference",
+          "declaration_line": 215,
+          "comment_index": 11,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/sandbox/SandboxBackedFilesystem.java",
+      "nonlicense_comment_blocks": 12,
+      "chinese_comment_blocks": 12,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxBackedFilesystem",
+          "declaration_line": 56,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/spec/LocalFilesystemSpec.java",
+      "nonlicense_comment_blocks": 26,
+      "chinese_comment_blocks": 26,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalFilesystemSpec",
+          "declaration_line": 49,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/spec/RemoteFilesystemSpec.java",
+      "nonlicense_comment_blocks": 18,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteFilesystemSpec",
+          "declaration_line": 73,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/spec/SandboxFilesystemSpec.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxFilesystemSpec",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/util/FilesystemUtils.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FilesystemUtils",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ReplacementResult",
+          "declaration_line": 71,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/ChannelManager.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelManager",
+          "declaration_line": 47,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/Gateway.java",
+      "nonlicense_comment_blocks": 14,
+      "chinese_comment_blocks": 14,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "Gateway",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/GatewayBootstrap.java",
+      "nonlicense_comment_blocks": 28,
+      "chinese_comment_blocks": 26,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GatewayBootstrap",
+          "declaration_line": 84,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 186,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/HarnessGateway.java",
+      "nonlicense_comment_blocks": 50,
+      "chinese_comment_blocks": 40,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessGateway",
+          "declaration_line": 61,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ExposedSession",
+          "declaration_line": 368,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/InMemorySubagentRegistry.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "InMemorySubagentRegistry",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/LocalSessionTurnGate.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalSessionTurnGate",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/MsgContext.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MsgContext",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SessionIdUtils.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionIdUtils",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SessionTurnGate.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionTurnGate",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/StoreBackedSubagentRegistry.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoreBackedSubagentRegistry",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SubagentGatewayBridge.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentGatewayBridge",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ExposeResult",
+          "declaration_line": 36,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SubagentMaterializer.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentMaterializer",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SubagentRecord.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentRecord",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/SubagentRegistry.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentRegistry",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/TurnBusyException.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TurnBusyException",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/TurnLease.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TurnLease",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/WakeupDispatcher.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WakeupDispatcher",
+          "declaration_line": 47,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "WakeupTarget",
+          "declaration_line": 60,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/Channel.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "Channel",
+          "declaration_line": 51,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelBinding.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelBinding",
+          "declaration_line": 53,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelConfig.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelConfig",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 65,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelFactory.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelFactory",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelRouter.java",
+      "nonlicense_comment_blocks": 12,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelRouter",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelRuntimeContextRequest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelRuntimeContextRequest",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/ChannelRuntimeContextResolver.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChannelRuntimeContextResolver",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/DmScope.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DmScope",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/InboundMessage.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "InboundMessage",
+          "declaration_line": 55,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 197,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/OutboundAddress.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OutboundAddress",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/Peer.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "Peer",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/PeerKind.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PeerKind",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/RouteResult.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RouteResult",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/chatui/ChatUiChannel.java",
+      "nonlicense_comment_blocks": 50,
+      "chinese_comment_blocks": 40,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChatUiChannel",
+          "declaration_line": 62,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/chatui/ChatUiRequest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ChatUiRequest",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/chatui/OutboundEnvelope.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OutboundEnvelope",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/chatui/SendOptions.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SendOptions",
+          "declaration_line": 65,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/MemoryBackgroundTasks.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryBackgroundTasks",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/MemoryConfig.java",
+      "nonlicense_comment_blocks": 22,
+      "chinese_comment_blocks": 22,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryConfig",
+          "declaration_line": 49,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "FlushMode",
+          "declaration_line": 61,
+          "comment_index": 5,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "FlushTrigger",
+          "declaration_line": 78,
+          "comment_index": 9,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 216,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/MemoryConsolidator.java",
+      "nonlicense_comment_blocks": 12,
+      "chinese_comment_blocks": 12,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryConsolidator",
+          "declaration_line": 57,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/MemoryFlushManager.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryFlushManager",
+          "declaration_line": 54,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/compaction/CompactionConfig.java",
+      "nonlicense_comment_blocks": 41,
+      "chinese_comment_blocks": 37,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "CompactionConfig",
+          "declaration_line": 52,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 285,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "TruncateArgsConfig",
+          "declaration_line": 431,
+          "comment_index": 31,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TruncateArgsBuilder",
+          "declaration_line": 479,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "PruneConfig",
+          "declaration_line": 540,
+          "comment_index": 37,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "PruneBuilder",
+          "declaration_line": 582,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactionStrategy.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ConversationCompactionStrategy",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Request",
+          "declaration_line": 30,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactor.java",
+      "nonlicense_comment_blocks": 57,
+      "chinese_comment_blocks": 43,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ConversationCompactor",
+          "declaration_line": 64,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CompactionExecution",
+          "declaration_line": 147,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/compaction/TokenCounterUtil.java",
+      "nonlicense_comment_blocks": 27,
+      "chinese_comment_blocks": 27,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TokenCounterUtil",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/compaction/ToolResultEvictionConfig.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 15,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolResultEvictionConfig",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 114,
+          "comment_index": 11,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/memory/session/SessionFreshnessEvaluator.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionFreshnessEvaluator",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/AgentTraceMiddleware.java",
+      "nonlicense_comment_blocks": 17,
+      "chinese_comment_blocks": 17,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentTraceMiddleware",
+          "declaration_line": 55,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/AsyncToolMiddleware.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AsyncToolMiddleware",
+          "declaration_line": 67,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/AtPathExpansionMiddleware.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AtPathExpansionMiddleware",
+          "declaration_line": 67,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/CompactionMiddleware.java",
+      "nonlicense_comment_blocks": 12,
+      "chinese_comment_blocks": 12,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "CompactionMiddleware",
+          "declaration_line": 67,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Candidate",
+          "declaration_line": 221,
+          "comment_index": 9,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/ContextConventionsMiddleware.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContextConventionsMiddleware",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/DynamicSubagentsMiddleware.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DynamicSubagentsMiddleware",
+          "declaration_line": 64,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/HarnessRuntimeMiddleware.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessRuntimeMiddleware",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/HarnessSkillMiddleware.java",
+      "nonlicense_comment_blocks": 20,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessSkillMiddleware",
+          "declaration_line": 79,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/InboxMiddleware.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "InboxMiddleware",
+          "declaration_line": 58,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/MemoryFlushMiddleware.java",
+      "nonlicense_comment_blocks": 28,
+      "chinese_comment_blocks": 28,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryFlushMiddleware",
+          "declaration_line": 86,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "FlushQueue",
+          "declaration_line": 259,
+          "comment_index": 20,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ConversationKey",
+          "declaration_line": 329,
+          "comment_index": 26,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/MemoryMaintenanceMiddleware.java",
+      "nonlicense_comment_blocks": 14,
+      "chinese_comment_blocks": 14,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryMaintenanceMiddleware",
+          "declaration_line": 69,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PlanModeMiddleware",
+          "declaration_line": 64,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/SandboxLifecycleMiddleware.java",
+      "nonlicense_comment_blocks": 18,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxLifecycleMiddleware",
+          "declaration_line": 63,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/SkillCuratorMiddleware.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCuratorMiddleware",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/SkillUsageMiddleware.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillUsageMiddleware",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/SubagentEntry.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentEntry",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/SubagentsMiddleware.java",
+      "nonlicense_comment_blocks": 38,
+      "chinese_comment_blocks": 36,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentsMiddleware",
+          "declaration_line": 79,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SubagentSnapshot",
+          "declaration_line": 187,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/TeamsMiddleware.java",
+      "nonlicense_comment_blocks": 33,
+      "chinese_comment_blocks": 33,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamsMiddleware",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/ToolResultEvictionMiddleware.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolResultEvictionMiddleware",
+          "declaration_line": 68,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Candidate",
+          "declaration_line": 112,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "ToolResultFingerprint",
+          "declaration_line": 333,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "EvictionResult",
+          "declaration_line": 340,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddleware.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceContextMiddleware",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/observation/StateStoreActionObserver.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StateStoreActionObserver",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/observation/StoredActionObservation.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoredActionObservation",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/AbstractBaseSandbox.java",
+      "nonlicense_comment_blocks": 22,
+      "chinese_comment_blocks": 22,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AbstractBaseSandbox",
+          "declaration_line": 49,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/ExecResult.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ExecResult",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/Sandbox.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "Sandbox",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxAcquireResult.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxAcquireResult",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxAware.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxAware",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxClient.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxClient",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxClientOptions.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxClientOptions",
+          "declaration_line": 31,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxContext.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxContext",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 78,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxErrorCode.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxErrorCode",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxException.java",
+      "nonlicense_comment_blocks": 31,
+      "chinese_comment_blocks": 31,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxException",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SandboxConfigurationException",
+          "declaration_line": 96,
+          "comment_index": 8,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SandboxRuntimeException",
+          "declaration_line": 121,
+          "comment_index": 11,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "WorkspaceStartException",
+          "declaration_line": 159,
+          "comment_index": 15,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "WorkspaceStopException",
+          "declaration_line": 190,
+          "comment_index": 18,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ExecException",
+          "declaration_line": 221,
+          "comment_index": 21,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ExecTimeoutException",
+          "declaration_line": 276,
+          "comment_index": 26,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SnapshotException",
+          "declaration_line": 292,
+          "comment_index": 28,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxExecutionGuard.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxExecutionGuard",
+          "declaration_line": 51,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "NoopSandboxExecutionGuard",
+          "declaration_line": 74,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxFileTransfer.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxFileTransfer",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxIsolationKey.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxIsolationKey",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxLease.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxLease",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "NoopSandboxLease",
+          "declaration_line": 45,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxManager.java",
+      "nonlicense_comment_blocks": 14,
+      "chinese_comment_blocks": 14,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxManager",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SandboxState.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxState",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/SessionSandboxStateStore.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionSandboxStateStore",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SandboxStateSlot",
+          "declaration_line": 93,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceArchiveExtractor.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceArchiveExtractor",
+          "declaration_line": 41,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceMountSupport.java",
+      "nonlicense_comment_blocks": 10,
+      "chinese_comment_blocks": 10,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceMountSupport",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceProjectionApplier.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceProjectionApplier",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ProjectionPayload",
+          "declaration_line": 155,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceSpec.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceSpec",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceSpecApplier.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceSpecApplier",
+          "declaration_line": 47,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerFilesystemSpec.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DockerFilesystemSpec",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandbox.java",
+      "nonlicense_comment_blocks": 32,
+      "chinese_comment_blocks": 29,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DockerSandbox",
+          "declaration_line": 68,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ContainerState",
+          "declaration_line": 761,
+          "comment_index": 32,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxClient.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DockerSandboxClient",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxClientOptions.java",
+      "nonlicense_comment_blocks": 33,
+      "chinese_comment_blocks": 33,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DockerSandboxClientOptions",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxState.java",
+      "nonlicense_comment_blocks": 31,
+      "chinese_comment_blocks": 31,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DockerSandboxState",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/json/HarnessSandboxJacksonModule.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessSandboxJacksonModule",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/BindMountEntry.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BindMountEntry",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/DirEntry.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DirEntry",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/FileEntry.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FileEntry",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/GitRepoEntry.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GitRepoEntry",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/LocalDirEntry.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalDirEntry",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/LocalFileEntry.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalFileEntry",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/WorkspaceEntry.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceEntry",
+          "declaration_line": 38,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/layout/WorkspaceProjectionEntry.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceProjectionEntry",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/LocalSandboxSnapshot.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalSandboxSnapshot",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/LocalSnapshotSpec.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalSnapshotSpec",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/NoopSandboxSnapshot.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "NoopSandboxSnapshot",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/NoopSnapshotSpec.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "NoopSnapshotSpec",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/RemoteSandboxSnapshot.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSandboxSnapshot",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/RemoteSnapshotClient.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSnapshotClient",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/RemoteSnapshotSpec.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSnapshotSpec",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/SandboxSnapshot.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxSnapshot",
+          "declaration_line": 34,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/SandboxSnapshotSpec.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SandboxSnapshotSpec",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/AgentSession.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentSession",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Task",
+          "declaration_line": 63,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "InputReceipt",
+          "declaration_line": 71,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/LocalSessionStorage.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalSessionStorage",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/SessionAnswer.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionAnswer",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Output",
+          "declaration_line": 27,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Approval",
+          "declaration_line": 33,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Confirmation",
+          "declaration_line": 35,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/SqliteSessionStorage.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SqliteSessionStorage",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/StoreSessionStorage.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoreSessionStorage",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/session/WorkspaceSessionLogStore.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceSessionLogStore",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/LazyResourceCapable.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LazyResourceCapable",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/SkillResources.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillResources",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "EmptySkillResources",
+          "declaration_line": 66,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/WorkspaceSkillRepository.java",
+      "nonlicense_comment_blocks": 44,
+      "chinese_comment_blocks": 30,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "WorkspaceSkillRepository",
+          "declaration_line": 57,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "FilesystemSkillResources",
+          "declaration_line": 557,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": [
+        {
+          "line": 166,
+          "comment_index": 10,
+          "snippet": "通过 resourcesFor(name, ctx) 懒加载资源，支持逐调用切换命名空间，",
+          "english_fragments": [
+            "resourcesFor(name, ctx)"
+          ],
+          "class_level": false,
+          "review": "保留 Java 方法调用、字面值、YAML 示例或工具动作标识符，不属于英文说明遗漏"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/AbstractAgentCreatedFilter.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AbstractAgentCreatedFilter",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/AllowListFilter.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AllowListFilter",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/BaseStoreSkillUsageBackend.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BaseStoreSkillUsageBackend",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/CanaryFilter.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "CanaryFilter",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/CompositeFilter.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "CompositeFilter",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/EnvironmentFilter.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "EnvironmentFilter",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/FilesystemSkillUsageBackend.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FilesystemSkillUsageBackend",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/LocalApprovalGate.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalApprovalGate",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Prompter",
+          "declaration_line": 39,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/NotificationSink.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "NotificationSink",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/NotifyAndWaitGate.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "NotifyAndWaitGate",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/RejectAllGate.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RejectAllGate",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillAuditLog.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillAuditLog",
+          "declaration_line": 44,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Entry",
+          "declaration_line": 72,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillCandidate.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCandidate",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ScriptFilePreview",
+          "declaration_line": 34,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillCurator.java",
+      "nonlicense_comment_blocks": 25,
+      "chinese_comment_blocks": 17,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCurator",
+          "declaration_line": 55,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TransitionCounts",
+          "declaration_line": 183,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "CuratorRunReport",
+          "declaration_line": 317,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillCuratorConfig.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCuratorConfig",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "UmbrellaPassMode",
+          "declaration_line": 23,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 76,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillCuratorState.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCuratorState",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillPromoter.java",
+      "nonlicense_comment_blocks": 19,
+      "chinese_comment_blocks": 19,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillPromoter",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "PromotionResult",
+          "declaration_line": 286,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Status",
+          "declaration_line": 293,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillPromotionGate.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillPromotionGate",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Approve",
+          "declaration_line": 50,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Reject",
+          "declaration_line": 53,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Defer",
+          "declaration_line": 55,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillSecurityScanner.java",
+      "nonlicense_comment_blocks": 26,
+      "chinese_comment_blocks": 20,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillSecurityScanner",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Severity",
+          "declaration_line": 45,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Category",
+          "declaration_line": 52,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Verdict",
+          "declaration_line": 61,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "TrustLevel",
+          "declaration_line": 70,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Finding",
+          "declaration_line": 77,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "ScanResult",
+          "declaration_line": 86,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "Rule",
+          "declaration_line": 91,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillUsageBackend.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillUsageBackend",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillUsageRecord.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "SkillUsageRecord",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "State",
+          "declaration_line": 55,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": [
+        {
+          "line": 111,
+          "comment_index": 4,
+          "snippet": "支持宽容解码的 Jackson 构造方法（缺失字段默认为 null/0/false）。",
+          "english_fragments": [
+            "null/0/false"
+          ],
+          "class_level": false,
+          "review": "保留 Java 方法调用、字面值、YAML 示例或工具动作标识符，不属于英文说明遗漏"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillUsageStore.java",
+      "nonlicense_comment_blocks": 25,
+      "chinese_comment_blocks": 17,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillUsageStore",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/curator/SkillVisibilityFilter.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillVisibilityFilter",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/HarnessSkillEntry.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessSkillEntry",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/MarketplaceStager.java",
+      "nonlicense_comment_blocks": 68,
+      "chinese_comment_blocks": 66,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MarketplaceStager",
+          "declaration_line": 64,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RepoBound",
+          "declaration_line": 569,
+          "comment_index": 64,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "StageResult",
+          "declaration_line": 574,
+          "comment_index": 65,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "None",
+          "declaration_line": 582,
+          "comment_index": 66,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "WorkspaceNative",
+          "declaration_line": 587,
+          "comment_index": 67,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Cached",
+          "declaration_line": 592,
+          "comment_index": 68,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/ShellPathPolicy.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ShellPathPolicy",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Mode",
+          "declaration_line": 33,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/SkillCatalog.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillCatalog",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/SkillLoadTool.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillLoadTool",
+          "declaration_line": 47,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/SkillPromptBuilder.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillPromptBuilder",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/skill/runtime/SkillRuntime.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillRuntime",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/AgentSpecLoader.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "AgentSpecLoader",
+          "declaration_line": 78,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": [
+        {
+          "line": 518,
+          "comment_index": 15,
+          "snippet": "同时支持逗号分隔字符串和 YAML 列表表示形式 \"[a, b, c]\"",
+          "english_fragments": [
+            "\"[a, b, c]\""
+          ],
+          "class_level": false,
+          "review": "保留 Java 方法调用、字面值、YAML 示例或工具动作标识符，不属于英文说明遗漏"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/DefaultAgentManager.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 15,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DefaultAgentManager",
+          "declaration_line": 46,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/RemoteAskPolicy.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteAskPolicy",
+          "declaration_line": 22,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/RemoteSubagentStub.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSubagentStub",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/SubagentDeclaration.java",
+      "nonlicense_comment_blocks": 66,
+      "chinese_comment_blocks": 64,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentDeclaration",
+          "declaration_line": 62,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Mode",
+          "declaration_line": 73,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 414,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/SubagentFactory.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentFactory",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/SubagentSpecGenerator.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SubagentSpecGenerator",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "GeneratedSpec",
+          "declaration_line": 160,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/WorkspaceMode.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceMode",
+          "declaration_line": 41,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemoteAgentEvent.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteAgentEvent",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemoteConfirmDecision.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteConfirmDecision",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemoteEventCodec.java",
+      "nonlicense_comment_blocks": 10,
+      "chinese_comment_blocks": 10,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteEventCodec",
+          "declaration_line": 46,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemoteEventType.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteEventType",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemotePendingConfirm.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemotePendingConfirm",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/protocol/RemoteStreamDetail.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteStreamDetail",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/AgentProtocolTaskClient.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentProtocolTaskClient",
+          "declaration_line": 53,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/AgentProtocolTransport.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentProtocolTransport",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/BackgroundTask.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BackgroundTask",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/RemoteSubagentTransport.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSubagentTransport",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/RemoteSubmitContext.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteSubmitContext",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 106,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/RemoteTarget.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteTarget",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/RemoteTaskStatus.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RemoteTaskStatus",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/TaskDelivery.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskDelivery",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/TaskRecord.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskRecord",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/TaskRepository.java",
+      "nonlicense_comment_blocks": 24,
+      "chinese_comment_blocks": 21,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskRepository",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TaskCompletionCallback",
+          "declaration_line": 155,
+          "comment_index": 24,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/TaskRunSpec.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskRunSpec",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "LocalTaskRunSpec",
+          "declaration_line": 36,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RemoteTaskRunSpec",
+          "declaration_line": 43,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "AdoptedTaskRunSpec",
+          "declaration_line": 62,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/TaskStatus.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskStatus",
+          "declaration_line": 22,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+      "nonlicense_comment_blocks": 63,
+      "chinese_comment_blocks": 63,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceTaskRepository",
+          "declaration_line": 77,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/LocalTeamClient.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalTeamClient",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "VersionedTask",
+          "declaration_line": 561,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamClient.java",
+      "nonlicense_comment_blocks": 21,
+      "chinese_comment_blocks": 21,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamClient",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamConflictException.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamConflictException",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamContext.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamContext",
+          "declaration_line": 23,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "MemberSnapshot",
+          "declaration_line": 46,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RecoveryContext",
+          "declaration_line": 50,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CompletedTask",
+          "declaration_line": 58,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "InterruptedTask",
+          "declaration_line": 61,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "RecentMessage",
+          "declaration_line": 64,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamCreateSpec.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamCreateSpec",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamInfo.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamInfo",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamMemberInfo.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamMemberInfo",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamMemberSpec.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamMemberSpec",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamMessage.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamMessage",
+          "declaration_line": 21,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamTask.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamTask",
+          "declaration_line": 24,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/team/TeamWakeups.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TeamWakeups",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Hook",
+          "declaration_line": 31,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentGenerateTool.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentGenerateTool",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+      "nonlicense_comment_blocks": 84,
+      "chinese_comment_blocks": 82,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "AgentSpawnTool",
+          "declaration_line": 105,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SpawnedAgent",
+          "declaration_line": 227,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "LabelKey",
+          "declaration_line": 232,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/ArtifactDeliveryTool.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ArtifactDeliveryTool",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/FilesystemTool.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FilesystemTool",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/FuzzyTextMatcher.java",
+      "nonlicense_comment_blocks": 31,
+      "chinese_comment_blocks": 27,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "FuzzyTextMatcher",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Level",
+          "declaration_line": 64,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "MatchRange",
+          "declaration_line": 75,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "SearchResult",
+          "declaration_line": 84,
+          "comment_index": 6,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Normalized",
+          "declaration_line": 188,
+          "comment_index": 19,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/KeywordMatcher.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "KeywordMatcher",
+          "declaration_line": 27,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/MemoryGetTool.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemoryGetTool",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/MemorySaveTool.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemorySaveTool",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/MemorySearchTool.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MemorySearchTool",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PlanModeTools",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "PlanEnterTool",
+          "declaration_line": 66,
+          "comment_index": 3,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "PlanWriteTool",
+          "declaration_line": 107,
+          "comment_index": 4,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "PlanExitTool",
+          "declaration_line": 154,
+          "comment_index": 5,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/ProposeSkillTool.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ProposeSkillTool",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/SessionSearchTool.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SessionSearchTool",
+          "declaration_line": 38,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/ShellExecuteTool.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ShellExecuteTool",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/SkillManageConfig.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillManageConfig",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Builder",
+          "declaration_line": 88,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/SkillManageTool.java",
+      "nonlicense_comment_blocks": 34,
+      "chinese_comment_blocks": 29,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SkillManageTool",
+          "declaration_line": 61,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/TaskTool.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TaskTool",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/TeamTool.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "TeamTool",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 1,
+          "status": "REVIEWED_SYMBOLS_ONLY"
+        }
+      ],
+      "samples": [
+        {
+          "line": 38,
+          "comment_index": 1,
+          "snippet": "（负责人可 create/assign/spawn/shutdown/approve/complete；工作者可 list/claim/message）。",
+          "english_fragments": [
+            "create/assign/spawn/shutdown/approve/complete"
+          ],
+          "class_level": true,
+          "review": "保留 Java 方法调用、字面值、YAML 示例或工具动作标识符，不属于英文说明遗漏"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/WaitAsyncResultsTool.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WaitAsyncResultsTool",
+          "declaration_line": 55,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Sleeper",
+          "declaration_line": 124,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/WebTools.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WebTools",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "WebFetchTool",
+          "declaration_line": 54,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "WebSearchTool",
+          "declaration_line": 116,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/HarnessPlatformTools.java",
+      "nonlicense_comment_blocks": 8,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HarnessPlatformTools",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/McpConnectionException.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "McpConnectionException",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/McpServerConfig.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "McpServerConfig",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/McpServerRegistrar.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "McpServerRegistrar",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/McpServerRegistrationListener.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "McpServerRegistrationListener",
+          "declaration_line": 20,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/McpServerRegistrationResult.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "McpServerRegistrationResult",
+          "declaration_line": 30,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Status",
+          "declaration_line": 45,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/ToolFilter.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolFilter",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/ToolsConfig.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolsConfig",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tools/ToolsConfigLoader.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolsConfigLoader",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/verification/DeterministicVerifier.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DeterministicVerifier",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "Verdict",
+          "declaration_line": 30,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/verification/JsonResultSchemaVerifier.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "JsonResultSchemaVerifier",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/verification/ShellExitCodeVerifier.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ShellExitCodeVerifier",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/verification/StoredVerification.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "StoredVerification",
+          "declaration_line": 25,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/verification/VerificationService.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "VerificationService",
+          "declaration_line": 47,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/LocalFsMode.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "LocalFsMode",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/PathPolicy.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PathPolicy",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspaceConstants.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceConstants",
+          "declaration_line": 19,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspaceIndex.java",
+      "nonlicense_comment_blocks": 36,
+      "chinese_comment_blocks": 22,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceIndex",
+          "declaration_line": 50,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspaceManager.java",
+      "nonlicense_comment_blocks": 52,
+      "chinese_comment_blocks": 52,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspaceManager",
+          "declaration_line": 101,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ScopedTaskRecord",
+          "declaration_line": 480,
+          "comment_index": 23,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "store",
+          "declaration_line": 580,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "store",
+          "declaration_line": 720,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "store",
+          "declaration_line": 754,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspacePathNormalizer.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WorkspacePathNormalizer",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/plan/PlanModeManager.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PlanModeManager",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    }
+  ]
+}

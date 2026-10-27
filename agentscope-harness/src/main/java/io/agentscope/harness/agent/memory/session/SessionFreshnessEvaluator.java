@@ -22,12 +22,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 /**
- * Evaluates whether a session is still "fresh" or should be reset.
+ * 判断会话是否仍然有效，或应当重置。
  *
- * <p>Inspired by agentscope-claw's SessionFreshnessEvaluator. Supports two reset policies:
+ * <p>设计参考 agentscope-claw 的 SessionFreshnessEvaluator，支持两种重置策略：
  * <ul>
- *   <li><b>Daily reset:</b> AgentStateStore resets after a configured hour each day</li>
- *   <li><b>Idle timeout:</b> AgentStateStore resets after inactivity exceeding a threshold</li>
+ * <li><b>每日重置</b>：每天到达配置的小时后，AgentStateStore 重置会话。</li>
+ * <li><b>空闲超时</b>：无活动时间超过阈值后，AgentStateStore 重置会话。</li>
  * </ul>
  */
 public class SessionFreshnessEvaluator {
@@ -37,8 +37,8 @@ public class SessionFreshnessEvaluator {
     private final ZoneId timezone;
 
     /**
-     * Creates a freshness evaluator with default settings:
-     * daily reset at 4 AM, idle timeout of 2 hours, system timezone.
+     * 使用默认设置创建会话有效性评估器：
+     * 每天凌晨 4 点重置，空闲超时为 2 小时，使用系统时区。
      */
     public SessionFreshnessEvaluator() {
         this(4, Duration.ofHours(2), ZoneId.systemDefault());
@@ -51,10 +51,10 @@ public class SessionFreshnessEvaluator {
     }
 
     /**
-     * Determines if the session should be considered stale and reset.
+     * 判断会话是否应视为过期并重置。
      *
-     * @param lastActivityAt the timestamp of the last activity in the session
-     * @return true if the session should be reset
+     * @param lastActivityAt 会话最后一次活动的时间戳
+     * @return 应重置会话时返回 true
      */
     public boolean isStale(Instant lastActivityAt) {
         if (lastActivityAt == null) {

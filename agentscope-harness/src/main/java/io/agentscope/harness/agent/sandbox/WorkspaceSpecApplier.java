@@ -36,15 +36,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Applies a {@link WorkspaceSpec} to a target directory by materializing declared entries
- * (files, directories, local copies).
+ * 通过物化声明的条目（文件、目录、本地副本），将 {@link WorkspaceSpec} 应用到目标目录。
  *
- * <p>Supports two materialization modes:
+ * <p>支持两种物化模式：
  * <ul>
- *   <li>{@code onlyEphemeral=false}: apply all entries (Branch C / D of sandbox start)</li>
- *   <li>{@code onlyEphemeral=true}: apply only entries where
- *       {@link WorkspaceEntry#isEphemeral()} is {@code true} (Branch A / B of sandbox start)
- *   </li>
+ *   <li>{@code onlyEphemeral=false}：应用所有条目（沙箱启动分支 C / D）</li>
+ *   <li>{@code onlyEphemeral=true}：仅应用 {@link WorkspaceEntry#isEphemeral()} 为 {@code true} 的条目（沙箱启动分支 A / B）</li>
  * </ul>
  */
 public class WorkspaceSpecApplier {

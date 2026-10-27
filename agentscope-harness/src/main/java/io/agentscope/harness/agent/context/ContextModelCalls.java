@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import reactor.core.publisher.Flux;
 
-/** Budget-only auxiliary call boundary: never recursively compacts or injects task state. */
+/** 只执行预算控制的辅助调用边界：绝不递归压缩，也不注入任务状态。 */
 public final class ContextModelCalls {
     private ContextModelCalls() {}
 

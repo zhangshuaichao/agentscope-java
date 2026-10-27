@@ -45,46 +45,43 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.context.ContextView;
 
 /**
- * Middleware that triggers memory extraction at the end of each agent call.
+ * 在每次智能体调用结束时触发记忆提取的中间件。
  *
- * <p>Runs on the agent stream's completion signal ({@link #onAgent}) so long-term memories are
- * extracted and persisted after every call, even when conversation compaction was not triggered
- * during that call. The flush is <em>fire-and-forget</em>: the agent stream completes immediately
- * while the extraction runs on a background scheduler. The completing subscription's Reactor
- * context is replayed on that background subscription, so context-scoped instrumentation (token
- * metering, tracing) on the model call sees the same context as the turn. When
- * {@link CompactionMiddleware} is active, it handles memory extraction for the messages it
- * summarizes; this middleware covers the remaining tail of messages that were kept verbatim.
+ * <p>在智能体流的完成信号（{@link #onAgent}）上运行，因此即使本次未触发对话压缩，
+ * 也会在调用后提取并持久化长期记忆。写入采用“发起后不等待”方式：智能体流立即完成，
+ * 提取任务在后台调度器执行。已完成订阅的 Reactor 上下文会重放到后台订阅，
+ * 让模型调用的上下文级计量（词元计费、追踪）看到与本轮相同的上下文。
+ * 启用 {@link CompactionMiddleware} 时，由它提取被摘要消息的记忆；
+ * 此中间件覆盖剩余的原文尾部消息。
  *
- * <p>Flush is gated by a {@link MemoryConfig.FlushTrigger}:
+ * <p>写入受 {@link MemoryConfig.FlushTrigger} 门控：
  * <ul>
- *   <li>{@link MemoryConfig.FlushMode#ALWAYS} (default) — flush after every call.</li>
- *   <li>{@link MemoryConfig.FlushMode#NEVER} — never flush via this middleware. The CompactionMiddleware
- *       and overflow-recovery paths still run their own flush when they fire.</li>
- *   <li>{@link MemoryConfig.FlushMode#THROTTLED} — flush at most once per
- *       {@link MemoryConfig.FlushTrigger#minGap()}.</li>
+ *   <li>{@link MemoryConfig.FlushMode#ALWAYS}（默认）—— 每次调用后写入。</li>
+ *   <li>{@link MemoryConfig.FlushMode#NEVER} —— 不经此中间件写入。
+ *       CompactionMiddleware 与溢出恢复路径触发时仍会自行执行记忆提取。</li>
+ *   <li>{@link MemoryConfig.FlushMode#THROTTLED} —— 每个
+ *       {@link MemoryConfig.FlushTrigger#minGap()} 间隔最多写入一次。</li>
  * </ul>
  *
- * <p>Native session logging runs independently of memory extraction, so disabling memory
- * flush does not affect durable execution history.
+ * <p>原生会话日志独立于记忆提取运行，因此关闭记忆写入不影响持久化执行历史。
  *
- * <p>Concurrent flushes for the same isolation key are serialised: at most one flush runs per
- * key at a time, and pending flushes of the same conversation coalesce into a single queued
- * task, because a queued task reads the conversation state only when it executes and the
- * newest task therefore subsumes the ones it replaces. Flushes of distinct conversations
- * under the same key are queued separately.
+ * <p>同一隔离键的并发写入串行化：每个键同时最多运行一次写入；
+ * 同一对话待处理的写入合并成一个排队任务，因为任务直到执行时才读取对话状态，
+ * 最新任务已经包含它替代的旧任务需要读取的内容。
+ * 同一键下不同对话的写入仍分别排队。
  *
- * <p>The class is thread-safe: instances hold only configuration, and the per-key queues live
- * in a static map and are synchronised internally.
+ * <p>此类线程安全：实例只保存配置，每个键的队列位于静态映射中并在内部同步。
  *
- * <p>The throttle window is tracked per <em>isolation key</em>, which matches the memory data
- * isolation in use:
+ * <p>节流窗口按与记忆数据隔离方式一致的<em>隔离键</em>跟踪：
  * <ul>
- *   <li>{@link IsolationScope#USER} (default) — one window per {@code userId}.</li>
- *   <li>{@link IsolationScope#SESSION} — one window per {@code sessionId}.</li>
- *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} — one shared window for
- *       the whole agent instance (prevents concurrent flush races on shared memory files).</li>
+ *   <li>{@link IsolationScope#USER}（默认）—— 每个 {@code userId} 一个窗口。</li>
+ *   <li>{@link IsolationScope#SESSION} —— 每个 {@code sessionId} 一个窗口。</li>
+ *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} —— 整个智能体实例
+ *       共用一个窗口，避免共享记忆文件上的并发写入竞争。</li>
  * </ul>
+ *
+ * <p>【学习提示】记忆提取是后台派生工作，不是回复完成的同义词。
+ * 任务排队、合并与节流必须以正确的数据隔离维度为键，否则可能丢更新或跨会话干扰。
  */
 public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
 
@@ -153,7 +150,7 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
         this.periodicGate = periodicGate != null ? periodicGate : new LocalPeriodicGate();
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT);
@@ -166,9 +163,9 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
             AgentInput input,
             Function<AgentInput, Flux<AgentEvent>> next) {
         final RuntimeContext rc = ctx != null ? ctx : RuntimeContext.empty();
-        // Capture the completing subscription's context so the fire-and-forget flush can replay
-        // it; a fresh background subscription does not inherit it, and context-scoped
-        // instrumentation (token usage, tracing) on the model call would otherwise see nothing.
+        // 捕获正在完成的订阅上下文，让不等待结果的后台记忆写入能够重放它；
+        // 新的后台订阅不会自动继承此上下文，否则模型调用上的
+        // 上下文级计量（词元用量、追踪）将看不到任何信息。
         return next.apply(input)
                 .doOnEach(
                         signal -> {
@@ -179,14 +176,14 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
     }
 
     private void scheduleFlush(Agent agent, RuntimeContext rc, ContextView contextView) {
-        // The in-flight slot is acquired at dispatch rather than inside the task: a queued
-        // flush must already be counted, or a quiescence check could observe an empty
-        // in-flight set while work is still pending.
+        // 在派发时而非任务内部占用在途槽位：已排队的写入必须
+        // 立刻计入，否则静止状态检查可能在仍有待执行任务时
+        // 观察到空的在途集合。
         MemoryBackgroundTasks.begin();
         String key = compositeTimerKey(rc);
-        // Coalescing key of the task: the conversation whose state the task reads when it
-        // executes. The agent reference distinguishes agent instances serving the same user
-        // and session ids, whose flushes must not displace each other.
+        // 任务的合并键标识它执行时读取的对话。智能体引用用于区分
+        // 服务相同用户与会话 ID 的不同智能体实例，
+        // 这些实例的写入不能相互替代。
         ConversationKey conversationKey =
                 new ConversationKey(
                         agent, blankToEmpty(rc.getUserId()), blankToEmpty(rc.getSessionId()));
@@ -198,10 +195,10 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
                 (k, queue) -> {
                     FlushQueue q = queue == null ? new FlushQueue() : queue;
                     if (q.running) {
-                        // A queued task reads the conversation state only when it executes, and
-                        // calls of one conversation are serialised on the agent's
-                        // (userId, sessionId) serialization key, so the newest task's state
-                        // includes everything the replaced tasks would have read.
+                        // 排队任务只在执行时读取对话状态，而且同一对话的调用
+                        // 会按智能体的 (userId, sessionId) 键串行化，
+                        // 因此最新任务的状态已经包含
+                        // 所有被替代任务原本会读取的内容。
                         displaced[0] = q.pending.put(conversationKey, task);
                     } else {
                         q.running = true;
@@ -210,8 +207,8 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
                     return q;
                 });
         if (displaced[0] != null) {
-            // The replaced task will never execute; release the in-flight slot it acquired at
-            // dispatch. Done outside compute to avoid running under the map's bin lock.
+            // 被替代任务永远不会执行，需释放它在派发时占用的在途槽位。
+            // 在 compute 之外完成释放，避免在映射的桶锁内执行。
             MemoryBackgroundTasks.end();
         }
         if (starter[0] != null) {
@@ -245,9 +242,9 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
                         it.remove();
                     }
                     if (next[0] == null) {
-                        return null; // idle: evict so the map holds only active keys
+                        return null; // 空闲：移除条目，使映射只持有活动键
                     }
-                    return queue; // the dequeued task continues as the running flush
+                    return queue; // 出队的任务继续作为正在运行的写入执行
                 });
         if (next[0] != null) {
             next[0].run();
@@ -255,10 +252,9 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Per-isolation-key pending flush tasks, keeping at most one flush in flight per memory
-     * namespace. Fields are only mutated inside {@link ConcurrentHashMap#compute} (which holds
-     * the per-key bin lock), so they need no additional synchronisation; entries are removed
-     * as soon as a key goes idle.
+     * 每个隔离键下的待处理写入任务，保证每个记忆命名空间最多一个写入在途。
+     * 字段只在 {@link ConcurrentHashMap#compute} 内修改（持有按键的桶锁），
+     * 因此无需额外同步；键一旦空闲便移除条目。
      */
     private static final class FlushQueue {
         final LinkedHashMap<ConversationKey, Runnable> pending = new LinkedHashMap<>();
@@ -273,9 +269,9 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
         if (state == null) {
             return Mono.empty();
         }
-        // Read at execution time rather than scheduling time: a task that waited in the queue
-        // sees everything appended in the meantime, so coalescing queued tasks never loses
-        // messages.
+        // 在执行而非调度时读取状态：排队等待的任务可以看到期间
+        // 追加的全部内容，因此合并排队任务不会丢失
+        // 消息。
         List<Msg> messages = new ArrayList<>(state.getContext());
         if (messages.isEmpty()) {
             return Mono.empty();
@@ -298,15 +294,14 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Returns whether this call should trigger a flush, applying the configured trigger policy.
-     * For {@link MemoryConfig.FlushMode#THROTTLED}, uses an {@link AtomicReference#compareAndSet}
-     * race to ensure at most one caller within {@code minGap} wins the slot.
+     * 应用配置的触发策略，判断本次调用是否应触发写入。
+     * 对于 {@link MemoryConfig.FlushMode#THROTTLED}，使用 {@link AtomicReference#compareAndSet}
+     * 竞争，确保 {@code minGap} 内最多一个调用方占用槽位。
      *
-     * <p>The throttle window is keyed by the isolation dimension that matches the memory data
-     * namespace (see {@link #timerKeyFor(RuntimeContext)}).
+     * <p>节流窗口的键按记忆数据命名空间对应的隔离维度生成
+     * （见 {@link #timerKeyFor(RuntimeContext)}）。
      *
-     * <p>Package-private for unit testing of the trigger gate without standing up a full
-     * {@code Agent}.
+     * <p>包级可见，便于无需构建完整 {@code Agent} 就测试触发门控。
      */
     boolean shouldFlushNow(RuntimeContext rc) {
         switch (flushTrigger.mode()) {
@@ -322,35 +317,33 @@ public class MemoryFlushMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds a composite key from {@link IsolationScope} name and the per-call identity returned
-     * by {@link #timerKeyFor(RuntimeContext)}. The operation prefix keeps flush independent
-     * of maintenance when both use the same {@link PeriodicGate}. The scope prefix keeps
-     * different isolation dimensions from sharing a slot.
+     * 将 {@link IsolationScope} 名称与 {@link #timerKeyFor(RuntimeContext)}
+     * 返回的调用身份组合为键。操作前缀使写入与维护即便使用同一
+     * {@link PeriodicGate} 也彼此独立；范围前缀防止不同隔离维度共享槽位。
      */
     private String compositeTimerKey(RuntimeContext rc) {
         return "memory-flush:" + isolationScope.name() + ":" + timerKeyFor(rc);
     }
 
-    /** The conversation a queued flush reads when it executes: agent instance, user, session. */
+    /** 排队写入在执行时读取的对话：智能体实例、用户、会话。 */
     private record ConversationKey(Agent agent, String userId, String sessionId) {}
 
     /**
-     * Normalises {@code null} and blank identifiers to {@code ""} so absent ids share one slot.
-     * Package-private: shared with {@link MemoryMaintenanceMiddleware#timerKeyFor}.
+     * 将 {@code null} 和空白标识符规范化为 {@code ""}，使缺失 ID 共享一个槽位。
+     * 包级可见，与 {@link MemoryMaintenanceMiddleware#timerKeyFor} 共用。
      */
     static String blankToEmpty(String s) {
         return (s != null && !s.isBlank()) ? s : "";
     }
 
     /**
-     * Derives the per-call identity portion of the composite timer key from the configured
-     * {@link IsolationScope} and the {@link RuntimeContext}, mirroring the memory data
-     * namespace:
+     * 根据配置的 {@link IsolationScope} 和 {@link RuntimeContext}
+     * 推导组合计时键中的调用身份部分，与记忆数据命名空间保持一致：
      * <ul>
-     *   <li>{@link IsolationScope#USER} — {@code userId} (empty string for anonymous)</li>
-     *   <li>{@link IsolationScope#SESSION} — {@code sessionId} (empty string when absent)</li>
-     *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} — constant {@code ""}
-     *       so all callers share one throttle slot, serialising flushes on shared memory files</li>
+     *   <li>{@link IsolationScope#USER} — {@code userId}（匿名时为空字符串）</li>
+     *   <li>{@link IsolationScope#SESSION} — {@code sessionId}（缺失时为空字符串）</li>
+     *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} — 常量 {@code ""}，
+     *       使所有调用方共用节流槽位，串行化共享记忆文件上的写入</li>
      * </ul>
      */
     String timerKeyFor(RuntimeContext rc) {

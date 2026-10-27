@@ -18,39 +18,36 @@ package io.agentscope.harness.agent.sandbox.snapshot;
 import java.io.InputStream;
 
 /**
- * User-implemented interface for uploading and downloading snapshot archives to/from remote
- * storage (e.g. S3, OSS, GCS, or a custom blob store).
+ * 由用户实现的接口，用于向远程存储（例如 S3、OSS、GCS 或自定义 Blob 存储）上传和下载快照归档。
  *
- * <p>Implement this interface and pass it to {@link RemoteSnapshotSpec} to enable
- * remote snapshot storage. The implementation is responsible for authentication,
- * retry logic, and connection management.
+ * <p>实现此接口并传给 {@link RemoteSnapshotSpec} 即可启用远程快照存储。实现负责认证、重试逻辑和连接管理。
  */
 public interface RemoteSnapshotClient {
 
     /**
-     * Uploads a snapshot archive to remote storage.
+     * 向远程存储上传快照归档。
      *
-     * @param snapshotId unique identifier for this snapshot
-     * @param data the workspace tar archive stream to upload
-     * @throws Exception if the upload fails
+     * @param snapshotId 此快照的唯一标识符
+     * @param data 要上传的工作区 tar 归档流
+     * @throws Exception 上传失败时抛出
      */
     void upload(String snapshotId, InputStream data) throws Exception;
 
     /**
-     * Downloads a snapshot archive from remote storage.
+     * 从远程存储下载快照归档。
      *
-     * @param snapshotId unique identifier for the snapshot to download
-     * @return an {@link InputStream} over the downloaded tar archive
-     * @throws Exception if the download fails or the snapshot does not exist
+     * @param snapshotId 要下载快照的唯一标识符
+     * @return 下载所得 tar 归档的 {@link InputStream}
+     * @throws Exception 下载失败或快照不存在时抛出
      */
     InputStream download(String snapshotId) throws Exception;
 
     /**
-     * Checks whether a snapshot with the given ID exists in remote storage.
+     * 检查远程存储中是否存在给定 ID 的快照。
      *
-     * @param snapshotId unique identifier to check
-     * @return {@code true} if the snapshot exists and can be downloaded
-     * @throws Exception if the check fails
+     * @param snapshotId 要检查的唯一标识符
+     * @return 快照存在且可下载时为 {@code true}
+     * @throws Exception 检查失败时抛出
      */
     boolean exists(String snapshotId) throws Exception;
 }

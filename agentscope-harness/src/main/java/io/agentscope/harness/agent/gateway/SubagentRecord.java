@@ -20,23 +20,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Durable, recovery-oriented descriptor of an exposed subagent. Unlike the in-memory
- * {@code ExposedSession} (which holds a live {@code Agent} reference), a {@code SubagentRecord}
- * stores only the <em>recipe</em> needed to re-materialize and route to the subagent on any node:
- * its type ({@code agentId}), its own conversational session ({@code sessionId}), and lifecycle
- * metadata.
+ * 面向恢复、可持久化的已公开子智能体描述。
+ * 与持有活跃 {@code Agent} 引用的内存 {@code ExposedSession} 不同，
+ * {@code SubagentRecord} 只保存任意节点重建和路由子智能体所需的<em>配方</em>：
+ * 类型（{@code agentId}）、自己的对话会话（{@code sessionId}）及生命周期元数据。
  *
- * <p>The {@code agentId} feeds the agent factory to rebuild the instance; the {@code sessionId} is
- * passed at invocation time so the rebuilt agent loads the correct conversation history from a
- * (distributed) {@code AgentStateStore}.
+ * <p>{@code agentId} 交给智能体工厂重建实例；调用时传入 {@code sessionId}，
+ * 使重建后的智能体从（分布式）{@code AgentStateStore} 加载正确对话历史。
  *
- * @param subagentId the user-visible handle for direct addressing
- * @param agentId the subagent type identifier (used to re-materialize the agent)
- * @param sessionId the subagent's own session id (used to load its conversational state)
- * @param userId the originating user id, or {@code null} when unknown
- * @param parentSessionId the parent session that exposed this subagent, or {@code null}
- * @param createdAt when the subagent was exposed
- * @param expiresAt optional expiry instant; {@code null} means no TTL
+ * @param subagentId 用户可见的直接寻址句柄
+ * @param agentId 子智能体类型标识（用于重建智能体）
+ * @param sessionId 子智能体自己的会话 ID（用于加载对话状态）
+ * @param userId 发起用户 ID；未知时为 {@code null}
+ * @param parentSessionId 公开此子智能体的父会话；可为 {@code null}
+ * @param createdAt 子智能体公开时间
+ * @param expiresAt 可选过期时刻；{@code null} 表示无 TTL
  */
 public record SubagentRecord(
         String subagentId,
@@ -47,12 +45,16 @@ public record SubagentRecord(
         Instant createdAt,
         Instant expiresAt) {
 
-    /** Whether this record has a TTL that has already elapsed relative to {@code now}. */
+    /**
+     * 此记录的 TTL 相对于 {@code now} 是否已经到期。
+     */
     public boolean isExpired(Instant now) {
         return expiresAt != null && now != null && now.isAfter(expiresAt);
     }
 
-    /** Serializes this record to a flat string/number map for {@code BaseStore} persistence. */
+    /**
+     * 将记录序列化为扁平字符串／数字映射，供 {@code BaseStore} 持久化。
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> m = new HashMap<>();
         m.put("subagentId", subagentId);
@@ -73,7 +75,9 @@ public record SubagentRecord(
         return m;
     }
 
-    /** Reconstructs a record from a persisted map, tolerating missing optional fields. */
+    /**
+     * 从持久化映射重建记录，容忍缺失可选字段。
+     */
     public static SubagentRecord fromMap(Map<String, Object> m) {
         if (m == null) {
             return null;

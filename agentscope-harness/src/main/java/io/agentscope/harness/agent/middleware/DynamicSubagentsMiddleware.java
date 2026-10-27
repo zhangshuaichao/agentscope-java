@@ -46,23 +46,19 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Dynamic counterpart to {@link SubagentsMiddleware} that re-resolves the registered subagent
- * set on every reasoning step, supporting per-user isolation through the workspace
- * {@link AbstractFilesystem} (e.g. {@code CompositeFilesystem} routing user-scoped writes into
- * a remote Store).
+ * {@link SubagentsMiddleware} 的动态版本，在每次推理时重新解析已注册的子智能体集合，
+ * 通过工作区 {@link AbstractFilesystem} 支持按用户隔离，例如
+ * {@code CompositeFilesystem} 将用户作用域写入路由到远程 Store。
  *
- * <p><strong>Two-layer load</strong> (mirrors the previous {@code DynamicSubagentsHook}
- * override semantics):
- *
+ * <p><strong>两层加载</strong>，保持旧版 {@code DynamicSubagentsHook} 的覆盖语义：
  * <ol>
- *   <li><em>Layer 1 (override)</em> — {@code filesystem.glob("*.md", "subagents")} + per-file
- *       {@code filesystem.read}. The backend's {@code NamespaceFactory} is applied transparently
- *       so each user sees their own slice of the store.
- *   <li><em>Layer 2 (base)</em> — {@code AgentSpecLoader.loadFromDirectory} reads the local
- *       workspace {@code subagents/} directory directly.
- *   <li><em>Merge</em> — same-name entries from Layer 1 override Layer 2; programmatic
- *       (builder-registered) entries are preserved as the static prefix and same-name dynamic
- *       declarations override them too.
+ *   <li><em>第 1 层（覆盖层）</em> —— {@code filesystem.glob("*.md", "subagents")}
+ *       加逐文件 {@code filesystem.read}。后端透明应用 {@code NamespaceFactory}，
+ *       使每个用户只看到属于自己的存储分区。
+ *   <li><em>第 2 层（基础层）</em> —— {@code AgentSpecLoader.loadFromDirectory}
+ *       直接读取本地工作区的 {@code subagents/} 目录。
+ *   <li><em>合并</em> —— 第 1 层同名条目覆盖第 2 层。
+ *       程序化（建造者注册的）条目保留为静态前缀，但同名动态声明也会覆盖它们。
  * </ol>
  */
 public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
@@ -103,26 +99,25 @@ public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
         this.taskTool = new TaskTool(taskRepository);
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_REASONING);
     }
 
     /**
-     * Wires a gateway bridge into the internal {@link AgentSpawnTool}, enabling spawned subagents
-     * to be exposed as user-addressable threads. Only effective when the middleware owns a
-     * {@link DefaultAgentManager}.
+     * 将网关桥接器接入内部 {@link AgentSpawnTool}，使新建子智能体可暴露为用户可寻址的线程。
+     * 仅在中间件拥有 {@link DefaultAgentManager} 时生效。
      */
     public DynamicSubagentsMiddleware setGatewayBridge(
             io.agentscope.harness.agent.gateway.SubagentGatewayBridge bridge) {
         if (agentManager == null) {
             return this;
         }
-        // Mutate the bridge on the live tool instead of replacing it: the toolkit binds
-        // agent_spawn to the AgentSpawnTool instance returned by getTools() at orchestration
-        // time, so a fresh instance here would never be invoked and exposure would silently
-        // never fire.
+        // 修改活动工具上的桥接器，而不是替换工具：编排时，工具集将
+        // agent_spawn 绑定到 getTools() 返回的 AgentSpawnTool 实例，
+        // 因此在此创建新实例永远不会被调用，线程暴露也就会
+        // 静默失效。
         if (this.subagentTool instanceof AgentSpawnTool ast) {
             ast.setGatewayBridge(bridge);
         } else {
@@ -132,17 +127,17 @@ public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Returns the internal {@link DefaultAgentManager} that can re-materialize subagents, or
-     * {@code null} when none is owned. Used to wire a gateway materializer for cross-node
-     * exposed-subagent recovery.
+     * 返回可重新物化子智能体的内部 {@link DefaultAgentManager}；
+     * 没有自行拥有的管理器时为 {@code null}。
+     * 用于连接网关物化器，实现跨节点恢复已暴露的子智能体。
      */
     public DefaultAgentManager getAgentManager() {
         return agentManager;
     }
 
     /**
-     * Returns the tool instances this middleware contributes to the agent toolkit. The caller
-     * is responsible for registering them on the toolkit at orchestration time.
+     * 返回此中间件向智能体工具集贡献的工具实例。
+     * 调用方负责在编排阶段将它们注册到工具集。
      */
     public List<Object> getTools() {
         return List.of(subagentTool, taskTool);
@@ -177,7 +172,7 @@ public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     private List<SubagentEntry> reloadEntries(RuntimeContext rc) {
-        // ---- Layer 2 (base): local workspace scan ----
+        // ---- 第 2 层（基础层）：扫描本地工作区 ----
         Map<String, SubagentDeclaration> declsByName = new LinkedHashMap<>();
         Path subagentsDir = mainWorkspace != null ? mainWorkspace.resolve(SUBAGENTS_DIR) : null;
         if (subagentsDir != null && Files.isDirectory(subagentsDir)) {
@@ -187,14 +182,14 @@ public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
             }
         }
 
-        // ---- Layer 1 (override): filesystem with namespace ----
+        // ---- 第 1 层（覆盖层）：带命名空间的文件系统 ----
         if (filesystem != null) {
             for (SubagentDeclaration d : loadDeclarationsViaFilesystem(rc)) {
                 declsByName.put(d.getName(), d);
             }
         }
 
-        // ---- Materialise factories ----
+        // ---- 物化工厂 ----
         List<SubagentEntry> dynamicEntries = new ArrayList<>(declsByName.size());
         for (SubagentDeclaration decl : declsByName.values()) {
             if (factoryBuilder == null) {
@@ -215,7 +210,7 @@ public class DynamicSubagentsMiddleware implements HarnessRuntimeMiddleware {
             }
         }
 
-        // ---- Combine: static + dynamic, dynamic wins on name conflict ----
+        // ---- 合并：静态 + 动态，同名冲突时动态条目优先 ----
         Map<String, SubagentEntry> combined = new LinkedHashMap<>();
         for (SubagentEntry e : staticEntries) {
             combined.put(e.name(), e);

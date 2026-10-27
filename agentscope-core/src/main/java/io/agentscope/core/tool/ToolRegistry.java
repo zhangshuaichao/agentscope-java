@@ -21,20 +21,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Internal registry for managing tool registration and lookup.
+ * 管理工具注册和查找的内部注册表。
  *
- * <p>This class maintains mappings between tool names and their implementations, along with
- * metadata about registered tool functions. It is used internally by {@link Toolkit} to organize
- * and retrieve tools.
+ * <p>维护工具名称到实现的映射，以及已注册工具函数的元数据，由 {@link Toolkit} 内部用于组织和检索工具。
  *
- * <p><b>Thread Safety:</b> This class is thread-safe, using {@link ConcurrentHashMap} for internal
- * storage to support concurrent tool registration and lookup operations.
+ * <p><b>线程安全：</b>内部使用 {@link ConcurrentHashMap}，支持并发注册和查找。
  *
- * <p><b>Key Responsibilities:</b>
+ * <p><b>主要职责：</b>
  * <ul>
- *   <li>Store and retrieve {@link AgentTool} implementations by name</li>
- *   <li>Maintain {@link RegisteredToolFunction} metadata for schema generation</li>
- *   <li>Support dynamic tool removal for group-based activation</li>
+ * <li>按名称存储和检索 {@link AgentTool} 实现</li>
+ * <li>维护生成模式所需的 {@link RegisteredToolFunction} 元数据</li>
+ * <li>支持动态移除工具，配合基于工具组的激活机制</li>
  * </ul>
  */
 class ToolRegistry {
@@ -43,11 +40,11 @@ class ToolRegistry {
     private final Map<String, RegisteredToolFunction> registeredTools = new ConcurrentHashMap<>();
 
     /**
-     * Register a tool with its metadata.
+     * 注册工具及其元数据。
      *
-     * @param toolName Tool name
-     * @param tool AgentTool implementation
-     * @param registered RegisteredToolFunction wrapper with metadata
+     * @param toolName 工具名称
+     * @param tool AgentTool 实现
+     * @param registered 带元数据的 RegisteredToolFunction 包装器
      */
     void registerTool(String toolName, AgentTool tool, RegisteredToolFunction registered) {
         if (toolName == null || toolName.isBlank()) {
@@ -58,10 +55,10 @@ class ToolRegistry {
     }
 
     /**
-     * Get tool by name.
+     * 按名称获取工具。
      *
-     * @param name Tool name
-     * @return AgentTool or null if not found
+     * @param name 工具名称
+     * @return AgentTool；未找到时为 null
      */
     AgentTool getTool(String name) {
         if (name == null || name.isBlank()) {
@@ -71,10 +68,10 @@ class ToolRegistry {
     }
 
     /**
-     * Get registered tool function by name.
+     * 按名称获取已注册工具函数。
      *
-     * @param name Tool name
-     * @return RegisteredToolFunction or null if not found
+     * @param name 工具名称
+     * @return RegisteredToolFunction；未找到时为 null
      */
     RegisteredToolFunction getRegisteredTool(String name) {
         if (name == null || name.isBlank()) {
@@ -84,27 +81,27 @@ class ToolRegistry {
     }
 
     /**
-     * Get all tool names.
+     * 获取全部工具名称。
      *
-     * @return Set of tool names
+     * @return 工具名称集合
      */
     Set<String> getToolNames() {
         return new HashSet<>(tools.keySet());
     }
 
     /**
-     * Get all registered tool functions.
+     * 获取全部已注册工具函数。
      *
-     * @return Map of tool name to RegisteredToolFunction
+     * @return 工具名称到 RegisteredToolFunction 的映射
      */
     Map<String, RegisteredToolFunction> getAllRegisteredTools() {
         return new ConcurrentHashMap<>(registeredTools);
     }
 
     /**
-     * Remove a tool by name.
+     * 按名称移除工具。
      *
-     * @param toolName Tool name to remove
+     * @param toolName 要移除的工具名称
      */
     void removeTool(String toolName) {
         if (toolName == null || toolName.isBlank()) {
@@ -115,12 +112,11 @@ class ToolRegistry {
     }
 
     /**
-     * Atomically remove a tool only if the current instance matches the expected one.
-     * Uses {@link ConcurrentHashMap#remove(Object, Object)} to avoid TOCTOU races.
+     * 仅当当前实例与期望实例一致时原子性地移除工具。使用 {@link ConcurrentHashMap#remove(Object, Object)} 避免检查与使用之间的竞态（TOCTOU）。
      *
-     * @param toolName Tool name to remove
-     * @param expected The expected AgentTool instance (identity comparison)
-     * @return true if the tool was removed, false if it was already replaced or absent
+     * @param toolName 要移除的工具名称
+     * @param expected 期望的 AgentTool 实例（按身份比较）
+     * @return 移除成功为 true；已被替换或不存在时为 false
      */
     boolean removeToolIfSame(String toolName, AgentTool expected) {
         boolean removed = tools.remove(toolName, expected);
@@ -131,22 +127,20 @@ class ToolRegistry {
     }
 
     /**
-     * Remove multiple tools by names.
+     * 按名称批量移除工具。
      *
-     * @param toolNames Set of tool names to remove
+     * @param toolNames 要移除的工具名称集合
      */
     void removeTools(Set<String> toolNames) {
         toolNames.forEach(this::removeTool);
     }
 
     /**
-     * Copy all tools (and their registration metadata) from this registry to another registry.
+     * 将此注册表的全部工具及注册元数据复制到另一注册表。
      *
-     * <p>Tools are shared by reference (they are stateless and thread-safe); only the registry
-     * entries (including {@link RegisteredToolFunction} metadata) are copied, so the target is an
-     * isolated registry for build-time agent isolation.
+     * <p>工具通过引用共享（无状态且线程安全），仅复制注册条目（包括 {@link RegisteredToolFunction} 元数据），为构建期智能体隔离提供独立注册表。
      *
-     * @param target The target registry to copy tools to
+     * @param target 接收工具副本的目标注册表
      */
     void copyTo(ToolRegistry target) {
         for (Map.Entry<String, AgentTool> entry : tools.entrySet()) {

@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract base implementation of {@link Sandbox} with the 4-branch workspace start logic.
+ * 实现工作区四分支启动逻辑的 {@link Sandbox} 抽象基类。
  *
- * <h2>4-Branch Start Logic</h2>
+ * <h2>四分支启动逻辑</h2>
  * <pre>
  * Branch A: workspaceRootReady=true  &amp; workspace dir exists   → apply ephemeral-only entries
  * Branch B: workspaceRootReady=true  &amp; workspace dir missing  → restore from snapshot + ephemeral entries
@@ -36,21 +36,23 @@ import org.slf4j.LoggerFactory;
  * Branch D: workspaceRootReady=false &amp; no restorable snapshot → fresh init from full workspace spec
  * </pre>
  *
- * <p>Subclasses implement the backend-specific operations:
+ * <p>子类实现后端专用操作：
  * <ul>
- *   <li>{@link #doExec(RuntimeContext, String, int)} — execute a shell command in the workspace</li>
- *   <li>{@link #doPersistWorkspace()} — create a tar archive of the workspace</li>
- *   <li>{@link #doHydrateWorkspace(InputStream)} — extract a tar archive into the workspace</li>
- *   <li>{@link #doSetupWorkspace()} — create the workspace root directory</li>
- *   <li>{@link #doDestroyWorkspace()} — delete the workspace root directory (on shutdown)</li>
- *   <li>{@link #getWorkspaceRoot()} — return the workspace root path string</li>
+ *   <li>{@link #doExec(RuntimeContext, String, int)}：在工作区执行 Shell 命令</li>
+ *   <li>{@link #doPersistWorkspace()}：创建工作区 tar 归档</li>
+ *   <li>{@link #doHydrateWorkspace(InputStream)}：将 tar 归档解压到工作区</li>
+ *   <li>{@link #doSetupWorkspace()}：创建工作区根目录</li>
+ *   <li>{@link #doDestroyWorkspace()}：关闭时删除工作区根目录</li>
+ *   <li>{@link #getWorkspaceRoot()}：返回工作区根路径字符串</li>
  * </ul>
  */
 public abstract class AbstractBaseSandbox implements Sandbox {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractBaseSandbox.class);
 
-    /** Default timeout in seconds for workspace probing commands. */
+    /**
+ * 工作区探测命令的默认超时秒数。
+ */
     private static final int PROBE_TIMEOUT_SECONDS = 10;
 
     private final SandboxState state;
@@ -63,9 +65,9 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Executes the 4-branch workspace start logic.
+     * 执行工作区四分支启动逻辑。
      *
-     * @throws Exception if the workspace fails to start
+     * @throws Exception 工作区启动失败时抛出
      */
     @Override
     public void start() throws Exception {
@@ -74,15 +76,15 @@ public abstract class AbstractBaseSandbox implements Sandbox {
 
         try {
             if (state.isWorkspaceRootReady()) {
-                // Workspace was ready at last stop — check if it still exists
+                // 工作区上次停止时已就绪：检查是否仍然存在
                 boolean stillExists = probeWorkspaceRootForPreservedResume();
                 if (stillExists) {
-                    // Branch A: workspace preserved — only apply ephemeral entries
+                    // 分支 A：工作区保留，只应用临时条目
                     log.debug(
                             "[sandbox] Branch A: workspace preserved, applying ephemeral entries");
                     workspaceSpecApplier.applyWorkspaceSpec(spec, true);
                 } else {
-                    // Branch B: workspace was lost — restore from snapshot + ephemeral entries
+                    // 分支 B：工作区丢失，从快照恢复并应用临时条目
                     log.debug("[sandbox] Branch B: workspace lost, restoring from snapshot");
                     Optional<InputStream> archive = openSnapshotArchive(snapshot);
                     if (archive.isPresent()) {
@@ -92,17 +94,17 @@ public abstract class AbstractBaseSandbox implements Sandbox {
                         }
                         workspaceSpecApplier.applyWorkspaceSpec(spec, true);
                     } else {
-                        // Degrade to Branch D: no usable snapshot
+                        // 降级到分支 D：没有可用快照
                         log.warn("[sandbox] Branch B degraded to D: snapshot not restorable");
                         doSetupWorkspace();
                         workspaceSpecApplier.applyWorkspaceSpec(spec, false);
                     }
                 }
             } else {
-                // Workspace was not ready at last stop
+                // 工作区上次停止时未就绪
                 Optional<InputStream> archive = openSnapshotArchive(snapshot);
                 if (archive.isPresent()) {
-                    // Branch C: restore from snapshot + all spec entries
+                    // 分支 C：从快照恢复并应用全部规范条目
                     log.debug("[sandbox] Branch C: restoring from snapshot");
                     doSetupWorkspace();
                     try (InputStream stream = archive.get()) {
@@ -110,7 +112,7 @@ public abstract class AbstractBaseSandbox implements Sandbox {
                     }
                     workspaceSpecApplier.applyWorkspaceSpec(spec, false);
                 } else {
-                    // Branch D: fresh initialization from full workspace spec
+                    // 分支 D：根据完整工作区规范重新初始化
                     log.debug("[sandbox] Branch D: fresh workspace initialization");
                     doSetupWorkspace();
                     workspaceSpecApplier.applyWorkspaceSpec(spec, false);
@@ -127,9 +129,9 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Persists the workspace snapshot and marks the workspace root as ready.
+     * 持久保存工作区快照，并将工作区根目录标记为就绪。
      *
-     * @throws Exception if snapshot persistence fails
+     * @throws Exception 快照持久化失败时抛出
      */
     @Override
     public void stop() throws Exception {
@@ -146,8 +148,7 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     /**
      * {@inheritDoc}
      *
-     * <p>Calls {@link #stop()} then {@link #shutdown()}.
-     * Stop failures are logged but do not prevent shutdown.
+     * <p>先调用 {@link #stop()}，再调用 {@link #shutdown()}。停止失败会记录日志，但不会阻止关闭。
      */
     @Override
     public void close() throws Exception {
@@ -170,7 +171,7 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Delegates to {@link #doExec(RuntimeContext, String, int)} with a fallback timeout.
+     * 使用回退超时委托给 {@link #doExec(RuntimeContext, String, int)}。
      */
     @Override
     public ExecResult exec(RuntimeContext runtimeContext, String command, Integer timeoutSeconds)
@@ -185,9 +186,7 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Opens the snapshot archive for the current start, or returns empty when no snapshot is
-     * available. Backends that select a restore source before {@link #start()} can override this
-     * to reuse their decision instead of opening the persisted snapshot a second time.
+     * 打开本次启动使用的快照归档；无快照时返回空。后端若在 {@link #start()} 前已选择恢复来源，可以覆盖此方法复用决定，避免再次打开持久化快照。
      */
     protected Optional<InputStream> openSnapshotArchive(SandboxSnapshot snapshot) throws Exception {
         if (snapshot == null || !snapshot.isRestorable()) {
@@ -202,12 +201,11 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Probes whether the workspace root directory still exists, using a backend exec.
+     * 通过后端命令探测工作区根目录是否仍然存在。
      *
-     * <p>Uses {@code test -d {workspaceRoot}} with a {@value #PROBE_TIMEOUT_SECONDS}-second
-     * timeout. Returns {@code true} if the command exits with code 0.
+     * <p>使用 {@code test -d {workspaceRoot}}，超时为 {@value #PROBE_TIMEOUT_SECONDS} 秒。命令退出码为 0 时返回 {@code true}。
      *
-     * @return true if the workspace root exists
+     * @return 工作区根目录存在时为 true
      */
     protected boolean probeWorkspaceRootForPreservedResume() {
         try {
@@ -222,60 +220,60 @@ public abstract class AbstractBaseSandbox implements Sandbox {
     }
 
     /**
-     * Returns the default command execution timeout in seconds.
+     * 返回默认命令执行超时秒数。
      *
-     * @return default timeout (120 seconds)
+     * @return 默认超时（120 秒）
      */
     protected int getDefaultExecTimeoutSeconds() {
         return 120;
     }
 
     /**
-     * Executes a shell command within the workspace.
+     * 在工作区内执行 Shell 命令。
      *
-     * @param runtimeContext per-call context; may be {@code null} for internal probes
-     * @param command shell command string
-     * @param timeoutSeconds maximum execution time
-     * @return execution result
-     * @throws Exception if execution fails
+     * @param runtimeContext 每次调用的上下文；内部探测时可为 {@code null}
+     * @param command Shell 命令字符串
+     * @param timeoutSeconds 最大执行时间
+     * @return 执行结果
+     * @throws Exception 执行失败时抛出
      */
     protected abstract ExecResult doExec(
             RuntimeContext runtimeContext, String command, int timeoutSeconds) throws Exception;
 
     /**
-     * Creates a tar archive of the current workspace contents.
+     * 为当前工作区内容创建 tar 归档。
      *
-     * @return an {@link InputStream} over the tar stream; caller must close
-     * @throws Exception if archiving fails
+     * @return tar 流的 {@link InputStream}，调用方必须关闭
+     * @throws Exception 归档失败时抛出
      */
     protected abstract InputStream doPersistWorkspace() throws Exception;
 
     /**
-     * Extracts a tar archive into the workspace.
+     * 将 tar 归档解压到工作区。
      *
-     * @param archive the tar archive stream to extract
-     * @throws Exception if extraction fails
+     * @param archive 要解压的 tar 归档流
+     * @throws Exception 解压失败时抛出
      */
     protected abstract void doHydrateWorkspace(InputStream archive) throws Exception;
 
     /**
-     * Creates the workspace root directory.
+     * 创建工作区根目录。
      *
-     * @throws Exception if directory creation fails
+     * @throws Exception 目录创建失败时抛出
      */
     protected abstract void doSetupWorkspace() throws Exception;
 
     /**
-     * Destroys the workspace root and any backend resources.
+     * 销毁工作区根目录及后端资源。
      *
-     * @throws Exception if cleanup fails
+     * @throws Exception 清理失败时抛出
      */
     protected abstract void doDestroyWorkspace() throws Exception;
 
     /**
-     * Returns the absolute path of the workspace root directory.
+     * 返回工作区根目录的绝对路径。
      *
-     * @return workspace root path string
+     * @return 工作区根路径字符串
      */
     protected abstract String getWorkspaceRoot();
 

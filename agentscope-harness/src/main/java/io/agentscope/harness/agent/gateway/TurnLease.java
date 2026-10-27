@@ -16,18 +16,17 @@
 package io.agentscope.harness.agent.gateway;
 
 /**
- * A handle representing an acquired session turn slot.
+ * 代表已获取会话轮次槽位的句柄。
  *
- * <p>Returned by {@link SessionTurnGate#acquire(String)}. The gateway closes the lease in
- * {@code doFinally} after the turn completes. Implementations must be idempotent: calling
- * {@link #close()} more than once must be safe.
+ * <p>由 {@link SessionTurnGate#acquire(String)} 返回。轮次结束后，网关在
+ * {@code doFinally} 中关闭租约。实现必须幂等：多次调用 {@link #close()} 必须安全。
  */
 public interface TurnLease extends AutoCloseable {
 
     /**
-     * Releases the turn slot held by this lease.
+     * 释放此租约持有的轮次槽位。
      *
-     * <p>Must not throw. Any release-side error should be logged internally by the implementation.
+     * <p>不得抛出异常。释放期间的错误应由实现内部记录日志。
      */
     @Override
     void close();

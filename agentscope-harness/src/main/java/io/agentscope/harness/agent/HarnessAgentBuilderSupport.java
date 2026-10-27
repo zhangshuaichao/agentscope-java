@@ -61,10 +61,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Package-private static helpers backing {@link HarnessAgent.Builder}'s orchestration path.
+ * 支撑 {@link HarnessAgent.Builder} 编排路径的包可见静态辅助方法。
  *
- * <p>Each helper accepts a {@link HarnessAgent.Builder} so it can read the builder's harness
- * fields without going through public accessors.
+ * <p>每个辅助方法接收 {@link HarnessAgent.Builder}，无需公共访问器即可读取 Harness 字段。
  */
 final class HarnessAgentBuilderSupport {
 
@@ -73,14 +72,13 @@ final class HarnessAgentBuilderSupport {
     private HarnessAgentBuilderSupport() {}
 
     // -----------------------------------------------------------------
-    //  Subagent context section
+    // 子智能体上下文段
     // -----------------------------------------------------------------
 
     // @formatter:off
     /**
-     * Subagent context section injected into every subagent's system prompt.
-     * Establishes identity, rules, output format, and prohibited behaviours for a leaf worker.
-     * The task itself is delivered as the first user message, not duplicated here.
+     * 注入每个子智能体系统提示的上下文段。
+     * 定义叶子工作者的身份、规则、输出格式及禁止行为。任务本身作为首条用户消息传递，不在此重复。
      */
     static final String SUBAGENT_CONTEXT_SECTION =
             """
@@ -117,13 +115,15 @@ final class HarnessAgentBuilderSupport {
 
     // @formatter:on
 
-    /** Identity line prepended to {@link #SUBAGENT_CONTEXT_SECTION} for the general-purpose subagent. */
+    /**
+     * 为通用子智能体前置到 {@link #SUBAGENT_CONTEXT_SECTION} 的身份说明行。
+     */
     static final String GENERAL_PURPOSE_BASE_PROMPT =
             "You are a highly capable general-purpose subagent.";
 
     /**
-     * Builds a system prompt for a subagent by appending {@link #SUBAGENT_CONTEXT_SECTION} to the
-     * given base prompt. If the base is blank, only the context section is used.
+     * 向给定基础提示追加 {@link #SUBAGENT_CONTEXT_SECTION}，构建子智能体系统提示。
+     * 基础提示为空白时仅使用上下文段。
      */
     static String buildSubagentSysPrompt(String basePrompt) {
         String base =
@@ -132,9 +132,8 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Custom-supplied subagent factory entry: name + optional description + factory, plus an
-     * optional {@link SubagentDeclaration} whose spawn-time options (e.g. {@code persistSession})
-     * apply to the custom instances.
+     * 自定义子智能体工厂条目：名称、可选描述、工厂，以及可选的 {@link SubagentDeclaration}；
+     * 其启动选项（例如 {@code persistSession}）应用于自定义实例。
      */
     record SubagentFactoryEntry(
             String name,
@@ -142,14 +141,16 @@ final class HarnessAgentBuilderSupport {
             SubagentFactory factory,
             SubagentDeclaration declaration) {
 
-        /** Description shown to the orchestrator, falling back to the name when unset. */
+        /**
+         * 向编排器展示的描述，未设置时回退到名称。
+         */
         String displayDescription() {
             return description != null && !description.isBlank() ? description : name;
         }
     }
 
     // -----------------------------------------------------------------
-    //  Filesystem
+    // 文件系统
     // -----------------------------------------------------------------
 
     static AbstractFilesystem resolveFilesystem(
@@ -170,17 +171,16 @@ final class HarnessAgentBuilderSupport {
         if (b.localFilesystemSpec != null) {
             return b.localFilesystemSpec.toFilesystem(workspace, nsFactory);
         }
-        // Default: route through LocalFilesystemSpec so the default project (= ${user.dir})
-        // is overlaid below the agent workspace, matching the Claude-Code-style two-layer model.
+        // 默认通过 LocalFilesystemSpec 路由，使默认项目（${user.dir}）
+        // 覆盖在智能体工作区下层，对应 Claude Code 风格的双层模型。
         return new LocalFilesystemSpec().toFilesystem(workspace, nsFactory);
     }
 
     /**
-     * Builds a {@link RuntimeContext} that bakes in the supplied {@code userId} and
-     * {@code sessionId} for out-of-band IO performed via
-     * {@link HarnessAgent#workspaceFor(String, String)}. Used together with
-     * {@code BakedContextFilesystem} so the underlying namespace factories see this identity
-     * regardless of what the caller passes downstream.
+     * 构建固定包含指定 {@code userId} 和 {@code sessionId} 的 {@link RuntimeContext}，
+     * 用于通过 {@link HarnessAgent#workspaceFor(String, String)} 进行的带外 I/O。
+     * 配合 {@code BakedContextFilesystem} 使用，使底层命名空间工厂始终看到此身份，
+     * 不受调用方向下游传入内容影响。
      */
     static RuntimeContext buildBakedRuntimeContext(String userId, String sessionId) {
         if ((userId == null || userId.isBlank()) && (sessionId == null || sessionId.isBlank())) {
@@ -197,12 +197,11 @@ final class HarnessAgentBuilderSupport {
     }
 
     // -----------------------------------------------------------------
-    //  Subagents
+    // 子智能体
     // -----------------------------------------------------------------
 
     /**
-     * Builds the subagent entries from programmatic declarations,
-     * {@code workspace/subagents/*.md}, and custom factories.
+     * 从程序化声明、{@code workspace/subagents/*.md} 及自定义工厂构建子智能体条目。
      */
     static List<SubagentEntry> buildSubagentEntries(
             HarnessAgent.Builder b, Path resolvedWorkspace, SandboxBackedFilesystem sandboxFs) {
@@ -246,10 +245,9 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Like {@link #buildSubagentEntries(HarnessAgent.Builder, Path, SandboxBackedFilesystem)} but
-     * omits the local-disk {@code subagents/} scan. The {@code DynamicSubagentsMiddleware} performs that
-     * scan itself on every reasoning step (Layer 2), so feeding the same entries in here would
-     * register them twice.
+     * 类似 {@link #buildSubagentEntries(HarnessAgent.Builder, Path, SandboxBackedFilesystem)}，
+     * 但省略本地磁盘 {@code subagents/} 扫描。{@code DynamicSubagentsMiddleware}
+     * 会在每次推理步骤自行扫描（第 2 层），在此重复传入相同条目会注册两次。
      */
     static List<SubagentEntry> buildStaticSubagentEntries(
             HarnessAgent.Builder b, Path resolvedWorkspace, SandboxBackedFilesystem sandboxFs) {
@@ -305,7 +303,7 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Builds a factory for the built-in general-purpose subagent.
+     * 构建内置通用子智能体的工厂。
      */
     static SubagentFactory buildGeneralPurposeFactory(
             HarnessAgent.Builder b, Path workspace, SandboxBackedFilesystem sandboxFs) {
@@ -352,17 +350,17 @@ final class HarnessAgentBuilderSupport {
         final boolean capturedAgentTracingLogEnabled = b.agentTracingLogEnabled;
         final List<String> capturedAdditionalContextFiles = List.copyOf(b.additionalContextFiles);
         final int capturedMaxContextTokens = b.maxContextTokens;
-        // Propagate the parent's (distributed) state store so an exposed subagent can be
-        // re-materialized on another node / after a restart and still load its conversation
-        // history by sessionId. Null in purely local default deployments — children then keep
-        // their own local store, preserving legacy behaviour.
+        // 传播父级（分布式）状态存储，使已暴露子智能体可在
+        // 另一节点或重启后重新实体化，并仍按 sessionId 加载
+        // 会话历史。纯本地默认部署中为 null，此时子级保持
+        // 自己的本地存储，维持旧行为。
         final io.agentscope.core.state.AgentStateStore capturedStateStore = b.stateStoreOverride;
         final var capturedSessionHistory = b.sessionHistoryConfigurer();
 
         return (RuntimeContext parentRc) -> {
-            // general-purpose subagent shares the parent's workspace and is short-lived per spawn;
-            // we don't need parent-aware bucketing here. parentRc is accepted for interface
-            // compatibility and reserved for future use.
+            // 通用子智能体共享父级工作区，每次启动短期存在；
+            // 这里无需按父级身份分桶。接收 parentRc 是为接口
+            // 兼容及未来使用预留。
             HarnessAgent.Builder sub =
                     HarnessAgent.builder()
                             .name("general-purpose-subagent")
@@ -430,7 +428,7 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Builds a factory for a user-declared subagent from a {@link SubagentDeclaration}.
+     * 根据 {@link SubagentDeclaration} 构建用户声明子智能体的工厂。
      */
     static SubagentFactory buildDeclaredFactory(
             HarnessAgent.Builder b,
@@ -468,24 +466,24 @@ final class HarnessAgentBuilderSupport {
         final boolean capturedPlanModeAllowShell = b.planModeAllowShell;
         final String capturedPlanFileDir = b.planFileDir;
         final GenerateOptions capturedGenOpts = b.generateOptions;
-        // See buildGeneralPurposeFactory: propagate the parent's model/tool execution configs so
-        // declared subagents honor the parent's timeouts. Without this they fall back to
-        // ExecutionConfig defaults (e.g. the 5-minute tool timeout), ignoring a longer timeout
-        // configured on the main agent.
+        // 参见 buildGeneralPurposeFactory：传播父级模型／工具执行配置，
+        // 使声明式子智能体遵循父级超时。否则会回退到
+        // ExecutionConfig 默认值（例如 5 分钟工具超时），忽略主智能体
+        // 配置的更长超时。
         final ExecutionConfig capturedModelExec = b.modelExecutionConfig;
         final ExecutionConfig capturedToolExec = b.toolExecutionConfig;
-        // Snapshot of main agent's Local filesystem configuration. ISOLATED subagents get a
-        // fresh spec carrying the same project / additionalRoots / mode so PathPolicy stays in
-        // sync; without this, every isolated subagent would default to project=${user.dir} and
-        // lose any --add-dir style allow-list configured at the main level.
+        // 主智能体本地文件系统配置快照。ISOLATED 子智能体获得新的
+        // 配置，携带相同 project／additionalRoots／mode，使 PathPolicy 保持
+        // 一致；否则每个隔离子智能体会默认 project=${user.dir}，
+        // 丢失主级配置的 --add-dir 风格允许列表。
         final io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec
                 capturedLocalFilesystemSpec = b.localFilesystemSpec;
         final List<AgentSkillRepository> capturedSkillRepos = List.copyOf(b.skillRepositories);
         final Path capturedProjectGlobalSkillsDir = b.projectGlobalSkillsDir;
         final CompactionConfig capturedCompactionConfig = b.compactionConfig;
         final boolean capturedDisableCompaction = b.disableCompaction;
-        // See buildGeneralPurposeFactory: propagate the parent's (distributed) state store so the
-        // subagent's conversation survives cross-node re-materialization. Null in local defaults.
+        // 参见 buildGeneralPurposeFactory：传播父级（分布式）状态存储，
+        // 使子智能体会话可跨节点重新实体化；本地默认值为 null。
         final io.agentscope.core.state.AgentStateStore capturedStateStore = b.stateStoreOverride;
         final var capturedSessionHistory = b.sessionHistoryConfigurer();
 
@@ -494,22 +492,22 @@ final class HarnessAgentBuilderSupport {
                 return new io.agentscope.harness.agent.subagent.RemoteSubagentStub(
                         decl.getName(), decl.getDescription());
             }
-            // ---- Resolve workspace root ----
+            // ---- 解析工作区根目录 ----
             Path runtimeWorkspace = resolveDeclaredWorkspace(decl, mainWorkspace);
 
-            // ---- Resolve system prompt ----
+            // ---- 解析系统提示 ----
             String sysPromptBase = resolveDeclaredSysPromptBase(decl);
 
-            // ---- Resolve model ----
+            // ---- 解析模型 ----
             Model effectiveModel =
                     resolveModel(decl.getModel(), capturedModel, capturedResolver, decl.getName());
 
-            // ---- Derive child session ID: bucket persisted AgentState by parent identity ----
-            // (Phase B-0) Without this every (user, parent-session) shares the same bucket and
-            // can read each other's subagent conversations through AgentStateStore.get(...).
+            // ---- 派生子会话 ID：按父级身份对持久化 AgentState 分桶 ----
+            // （阶段 B-0）否则每个用户／父会话都会共享同一桶，
+            // 能够通过 AgentStateStore.get(...) 读取彼此的子智能体会话。
             String childSessionId = deriveChildSessionId(decl, parentRc);
 
-            // ---- Build child agent ----
+            // ---- 构建子智能体 ----
             HarnessAgent.Builder sub =
                     HarnessAgent.builder()
                             .name(decl.getName())
@@ -527,12 +525,12 @@ final class HarnessAgentBuilderSupport {
                             .contextPolicy(capturedContextPolicy)
                             .sysPrompt(buildSubagentSysPrompt(sysPromptBase));
 
-            // Overlay declaration-specified temperature/topP on top of the parent's
-            // GenerateOptions.
-            // Null fields in the overlay fall back to parent via GenerateOptions.mergeOptions.
-            // Note: SubagentDeclaration.variant is parsed and retained on the declaration but is
-            // NOT plumbed into GenerateOptions today because the core Model layer has no variant
-            // concept; treat it as schema-forward storage until variant support lands.
+            // 将声明指定的 temperature/topP 叠加到父级
+            // GenerateOptions 之上。
+            // 覆盖项中的 null 字段通过 GenerateOptions.mergeOptions 回退到父级。
+            // 注意：SubagentDeclaration.variant 会解析并保留在声明中，但
+            // 目前不会接入 GenerateOptions，因为核心 Model 层没有 variant
+            // 概念；在 variant 支持落地之前，仅将其视为面向未来的 schema 字段存储。
             if (decl.getTemperature() != null || decl.getTopP() != null) {
                 GenerateOptions overlay =
                         GenerateOptions.builder()
@@ -613,13 +611,11 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Propagates build-time plan-mode capabilities to an automatically constructed subagent.
+     * 将构建时计划模式能力传播给自动构建的子智能体。
      *
-     * <p>Copying the parent's explicit middleware list is not sufficient: {@code
-     * PlanModeMiddleware} and {@code PlanModeManager} are installed dynamically by {@link
-     * HarnessAgent.Builder#build()}. The child must therefore receive the builder configuration
-     * before it is built; setting only {@code AgentState.planActive} later would expose the state
-     * without installing the write-operation guard.
+     * <p>仅复制父级显式中间件列表还不够：{@code PlanModeMiddleware} 和 {@code PlanModeManager}
+     * 由 {@link HarnessAgent.Builder#build()} 动态安装。因此必须在构建子智能体之前
+     * 将构建器配置传给它；之后仅设置 {@code AgentState.planActive} 会暴露状态，却没有安装写操作保护。
      */
     private static void configurePlanMode(
             HarnessAgent.Builder sub,
@@ -629,17 +625,18 @@ final class HarnessAgentBuilderSupport {
         if (!planModeEnabled) {
             return;
         }
+        // 【学习提示】运行时的“处于计划模式”状态与构建时的“具备计划模式保护”不同；
+        // 子智能体必须先安装相关能力，后续状态传播才能由对应中间件解释和约束。
         sub.enablePlanMode()
                 .planFileDirectory(planFileDir)
                 .allowShellInPlanMode(planModeAllowShell);
     }
 
     /**
-     * Builds a fresh {@link io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec} for
-     * an ISOLATED subagent, copying the main agent's project, mode, and additionalRoots so the
-     * subagent's {@code PathPolicy} stays consistent with the parent. The subagent gets its own
-     * workspace (passed separately via {@code sub.workspace(...)}) so its MEMORY/sessions stay
-     * isolated; only the allow-list inputs are shared.
+     * 为 ISOLATED 子智能体构建新的 {@link io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec}，
+     * 复制主智能体 project、mode 和 additionalRoots，使子级 {@code PathPolicy} 与父级一致。
+     * 子智能体拥有自己的工作区（通过 {@code sub.workspace(...)} 单独传入），保持 MEMORY／会话隔离；
+     * 仅共享允许列表输入。
      */
     private static io.agentscope.harness.agent.filesystem.spec.LocalFilesystemSpec
             cloneLocalSpecForSubagent(
@@ -656,7 +653,9 @@ final class HarnessAgentBuilderSupport {
         return spec;
     }
 
-    /** Returns a defensive copy of inherited parent tools filtered by the optional allowlist. */
+    /**
+     * 返回继承父级工具的防御性副本，并按可选允许列表过滤。
+     */
     static Toolkit allowlistedInheritedToolkit(Toolkit parentToolkit, List<String> allowlist) {
         Toolkit toolkit =
                 parentToolkit != null
@@ -675,21 +674,17 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Composes the child agent's persisted session ID, bucketing by declaration name and the
-     * spawn-time parent identity:
+     * 组合子智能体持久化会话 ID，按声明名称及启动时父级身份分桶：
      *
      * <pre>
      * {declarationName}[@{parentSessionId}][#{userId}]
      * </pre>
      *
-     * <p>Empty / blank uid or sid segments are dropped — keeps single-tenant demos working with
-     * the legacy single-bucket form. {@link WorkspaceMode#SHARED} subagents intentionally fall
-     * back to the legacy single-bucket form: they're sharing the parent's full state tree by
-     * design.
+     * <p>省略空／空白 uid 或 sid 段，保持单租户演示与旧式单桶形式兼容。
+     * {@link WorkspaceMode#SHARED} 子智能体有意回退到旧式单桶形式，因为设计上它们共享父级完整状态树。
      *
-     * <p>This works uniformly across {@link io.agentscope.core.state.AgentStateStore} stores —
-     * Workspace, Redis, InMemory, or custom — because all of them bucket {@code save}/{@code get}
-     * by session ID. (Phase B-0)
+     * <p>对 {@link io.agentscope.core.state.AgentStateStore} 的 Workspace、Redis、InMemory 及自定义实现
+     * 均有效，因为它们都按会话 ID 对 {@code save}／{@code get} 分桶。（阶段 B-0）
      */
     static String deriveChildSessionId(SubagentDeclaration decl, RuntimeContext parentRc) {
         String declName = decl.getName();
@@ -708,9 +703,9 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Returns {@code null} when the input is null or blank; otherwise replaces characters that
-     * confuse path-based AgentStateStore stores (slashes, backslashes, whitespace, controls) with
-     * underscores. Keeps Redis/InMemory/SQL keys unaffected since their stored form is opaque.
+     * 输入为 null 或空白时返回 {@code null}；否则将会扰乱基于路径的 AgentStateStore 的字符
+     * （斜杠、反斜杠、空白、控制字符）替换为下划线。
+     * Redis／InMemory／SQL 的键为不透明存储形式，不受影响。
      */
     static String sanitizeIdentifier(String s) {
         if (s == null) return null;
@@ -720,8 +715,7 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Resolves the runtime workspace root for a declared subagent. Creates the auto-generated
-     * isolated directory when needed.
+     * 解析声明式子智能体的运行时工作区根目录，必要时创建自动生成的隔离目录。
      */
     static Path resolveDeclaredWorkspace(SubagentDeclaration decl, Path mainWorkspace) {
         if (decl.getWorkspacePath() != null) {
@@ -733,7 +727,7 @@ final class HarnessAgentBuilderSupport {
         if (decl.getWorkspaceMode() == WorkspaceMode.SHARED) {
             return mainWorkspace;
         }
-        // ISOLATED + no path: auto-create agents/<name>/workspace/
+        // ISOLATED 且未指定路径：自动创建 agents/<name>/workspace/
         Path isolated =
                 mainWorkspace.resolve("agents").resolve(decl.getName()).resolve("workspace");
         try {
@@ -748,7 +742,9 @@ final class HarnessAgentBuilderSupport {
         return isolated;
     }
 
-    /** Resolves the system-prompt base for a declared subagent. */
+    /**
+     * 解析声明式子智能体的系统提示基础内容。
+     */
     static String resolveDeclaredSysPromptBase(SubagentDeclaration decl) {
         if (decl.getWorkspacePath() != null) {
             Path agentsMd = decl.getWorkspacePath().resolve("AGENTS.md");
@@ -769,7 +765,9 @@ final class HarnessAgentBuilderSupport {
         return (inline != null) ? inline : "";
     }
 
-    /** Resolves the effective {@link Model} for a subagent, applying the optional override. */
+    /**
+     * 解析子智能体实际使用的 {@link Model}，应用可选覆盖。
+     */
     static Model resolveModel(
             String modelOverride,
             Model parentModel,
@@ -803,7 +801,7 @@ final class HarnessAgentBuilderSupport {
     }
 
     // -----------------------------------------------------------------
-    //  Subagents middlewares
+    // 子智能体中间件
     // -----------------------------------------------------------------
 
     static SubagentsMiddleware buildSubagentsMiddleware(
@@ -864,9 +862,8 @@ final class HarnessAgentBuilderSupport {
     }
 
     /**
-     * Resolves a {@link PeriodicGate} for workspace-backed orphan sweeping: prefer the
-     * {@link DistributedStore}'s {@link BaseStore}, then a store attached to
-     * {@code RemoteFilesystemSpec}, otherwise a process-local gate.
+     * 为基于工作区的孤立任务清扫解析 {@link PeriodicGate}：优先使用 {@link DistributedStore} 的 {@link BaseStore}，
+     * 其次使用附加到 {@code RemoteFilesystemSpec} 的存储，否则使用进程局部门控。
      */
     private static PeriodicGate resolvePeriodicGate(HarnessAgent.Builder b) {
         if (b.distributedStore != null) {
@@ -885,17 +882,19 @@ final class HarnessAgentBuilderSupport {
     }
 
     // -----------------------------------------------------------------
-    //  Skills
+    // 技能
     // -----------------------------------------------------------------
 
     /**
-     * Assembles the ordered list of skill repositories used by this build (low-to-high priority).
+     * 组装本次构建使用的技能仓库有序列表（优先级从低到高）。
      */
     static List<AgentSkillRepository> composeSkillRepositories(
             HarnessAgent.Builder b, WorkspaceManager wsManager, AbstractFilesystem filesystem) {
+        // 【学习提示】这里仅按由低到高的优先级组合仓库，具体技能加载交给技能中间件；
+        // 默认工作区层可退出，因此不要把“默认可见”误解为不可覆盖的内置能力。
         List<AgentSkillRepository> ordered = new ArrayList<>();
 
-        // Layer 1 (lowest priority): project-global skills directory.
+        // 第 1 层（最低优先级）：项目全局技能目录。
         if (b.projectGlobalSkillsDir != null && Files.isDirectory(b.projectGlobalSkillsDir)) {
             try {
                 ordered.add(new FileSystemSkillRepository(b.projectGlobalSkillsDir));
@@ -907,10 +906,10 @@ final class HarnessAgentBuilderSupport {
             }
         }
 
-        // Layer 2: marketplace repositories (user-supplied).
+        // 第 2 层：市场仓库（用户提供）。
         ordered.addAll(b.skillRepositories);
 
-        // Layer 3: workspace agent-shared directory.
+        // 第 3 层：工作区智能体共享目录。
         Path workspaceSkillsDir = wsManager.getSkillsDir();
         if (workspaceSkillsDir != null && Files.isDirectory(workspaceSkillsDir)) {
             try {
@@ -923,9 +922,9 @@ final class HarnessAgentBuilderSupport {
             }
         }
 
-        // Layer 4 (highest priority): per-user namespaced filesystem view, via the new
-        // WorkspaceSkillRepository (replaces legacy FilesystemBackedSkillRepository).
-        // Skipped when the user opts out with disableDefaultWorkspaceSkills().
+        // 第 4 层（最高优先级）：通过新的 WorkspaceSkillRepository 提供按用户命名空间的文件系统视图
+        // （替代旧 FilesystemBackedSkillRepository）。
+        // 用户通过 disableDefaultWorkspaceSkills() 退出时跳过。
         if (filesystem != null && !b.disableDefaultWorkspaceSkills) {
             ordered.add(
                     new io.agentscope.harness.agent.skill.WorkspaceSkillRepository(

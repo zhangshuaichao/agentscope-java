@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.context;
 
 import java.util.List;
 
-/** Metadata only; observers must apply their own access/retention policy. No prompt bodies. */
+/** 仅包含元数据，不含提示词正文；观察者必须自行实施访问控制和保留策略。 */
 public record ContextManifest(
         String callId,
         String purpose,

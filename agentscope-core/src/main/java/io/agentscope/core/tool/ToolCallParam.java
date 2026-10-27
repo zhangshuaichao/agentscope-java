@@ -24,15 +24,13 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Parameters for tool invocation.
+ * 工具调用参数。
  *
- * <p>This class encapsulates all the information needed to call a tool, including the tool use
- * block (containing metadata like call ID and tool name), input parameters, and the calling agent.
+ * <p>封装调用工具所需的全部信息，包括工具使用块（调用 ID、工具名称等元数据）、输入参数和调用方智能体。
  *
- * <p>Using a parameter object instead of multiple method parameters provides better extensibility
- * - new parameters can be added without breaking existing code.
+ * <p>使用参数对象而非多个方法参数可提升扩展性：新增参数无需破坏现有代码。
  *
- * <p><b>Example usage:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * ToolCallParam param = ToolCallParam.builder()
  *     .toolUseBlock(toolUseBlock)
@@ -60,46 +58,46 @@ public class ToolCallParam {
     }
 
     /**
-     * Gets the tool use block containing call metadata.
+     * 获取包含调用元数据的工具使用块。
      *
-     * @return The tool use block
+     * @return 工具使用块
      */
     public ToolUseBlock getToolUseBlock() {
         return toolUseBlock;
     }
 
     /**
-     * Gets the input parameters for the tool call.
+     * 获取工具调用输入参数。
      *
-     * @return Unmodifiable map of input parameters
+     * @return 不可修改的输入参数映射
      */
     public Map<String, Object> getInput() {
         return Collections.unmodifiableMap(input);
     }
 
     /**
-     * Gets the agent making the call.
+     * 获取发起调用的智能体。
      *
-     * @return The agent, or null if not provided
+     * @return 智能体；未提供时为 null
      */
     public Agent getAgent() {
         return agent;
     }
 
     /**
-     * Gets the runtime context for this tool call.
+     * 获取工具调用的运行时上下文。
      *
-     * @return The runtime context, or null if not provided
+     * @return 运行时上下文；未提供时为 null
      */
     public RuntimeContext getRuntimeContext() {
         return runtimeContext;
     }
 
     /**
-     * Gets the tool execution context.
+     * 获取工具执行上下文。
      *
-     * @return The execution context derived from RuntimeContext, or null
-     * @deprecated Use {@link #getRuntimeContext()} instead.
+     * @return 从 RuntimeContext 派生的执行上下文，或 null
+     * @deprecated 请改用 {@link #getRuntimeContext()}。
      */
     @Deprecated
     public ToolExecutionContext getContext() {
@@ -107,34 +105,31 @@ public class ToolCallParam {
     }
 
     /**
-     * Gets the ToolEmitter for streaming tool output.
+     * 获取用于流式工具输出的 ToolEmitter。
      *
-     * <p>Tools can use this emitter to send intermediate progress updates during execution. If no
-     * emitter is configured, returns a no-op emitter that silently discards chunks.
+     * <p>工具可在执行中发送中间进度更新。未配置时返回静默丢弃数据块的空操作发射器。
      *
-     * @return The ToolEmitter, never null
+     * @return ToolEmitter，永不为 null
      */
     public ToolEmitter getEmitter() {
         return emitter != null ? emitter : NoOpToolEmitter.INSTANCE;
     }
 
     /**
-     * Creates a new builder for constructing ToolCallParam instances.
+     * 创建用于构造 ToolCallParam 实例的构建器。
      *
-     * @return A new builder
+     * @return 新的构建器
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Creates a new builder initialized with values from an existing ToolCallParam.
+     * 创建以现有 ToolCallParam 值初始化的构建器。
      *
-     * <p>This is useful for creating a modified copy of an existing parameter object.
-     * The builder copies all values from the source object, allowing selective
-     * modifications before building a new instance.
+     * <p>适用于构造修改后的参数对象副本。复制源对象的全部值，构建新实例前可选择性修改。
      *
-     * <p><b>Example usage:</b>
+     * <p><b>使用示例：</b>
      * <pre>{@code
      * ToolCallParam original = ...;
      * ToolCallParam modified = ToolCallParam.builder(original)
@@ -142,13 +137,11 @@ public class ToolCallParam {
      *     .build();
      * }</pre>
      *
-     * <p>Note: The input map structure is copied so that entries can be modified
-     * independently, but nested values (typed as Object) remain shared.
-     * Immutable fields (toolUseBlock, agent, context, emitter) are shared by reference.
+     * <p>注意：复制输入映射结构，使各条目可独立修改，但嵌套值（Object 类型）仍然共享。不可变字段（toolUseBlock、agent、context、emitter）通过引用共享。
      *
-     * @param source The existing ToolCallParam to copy values from
-     * @return A new builder pre-populated with the source's values
-     * @throws NullPointerException if source is null
+     * @param source 用于复制值的现有 ToolCallParam
+     * @return 预填了源对象值的新构建器
+     * @throws NullPointerException 当 source 为 null 时
      */
     public static Builder builder(ToolCallParam source) {
         Objects.requireNonNull(source, "source must not be null");
@@ -156,7 +149,7 @@ public class ToolCallParam {
     }
 
     /**
-     * Builder for ToolCallParam.
+     * ToolCallParam 的构建器。
      */
     public static class Builder {
         private ToolUseBlock toolUseBlock;
@@ -176,10 +169,10 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the tool use block.
+         * 设置工具使用块。
          *
-         * @param toolUseBlock The tool use block
-         * @return This builder
+         * @param toolUseBlock 工具使用块
+         * @return 当前构建器
          */
         public Builder toolUseBlock(ToolUseBlock toolUseBlock) {
             this.toolUseBlock = toolUseBlock;
@@ -187,10 +180,10 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the input parameters.
+         * 设置输入参数。
          *
-         * @param input The input parameters
-         * @return This builder
+         * @param input 输入参数
+         * @return 当前构建器
          */
         public Builder input(Map<String, Object> input) {
             this.input = input;
@@ -198,10 +191,10 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the calling agent.
+         * 设置调用方智能体。
          *
-         * @param agent The agent
-         * @return This builder
+         * @param agent 智能体
+         * @return 当前构建器
          */
         public Builder agent(Agent agent) {
             this.agent = agent;
@@ -209,10 +202,10 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the runtime context for the tool call.
+         * 设置工具调用的运行时上下文。
          *
-         * @param runtimeContext The runtime context
-         * @return This builder
+         * @param runtimeContext 运行时上下文
+         * @return 当前构建器
          */
         public Builder runtimeContext(RuntimeContext runtimeContext) {
             this.runtimeContext = runtimeContext;
@@ -220,11 +213,11 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the tool execution context.
+         * 设置工具执行上下文。
          *
-         * @param context The execution context
-         * @return This builder
-         * @deprecated Use {@link #runtimeContext(RuntimeContext)} instead.
+         * @param context 执行上下文
+         * @return 当前构建器
+         * @deprecated 请改用 {@link #runtimeContext(RuntimeContext)}。
          */
         @Deprecated
         public Builder context(ToolExecutionContext context) {
@@ -237,10 +230,10 @@ public class ToolCallParam {
         }
 
         /**
-         * Sets the ToolEmitter for streaming tool output.
+         * 设置用于流式工具输出的 ToolEmitter。
          *
-         * @param emitter The ToolEmitter
-         * @return This builder
+         * @param emitter ToolEmitter
+         * @return 当前构建器
          */
         public Builder emitter(ToolEmitter emitter) {
             this.emitter = emitter;
@@ -248,9 +241,9 @@ public class ToolCallParam {
         }
 
         /**
-         * Builds the ToolCallParam instance.
+         * 构建 ToolCallParam 实例。
          *
-         * @return A new ToolCallParam
+         * @return 新的 ToolCallParam
          */
         public ToolCallParam build() {
             return new ToolCallParam(this);

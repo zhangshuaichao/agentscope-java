@@ -23,14 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Thinking content accumulator for accumulating streaming thinking chunks.
+ * 用于累积流式思考片段的思考内容累积器。
  *
- * <p>This accumulator concatenates all thinking chunks in order to build the complete thinking
- * content.
+ * <p>按顺序连接全部思考片段，构建完整思考内容。
  *
- * <p>List-valued metadata (e.g. reasoning details) is accumulated in stream order: entries from
- * each chunk are appended rather than replaced. Scalar metadata uses last-write-wins. List values
- * are always copied to prevent caller mutation from affecting accumulator state.
+ * <p>列表类型元数据（例如推理详情）按流顺序累积：每个片段的条目追加而非替换。
+ * 标量元数据采用后写覆盖策略。列表值始终复制，防止调用方修改影响累积器状态。
  * @hidden
  */
 public class ThinkingAccumulator implements ContentAccumulator<ThinkingBlock> {
@@ -84,10 +82,10 @@ public class ThinkingAccumulator implements ContentAccumulator<ThinkingBlock> {
     }
 
     /**
-     * Merges incoming metadata into the accumulator's metadata map.
+     * 将传入元数据合并到累积器的元数据映射中。
      *
-     * <p>List values are accumulated in stream order (entries appended, not replaced). Scalar
-     * values use last-write-wins. List values are always copied to prevent caller mutation.
+     * <p>列表值按流顺序累积（追加而非替换）；标量值采用后写覆盖策略。
+     * 列表值始终复制，防止调用方修改。
      */
     private void mergeMetadata(Map<String, Object> incoming) {
         for (Map.Entry<String, Object> entry : incoming.entrySet()) {
@@ -95,25 +93,25 @@ public class ThinkingAccumulator implements ContentAccumulator<ThinkingBlock> {
             Object newValue = entry.getValue();
             Object existing = metadata.get(key);
             if (existing instanceof List<?> existingList && newValue instanceof List<?> newList) {
-                // Both are lists: concatenate in stream order
+                // 两者都是列表：按流顺序连接
                 List<Object> combined = new ArrayList<>(existingList);
                 combined.addAll(newList);
                 metadata.put(key, combined);
             } else if (newValue instanceof List<?> newList) {
-                // First list for this key: copy to prevent caller mutation
+                // 此键首次出现列表：复制以防调用方修改
                 metadata.put(key, new ArrayList<>(newList));
             } else {
-                // Scalar value: last-write-wins
+                // 标量值：后写覆盖
                 metadata.put(key, newValue);
             }
         }
     }
 
     /**
-     * Get the accumulated thinking content.
+     * 获取已累积的思考内容。
      *
      * @hidden
-     * @return accumulated thinking as string
+     * @return 以字符串形式返回累积的思考内容
      */
     public String getAccumulated() {
         return accumulated.toString();

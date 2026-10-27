@@ -27,22 +27,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Registry and lifecycle manager for {@link Channel} adapters. Provides outbound dispatch so the
- * gateway can deliver proactive messages (e.g. subagent announces) through the correct channel.
+ * {@link Channel} 适配器的注册表与生命周期管理器。提供出站分发能力，
+ * 使网关可通过正确渠道投递主动消息（例如子智能体公告）。
  *
- * <h2>Lifecycle</h2>
+ * <h2>生命周期</h2>
  *
  * <ol>
- *   <li>{@link #register(Channel)} — add a channel to the registry
- *   <li>{@link #initAll(Gateway)} — inject the gateway into all registered channels
- *   <li>{@link #startAll()} — start all channels (connect to external transports)
- *   <li>{@link #stopAll()} — stop all channels and release resources
+ *   <li>{@link #register(Channel)} — 将渠道加入注册表
+ *   <li>{@link #initAll(Gateway)} — 向全部已注册渠道注入网关
+ *   <li>{@link #startAll()} — 启动全部渠道（连接外部传输）
+ *   <li>{@link #stopAll()} — 停止全部渠道并释放资源
  * </ol>
  *
- * <h2>Outbound delivery</h2>
+ * <h2>出站投递</h2>
  *
- * {@link #deliver(OutboundAddress, List)} looks up the target channel by {@link
- * OutboundAddress#channelId()} and delegates to {@link Channel#deliver(OutboundAddress, List)}.
+ * {@link #deliver(OutboundAddress, List)} 按 {@link
+ * OutboundAddress#channelId()} 查找目标渠道，并委托给 {@link Channel#deliver(OutboundAddress, List)}。
  */
 public final class ChannelManager {
 
@@ -54,8 +54,7 @@ public final class ChannelManager {
     public ChannelManager() {}
 
     /**
-     * Registers a channel adapter. If a channel with the same {@link Channel#channelId()} is
-     * already registered, it is replaced.
+     * 注册渠道适配器。若同一 {@link Channel#channelId()} 已注册渠道，则替换它。
      */
     public void register(Channel channel) {
         Objects.requireNonNull(channel, "channel");
@@ -63,9 +62,8 @@ public final class ChannelManager {
     }
 
     /**
-     * Stops and removes the channel registered under {@code channelId}, if any. Returns
-     * {@code true} when a channel was removed, {@code false} when no channel was registered under
-     * that id.
+     * 停止并移除以 {@code channelId} 注册的渠道（若存在）。
+     * 移除了渠道时返回 {@code true}，该 ID 原本未注册渠道时返回 {@code false}。
      */
     public boolean unregister(String channelId) {
         if (channelId == null) {
@@ -88,7 +86,9 @@ public final class ChannelManager {
         return true;
     }
 
-    /** Returns the channel registered under the given id, if any. */
+    /**
+     * 返回指定 ID 下注册的渠道（若存在）。
+     */
     public Optional<Channel> getChannel(String channelId) {
         if (channelId == null) {
             return Optional.empty();
@@ -96,19 +96,23 @@ public final class ChannelManager {
         return Optional.ofNullable(channels.get(channelId));
     }
 
-    /** Returns an unmodifiable snapshot of all registered channel ids. */
+    /**
+     * 返回全部已注册渠道 ID 的不可修改快照。
+     */
     public List<String> channelIds() {
         return List.copyOf(channels.keySet());
     }
 
-    /** Returns an unmodifiable snapshot of all registered channels. */
+    /**
+     * 返回全部已注册渠道的不可修改快照。
+     */
     public Collection<Channel> getAllChannels() {
         return List.copyOf(channels.values());
     }
 
     /**
-     * Injects the gateway into all registered channels via {@link Channel#init(Gateway)}. Called
-     * once during bootstrap before {@link #startAll()}.
+     * 通过 {@link Channel#init(Gateway)} 向全部已注册渠道注入网关。
+     * 在启动引导期间、{@link #startAll()} 之前调用一次。
      */
     public void initAll(Gateway gateway) {
         Objects.requireNonNull(gateway, "gateway");
@@ -121,7 +125,9 @@ public final class ChannelManager {
         }
     }
 
-    /** Starts all registered channels. Channels that fail to start are logged but do not abort. */
+    /**
+     * 启动全部已注册渠道。渠道启动失败会记日志，但不会中止整体启动。
+     */
     public void startAll() {
         for (Channel ch : channels.values()) {
             try {
@@ -134,7 +140,9 @@ public final class ChannelManager {
         started = true;
     }
 
-    /** Stops all registered channels and clears the registry. */
+    /**
+     * 停止全部已注册渠道并清空注册表。
+     */
     public void stopAll() {
         started = false;
         for (Channel ch : channels.values()) {
@@ -147,18 +155,19 @@ public final class ChannelManager {
         }
     }
 
-    /** Whether {@link #startAll()} has been called. */
+    /**
+     * 是否已调用 {@link #startAll()}。
+     */
     public boolean isStarted() {
         return started;
     }
 
     /**
-     * Delivers proactive outbound messages through the channel identified by {@link
-     * OutboundAddress#channelId()}. If the target channel is not registered, the messages are
-     * dropped with a warning log.
+     * 通过 {@link OutboundAddress#channelId()} 指定的渠道投递主动出站消息。
+     * 若目标渠道未注册，则丢弃消息并记录警告。
      *
-     * @param address the delivery target
-     * @param messages the messages to deliver
+     * @param address 投递目标
+     * @param messages 要投递的消息
      */
     public void deliver(OutboundAddress address, List<Msg> messages) {
         Objects.requireNonNull(address, "address");

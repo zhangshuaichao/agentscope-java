@@ -16,41 +16,37 @@
 package io.agentscope.core.rag;
 
 /**
- * RAG (Retrieval-Augmented Generation) mode enumeration.
+ * RAG（Retrieval-Augmented Generation，检索增强生成）模式枚举。
  *
- * <p>Defines how knowledge retrieval is integrated with the agent:
+ * <p>定义如何将知识检索集成到智能体中：
  * <ul>
- *   <li><b>GENERIC</b>: Knowledge is automatically retrieved and injected before each reasoning step via Hook</li>
- *   <li><b>AGENTIC</b>: Agent actively decides when to retrieve knowledge via Tool</li>
- *   <li><b>NONE</b>: No RAG functionality enabled</li>
+ *   <li><b>GENERIC</b>: 通过钩子在每一步推理之前自动检索并注入知识</li>
+ *   <li><b>AGENTIC</b>: 智能体主动决定何时通过工具检索知识</li>
+ *   <li><b>NONE</b>: 未启用 RAG 功能</li>
  * </ul>
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public enum RAGMode {
     /**
-     * Generic mode: Knowledge is automatically retrieved and injected
-     * before each reasoning step via Hook.
+     * Generic 模式：通过钩子在每一步推理之前自动检索并注入知识。
      *
-     * <p>In this mode, the system automatically retrieves relevant knowledge
-     * based on user queries and injects it into the prompt context.
+     * <p>此模式下，系统根据用户查询自动检索相关知识，并将其注入提示词上下文。
      */
     GENERIC,
 
     /**
-     * Agentic mode: Agent decides when to retrieve knowledge via Tool.
+     * Agentic 模式：智能体决定何时通过工具检索知识。
      *
-     * <p>In this mode, the agent has a tool to retrieve knowledge and
-     * actively decides when to use it based on the conversation context.
+     * <p>此模式下，智能体拥有知识检索工具，并根据对话上下文主动决定何时使用。
      */
     AGENTIC,
 
     /**
-     * Disabled mode: No RAG functionality.
+     * 禁用模式：不提供 RAG 功能。
      *
-     * <p>Knowledge retrieval is not enabled for this agent.
+     * <p>此智能体未启用知识检索。
      */
     NONE
 }

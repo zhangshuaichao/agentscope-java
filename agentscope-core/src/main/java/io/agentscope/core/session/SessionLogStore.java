@@ -18,15 +18,16 @@ package io.agentscope.core.session;
 import io.agentscope.core.agent.RuntimeContext;
 import java.util.List;
 
-/** Extensible session log backend. Opening a reader must not acquire a writer or repair history. */
+/** 可扩展的会话日志后端。打开读取器不得获取写入者身份或修复历史。 */
 @FunctionalInterface
 public interface SessionLogStore {
     SessionLog open(SessionKey key, RuntimeContext context);
 
-    /** Discover native sessions in the caller's storage namespace, without acquiring writers.
-     * Implementations should restrict results to the caller's user identity. This is a discovery
-     * view, not a transactional snapshot; a session created concurrently may appear on a later call.
-     */
+    /**
+ * 在调用方存储命名空间中发现原生会话，不获取写入者身份。
+     * 实现应将结果限制在调用方的用户身份内。这是发现视图，不是事务快照；
+     * 并发创建的会话可能在后续调用中才出现。
+ */
     default List<SessionKey> list(RuntimeContext context) {
         throw new UnsupportedOperationException(
                 "This session log store does not support discovery");

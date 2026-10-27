@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Orchestrates the promotion pipeline: locate draft → run security scan → call gate →
- * physically move {@code _drafts/<name>/} to {@code skills/<name>/} → update sidecar.
+ * 编排晋级流水线：定位草稿 → 安全扫描 → 调用门控 → 将 {@code _drafts/<name>/} 实际移动到 {@code skills/<name>/} → 更新旁挂记录。
  *
- * <p>Surfaced via {@code HarnessAgent.promoteSkill(name, reviewerId, ctx)}; standalone here so it can
- * be unit tested without spinning up a full agent.
+ * <p>【学习提示】调用晋级 API 只是发起流程，不等于批准：先扫描，再等待门控返回 Approve，之后才移动目录。默认 RejectAllGate 始终返回 Defer，重复调用也不会自动放行；需接入能够根据真实审批状态返回 Approve 的门控。目录移动和遥测更新不是同一事务，后者失败只记录警告。
+ *
+ * <p>通过 {@code HarnessAgent.promoteSkill(name, reviewerId, ctx)} 暴露；独立成类以便无需启动完整智能体即可单元测试。
  */
 @SuppressWarnings("deprecation")
 public class SkillPromoter {
@@ -78,11 +78,11 @@ public class SkillPromoter {
     }
 
     /**
-     * Promote a draft. Returns a result describing what happened.
+     * 晋级草稿并返回结果说明。
      *
-     * @param name skill name (must exist under the drafts repo)
-     * @param reviewerId tag stamped onto the sidecar's {@code promoted_by}
-     * @param ctx runtime context (forwarded to gate / filesystem)
+     * @param name 技能名称（必须存在于草稿仓库）
+     * @param reviewerId 写入旁挂记录 {@code promoted_by} 的评审者标记
+     * @param ctx 运行时上下文（转发给门控/文件系统）
      */
     public Mono<PromotionResult> promote(String name, String reviewerId, RuntimeContext ctx) {
         if (name == null || name.isBlank()) {
@@ -99,9 +99,9 @@ public class SkillPromoter {
             return Mono.just(PromotionResult.invalid("draft '" + name + "' not found"));
         }
 
-        // 1. Security scan (always — even when SkillManageTool already scanned, this is the
-        //    last gate before going live). Pull resources off disk because the repository's
-        //    {@code getSkill(name)} only loads SKILL.md.
+        // 1. 始终执行安全扫描，即使 SkillManageTool 已扫描过，这仍是
+        //    正式生效前的最后一道检查。从磁盘读取资源，因为仓库的
+        //    {@code getSkill(name)} 只加载 SKILL.md。
         java.util.Map<String, String> resources = loadDraftResources(name, effectiveCtx);
         SkillSecurityScanner.ScanResult scan =
                 SkillSecurityScanner.scan(name, mdOf(draft), resources);
@@ -112,7 +112,7 @@ public class SkillPromoter {
                             "security scan blocked promotion (" + scan.verdict() + ")", scan));
         }
 
-        // 2. Build candidate package and call the gate.
+        // 2. 构建候选材料包并调用门控。
         SkillCandidate candidate = buildCandidate(draft, scan);
         return gate.review(candidate, effectiveCtx)
                 .map(decision -> applyDecision(name, reviewerId, decision, scan, effectiveCtx));
@@ -136,7 +136,7 @@ public class SkillPromoter {
             return PromotionResult.invalid("unknown decision type");
         }
 
-        // 3. Physically move _drafts/<name>/ → <mainDir>/<name>/
+        // 3. 实际移动 _drafts/<name>/ → <mainDir>/<name>/
         String src = draftsDir + "/" + name;
         String dst = mainDir + "/" + name;
         if (workspaceManager == null) {
@@ -147,7 +147,7 @@ public class SkillPromoter {
             return PromotionResult.invalid("failed to move draft directory");
         }
 
-        // 4. Update sidecar with promoted state + reviewer info.
+        // 4. 更新旁挂记录的晋级状态及评审者信息。
         if (usageStore != null) {
             try {
                 List<String> envs = approve.targetEnvironments();
@@ -230,16 +230,14 @@ public class SkillPromoter {
     }
 
     /**
-     * Read every support file under the draft skill (scripts/, references/, templates/,
-     * assets/) so the security scanner sees the full payload — the repository's
-     * {@code getSkill} only deserialises SKILL.md.
+     * 读取草稿技能下的全部辅助文件（scripts/、references/、templates/、assets/），让安全扫描器看到完整载荷；仓库的 {@code getSkill} 只反序列化 SKILL.md。
      */
     private java.util.Map<String, String> loadDraftResources(String skillName, RuntimeContext ctx) {
         java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
         for (String sub : new String[] {"scripts", "references", "templates", "assets"}) {
-            // Read each known support directory under <draftsDir>/<name>/<sub>/.
-            // We can't directly enumerate via the read-only repo API, so we ask the underlying
-            // filesystem for a glob match scoped to that subdirectory.
+            // 读取 <draftsDir>/<name>/<sub>/ 下各已知辅助目录。
+            // 只读仓库 API 无法直接枚举，因此向底层文件系统
+            // 请求限定在该子目录的 glob 匹配。
             String relDir = draftsDir + "/" + skillName + "/" + sub;
             try {
                 var glob = draftsRepo.filesystem().glob(ctx, "*", relDir);
@@ -249,8 +247,8 @@ public class SkillPromoter {
                 for (var fi : glob.matches()) {
                     String path = fi.path();
                     if (path == null) continue;
-                    // Reduce to "<sub>/<filename>"; strip everything before "<sub>/".
-                    // Normalize separator first — glob can return backslashes on Windows.
+                    // 缩减为 "<sub>/<filename>"，移除 "<sub>/" 之前的内容。
+                    // 先规范化分隔符，Windows 上 glob 可能返回反斜杠。
                     String pathSlash = path.replace('\\', '/');
                     int idx = pathSlash.indexOf("/" + sub + "/");
                     if (idx < 0) continue;
@@ -268,10 +266,10 @@ public class SkillPromoter {
     }
 
     private static String mdOf(AgentSkill skill) {
-        // Use the same reverse-serialization as WorkspaceSkillRepository.toMarkdown,
-        // but called via reflection through the public skill content. For simplicity here we
-        // just stitch frontmatter + content (good enough for the candidate payload that
-        // reviewers see).
+        // 与 WorkspaceSkillRepository.toMarkdown 类似，从公开技能内容
+        // 重建 Markdown；这里直接拼接 frontmatter 与正文，
+        // 而不依赖仓库内部序列化实现，足以构成
+        // 交给评审者查看的候选载荷。
         StringBuilder sb = new StringBuilder();
         sb.append("---\n");
         sb.append("name: ").append(skill.getName()).append('\n');
@@ -283,7 +281,7 @@ public class SkillPromoter {
         return sb.toString();
     }
 
-    // ---- result type ---------------------------------------------------
+    // ---- 结果类型 ---------------------------------------------------
 
     public record PromotionResult(
             Status status,

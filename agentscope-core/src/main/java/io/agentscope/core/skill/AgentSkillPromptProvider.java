@@ -23,17 +23,15 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Generates skill system prompts for agents to understand available skills.
+ * 生成技能系统提示，帮助智能体了解可用技能。
  *
- * <p>This provider creates system prompts containing information about available skills
- * that the LLM can dynamically load and use.
+ * <p>提示包含 LLM 可动态加载和使用的技能信息。
  *
- * <p><b>Usage example:</b>
+ * <p><b>用法示例：</b>
  * <pre>{@code
  * AgentSkillPromptProvider provider = new AgentSkillPromptProvider(registry);
  * String prompt = provider.getSkillSystemPrompt();
  * }</pre>
- *
  */
 public class AgentSkillPromptProvider {
     private static final String INDENT = "  ";
@@ -74,7 +72,7 @@ public class AgentSkillPromptProvider {
 
             """;
 
-    // Every %s placeholder in the template will be replaced with the uploadDir absolute path
+    // 模板中的每个 %s 占位符都会替换为 uploadDir 的绝对路径。
     public static final String DEFAULT_CODE_EXECUTION_INSTRUCTION =
             """
 
@@ -110,10 +108,7 @@ public class AgentSkillPromptProvider {
             """;
 
     /**
-     * Code-execution instruction used when every visible skill carries its own {@code
-     * <files-root>} (e.g. {@link io.agentscope.core.skill.repository.FileSystemSkillRepository}).
-     * No single root path to substitute — the LLM reads each skill's {@code <files-root>}
-     * directly from the {@code <available_skills>} block.
+     * 当所有可见技能都携带自己的 {@code <files-root>} 时使用的代码执行指令（例如 {@link io.agentscope.core.skill.repository.FileSystemSkillRepository}）。无需替换单一根路径，LLM 直接从 {@code <available_skills>} 块读取每个技能的 {@code <files-root>}。
      */
     public static final String DEFAULT_PER_SKILL_CODE_EXECUTION_INSTRUCTION =
             """
@@ -134,19 +129,19 @@ public class AgentSkillPromptProvider {
             """;
 
     /**
-     * Creates a skill prompt provider.
+     * 创建技能提示提供者。
      *
-     * @param registry The skill registry containing registered skills
+     * @param registry 包含已注册技能的注册表
      */
     public AgentSkillPromptProvider(SkillRegistry registry) {
         this(registry, null);
     }
 
     /**
-     * Creates a skill prompt provider with custom instruction.
+     * 使用自定义指令创建技能提示提供者。
      *
-     * @param registry The skill registry containing registered skills
-     * @param instruction Custom instruction header (null or blank uses default)
+     * @param registry 包含已注册技能的注册表
+     * @param instruction 自定义指令头（null 或空白使用默认值）
      */
     public AgentSkillPromptProvider(SkillRegistry registry, String instruction) {
         this.skillRegistry = registry;
@@ -166,23 +161,21 @@ public class AgentSkillPromptProvider {
     }
 
     /**
-     * Gets the skill system prompt for the agent with all skills included.
+     * 获取包含全部技能的智能体技能系统提示。
      *
-     * @return The skill system prompt, or empty string if no skills exist
+     * @return 技能系统提示；无技能时为空字符串
      */
     public String getSkillSystemPrompt() {
         return getSkillSystemPrompt(SkillFilter.all());
     }
 
     /**
-     * Gets the skill system prompt filtered by the given {@link SkillFilter}.
+     * 获取经给定 {@link SkillFilter} 过滤后的技能系统提示。
      *
-     * <p>The filter matches skills by {@link AgentSkill#getName() skill name}, not by the composite
-     * registry id, so {@code only("x")} / {@code disable("x")} apply to every source variant of
-     * {@code x}, and a composite id such as {@code "x_custom"} does not match.
+     * <p>过滤器按{@link AgentSkill#getName() skill name}匹配，而不是复合注册 ID，因此 {@code only("x")} / {@code disable("x")} 作用于 {@code x} 的全部来源变体，而 {@code "x_custom"} 等复合 ID 不会匹配。
      *
-     * @param filter the filter deciding which skills to include (null treated as all)
-     * @return The skill system prompt, or empty string if no skills pass the filter
+     * @param filter 决定包含哪些技能的过滤器（null 视为全部）
+     * @return 技能系统提示；无技能通过过滤时为空字符串
      */
     public String getSkillSystemPrompt(SkillFilter filter) {
         SkillFilter effectiveFilter = filter != null ? filter : SkillFilter.all();
@@ -227,16 +220,12 @@ public class AgentSkillPromptProvider {
     }
 
     /**
-     * Picks the code-execution prompt block.
+     * 选择代码执行提示块。
      *
      * <ul>
-     *   <li>If a custom template was set via {@link #setCodeExecutionInstruction(String)}, use it
-     *       verbatim ({@code %s} substituted with {@code uploadDir} when both are present).
-     *   <li>If every visible skill has a {@code <files-root>}, use {@link
-     *       #DEFAULT_PER_SKILL_CODE_EXECUTION_INSTRUCTION} — no substitution needed.
-     *   <li>Otherwise fall back to {@link #DEFAULT_CODE_EXECUTION_INSTRUCTION} (single uploadDir).
-     *       Returns empty if {@code uploadDir} is null in this branch, since the template's
-     *       absolute path is required to be meaningful.
+     * <li>若通过 {@link #setCodeExecutionInstruction(String)} 设置了自定义模板，则原样使用（同时存在 {@code %s} 与 {@code uploadDir} 时执行替换）。
+     * <li>若所有可见技能都有 {@code <files-root>}，则使用 {@link #DEFAULT_PER_SKILL_CODE_EXECUTION_INSTRUCTION}，无需替换。
+     * <li>否则回退到 {@link #DEFAULT_CODE_EXECUTION_INSTRUCTION}（单一 uploadDir）。此分支中若 {@code uploadDir} 为 null，则返回空值，因为模板必须有实际绝对路径才有意义。
      * </ul>
      */
     private String resolveCodeExecutionBlock(int visibleCount, int withOriginDir) {
@@ -255,32 +244,29 @@ public class AgentSkillPromptProvider {
     }
 
     /**
-     * Sets whether code execution instructions are included in the skill system prompt.
+     * 设置技能系统提示是否包含代码执行指令。
      *
-     * @param codeExecutionEnabled {@code true} to append code execution instructions
+     * @param codeExecutionEnabled {@code true} 表示追加代码执行指令
      */
     public void setCodeExecutionEnable(boolean codeExecutionEnabled) {
         this.codeExecutionEnabled = codeExecutionEnabled;
     }
 
     /**
-     * Sets the upload directory whose absolute path replaces every {@code %s}
-     * placeholder in the code execution instruction template.
+     * 设置上传目录，其绝对路径将替换代码执行指令模板中的每个 {@code %s} 占位符。
      *
-     * @param uploadDir the upload directory path, or {@code null} to disable path substitution
+     * @param uploadDir 上传目录路径；{@code null} 表示禁用路径替换
      */
     public void setUploadDir(Path uploadDir) {
         this.uploadDir = uploadDir != null ? uploadDir.toAbsolutePath().toString() : null;
     }
 
     /**
-     * Sets a custom code execution instruction template.
+     * 设置自定义代码执行指令模板。
      *
-     * <p>Every {@code %s} placeholder in the template will be replaced with
-     * the {@code uploadDir} absolute path. Pass {@code null} or blank to
-     * fall back to {@link #DEFAULT_CODE_EXECUTION_INSTRUCTION}.
+     * <p>模板中的每个 {@code %s} 占位符都会替换为 {@code uploadDir} 的绝对路径。传入 {@code null} 或空白时回退到 {@link #DEFAULT_CODE_EXECUTION_INSTRUCTION}。
      *
-     * @param codeExecutionInstruction the custom template, or {@code null}/blank for default
+     * @param codeExecutionInstruction 自定义模板；{@code null} 或空白表示使用默认值
      */
     public void setCodeExecutionInstruction(String codeExecutionInstruction) {
         this.codeExecutionInstruction =
@@ -290,13 +276,11 @@ public class AgentSkillPromptProvider {
     }
 
     /**
-     * Sets whether all metadata fields are exposed to the LLM.
+     * 设置是否向 LLM 暴露全部元数据字段。
      *
-     * <p>When disabled, only {@code name}, {@code description}, and {@code skill-id}
-     * are rendered into the skill prompt.
+     * <p>禁用时，技能提示仅渲染 {@code name}、{@code description} 和 {@code skill-id}。
      *
-     * @param exposeAllMetadata {@code true} to expose all metadata, {@code false} to expose only
-     *                          the core fields
+     * @param exposeAllMetadata {@code true} 暴露全部元数据，{@code false} 仅暴露核心字段
      */
     public void setExposeAllMetadata(boolean exposeAllMetadata) {
         this.exposeAllMetadata = exposeAllMetadata;
@@ -311,9 +295,9 @@ public class AgentSkillPromptProvider {
             appendXmlNode(sb, entry.getKey(), entry.getValue(), 1);
         }
         appendXmlNode(sb, "skill-id", skill.getSkillId(), 1);
-        // Per-skill files-root: only emitted when code execution is enabled AND the skill
-        // carries an originDir (filesystem-backed). Lets the LLM build absolute shell paths
-        // without going through uploadSkillFiles or guessing layouts.
+        // 每个技能的 files-root：仅在启用代码执行且技能
+        // 具有 originDir（文件系统来源）时输出，使 LLM 能构造绝对 Shell 路径，
+        // 无需经过 uploadSkillFiles 或猜测目录布局。
         if (codeExecutionEnabled) {
             skill.getOriginDir()
                     .ifPresent(

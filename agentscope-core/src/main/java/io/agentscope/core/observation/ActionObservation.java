@@ -20,7 +20,7 @@ import io.agentscope.core.state.EvidenceBinding;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** One execution attempt's lifecycle fact. RETURNED is not a business success verdict. */
+/** 一次执行尝试的生命周期事实。RETURNED 不代表业务成功结论。 */
 public record ActionObservation(
         String actionId,
         String toolCallId,
@@ -61,7 +61,7 @@ public record ActionObservation(
                 evidenceBinding);
     }
 
-    /** No arguments, raw output or exception messages are copied to observation events. */
+    /** 观察事件不会复制参数、原始输出或异常消息。 */
     public Map<String, Object> eventPayload() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("action_id", actionId);

@@ -16,32 +16,31 @@
 package io.agentscope.core.model.transport;
 
 /**
- * Enumeration of supported proxy types.
+ * 支持的代理类型枚举。
  *
- * <p>This enum defines the types of proxies that can be configured for HTTP and WebSocket
- * transport layers.
+ * <p>定义 HTTP 和 WebSocket 传输层可配置的代理类型。
  */
 public enum ProxyType {
 
     /**
-     * HTTP/HTTPS proxy.
+     * HTTP/HTTPS 代理。
      *
-     * <p>Supports authentication via username/password.
+     * <p>支持用户名／密码认证。
      */
     HTTP,
 
     /**
-     * SOCKS version 4 proxy.
+     * SOCKS 4 代理。
      *
-     * <p>Does not support authentication.
+     * <p>不支持认证。
      */
     SOCKS4,
 
     /**
-     * SOCKS version 5 proxy.
+     * SOCKS 5 代理。
      *
-     * <p>Supports authentication via username/password, but only when using OkHttp-based
-     * transport implementations. JDK HttpClient does not support SOCKS5 authentication.
+     * <p>仅基于 OkHttp 的传输实现支持用户名／密码认证。
+     * JDK HttpClient 不支持 SOCKS5 认证。
      */
     SOCKS5
 }

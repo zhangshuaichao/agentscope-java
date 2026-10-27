@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.state;
 
-/** Trusted application version, captured before execution; not inferred from tool output. */
+/** 执行前捕获的可信应用版本，不从工具输出中推断。 */
 public record EvidenceBinding(String taskId, long contractVersion, String subjectVersion) {
     public EvidenceBinding {
         TaskRequirement.requireText(taskId, "task ID", 200);

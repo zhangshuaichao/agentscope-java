@@ -26,21 +26,21 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Tool adapter that exposes long-term memory operations as agent-callable tools.
+ * 将长期记忆操作暴露为智能体可调用工具的适配器。
  *
- * <p>This class provides a clean separation between the core memory API (defined in
- * {@link LongTermMemory}) and the tool interface used by agents. It adapts the
- * developer-facing {@code record()} and {@code retrieve()} methods into tool functions
- * with agent-friendly signatures.
+ * <p>此类清晰分离了核心记忆 API（定义于
+ * {@link LongTermMemory}）与智能体使用的工具接口。它将
+ * 面向开发者的 {@code record()} 和 {@code retrieve()} 方法适配为
+ * 签名便于智能体使用的工具函数。
  *
- * <p><b>Architecture:</b>
+ * <p><b>架构：</b>
  * <ul>
- *   <li><b>LongTermMemoryBase:</b> Defines core storage API ({@code record()}, {@code retrieve()})
- *   <li><b>LongTermMemoryTools:</b> Adapts core API to tool interface for agent control
- *   <li><b>ReActAgent:</b> Registers tools when {@code AGENT_CONTROL} mode is enabled
+ *   <li><b>LongTermMemoryBase：</b>定义核心存储 API（{@code record()}、{@code retrieve()}）
+ *   <li><b>LongTermMemoryTools：</b>将核心 API 适配为供智能体控制的工具接口
+ *   <li><b>ReActAgent：</b>启用 {@code AGENT_CONTROL} 模式时注册工具
  * </ul>
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * // Create long-term memory instance
  * LongTermMemoryBase memory = Mem0LongTermMemory.builder()
@@ -62,7 +62,7 @@ import reactor.core.publisher.Mono;
  *
  * @see LongTermMemory
  * @see LongTermMemoryMode
- * @deprecated since 2.0.0. Long-term memory is removed.
+ * @deprecated 自 2.0.0 起弃用。旧长期记忆功能已移除。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class LongTermMemoryTools {
@@ -70,10 +70,10 @@ public class LongTermMemoryTools {
     private final LongTermMemory memory;
 
     /**
-     * Creates a new tool adapter for the given long-term memory instance.
+     * 为给定长期记忆实例创建新的工具适配器。
      *
-     * @param memory The long-term memory instance to adapt
-     * @throws IllegalArgumentException if memory is null
+     * @param memory 要适配的长期记忆实例
+     * @throws IllegalArgumentException 当 memory 为 null 时抛出
      */
     public LongTermMemoryTools(LongTermMemory memory) {
         if (memory == null) {
@@ -83,7 +83,7 @@ public class LongTermMemoryTools {
     }
 
     /*
-     * Wraps the given text in a special format to indicate that it is retrieved from long-term memory.
+     * 以特殊格式包装给定文本，表明它检索自长期记忆。
      */
     public static String wrap(String text) {
         return "Below is content retrieved from the long-term memory associated with the current"
@@ -95,11 +95,11 @@ public class LongTermMemoryTools {
     }
 
     /**
-     * Tool function for agent to record important information to long-term memory.
+     * 供智能体向长期记忆记录重要信息的工具函数。
      *
-     * @param thinking Agent's reasoning about what to record and why
-     * @param content List of specific facts to remember (should be clear and concise)
-     * @return A status message indicating success or failure
+     * @param thinking 智能体关于记录内容及原因的思考
+     * @param content 要记住的具体事实列表（应清晰简洁）
+     * @return 表示成功或失败的状态消息
      */
     @Tool(
             description =
@@ -121,7 +121,7 @@ public class LongTermMemoryTools {
             return Mono.just(ToolResultBlock.error("No content provided to record"));
         }
 
-        // Combine thinking and content into messages
+        // 将 thinking 与 content 组合成消息
         List<Msg> messages = new ArrayList<>();
 
         if (thinking != null && !thinking.isEmpty()) {
@@ -146,7 +146,7 @@ public class LongTermMemoryTools {
             return Mono.just(ToolResultBlock.error("No valid content to record"));
         }
 
-        // Call underlying memory record method
+        // 调用底层记忆记录方法
         return memory.record(messages)
                 .then(
                         Mono.just(
@@ -156,20 +156,20 @@ public class LongTermMemoryTools {
     }
 
     /**
-     * Tool function for agent to retrieve information from long-term memory.
+     * 供智能体从长期记忆检索信息的工具函数。
      *
-     * <p>This method adapts the agent's keyword input into a query message and calls
-     * the underlying memory's {@link LongTermMemory#retrieve(Msg)} method.
+     * <p>此方法将智能体输入的关键词适配为查询消息，并调用
+     * 底层记忆的 {@link LongTermMemory#retrieve(Msg)} 方法。
      *
-     * <p><b>When to use:</b>
+     * <p><b>使用时机：</b>
      * <ul>
-     *   <li>User asks about past preferences or information
-     *   <li>Agent needs context from previous conversations
-     *   <li>Looking for patterns or historical data
-     *   <li>Verifying stored information
+     *   <li>用户询问过去的偏好或信息
+     *   <li>智能体需要先前对话的上下文
+     *   <li>查找规律或历史数据
+     *   <li>验证已存储的信息
      * </ul>
      *
-     * <p><b>Example Agent Usage:</b>
+     * <p><b>智能体使用示例：</b>
      * <pre>{@code
      * {
      *   "name": "retrieve_from_memory",
@@ -179,8 +179,8 @@ public class LongTermMemoryTools {
      * }
      * }</pre>
      *
-     * @param keywords List of keywords to search for (should be specific and relevant)
-     * @return The retrieved memories as text
+     * @param keywords 要搜索的关键词列表（应具体且相关）
+     * @return 以文本形式返回的检索记忆
      */
     @Tool(
             description =
@@ -197,7 +197,7 @@ public class LongTermMemoryTools {
             return Mono.just(ToolResultBlock.error("No keywords provided for search"));
         }
 
-        // Combine keywords into a query message
+        // 将关键词组合为查询消息
         String query = String.join(" ", keywords);
         Msg queryMsg =
                 Msg.builder()
@@ -205,7 +205,7 @@ public class LongTermMemoryTools {
                         .content(TextBlock.builder().text(query).build())
                         .build();
 
-        // Call underlying memory retrieve method
+        // 调用底层记忆检索方法
         return memory.retrieve(queryMsg)
                 .map(
                         result -> {

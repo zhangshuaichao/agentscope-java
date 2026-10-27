@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/** Explicit extension schemas. Required unknown versions/types always stop recovery. */
+/** 显式扩展模式。遇到未知且必需的版本／类型时，始终停止恢复。 */
 public final class SessionEventCodecRegistry {
     private static final SessionEventCodecRegistry DEFAULT = new SessionEventCodecRegistry();
     private final Map<String, Codec> extensions = new ConcurrentHashMap<>();

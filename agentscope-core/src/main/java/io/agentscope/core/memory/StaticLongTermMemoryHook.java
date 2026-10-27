@@ -33,24 +33,28 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Static Long-Term Memory Hook for automatic memory management.
+ * 自动管理记忆的静态长期记忆钩子。
  *
- * <p>This hook implements the STATIC_CONTROL mode for long-term memory, where memory
- * retrieval and recording are handled automatically by the framework without agent
- * involvement. The hook:
+ * <p>【学习提示】此类是旧接口兼容实现，不代表当前 Harness 记忆架构。
+ * 下方上游说明沿用 PreReasoningEvent／系统消息的旧描述；当前 onEvent 实际处理
+ * PreCallEvent，并把检索结果作为 USER 消息追加在输入末尾。请结合实现阅读。
+ *
+ * <p>此钩子实现长期记忆的 STATIC_CONTROL 模式，由框架自动处理
+ * 记忆检索和记录，无须智能体主动参与。
+ * 钩子执行以下操作：
  * <ol>
- *   <li>Retrieves relevant memories before reasoning (PreReasoningEvent)</li>
- *   <li>Injects retrieved memories as system messages for context</li>
- *   <li>Records conversations to long-term memory after agent replies (PostCallEvent)</li>
+ *   <li>推理前检索相关记忆（PreReasoningEvent）</li>
+ *   <li>将检索记忆作为系统消息注入上下文</li>
+ *   <li>智能体回复后将对话记录到长期记忆（PostCallEvent）</li>
  * </ol>
  *
- * <p><b>When to Use:</b>
+ * <p><b>使用时机：</b>
  * <ul>
- *   <li>STATIC_CONTROL mode: Framework manages memory automatically</li>
- *   <li>BOTH mode: Combined with agent control tools</li>
+ *   <li>STATIC_CONTROL 模式：框架自动管理记忆</li>
+ *   <li>BOTH 模式：与智能体控制工具结合使用</li>
  * </ul>
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * LongTermMemory memory = Mem0LongTermMemory.builder()
  *     .agentName("Assistant")
@@ -66,22 +70,22 @@ import reactor.core.scheduler.Schedulers;
  *     .build();
  * }</pre>
  *
- * <p><b>Priority:</b> This hook has high priority (50) to ensure memory is retrieved
- * early in the event chain, before other processing occurs.
+ * <p><b>优先级：</b>此钩子具有较高优先级（50），确保记忆检索在事件链中
+ * 较早发生，先于其他处理。
  *
  * @see LongTermMemory
  * @see LongTermMemoryMode
- * @deprecated since 2.0.0. Long-term memory and the {@code Hook} system are removed; reimplement
- *     as a {@link io.agentscope.core.middleware.MiddlewareBase} if required.
+ * @deprecated 自 2.0.0 起弃用。长期记忆与 {@code Hook} 系统已移除；如有需要，
+ *     请基于 {@link io.agentscope.core.middleware.MiddlewareBase} 重新实现。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class StaticLongTermMemoryHook implements Hook {
 
     private static final Logger log = LoggerFactory.getLogger(StaticLongTermMemoryHook.class);
-    // Dedicated async scheduler for long-term memory recording:
-    // - max 1 concurrent workers
-    // - max 3 queued tasks (new tasks are rejected when saturated)
-    // This avoids unbounded queuing on the global boundedElastic scheduler.
+    // 长期记忆记录专用的异步调度器：
+    // - 最多 1 个并发工作线程
+    // - 最多 3 个排队任务（饱和时拒绝新任务）
+    // 避免在全局 boundedElastic 调度器上无界排队。
     private static final Scheduler ASYNC_RECORD_SCHEDULER =
             Schedulers.newBoundedElastic(1, 3, "long-term-memory-record");
 
@@ -90,23 +94,23 @@ public class StaticLongTermMemoryHook implements Hook {
     private final boolean asyncRecord;
 
     /**
-     * Creates a new StaticLongTermMemoryHook with synchronous recording.
+     * 创建采用同步记录方式的 StaticLongTermMemoryHook。
      *
-     * @param longTermMemory The long-term memory instance for persistent storage
-     * @param memory The agent's memory for accessing conversation history
-     * @throws IllegalArgumentException if longTermMemory or memory is null
+     * @param longTermMemory 用于持久化存储的长期记忆实例
+     * @param memory 用于访问对话历史的智能体记忆
+     * @throws IllegalArgumentException 当 longTermMemory 或 memory 为 null 时抛出
      */
     public StaticLongTermMemoryHook(LongTermMemory longTermMemory, Memory memory) {
         this(longTermMemory, memory, false);
     }
 
     /**
-     * Creates a new StaticLongTermMemoryHook.
+     * 创建新的 StaticLongTermMemoryHook。
      *
-     * @param longTermMemory The long-term memory instance for persistent storage
-     * @param memory The agent's memory for accessing conversation history
-     * @param asyncRecord Whether to record memories asynchronously (fire-and-forget)
-     * @throws IllegalArgumentException if longTermMemory or memory is null
+     * @param longTermMemory 用于持久化存储的长期记忆实例
+     * @param memory 用于访问对话历史的智能体记忆
+     * @param asyncRecord 是否异步记录记忆（发出后不等待）
+     * @throws IllegalArgumentException 当 longTermMemory 或 memory 为 null 时抛出
      */
     public StaticLongTermMemoryHook(
             LongTermMemory longTermMemory, Memory memory, boolean asyncRecord) {
@@ -137,41 +141,41 @@ public class StaticLongTermMemoryHook implements Hook {
 
     @Override
     public int priority() {
-        // High priority to execute early in the hook chain
+        // 使用较高优先级，以便在钩子链中尽早执行
         return 50;
     }
 
     /**
-     * Handles PreReasoningEvent by retrieving relevant memories and injecting them.
+     * 通过检索并注入相关记忆来处理 PreCallEvent。
      *
-     * <p>Retrieves memories relevant to the user's query and injects them as a system
-     * message at the beginning of the message list. The memories are wrapped in
-     * {@code <long_term_memory>} tags for clear identification.
+     * <p>检索与用户查询相关的记忆，并将其作为用户消息
+     * 追加到消息列表末尾。记忆用
+     * {@code <long_term_memory>} 标签包装，以便识别。
      *
-     * @param event the PreReasoningEvent
-     * @return Mono containing the potentially modified event
+     * @param event PreCallEvent 事件
+     * @return 包含可能已修改事件的 Mono
      */
     private Mono<PreCallEvent> handlePreCall(PreCallEvent event) {
         List<Msg> inputMessages = event.getInputMessages();
         if (inputMessages == null || inputMessages.isEmpty()) {
             return Mono.just(event);
         }
-        // Extract the last user message as the query
+        // 提取最后一条用户消息作为查询
         int queryMsgIndex = extractLastUserMessageIndex(inputMessages);
         if (queryMsgIndex < 0) {
             return Mono.just(event);
         }
 
-        // Retrieve relevant memories
+        // 检索相关记忆
         return longTermMemory
                 .retrieve(inputMessages.get(queryMsgIndex))
                 .filter(memoryText -> memoryText != null && !memoryText.isEmpty())
                 .flatMap(
                         memoryText -> {
-                            // Wrap memory content in tags
+                            // 用标签包装记忆内容
                             String wrappedMemory = wrap(memoryText);
 
-                            // Create user message with retrieved memories
+                            // 创建包含检索记忆的用户消息
                             Msg memoryMsg =
                                     Msg.builder()
                                             .role(MsgRole.USER)
@@ -180,7 +184,7 @@ public class StaticLongTermMemoryHook implements Hook {
                                                     TextBlock.builder().text(wrappedMemory).build())
                                             .build();
 
-                            // Inject memory message at the end
+                            // 将记忆消息注入末尾
                             List<Msg> enhancedMessages = new ArrayList<>(inputMessages);
                             enhancedMessages.add(memoryMsg);
                             event.setInputMessages(enhancedMessages);
@@ -190,7 +194,7 @@ public class StaticLongTermMemoryHook implements Hook {
                 .defaultIfEmpty(event)
                 .onErrorResume(
                         error -> {
-                            // Log error but don't interrupt the flow
+                            // 记录错误，但不中断流程
                             log.warn(
                                     "Failed to retrieve from long-term memory: {}",
                                     error.getMessage());
@@ -199,36 +203,36 @@ public class StaticLongTermMemoryHook implements Hook {
     }
 
     /**
-     * Handles PostCallEvent by recording conversation to long-term memory.
+     * 通过将对话记录到长期记忆来处理 PostCallEvent。
      *
-     * <p>Records all messages from the agent's memory to long-term storage. This allows
-     * the long-term memory backend (e.g., Mem0) to extract memorable information from
-     * the entire conversation context.
+     * <p>将智能体记忆中的所有消息记录到长期存储。这样，
+     * 长期记忆后端（例如 Mem0）可以从完整对话上下文中
+     * 提取值得记住的信息。
      *
-     * <p>When {@code asyncRecord} is enabled, the recording is performed in a
-     * fire-and-forget manner that does not block the agent's response. Async recording
-     * uses a bounded scheduler (1 workers, queue size 3). When saturated, new record
-     * tasks are dropped and logged.
+     * <p>启用 {@code asyncRecord} 时，以发出后不等待的方式记录，
+     * 不会阻塞智能体响应。异步记录
+     * 使用有界调度器（1 个工作线程，队列容量 3）。饱和时丢弃新的记录
+     * 任务，并写入日志。
      *
-     * <p><b>Trade-offs:</b> This async path intentionally decouples recording from the
-     * main event chain. The returned subscription is not retained in this mode, so
-     * in-flight record tasks are not explicitly cancelled by this class.
-     * Otherwise, the recording completes before returning the event.
+     * <p><b>权衡：</b>此异步路径有意将记录操作与
+     * 主事件链解耦。此模式不保留返回的订阅，因此
+     * 此类不会显式取消正在执行的记录任务。
+     * 否则，会先完成记录，再返回事件。
      *
-     * @param event the PostCallEvent
-     * @return Mono containing the unmodified event
+     * @param event PostCallEvent 事件
+     * @return 包含未修改事件的 Mono
      */
     private Mono<PostCallEvent> handlePostCall(PostCallEvent event) {
-        // Get all messages from memory
+        // 从记忆获取所有消息
         List<Msg> allMessages = memory.getMessages();
         if (allMessages == null || allMessages.isEmpty()) {
             return Mono.just(event);
         }
 
-        // Record to long-term memory
+        // 记录到长期记忆
         if (asyncRecord) {
-            // Fire-and-forget: schedule on a dedicated bounded scheduler so the agent's
-            // response is not blocked while still limiting backlog growth.
+            // 发出后不等待：调度到专用有界调度器，使智能体响应
+            // 不被阻塞，同时限制积压增长。
             return Mono.deferContextual(
                     ctxView -> {
                         longTermMemory
@@ -252,7 +256,7 @@ public class StaticLongTermMemoryHook implements Hook {
                     .thenReturn(event)
                     .onErrorResume(
                             error -> {
-                                // Log error but don't interrupt the flow
+                                // 记录错误，但不中断流程
                                 log.warn(
                                         "Failed to record to long-term memory: {}",
                                         error.getMessage());
@@ -262,13 +266,13 @@ public class StaticLongTermMemoryHook implements Hook {
     }
 
     /**
-     * Extracts the last user message from the message list.
+     * 从消息列表提取最后一条用户消息。
      *
-     * <p>Scans the message list from end to start to find the most recent user message,
-     * which is typically the current query that should be used for memory retrieval.
+     * <p>从后向前扫描消息列表，查找最近的用户消息；
+     * 它通常是记忆检索应使用的当前查询。
      *
-     * @param messages the message list
-     * @return the last user message, or null if none found
+     * @param messages 消息列表
+     * @return 最后一条用户消息；未找到时为 null
      */
     private int extractLastUserMessageIndex(List<Msg> messages) {
         for (int i = messages.size() - 1; i >= 0; i--) {
@@ -281,18 +285,18 @@ public class StaticLongTermMemoryHook implements Hook {
     }
 
     /**
-     * Gets the long-term memory instance used by this hook.
+     * 获取此钩子使用的长期记忆实例。
      *
-     * @return the long-term memory instance
+     * @return 长期记忆实例
      */
     public LongTermMemory getLongTermMemory() {
         return longTermMemory;
     }
 
     /**
-     * Gets the memory instance used by this hook.
+     * 获取此钩子使用的记忆实例。
      *
-     * @return the memory instance
+     * @return 记忆实例
      */
     public Memory getMemory() {
         return memory;

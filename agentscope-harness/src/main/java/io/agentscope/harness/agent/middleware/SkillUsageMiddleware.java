@@ -31,26 +31,25 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Bumps {@link SkillUsageStore} counters whenever the agent invokes a SkillBox-registered skill
- * loader (e.g. {@code load_skill_through_path}). Provenance gating happens inside the store —
- * only skills tagged {@code created_by="agent"} or {@code "agent-draft"} are recorded.
+ * 更新 {@link SkillUsageStore} 的计数：当智能体调用 SkillBox 注册的技能加载器
+ * （例如 {@code load_skill_through_path}）时增加计数。来源筛选在存储内部执行，
+ * 只记录标记为 {@code created_by="agent"} 或 {@code "agent-draft"} 的技能。
  *
- * <p>Counter bumping is best-effort and runs eagerly when {@code onActing} is entered (before
- * the actual tool call returns). The semantics are "the model decided to invoke this skill on
- * this turn" — not "the call succeeded". This matches hermes-agent's telemetry shape and is
- * cheap to compute.
+ * <p>计数更新采用尽力而为策略，在进入 {@code onActing} 时立即执行，早于实际工具调用返回。
+ * 其语义是“模型在本轮决定调用此技能”，而不是“调用已经成功”。
+ * 这与 hermes-agent 的遥测结构一致，计算成本较低。
  */
 public class SkillUsageMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(SkillUsageMiddleware.class);
 
-    /** Tool names whose invocation counts as a "view" of a skill. */
+    /** 调用后计为一次技能“查看”的工具名称。 */
     private static final Set<String> VIEW_TOOL_NAMES =
             Set.of("load_skill_through_path", "read_skill");
 
     /**
-     * Tool names whose invocation counts as a "use" of a skill. Reserved for future SkillBox
-     * surfaces (e.g. an explicit {@code use_skill}); empty today so {@code bumpUse} stays unused.
+     * 调用后计为一次技能“使用”的工具名称。当前包含显式 {@code use_skill}，
+     * 匹配此名称的调用会触发 {@code bumpUse}。
      */
     private static final Set<String> USE_TOOL_NAMES = Set.of("use_skill");
 
@@ -60,7 +59,7 @@ public class SkillUsageMiddleware implements HarnessRuntimeMiddleware {
         this.usageStore = java.util.Objects.requireNonNull(usageStore, "usageStore");
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_ACTING);
@@ -81,9 +80,9 @@ public class SkillUsageMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * If {@code call} targets a SkillBox loader / user, extract the {@code skillId} parameter
-     * (or fallback equivalents) and bump the right counter on the store. Failures are swallowed
-     * — telemetry must never break the agent loop.
+     * 如果 {@code call} 指向 SkillBox 加载／使用工具，则提取 {@code skillId} 参数
+     * （或回退等价字段），并更新存储中对应的计数。吞掉更新失败，
+     * 确保遥测绝不会破坏智能体循环。
      */
     private void trackInvocation(ToolUseBlock call) {
         if (call == null || call.getName() == null) {
@@ -115,9 +114,8 @@ public class SkillUsageMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Pulls the skill identifier out of a tool-use block. {@code skillId} is the canonical key
-     * used by the SkillBox loader; {@code skill_id} / {@code name} are tolerated as fallbacks
-     * for forward compatibility with potential renames.
+     * 从工具调用块提取技能标识符。{@code skillId} 是 SkillBox 加载器的标准键；
+     * 也接受 {@code skill_id} 和 {@code name} 作为回退，以兼容未来可能的重命名。
      */
     private static String extractSkillName(ToolUseBlock call) {
         Map<String, Object> input = call.getInput();
@@ -136,7 +134,7 @@ public class SkillUsageMiddleware implements HarnessRuntimeMiddleware {
         return null;
     }
 
-    // Suppress unused warning for the future-proof "use" channel.
+    // 为保留的空 Mono 辅助方法抑制未使用警告。
     @SuppressWarnings("unused")
     private static Mono<Void> noop() {
         return Mono.empty();

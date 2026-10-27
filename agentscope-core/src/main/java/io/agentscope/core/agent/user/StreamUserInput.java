@@ -32,14 +32,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Stream-based user input implementation that reads from any InputStream and writes to any
- * OutputStream. By default, uses System.in and System.out for console interaction.
+ * 基于流的用户输入实现，可从任意 InputStream 读取，并向任意 OutputStream 写入。
+ * 默认使用 System.in 和 System.out 进行控制台交互。
  *
- * <p>Supports both simple text input and structured data input via key=value pairs. Blocking I/O
- * operations are executed on the bounded elastic scheduler to maintain reactive compatibility.
+ * <p>支持简单文本输入及 key=value 键值对形式的结构化数据输入。
+ * 阻塞 I/O 在有界弹性调度器上执行，以保持响应式兼容性。
  *
- * <p>Usage examples:
- *
+ * <p>用法示例：
  * <pre>{@code
  * // Default console input/output
  * StreamUserInput consoleInput = StreamUserInput.builder().build();
@@ -60,9 +59,9 @@ public class StreamUserInput implements UserInputBase {
     private final PrintStream output;
 
     /**
-     * Private constructor - use builder() to create instances.
+     * 私有构造方法，请通过 builder() 创建实例。
      *
-     * @param builder The builder instance
+     * @param builder 构建器实例
      */
     private StreamUserInput(Builder builder) {
         this.inputHint = builder.inputHint;
@@ -71,26 +70,23 @@ public class StreamUserInput implements UserInputBase {
     }
 
     /**
-     * Create a new builder for StreamUserInput.
+     * 创建新的 StreamUserInput 构建器。
      *
-     * @return A new builder instance
+     * @return 新构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Handle user input from the configured input stream. Prints any context messages before
-     * prompting the user with the configured input hint, reads a line of text, and optionally
-     * collects structured data if a model class is provided. Returns a UserInputData containing
-     * both the text content blocks and any structured input.
+     * 处理已配置输入流中的用户输入。先打印上下文消息，再展示配置的输入提示，读取一行文本；
+     * 若提供模型类，则可选地收集结构化数据。返回同时包含文本内容块和结构化输入的 UserInputData。
      *
-     * @param agentId The agent identifier (unused in this implementation)
-     * @param agentName The agent name (unused in this implementation)
-     * @param contextMessages Optional messages to display before prompting (e.g., assistant
-     *     response)
-     * @param structuredModel Optional class for structured input format
-     * @return Mono containing the user input data
+     * @param agentId 智能体标识符（此实现未使用）
+     * @param agentName 智能体名称（此实现未使用）
+     * @param contextMessages 提示输入前可选展示的消息（例如助手回复）
+     * @param structuredModel 定义结构化输入格式的可选类
+     * @return 包含用户输入数据的 Mono
      */
     @Override
     public Mono<UserInputData> handleInput(
@@ -98,7 +94,7 @@ public class StreamUserInput implements UserInputBase {
         return Mono.fromCallable(
                         () -> {
                             try {
-                                // Print context messages before prompting
+                                // 提示输入前打印上下文消息
                                 if (contextMessages != null && !contextMessages.isEmpty()) {
                                     for (Msg msg : contextMessages) {
                                         printMessage(msg);
@@ -112,12 +108,12 @@ public class StreamUserInput implements UserInputBase {
                                     textInput = "";
                                 }
 
-                                // Create text block content
+                                // 创建文本块内容
                                 List<ContentBlock> blocksInput =
                                         Collections.singletonList(
                                                 TextBlock.builder().text(textInput).build());
 
-                                // Handle structured input if model is provided
+                                // 提供模型时处理结构化输入
                                 Map<String, Object> structuredInput = null;
                                 if (structuredModel != null) {
                                     structuredInput = handleStructuredInput(structuredModel);
@@ -132,15 +128,14 @@ public class StreamUserInput implements UserInputBase {
     }
 
     /**
-     * Print a message to the output stream. Formats the message with the sender name and role,
-     * followed by the text content.
+     * 向输出流打印消息。先格式化发送者名称和角色，再附加文本内容。
      *
-     * @param msg The message to print
+     * @param msg 要打印的消息
      */
     private void printMessage(Msg msg) {
         StringBuilder sb = new StringBuilder();
 
-        // Add sender name and role
+        // 添加发送者名称和角色
         if (msg.getName() != null && !msg.getName().isEmpty()) {
             sb.append("[").append(msg.getName());
             if (msg.getRole() != null) {
@@ -149,7 +144,7 @@ public class StreamUserInput implements UserInputBase {
             sb.append("]: ");
         }
 
-        // Extract and append text content
+        // 提取并追加文本内容
         for (ContentBlock block : msg.getContent()) {
             if (block instanceof TextBlock textBlock) {
                 sb.append(textBlock.getText());
@@ -160,12 +155,11 @@ public class StreamUserInput implements UserInputBase {
     }
 
     /**
-     * Handle structured input based on the provided model class. Uses simple key=value pair
-     * parsing. Future enhancements may include reflection-based parsing of model structure for
-     * field-level validation.
+     * 根据提供的模型类处理结构化输入，采用简单的 key=value 键值对解析。
+     * 未来可增强为通过反射解析模型结构以进行字段级校验。
      *
-     * @param structuredModel The model class defining expected structure
-     * @return Map containing parsed key-value pairs from user input
+     * @param structuredModel 定义预期结构的模型类
+     * @return 包含从用户输入解析出的键值对的映射
      */
     private Map<String, Object> handleStructuredInput(Class<?> structuredModel) {
         Map<String, Object> structuredInput = new HashMap<>();
@@ -176,7 +170,7 @@ public class StreamUserInput implements UserInputBase {
             String input = reader.readLine();
 
             if (input != null && !input.trim().isEmpty()) {
-                // Simple key=value parsing
+                // 简单的 key=value 解析
                 String[] pairs = input.split(",");
                 for (String pair : pairs) {
                     String[] keyValue = pair.split("=", 2);
@@ -193,10 +187,9 @@ public class StreamUserInput implements UserInputBase {
     }
 
     /**
-     * Builder for StreamUserInput.
+     * StreamUserInput 的构建器。
      *
-     * <p>Provides fluent API for configuring input/output streams and prompt hint. Defaults to
-     * System.in/System.out if not specified.
+     * <p>提供配置输入／输出流和输入提示的流式 API；未指定时默认使用 System.in/System.out。
      */
     public static class Builder {
         private String inputHint = "User Input: ";
@@ -206,10 +199,10 @@ public class StreamUserInput implements UserInputBase {
         private Builder() {}
 
         /**
-         * Set the input hint prompt.
+         * 设置输入提示。
          *
-         * @param inputHint The prompt text to display before user input
-         * @return This builder
+         * @param inputHint 用户输入前展示的提示文本
+         * @return 当前构建器
          */
         public Builder inputHint(String inputHint) {
             if (inputHint != null) {
@@ -219,10 +212,10 @@ public class StreamUserInput implements UserInputBase {
         }
 
         /**
-         * Set the input stream to read from.
+         * 设置读取所用输入流。
          *
-         * @param inputStream The input stream (defaults to System.in)
-         * @return This builder
+         * @param inputStream 输入流（默认为 System.in）
+         * @return 当前构建器
          */
         public Builder inputStream(InputStream inputStream) {
             if (inputStream != null) {
@@ -232,10 +225,10 @@ public class StreamUserInput implements UserInputBase {
         }
 
         /**
-         * Set the output stream to write to.
+         * 设置写入所用输出流。
          *
-         * @param outputStream The output stream (defaults to System.out)
-         * @return This builder
+         * @param outputStream 输出流（默认为 System.out）
+         * @return 当前构建器
          */
         public Builder outputStream(OutputStream outputStream) {
             if (outputStream != null) {
@@ -245,9 +238,9 @@ public class StreamUserInput implements UserInputBase {
         }
 
         /**
-         * Build the StreamUserInput instance.
+         * 构建 StreamUserInput 实例。
          *
-         * @return A new StreamUserInput instance
+         * @return 新的 StreamUserInput 实例
          */
         public StreamUserInput build() {
             return new StreamUserInput(this);

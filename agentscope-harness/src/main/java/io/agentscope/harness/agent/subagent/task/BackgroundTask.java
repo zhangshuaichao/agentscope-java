@@ -21,15 +21,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Wraps a {@link CompletableFuture} to track background subagent task execution with status,
- * result, error, and lifecycle metadata. Thread-safe by delegation to the underlying future.
+ * 包装 {@link CompletableFuture}，跟踪后台子智能体任务的状态、结果、错误及
+ * 生命周期元数据。通过委托给底层 future 保证线程安全。
  *
- * <p>Lifecycle metadata:
- *
+ * <p>生命周期元数据：
  * <ul>
- *   <li>{@code agentId} — which subagent type is executing
- *   <li>{@code createdAt} — when the task was created
- *   <li>{@code lastCheckedAt} — when the task status was last polled
+ *   <li>{@code agentId}：正在执行的子智能体类型
+ *   <li>{@code createdAt}：任务创建时间
+ *   <li>{@code lastCheckedAt}：最近一次轮询任务状态的时间
  * </ul>
  */
 public class BackgroundTask {
@@ -49,7 +48,9 @@ public class BackgroundTask {
         this.lastCheckedAt = this.createdAt;
     }
 
-    /** Observe the backing future; workspace local tasks persist their result before resolving it. */
+    /**
+     * 观察底层 future；工作区本地任务会先持久化结果，再完成该 future。
+     */
     public BackgroundTask whenComplete(java.util.function.BiConsumer<String, Throwable> action) {
         future.whenComplete(action);
         return this;
@@ -80,8 +81,7 @@ public class BackgroundTask {
     }
 
     /**
-     * Returns the structured {@link TaskStatus} for this task, reflecting the underlying future
-     * state and any explicit cancellation.
+     * 返回此任务的结构化 {@link TaskStatus}，反映底层 future 状态及显式取消。
      */
     public TaskStatus getTaskStatus() {
         if (cancelled || future.isCancelled()) {
@@ -96,7 +96,9 @@ public class BackgroundTask {
         return TaskStatus.RUNNING;
     }
 
-    /** Returns a human-readable status string. */
+    /**
+     * 返回供人阅读的状态字符串。
+     */
     public String getStatus() {
         TaskStatus ts = getTaskStatus();
         if (ts == TaskStatus.FAILED) {
@@ -106,7 +108,9 @@ public class BackgroundTask {
         return ts.name().charAt(0) + ts.name().substring(1).toLowerCase();
     }
 
-    /** Non-blocking result peek; returns null if not yet completed or if an error occurred. */
+    /**
+     * 非阻塞地查看结果；尚未完成或发生错误时返回 null。
+     */
     public String getResult() {
         try {
             return future.getNow(null);
@@ -127,9 +131,9 @@ public class BackgroundTask {
     }
 
     /**
-     * Blocks until the task completes or the timeout elapses.
+     * 阻塞直到任务完成或超时。
      *
-     * @return true if completed within timeout, false if timed out
+     * @return 在超时前完成返回 true，超时返回 false
      */
     public boolean waitForCompletion(long timeoutMs) throws InterruptedException {
         if (future.isDone()) {
@@ -148,8 +152,8 @@ public class BackgroundTask {
     }
 
     /**
-     * Cancels the task. Sets the internal cancelled flag so that {@link #getTaskStatus()} returns
-     * {@link TaskStatus#CANCELLED} even if the future cannot be interrupted.
+     * 取消任务。设置内部取消标志，即使 future 无法中断，
+     * {@link #getTaskStatus()} 也会返回 {@link TaskStatus#CANCELLED}。
      */
     public boolean cancel(boolean mayInterruptIfRunning) {
         this.cancelled = true;

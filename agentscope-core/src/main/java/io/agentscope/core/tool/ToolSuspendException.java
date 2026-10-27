@@ -16,17 +16,16 @@
 package io.agentscope.core.tool;
 
 /**
- * Exception thrown to signal that a tool execution should be suspended and handled externally.
+ * 表示工具执行应挂起并交由外部处理的异常。
  *
- * <p>This exception is used by tools that require external execution (e.g., tools registered
- * via schema-only registration). When thrown, the framework will:
+ * <p>用于需要外部执行的工具（例如仅通过模式注册的工具）。抛出后框架将：
  * <ol>
- *   <li>Convert the exception to a pending {@code ToolResultBlock}</li>
- *   <li>Return a suspended message to the user with {@code GenerateReason.TOOL_SUSPENDED}</li>
- *   <li>Wait for the user to provide the tool execution result</li>
+ * <li>将异常转换为待处理的 {@code ToolResultBlock}</li>
+ * <li>向用户返回生成原因为 {@code GenerateReason.TOOL_SUSPENDED} 的挂起消息</li>
+ * <li>等待用户提供工具执行结果</li>
  * </ol>
  *
- * <p>Example usage in a custom tool:
+ * <p>自定义工具用法示例：
  * <pre>{@code
  * @Tool(name = "external_api", description = "Call external API")
  * public ToolResultBlock callExternalApi(@ToolParam(name = "url") String url) {
@@ -42,16 +41,16 @@ public class ToolSuspendException extends RuntimeException {
     private final String reason;
 
     /**
-     * Creates a new ToolSuspendException with default message.
+     * 使用默认消息创建 ToolSuspendException。
      */
     public ToolSuspendException() {
         this(null);
     }
 
     /**
-     * Creates a new ToolSuspendException with a custom reason.
+     * 使用自定义原因创建 ToolSuspendException。
      *
-     * @param reason the reason for suspension, will be included in the pending ToolResultBlock
+     * @param reason 挂起原因，将包含在待处理的 ToolResultBlock 中
      */
     public ToolSuspendException(String reason) {
         super(reason != null ? reason : "Tool execution suspended");
@@ -59,9 +58,9 @@ public class ToolSuspendException extends RuntimeException {
     }
 
     /**
-     * Gets the user-defined reason for suspension.
+     * 获取用户定义的挂起原因。
      *
-     * @return the reason, or null if not specified
+     * @return 原因；未指定时为 null
      */
     public String getReason() {
         return reason;

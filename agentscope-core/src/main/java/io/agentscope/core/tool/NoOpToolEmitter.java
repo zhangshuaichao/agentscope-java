@@ -18,28 +18,28 @@ package io.agentscope.core.tool;
 import io.agentscope.core.message.ToolResultBlock;
 
 /**
- * A no-op implementation of ToolEmitter that silently discards all emitted chunks.
+ * ToolEmitter 的空操作实现，静默丢弃全部发出的数据块。
  *
- * <p>This is used as a default when no chunk callback is configured, allowing tools to call
- * emit() without null checks.
+ * <p>未配置数据块回调时用作默认值，使工具无需检查 null 即可调用 emit()。
  */
 public class NoOpToolEmitter implements ToolEmitter {
 
-    /** Singleton instance. */
+    /**
+     * 单例实例。
+     */
     public static final NoOpToolEmitter INSTANCE = new NoOpToolEmitter();
 
     private NoOpToolEmitter() {}
 
     /**
-     * Silently discards the emitted chunk without performing any action.
+     * 静默丢弃数据块，不执行任何操作。
      *
-     * <p>This no-op implementation allows tools to emit chunks without null checks, ensuring
-     * consistent behavior even when no actual chunk callback is configured.
+     * <p>此空操作实现使工具无需检查 null 即可发送数据块，即使未配置实际回调也能保持一致行为。
      *
-     * @param chunk The tool result chunk to discard (ignored)
+     * @param chunk 要丢弃的工具结果数据块（忽略）
      */
     @Override
     public void emit(ToolResultBlock chunk) {
-        // No-op: silently discard the chunk
+        // 空操作：静默丢弃数据块
     }
 }

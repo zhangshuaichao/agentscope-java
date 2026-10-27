@@ -34,8 +34,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Unified AgentTeams tool. Actions are gated by {@link TeamContext#availableActions()} (lead gets
- * create/assign/spawn/shutdown/approve/complete; workers get list/claim/message).
+ * 统一的 AgentTeams 工具。操作受 {@link TeamContext#availableActions()} 限制
+ * （负责人可 create/assign/spawn/shutdown/approve/complete；工作者可 list/claim/message）。
  */
 public final class TeamTool {
 
@@ -222,7 +222,7 @@ public final class TeamTool {
         }
     }
 
-    // ── Per-action aliases (models often call createTask/sendMessage as tool names) ──
+    // ── 按操作提供的别名（模型经常将 createTask/sendMessage 直接作为工具名调用）──
 
     @Tool(name = "listTasks", description = "List team tasks on the shared board.")
     public ToolResultBlock listTasks() {
@@ -655,7 +655,7 @@ public final class TeamTool {
             }
         }
         String n = normalize(action);
-        // Aliases keep sessions started before an action was named in TeamContext working.
+        // 别名使在 TeamContext 为操作命名之前启动的会话仍能正常工作。
         if (("listclaimabletasks".equals(n) || "unclaimtask".equals(n))
                 && set.contains("claimtask")) {
             return true;
@@ -687,7 +687,7 @@ public final class TeamTool {
                 return ToolResultBlock.success("null");
             }
             if (value instanceof List<?> list) {
-                // Prefer compact task/member records
+                // 优先使用紧凑的任务／成员记录
                 return ToolResultBlock.success(MAPPER.writeValueAsString(list));
             }
             if (value instanceof TeamTask

@@ -20,12 +20,12 @@ import io.agentscope.harness.agent.gateway.channel.OutboundAddress;
 import java.util.List;
 
 /**
- * A buffered proactive outbound message delivered to {@link ChatUiChannel} by the gateway. Callers
- * retrieve these via {@link ChatUiChannel#pollOutbound()}.
+ * 网关投递到 {@link ChatUiChannel} 并缓冲的主动出站消息。
+ * 调用方通过 {@link ChatUiChannel#pollOutbound()} 获取。
  *
- * @param address the delivery target
- * @param messages the outbound messages
- * @param timestampMs when the envelope was created
+ * @param address 投递目标
+ * @param messages 出站消息
+ * @param timestampMs 信封创建时间
  */
 public record OutboundEnvelope(OutboundAddress address, List<Msg> messages, long timestampMs) {
 

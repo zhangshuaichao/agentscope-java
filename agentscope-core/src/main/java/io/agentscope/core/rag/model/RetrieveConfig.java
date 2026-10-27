@@ -19,14 +19,12 @@ import io.agentscope.core.message.Msg;
 import java.util.List;
 
 /**
- * Configuration for document retrieval operations.
+ * 文档检索操作的配置。
  *
- * <p>This class uses the builder pattern to configure retrieval parameters such as
- * the maximum number of results, the minimum similarity score threshold, and optional
- * conversation history for context-aware retrieval.
+ * <p>此类使用构建器模式配置检索参数，例如最大结果数量、最低相似度分数阈值，
+ * 以及用于结合上下文检索的可选对话历史。
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class RetrieveConfig {
@@ -44,48 +42,48 @@ public class RetrieveConfig {
     }
 
     /**
-     * Gets the maximum number of documents to retrieve.
+     * 获取要检索的最大文档数量。
      *
-     * @return the limit
+     * @return 数量上限
      */
     public int getLimit() {
         return limit;
     }
 
     /**
-     * Gets the minimum similarity score threshold.
+     * 获取最低相似度分数阈值。
      *
-     * @return the score threshold
+     * @return 分数阈值
      */
     public double getScoreThreshold() {
         return scoreThreshold;
     }
 
     /**
-     * Gets the vector name for retrieval.
+     * 获取用于检索的向量名称。
      *
-     * @return the vector name, or null if not set
+     * @return 向量名称；未设置时为 null
      */
     public String getVectorName() {
         return vectorName;
     }
 
     /**
-     * Gets the conversation history for context-aware retrieval.
+     * 获取用于结合上下文检索的对话历史。
      *
-     * <p>This is an optional field used by knowledge bases that support multi-turn
-     * conversation context (e.g., Bailian Knowledge Base with query rewriting).
+     * <p>这是可选字段，供支持多轮对话上下文的知识库使用
+     * （例如支持查询改写的百炼知识库）。
      *
-     * @return the conversation history, or null if not set
+     * @return 对话历史；未设置时为 null
      */
     public List<Msg> getConversationHistory() {
         return conversationHistory;
     }
 
     /**
-     * Mutate the current instance to a new builder.
+     * 基于当前实例创建可修改的新构建器。
      *
-     * @return a new builder with the same values of this instance
+     * @return 与当前实例具有相同值的新构建器
      */
     public Builder mutate() {
         return new Builder()
@@ -96,16 +94,16 @@ public class RetrieveConfig {
     }
 
     /**
-     * Creates a new builder instance.
+     * 创建新的构建器实例。
      *
-     * @return a new builder
+     * @return 新构建器
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for RetrieveConfig.
+     * RetrieveConfig 的构建器。
      */
     public static class Builder {
 
@@ -115,10 +113,10 @@ public class RetrieveConfig {
         private List<Msg> conversationHistory;
 
         /**
-         * Sets the maximum number of documents to retrieve.
+         * 设置要检索的最大文档数量。
          *
-         * @param limit the limit (must be positive)
-         * @return this builder for chaining
+         * @param limit 数量上限（必须为正数）
+         * @return 当前构建器，以支持链式调用
          */
         public Builder limit(int limit) {
             if (limit <= 0) {
@@ -129,10 +127,10 @@ public class RetrieveConfig {
         }
 
         /**
-         * Sets the minimum similarity score threshold.
+         * 设置最低相似度分数阈值。
          *
-         * @param scoreThreshold the score threshold (must be between 0.0 and 1.0)
-         * @return this builder for chaining
+         * @param scoreThreshold 分数阈值（必须介于 0.0 与 1.0 之间）
+         * @return 当前构建器，以支持链式调用
          */
         public Builder scoreThreshold(double scoreThreshold) {
             if (scoreThreshold < 0.0 || scoreThreshold > 1.0) {
@@ -143,10 +141,10 @@ public class RetrieveConfig {
         }
 
         /**
-         * Sets the vector name for retrieval.
+         * 设置用于检索的向量名称。
          *
-         * @param vectorName the vector name (can be null)
-         * @return this builder for chaining
+         * @param vectorName 向量名称（可为 null）
+         * @return 当前构建器，以支持链式调用
          */
         public Builder vectorName(String vectorName) {
             this.vectorName = vectorName;
@@ -154,14 +152,13 @@ public class RetrieveConfig {
         }
 
         /**
-         * Sets the conversation history for context-aware retrieval.
+         * 设置用于结合上下文检索的对话历史。
          *
-         * <p>This is an optional parameter used by knowledge bases that support
-         * multi-turn conversation context. When provided, the knowledge base may use
-         * this history to rewrite or contextualize the query for better retrieval results.
+         * <p>这是可选参数，供支持多轮对话上下文的知识库使用。提供此参数后，
+         * 知识库可以利用历史改写查询或补充查询上下文，以获得更好的检索结果。
          *
-         * @param conversationHistory the conversation history (can be null)
-         * @return this builder for chaining
+         * @param conversationHistory 对话历史（可为 null）
+         * @return 当前构建器，以支持链式调用
          */
         public Builder conversationHistory(List<Msg> conversationHistory) {
             this.conversationHistory = conversationHistory;
@@ -169,9 +166,9 @@ public class RetrieveConfig {
         }
 
         /**
-         * Builds the RetrieveConfig instance.
+         * 构建 RetrieveConfig 实例。
          *
-         * @return the configured RetrieveConfig
+         * @return 配置完成的 RetrieveConfig
          */
         public RetrieveConfig build() {
             return new RetrieveConfig(this);

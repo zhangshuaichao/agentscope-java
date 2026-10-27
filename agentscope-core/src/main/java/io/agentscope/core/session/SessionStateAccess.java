@@ -30,16 +30,16 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/** Read-only snapshots and fenced administrative state changes against native history. */
+/** 基于原生历史提供只读快照与受隔离保护的管理性状态变更。 */
 public final class SessionStateAccess {
     private static final Duration LEASE = Duration.ofMinutes(2);
 
     private SessionStateAccess() {}
 
-    /** A detached state and the committed prefix from which it was recovered. */
+    /** 独立的状态副本，以及恢复该副本所依据的已提交前缀。 */
     public record Snapshot(long asOfSeq, AgentState state) {}
 
-    /** Reads one committed prefix without acquiring a writer or changing session history. */
+    /** 读取一个已提交前缀，不获取写入者身份，也不改变会话历史。 */
     public static Snapshot read(SessionLog log, Supplier<AgentState> initialState) {
         SessionProjection projection = SessionProjection.read(log);
         AgentState state = projection.restore();
@@ -47,8 +47,8 @@ public final class SessionStateAccess {
     }
 
     /**
-     * Reloads and mutates state while holding the native writer lease, then commits a checkpoint.
-     * An active execution or an unresolved tool dispatch prevents administrative mutation.
+     * 持有原生写入者租约时，重新加载并修改状态，然后提交检查点。
+     * 存在活跃执行或尚未解决的工具派发时，不允许管理性修改。
      */
     public static Snapshot update(
             SessionLog log,
@@ -60,8 +60,8 @@ public final class SessionStateAccess {
     }
 
     /**
-     * Saves an explicitly edited snapshot only if its committed prefix is still current.
-     * A stale snapshot is rejected; it never overwrites an execution completed elsewhere.
+     * 只有快照对应的已提交前缀仍是最新时，才保存显式编辑的快照。
+     * 过时快照会被拒绝，绝不覆盖其他位置已完成的执行。
      */
     public static Snapshot replace(
             SessionLog log, Supplier<AgentState> initialState, String reason, Snapshot snapshot) {
@@ -84,6 +84,8 @@ public final class SessionStateAccess {
             if (!projection.uncertainToolCalls().isEmpty())
                 throw new SessionLogException(
                         "Reconcile unresolved tool outcomes before changing session state");
+            // 【学习提示】asOfSeq 是检查时看到的历史版本。替换前重新比较，
+            // 防止旧快照覆盖其他执行刚提交的新状态，这是乐观并发控制的边界。
             if (replacement != null && replacement.asOfSeq() != projection.asOfSeq())
                 throw new SessionLogException(
                         "Session state changed since inspection; reload or use an atomic update");
@@ -154,6 +156,7 @@ public final class SessionStateAccess {
                     log.commit(writer, UUID.randomUUID().toString(), projection.asOfSeq(), facts);
             return new Snapshot(head.seq(), AgentState.fromJsonString(stateJson));
         } finally {
+            // 【学习提示】即使验证、变更或提交失败，也必须释放租约，避免阻塞后续执行。
             log.release(writer);
         }
     }

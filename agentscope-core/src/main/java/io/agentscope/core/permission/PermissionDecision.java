@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Decision returned by a permission rule match or a tool self-check.
+ * 权限规则匹配或工具自检返回的决定。
  *
- * <p>A decision carries the {@link PermissionBehavior} together with a human-readable message and
- * optional fields used by the engine (rewritten inputs, suggested follow-up rules).
+ * <p>决定包含 {@link PermissionBehavior}、供人阅读的消息，以及引擎使用的
+ * 可选字段（改写后的输入、建议追加的规则）。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"behavior", "message", "decision_reason", "updated_input", "suggested_rules"})
@@ -111,10 +111,10 @@ public final class PermissionDecision {
     }
 
     /**
-     * Returns a copy of this decision with the given suggested rules attached.
+     * 返回附加了指定建议规则的决定副本。
      *
-     * @param suggestedRules the rules to attach; may be null to clear
-     * @return a new {@code PermissionDecision} with all other fields preserved
+     * @param suggestedRules 要附加的规则；可为 null，表示清除
+     * @return 新的 {@code PermissionDecision}，其他字段保持不变
      */
     public PermissionDecision withSuggestedRules(List<PermissionRule> suggestedRules) {
         return builder()

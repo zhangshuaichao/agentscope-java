@@ -60,17 +60,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link AbstractFilesystem} implementation that reads and writes files on the local disk.
+ * 在本地磁盘上读写文件的 {@link AbstractFilesystem} 实现。
  *
- * <p>Path-resolution behaviour is controlled by the {@link LocalFsMode} passed at construction:
+ * <p>路径解析行为由构造时传入的 {@link LocalFsMode} 控制：
  *
  * <ul>
- *   <li>{@link LocalFsMode#SANDBOXED} — paths anchored to {@code rootDir}, {@code ..} and
- *       outside-root absolute paths blocked. Equivalent to legacy {@code virtualMode=true}.
- *   <li>{@link LocalFsMode#ROOTED} — absolute paths accepted only when they fall under one of
- *       the configured {@link PathPolicy} roots; relative paths anchor to {@code rootDir}.
- *   <li>{@link LocalFsMode#UNRESTRICTED} — absolute paths pass through; relative paths anchor
- *       to {@code rootDir}. Equivalent to legacy {@code virtualMode=false}.
+ *   <li>{@link LocalFsMode#SANDBOXED} — 路径锚定到 {@code rootDir}，阻止 {@code ..}
+ *       和根目录之外的绝对路径。等同于旧配置 {@code virtualMode=true}。
+ *   <li>{@link LocalFsMode#ROOTED} — 仅接受位于所配置 {@link PathPolicy} 根目录之一的绝对路径；
+ *       相对路径锚定到 {@code rootDir}。
+ *   <li>{@link LocalFsMode#UNRESTRICTED} — 绝对路径原样传递；相对路径锚定到 {@code rootDir}。
+ *       等同于旧配置 {@code virtualMode=false}。
  * </ul>
  */
 public class LocalFilesystem implements AbstractFilesystem {
@@ -86,60 +86,64 @@ public class LocalFilesystem implements AbstractFilesystem {
     private final NamespaceFactory namespaceFactory;
 
     /**
-     * Per-path locks for the read-modify-write cycle inside {@link #edit}.
-     * Keyed by the absolute, normalized path string so that two callers operating on
-     * the same file (even with different input paths) always share the same lock.
+     * 用于 {@link #edit} 内部“读取—修改—写入”周期的逐路径锁。
+     * 以规范化后的绝对路径字符串为键，确保两个调用方即使传入不同路径，
+     * 解析到相同键时，就共享同一把锁。
+     *
+     * <p>【学习提示】锁表属于当前文件系统实例，不是跨实例或跨进程文件锁。
+     * 键只做绝对化和 normalize，没有解析符号链接，因此不同别名也不保证共享锁。
+     * 它保护这里的 edit 读改写流程，不代表所有文件操作都有全局事务隔离。
      */
     private final ConcurrentHashMap<String, ReentrantLock> fileLocks = new ConcurrentHashMap<>();
 
     /**
-     * Same as {@link #LocalFilesystem(Path)} with {@link Path#of(String, String...) Path.of(path)}
-     * after {@link String#strip()}. Pass {@code null} for the same CWD semantics as a {@code null}
-     * {@link Path}. Blank strings are rejected.
+     * 与 {@link #LocalFilesystem(Path)} 相同，但先对字符串执行 {@link String#strip()}，
+     * 再调用 {@link Path#of(String, String...) Path.of(path)}。
+     * 传入 {@code null} 与传入 {@code null} 的 {@link Path} 一样，表示当前工作目录；拒绝空白字符串。
      *
-     * @param rootDir filesystem root as a path string, or {@code null} for process working directory
+     * @param rootDir 文件系统根路径字符串；{@code null} 表示进程工作目录
      */
     public LocalFilesystem(String rootDir) {
         this(rootDirFromString(rootDir), false, DEFAULT_MAX_FILE_SIZE_MB, null);
     }
 
     /**
-     * Creates a abstract filesystem rooted at the given directory.
+     * 创建以指定目录为根的抽象文件系统。
      *
-     * @param rootDir root directory for all operations ({@code null} means CWD)
+     * @param rootDir 所有操作的根目录（{@code null} 表示当前工作目录）
      */
     public LocalFilesystem(Path rootDir) {
         this(rootDir, false, DEFAULT_MAX_FILE_SIZE_MB, null);
     }
 
     /**
-     * Creates a abstract filesystem with explicit configuration.
+     * 使用明确配置创建抽象文件系统。
      *
-     * @param rootDir root directory for all operations ({@code null} means CWD)
-     * @param virtualMode when true, all paths are anchored to rootDir and traversal is blocked
-     * @param maxFileSizeMb maximum file size in megabytes for search operations
+     * @param rootDir 所有操作的根目录（{@code null} 表示当前工作目录）
+     * @param virtualMode 为 true 时，所有路径锚定到 rootDir 并阻止路径穿越
+     * @param maxFileSizeMb 搜索操作允许的最大文件大小，单位 MB
      */
     public LocalFilesystem(Path rootDir, boolean virtualMode, int maxFileSizeMb) {
         this(rootDir, virtualMode, maxFileSizeMb, null);
     }
 
     /**
-     * Same as {@link #LocalFilesystem(Path, boolean, int)} with a path string; see
-     * {@link #LocalFilesystem(String)} for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystem(Path, boolean, int)} 相同，但接收路径字符串；
+     * {@code null}／空白规则参见 {@link #LocalFilesystem(String)}。
      */
     public LocalFilesystem(String rootDir, boolean virtualMode, int maxFileSizeMb) {
         this(rootDirFromString(rootDir), virtualMode, maxFileSizeMb, null);
     }
 
     /**
-     * Legacy constructor: maps {@code virtualMode} to {@link LocalFsMode#SANDBOXED} or
-     * {@link LocalFsMode#UNRESTRICTED} and uses an empty {@link PathPolicy}. Prefer the
-     * mode-aware constructor below when you need {@link LocalFsMode#ROOTED}.
+     * 旧构造方法：把 {@code virtualMode} 映射到 {@link LocalFsMode#SANDBOXED} 或
+     * {@link LocalFsMode#UNRESTRICTED}，并使用空 {@link PathPolicy}。
+     * 需要 {@link LocalFsMode#ROOTED} 时，优先使用下方感知模式的构造方法。
      *
-     * @param rootDir root directory for all operations ({@code null} means CWD)
-     * @param virtualMode when true, all paths are anchored to rootDir and traversal is blocked
-     * @param maxFileSizeMb maximum file size in megabytes for search operations
-     * @param namespaceFactory optional namespace factory for path scoping ({@code null} for none)
+     * @param rootDir 所有操作的根目录（{@code null} 表示当前工作目录）
+     * @param virtualMode 为 true 时，所有路径锚定到 rootDir 并阻止路径穿越
+     * @param maxFileSizeMb 搜索操作允许的最大文件大小，单位 MB
+     * @param namespaceFactory 限定路径作用域的可选命名空间工厂（{@code null} 表示不使用）
      */
     public LocalFilesystem(
             Path rootDir,
@@ -155,8 +159,8 @@ public class LocalFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Same as {@link #LocalFilesystem(Path, boolean, int, NamespaceFactory)} with a path string;
-     * see {@link #LocalFilesystem(String)} for {@code null} / blank rules.
+     * 与 {@link #LocalFilesystem(Path, boolean, int, NamespaceFactory)} 相同，但接收路径字符串；
+     * {@code null}／空白规则参见 {@link #LocalFilesystem(String)}。
      */
     public LocalFilesystem(
             String rootDir,
@@ -167,20 +171,18 @@ public class LocalFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Creates a filesystem with explicit mode and path policy.
+     * 使用明确模式和路径策略创建文件系统。
      *
-     * <p>The {@code mode} controls how the agent's absolute paths are validated; see
-     * {@link LocalFsMode} for the three options. In {@link LocalFsMode#ROOTED} mode, an absolute
-     * path is accepted only when it falls under one of the {@code pathPolicy} roots or under
-     * {@code rootDir} itself; in {@link LocalFsMode#SANDBOXED} every path is anchored to
-     * {@code rootDir}; in {@link LocalFsMode#UNRESTRICTED} absolute paths pass through unchanged.
+     * <p>{@code mode} 控制智能体绝对路径的验证方式；三种选项见 {@link LocalFsMode}。
+     * 在 {@link LocalFsMode#ROOTED} 模式下，仅接受位于 {@code pathPolicy} 根目录之一
+     * 或 {@code rootDir} 本身之下的绝对路径；在 {@link LocalFsMode#SANDBOXED} 中，
+     * 每个路径都锚定到 {@code rootDir}；在 {@link LocalFsMode#UNRESTRICTED} 中，绝对路径保持原样。
      *
-     * @param rootDir root directory for relative paths ({@code null} means CWD)
-     * @param mode path-resolution policy ({@code null} defaults to {@link LocalFsMode#UNRESTRICTED})
-     * @param pathPolicy allow-list for {@link LocalFsMode#ROOTED}; ignored otherwise
-     *     ({@code null} treated as empty)
-     * @param maxFileSizeMb maximum file size in megabytes for search operations
-     * @param namespaceFactory optional namespace factory for path scoping ({@code null} for none)
+     * @param rootDir 相对路径的根目录（{@code null} 表示当前工作目录）
+     * @param mode 路径解析策略（{@code null} 默认使用 {@link LocalFsMode#UNRESTRICTED}）
+     * @param pathPolicy {@link LocalFsMode#ROOTED} 的允许列表；其他模式忽略（{@code null} 视为空）
+     * @param maxFileSizeMb 搜索操作允许的最大文件大小，单位 MB
+     * @param namespaceFactory 限定路径作用域的可选命名空间工厂（{@code null} 表示不使用）
      */
     public LocalFilesystem(
             Path rootDir,
@@ -199,8 +201,8 @@ public class LocalFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Converts a root path string to {@link Path}. {@code null} yields {@code null} (CWD). Non-null
-     * values must be non-blank after {@link String#strip()}.
+     * 将根路径字符串转换为 {@link Path}。{@code null} 仍返回 {@code null}（当前工作目录）。
+     * 非 null 值在 {@link String#strip()} 后必须非空白。
      */
     static Path rootDirFromString(String rootDir) {
         if (rootDir == null) {
@@ -214,21 +216,22 @@ public class LocalFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Returns the root directory for this filesystem.
+     * 返回此文件系统的根目录。
      */
     public Path getCwd() {
         return cwd;
     }
 
-    /** Returns the active path-resolution mode. */
+    /**
+     * 返回当前路径解析模式。
+     */
     public LocalFsMode getMode() {
         return mode;
     }
 
     /**
-     * Returns the configured path policy. Empty when {@link #getMode()} is not
-     * {@link LocalFsMode#ROOTED}; even with an empty policy, {@link LocalFsMode#ROOTED} still
-     * implicitly accepts paths under {@link #getCwd()}.
+     * 返回所配置的路径策略。{@link #getMode()} 不是 {@link LocalFsMode#ROOTED} 时为空；
+     * 即使策略为空，{@link LocalFsMode#ROOTED} 仍隐式接受 {@link #getCwd()} 下的路径。
      */
     public PathPolicy getPathPolicy() {
         return pathPolicy;
@@ -362,13 +365,13 @@ public class LocalFilesystem implements AbstractFilesystem {
             return EditResult.fail("Error: File '" + filePath + "' not found");
         }
 
-        // Serialize concurrent edits to the same file to prevent lost-update races.
+        // 串行执行同一文件的并发编辑，防止丢失更新。
         String lockKey = resolved.toAbsolutePath().normalize().toString();
         ReentrantLock lock = fileLocks.computeIfAbsent(lockKey, k -> new ReentrantLock());
         lock.lock();
         try {
-            // Line-ending normalization lives in FilesystemUtils.stringReplacement so every
-            // filesystem agrees on LF semantics; the content is written back accordingly.
+            // 换行规范化统一放在 FilesystemUtils.stringReplacement 中，使每种
+            // 文件系统都遵循 LF 语义；内容据此写回。
             String content = Files.readString(resolved, StandardCharsets.UTF_8);
 
             FilesystemUtils.ReplacementResult result =
@@ -433,9 +436,9 @@ public class LocalFilesystem implements AbstractFilesystem {
                 effectivePattern.startsWith("**") ? effectivePattern : "**/" + effectivePattern;
         FileSystem fs = FileSystems.getDefault();
         PathMatcher matcher = fs.getPathMatcher("glob:" + globExpr);
-        // Java's PathMatcher requires at least one separator for `**/<x>`, so depth-1 files
-        // never satisfy patterns like `**/*`. Strip the leading `**/` so the direct matcher
-        // catches files at the search root too.
+        // Java 的 PathMatcher 对 `**/<x>` 要求至少有一个分隔符，因此深度为 1 的文件
+        // 无法匹配 `**/*` 等模式。去除前导 `**/`，使直接匹配器
+        // 也能匹配搜索根目录中的文件。
         String directExpr;
         if (effectivePattern.startsWith("**/")) {
             directExpr = effectivePattern.substring(3);
@@ -531,7 +534,7 @@ public class LocalFilesystem implements AbstractFilesystem {
         AbstractFilesystem.validatePath(path);
         Path resolved = resolvePath(runtimeContext, path);
         if (!Files.exists(resolved)) {
-            return WriteResult.ok(path); // idempotent
+            return WriteResult.ok(path); // 幂等操作
         }
         try {
             if (Files.isDirectory(resolved)) {
@@ -588,7 +591,7 @@ public class LocalFilesystem implements AbstractFilesystem {
         }
     }
 
-    // ==================== Path resolution ====================
+    // ==================== 路径解析 ====================
 
     protected NamespaceFactory getNamespaceFactory() {
         return namespaceFactory;
@@ -622,8 +625,8 @@ public class LocalFilesystem implements AbstractFilesystem {
         if (vpath.contains("..") || vpath.startsWith("~")) {
             throw new SecurityException("Path traversal not allowed");
         }
-        // Strip Windows drive prefix ("C:\" / "C:/") so absolute Windows paths get re-rooted
-        // under the sandbox the same way Unix absolute paths do; no-op on Unix input.
+        // 去除 Windows 盘符前缀（"C:\"／"C:/"），使 Windows 绝对路径
+        // 与 Unix 绝对路径一样重新锚定到沙箱根；Unix 输入不受影响。
         Path full = cwd.resolve(stripWindowsDrive(vpath.substring(1))).normalize();
         if (!full.startsWith(cwd)) {
             throw new SecurityException("Path " + full + " outside root directory: " + cwd);
@@ -701,11 +704,11 @@ public class LocalFilesystem implements AbstractFilesystem {
         if (namespaceFactory == null || key == null || key.isBlank()) {
             return key;
         }
-        // Absolute paths identify specific host locations and must not be namespace-scoped.
-        // Prepending a namespace prefix would turn them into relative paths, causing them to
-        // resolve incorrectly under the workspace root (e.g. /abs/path → ns//abs/path).
-        // On Windows, absolute paths start with a drive letter ("C:\") or UNC prefix ("\\"),
-        // not "/", so we must check for those forms explicitly.
+        // 绝对路径指定宿主机上的特定位置，不能再添加命名空间作用域。
+        // 添加命名空间前缀会把它变成相对路径，导致它在工作区根下
+        // 错误解析（例如 /abs/path → ns//abs/path）。
+        // Windows 绝对路径以盘符（"C:\"）或 UNC 前缀（"\\"）开头，
+        // 而非 "/"，因此必须显式检查这些形式。
         if (isAbsolutePathString(key)) {
             return key;
         }
@@ -718,22 +721,22 @@ public class LocalFilesystem implements AbstractFilesystem {
     }
 
     /**
-     * Returns {@code true} when {@code key} looks like an absolute path on any supported OS:
-     * Unix ({@code /...}), Windows drive-letter ({@code C:\} or {@code C:/}), or Windows UNC
-     * ({@code \\server\share}).
+     * 当 {@code key} 看起来是任一支持的操作系统上的绝对路径时返回 {@code true}：
+     * Unix（{@code /...}）、Windows 盘符（{@code C:\} 或 {@code C:/}），
+     * 或 Windows UNC（{@code \\server\share}）。
      */
     private static boolean isAbsolutePathString(String key) {
         if (key.startsWith("/")) {
             return true;
         }
-        // Windows drive-letter: "X:\" or "X:/"
+        // Windows 盘符路径："X:\" 或 "X:/"
         if (key.length() >= 3
                 && Character.isLetter(key.charAt(0))
                 && key.charAt(1) == ':'
                 && (key.charAt(2) == '\\' || key.charAt(2) == '/')) {
             return true;
         }
-        // Windows UNC: "\\server\share"
+        // Windows UNC 路径："\\server\share"
         return key.startsWith("\\\\");
     }
 
@@ -778,7 +781,7 @@ public class LocalFilesystem implements AbstractFilesystem {
         return relPath;
     }
 
-    // ==================== Grep implementations ====================
+    // ==================== Grep 实现 ====================
 
     private List<GrepMatch> ripgrepSearch(
             RuntimeContext rc, String pattern, Path basePath, String includeGlob) {
@@ -924,7 +927,7 @@ public class LocalFilesystem implements AbstractFilesystem {
                                         }
                                     }
                                 } catch (IOException e) {
-                                    // Skip binary/unreadable files
+                                    // 跳过二进制或不可读文件
                                 }
                             });
         } catch (IOException e) {

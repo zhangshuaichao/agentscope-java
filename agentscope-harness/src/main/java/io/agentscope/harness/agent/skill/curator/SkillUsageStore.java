@@ -29,21 +29,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sidecar telemetry store for per-skill usage and provenance.
+ * 按技能记录使用情况和来源的旁挂遥测存储。
  *
- * <p>Persists {@link SkillUsageRecord} instances (one per skill). The default backend stores all
- * records in a single JSON file at {@code <workspace>/skills/.usage.json}; when constructed with
- * a {@link BaseStore}, each skill is stored under {@code ["skills", "usage"]} with CAS updates.
+ * <p>持久化 {@link SkillUsageRecord}，每个技能一条。默认后端将全部记录保存在 {@code <workspace>/skills/.usage.json}；使用 {@link BaseStore} 构造时，每个技能保存在 {@code ["skills", "usage"]} 下，并通过 CAS 更新。
  *
- * <p><b>Provenance gate</b>: counter mutators (bumpView/bumpUse/bumpPatch) silently skip skills
- * that are not agent-created. This avoids polluting telemetry for bundled / hub-installed /
- * user-authored skills, matching the hermes-agent {@code skill_usage._mutate} behavior.
+ * <p>【学习提示】计数器必须把“检查来源”和“更新计数”放在同一次后端修改中，否则并发修改会产生检查使用时间差。文件后端的进程内锁与分布式后端的 CAS 覆盖范围不同；接口统一不代表两者具有相同跨节点保证。
+ *
+ * <p><b>来源门控</b>：计数修改（bumpView/bumpUse/bumpPatch）静默跳过非智能体创建的技能，避免污染内置、技能中心安装或用户编写技能的遥测，对齐 hermes-agent 的 {@code skill_usage._mutate} 行为。
  */
 public class SkillUsageStore {
 
     private static final Logger log = LoggerFactory.getLogger(SkillUsageStore.class);
 
-    /** Default workspace-relative path for the filesystem sidecar. */
+    /**
+     * 文件系统旁挂文件相对于工作区的默认路径。
+     */
     public static final String DEFAULT_RELATIVE_PATH = "skills/.usage.json";
 
     private final SkillUsageBackend backend;
@@ -56,7 +56,9 @@ public class SkillUsageStore {
         this(new FilesystemSkillUsageBackend(filesystem, relativePath));
     }
 
-    /** Creates a store backed by a distributed {@link BaseStore} (one key per skill). */
+    /**
+     * 创建以分布式 {@link BaseStore} 为后端的存储，每个技能对应一个键。
+     */
     public static SkillUsageStore baseStore(BaseStore store) {
         return new SkillUsageStore(new BaseStoreSkillUsageBackend(store));
     }
@@ -66,20 +68,26 @@ public class SkillUsageStore {
     }
 
     // ---------------------------------------------------------------------
-    //  Read / write
+    // 读写
     // ---------------------------------------------------------------------
 
-    /** Load the entire sidecar map. Returns an empty map on missing / unreadable / corrupt. */
+    /**
+     * 加载完整旁挂映射；缺失、不可读或损坏时返回空映射。
+     */
     public Map<String, SkillUsageRecord> load() {
         return backend.loadAll();
     }
 
-    /** Persist the entire sidecar map. Best-effort on failure. */
+    /**
+     * 持久化完整旁挂映射；失败时尽力而为。
+     */
     public void save(Map<String, SkillUsageRecord> data) {
         backend.replaceAll(data != null ? data : Map.of());
     }
 
-    /** Read a single record by name. */
+    /**
+     * 按名称读取单条记录。
+     */
     public Optional<SkillUsageRecord> get(String name) {
         if (name == null || name.isBlank()) {
             return Optional.empty();
@@ -88,9 +96,7 @@ public class SkillUsageStore {
     }
 
     /**
-     * Apply {@code mutator} to the record for {@code name}. Creates a fresh
-     * {@link SkillUsageRecord#defaults()} record if none exists. Concurrency is owned by the
-     * backend (in-process lock or CAS).
+     * 将 {@code mutator} 应用于 {@code name} 的记录；不存在时创建新的 {@link SkillUsageRecord#defaults()}。并发控制由后端负责（进程内锁或 CAS）。
      */
     private void mutate(String name, UnaryOperator<SkillUsageRecord> mutator) {
         if (name == null || name.isBlank()) {
@@ -104,7 +110,7 @@ public class SkillUsageStore {
     }
 
     // ---------------------------------------------------------------------
-    //  Counter bumps (provenance-gated: skip skills NOT created by the agent)
+    // 计数递增（来源门控：跳过非智能体创建的技能）
     // ---------------------------------------------------------------------
 
     public void bumpView(String name) {
@@ -174,12 +180,9 @@ public class SkillUsageStore {
     }
 
     /**
-     * Apply {@code mutator} only if a record for {@code name} exists with non-null {@code
-     * createdBy} (i.e. the agent has explicitly tracked this skill). Skipping unknown / external
-     * skills keeps the sidecar focused on agent-authored procedural memory.
+     * 仅当 {@code name} 的记录存在且 {@code createdBy} 非 null（智能体已显式跟踪该技能）时应用 {@code mutator}。跳过未知或外部技能，使旁挂文件聚焦智能体编写的过程记忆。
      *
-     * <p>The provenance check runs inside the backend mutator so CAS / locking covers the full
-     * read-modify-write (no TOCTOU between a separate get and mutate).
+     * <p>来源检查在后端修改函数内执行，使 CAS/锁覆盖整个读-改-写，避免单独 get 与 mutate 之间的检查使用时间差（TOCTOU）。
      */
     private void bumpIfAgentTracked(String name, UnaryOperator<SkillUsageRecord> mutator) {
         if (name == null || name.isBlank()) {
@@ -190,7 +193,7 @@ public class SkillUsageStore {
                     name,
                     rec -> {
                         if (rec.createdBy() == null) {
-                            return rec; // same reference → backend no-op
+                            return rec; // 同一引用意味着后端不操作。
                         }
                         return mutator.apply(rec);
                     });
@@ -200,10 +203,12 @@ public class SkillUsageStore {
     }
 
     // ---------------------------------------------------------------------
-    //  Provenance / lifecycle setters (always allowed)
+    // 来源/生命周期设置器（始终允许）
     // ---------------------------------------------------------------------
 
-    /** Tag a freshly-created agent draft (called from {@code SkillManageTool.create}). */
+    /**
+     * 标记新创建的智能体草稿（由 {@code SkillManageTool.create} 调用）。
+     */
     public void markAgentDraft(String name, String sessionId) {
         mutate(
                 name,
@@ -227,9 +232,7 @@ public class SkillUsageStore {
     }
 
     /**
-     * Mark a skill as a fully agent-created (i.e. promoted from draft). Used by
-     * {@code SkillManageTool} when {@code autoPromote=true} (no staging) and by the future
-     * promotion gate.
+     * 将技能标记为已完成晋级的智能体创建技能。由 {@code SkillManageTool} 在 {@code autoPromote=true}（不暂存）时使用，也供晋级门控流程使用。
      */
     public void markAgentCreated(String name, String reviewerId, List<String> environments) {
         mutate(
@@ -300,16 +303,20 @@ public class SkillUsageStore {
                                 rec.environments()));
     }
 
-    /** Drop the record entirely. Called when a skill is archived / deleted permanently. */
+    /**
+     * 完全移除记录；技能归档或永久删除时调用。
+     */
     public void forget(String name) {
         mutate(name, rec -> null);
     }
 
     // ---------------------------------------------------------------------
-    //  Read views
+    // 读取视图
     // ---------------------------------------------------------------------
 
-    /** All records whose {@code createdBy} is non-null (i.e. agent-authored, draft or live). */
+    /**
+     * 全部 {@code createdBy} 非 null 的记录（即智能体编写的草稿或正式技能）。
+     */
     public List<Map.Entry<String, SkillUsageRecord>> agentCreatedReport() {
         Map<String, SkillUsageRecord> all = load();
         List<Map.Entry<String, SkillUsageRecord>> out = new ArrayList<>();

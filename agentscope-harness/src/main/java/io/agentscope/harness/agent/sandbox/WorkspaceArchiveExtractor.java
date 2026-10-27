@@ -23,33 +23,36 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
 /**
- * Securely extracts tar archives into a target directory.
+ * 将 tar 归档安全解压到目标目录。
  *
- * <p>Applies strict path traversal guards before extracting each archive entry:
+ * <p>解压每个归档条目前执行严格路径遍历检查：
  * <ol>
- *   <li>Rejects entries with absolute paths (starting with {@code /} or {@code \})</li>
- *   <li>Rejects entries containing {@code ..} path segments</li>
- *   <li>Verifies the resolved destination path starts with the canonical root</li>
+ *   <li>拒绝绝对路径条目（以 {@code /} 或 {@code \} 开头）</li>
+ *   <li>拒绝包含 {@code ..} 路径片段的条目</li>
+ *   <li>验证解析后的目标路径以规范根路径开头</li>
  * </ol>
  *
- * <p>These guards defend against the "Zip Slip" class of path traversal attacks.
+ * <p>这些检查防御“Zip Slip”类路径遍历攻击。
+ *
+ * <p>【学习提示】canonicalRoot 变量实际来自 normalize().toAbsolutePath()，并未调用
+ * toRealPath() 解析符号链接。词法路径检查不等于完整文件系统隔离，目标目录的既有链接和
+ * 并发修改仍须由可信目录管理及运行环境约束。
  */
 public class WorkspaceArchiveExtractor {
 
     private WorkspaceArchiveExtractor() {
-        // Utility class, no instances
+        // 工具类，不创建实例
     }
 
     /**
-     * Extracts a tar archive stream into the given destination directory.
+     * 将 tar 归档流解压到给定目标目录。
      *
-     * <p>The destination directory must already exist. Existing files at the same paths
-     * will be replaced.
+     * <p>目标目录必须已存在。同路径的现有文件会被替换。
      *
-     * @param destRoot the directory to extract into; must already exist
-     * @param tarStream the tar archive input stream; caller is responsible for closing
-     * @throws SandboxException.SandboxRuntimeException if a path traversal attempt is detected
-     * @throws Exception if extraction fails for any other reason
+     * @param destRoot 解压目标目录，必须已存在
+     * @param tarStream tar 归档输入流，由调用方负责关闭
+     * @throws SandboxException.SandboxRuntimeException 检测到路径遍历尝试时抛出
+     * @throws Exception 因其他原因解压失败时抛出
      */
     public static void extractTarArchive(Path destRoot, InputStream tarStream) throws Exception {
         Path canonicalRoot = destRoot.normalize().toAbsolutePath();
@@ -61,7 +64,7 @@ public class WorkspaceArchiveExtractor {
 
                 Path dest = canonicalRoot.resolve(entry.getName()).normalize();
 
-                // Final guard: verify destination is strictly within the root
+                // 最终检查：验证目标严格位于根目录内
                 if (!dest.startsWith(canonicalRoot)) {
                     throw new SandboxException.SandboxRuntimeException(
                             SandboxErrorCode.WORKSPACE_ARCHIVE_READ_ERROR,
@@ -85,16 +88,16 @@ public class WorkspaceArchiveExtractor {
             return;
         }
 
-        // Reject absolute paths
+        // 拒绝绝对路径
         if (name.startsWith("/") || name.startsWith("\\")) {
             throw new SandboxException.SandboxRuntimeException(
                     SandboxErrorCode.WORKSPACE_ARCHIVE_READ_ERROR,
                     "Tar entry has absolute path (rejected): " + name);
         }
 
-        // Reject path traversal sequences
+        // 拒绝路径遍历序列
         if (name.contains("..")) {
-            // Normalize and check for actual traversal segments
+            // 规范化并检查实际遍历片段
             for (String segment : name.split("[/\\\\]")) {
                 if ("..".equals(segment)) {
                     throw new SandboxException.SandboxRuntimeException(
@@ -104,7 +107,7 @@ public class WorkspaceArchiveExtractor {
             }
         }
 
-        // Reject null bytes
+        // 拒绝空字节
         if (name.contains("\0")) {
             throw new SandboxException.SandboxRuntimeException(
                     SandboxErrorCode.WORKSPACE_ARCHIVE_READ_ERROR,

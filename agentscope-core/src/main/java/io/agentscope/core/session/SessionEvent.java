@@ -19,7 +19,7 @@ import io.agentscope.core.util.JsonUtils;
 import java.util.Map;
 import java.util.Objects;
 
-/** An immutable native fact. Payload is JSON captured at acceptance, never a mutable Msg reference. */
+/** 不可变的原生事实。载荷是在接收时捕获的 JSON，绝不是可变的 Msg 引用。 */
 public record SessionEvent(
         int schemaVersion,
         String eventId,

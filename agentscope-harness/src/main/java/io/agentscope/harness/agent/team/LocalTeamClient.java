@@ -28,8 +28,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * {@link TeamClient} backed by {@link BaseStore} CAS (Claude file-lock equivalent). Mailbox wakeups
- * are delegated to {@link TeamWakeups}, which the hosting middleware registers.
+ * {@link TeamClient} 的实现，由 {@link BaseStore} CAS 支持（对应 Claude 的文件锁机制）。
+ * 邮箱唤醒委托给 {@link TeamWakeups}，由承载团队的中间件注册。
+ *
+ * <p>【学习提示】任务看板状态变更、邮箱通知、运行时唤醒是不同步骤。
+ * CAS 保护任务版本与所有权，不会把外部工具副作用回滚；通知失败也不撤销已经完成的任务状态转换。
  */
 public final class LocalTeamClient implements TeamClient {
 
@@ -133,7 +136,7 @@ public final class LocalTeamClient implements TeamClient {
         return Mono.fromCallable(
                         () -> {
                             VersionedTask cur = requireVersioned(namespace, teamName, taskId);
-                            // Idempotent: already started by this member.
+                            // 幂等处理：该成员已经启动此任务。
                             if (TeamTask.IN_PROGRESS.equals(cur.task().state())
                                     && claimedBy != null
                                     && claimedBy.equals(cur.task().owner())) {
@@ -238,8 +241,8 @@ public final class LocalTeamClient implements TeamClient {
     }
 
     /**
-     * Pushes newly assigned work into the owner's mailbox so the member is woken with it. A worker
-     * that probed an empty board and ended its turn has no other way to learn the task exists.
+     * 将新分配的工作推送到拥有者邮箱，让成员带着任务被唤醒。
+     * 若工作成员先前探查了空看板并结束当前轮次，除此之外就无法获知新任务的存在。
      */
     private void notifyMemberTaskAssigned(TeamTask task) {
         String owner = task.owner();
@@ -263,8 +266,8 @@ public final class LocalTeamClient implements TeamClient {
     }
 
     /**
-     * Pushes a terminal task transition into the lead's mailbox so the lead is woken with the
-     * outcome. Without this the board would change silently and an idle lead would never react.
+     * 将任务进入终态的事件推送到负责人邮箱，使负责人获知结果并被唤醒。
+     * 否则看板只会静默变化，空闲的负责人不会作出响应。
      */
     private void notifyLeadTaskSettled(TeamTask task, String verb, String detail) {
         String owner = task.owner() == null || task.owner().isBlank() ? "unknown" : task.owner();
@@ -290,17 +293,16 @@ public final class LocalTeamClient implements TeamClient {
     }
 
     /**
-     * Persists a notification synchronously. These calls run inside {@code Mono.fromCallable}
-     * blocks on boundedElastic threads, so blocking here guarantees the message is visible in the
-     * store before the triggering operation (createTask/failTask/...) completes. A fire-and-forget
-     * subscription raced with callers reading the inbox immediately afterwards.
+     * 同步持久化通知。这些调用在 boundedElastic 线程的 {@code Mono.fromCallable} 块中运行，
+     * 此处阻塞可确保触发操作（createTask/failTask 等）完成之前，消息已在存储中可见。
+     * 无需等待的订阅方式会与调用方紧接着读取收件箱的操作产生竞争。
      */
     private void deliverNotification(
             String namespace, String teamName, String from, String to, String content) {
         try {
             sendMessage(namespace, teamName, from, to, content).block();
         } catch (RuntimeException ex) {
-            // Notification failures never break the task transition itself.
+            // 通知失败绝不破坏任务状态转换本身。
         }
     }
 
@@ -322,8 +324,8 @@ public final class LocalTeamClient implements TeamClient {
                                             cur.task().subject(),
                                             cur.task().description(),
                                             TeamTask.PENDING,
-                                            // Owner is cleared so the task returns to the
-                                            // claimable pool, matching control-plane Unclaim.
+                                            // 清除拥有者，使任务返回
+                                            // 可领取池，与控制平面的 Unclaim 语义一致。
                                             "",
                                             cur.task().blockedBy(),
                                             cur.task().result(),
@@ -346,8 +348,8 @@ public final class LocalTeamClient implements TeamClient {
     public Mono<TeamMessage> sendMessage(
             String namespace, String teamName, String from, String to, String content) {
         if (to != null && to.equals(from)) {
-            // A self-addressed message only wakes its sender again, so the reply it
-            // was meant for never reaches anyone.
+            // 给自己发送消息只会再次唤醒发送者，
+            // 原本要回复给其他人的内容就无法送达。
             return Mono.error(
                     new IllegalArgumentException(
                             "cannot send a message to yourself; address another roster member"));
@@ -362,8 +364,8 @@ public final class LocalTeamClient implements TeamClient {
                             value.put("to", to);
                             value.put("content", content);
                             store.put(msgNs(namespace, teamName), String.valueOf(id), value);
-                            // Wake the recipient through the middleware, which owns the
-                            // member -> runtime session mapping this client cannot resolve.
+                            // 通过中间件唤醒接收方；中间件拥有
+                            // 本客户端无法解析的“成员 → 运行时会话”映射。
                             TeamWakeups.wake(teamName, to, content);
                             return msg;
                         })
@@ -564,7 +566,7 @@ public final class LocalTeamClient implements TeamClient {
             throw new IllegalArgumentException("task not found: " + taskId);
         }
         TeamTask task = TeamTask.fromMap(item.value());
-        // Prefer BaseStore CAS version as the authority.
+        // 优先以 BaseStore 的 CAS 版本为权威依据。
         return new VersionedTask(
                 new TeamTask(
                         task.taskId(),

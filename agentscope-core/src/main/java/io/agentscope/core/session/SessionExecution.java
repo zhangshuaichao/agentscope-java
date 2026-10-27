@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/** Execution-side inbox consumer. Validation runs under the native execution writer lease. */
+/** 执行侧的收件箱消费方。验证在原生执行写入者租约保护下运行。 */
 public final class SessionExecution {
     public static final String CONTEXT_KEY = "agentscope.session.execution";
     private final SessionLog log;
@@ -66,8 +66,8 @@ public final class SessionExecution {
             if (command.kind().equals("resume")) {
                 if (!pending.isEmpty())
                     throw new IllegalStateException("Answer pending interactions first");
-                // Confirmations change tool/permission state, rather than becoming chat messages.
-                // Resolved answers must not be replayed as a blank user message on continuation.
+                // 确认会改变工具／权限状态，而不是变成聊天消息。
+                // 继续执行时，已解析的回答不得作为空白用户消息重放。
                 inputs =
                         view.inputs().getOrDefault(command.turnId(), List.of()).stream()
                                 .filter(
@@ -93,7 +93,7 @@ public final class SessionExecution {
         opened = true;
     }
 
-    /** Checkpoint messages before marking their commands consumed; retries deduplicate message IDs. */
+    /** 将命令标记为已消费前，先为消息写入检查点；重试按消息 ID 去重。 */
     public void beforeStep(SessionRecorder recorder, AgentState state) {
         inbox.locked(
                 tx -> {
@@ -121,7 +121,7 @@ public final class SessionExecution {
                 });
     }
 
-    /** Serializes terminal admission with steering acceptance, so accepted steering is not lost. */
+    /** 将终结准入与引导指令接收串行化，避免已接收的引导指令丢失。 */
     public boolean continueOrClose(SessionRecorder recorder) {
         return inbox.locked(
                 tx -> {

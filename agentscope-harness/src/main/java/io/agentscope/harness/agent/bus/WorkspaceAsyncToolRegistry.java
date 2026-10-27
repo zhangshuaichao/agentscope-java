@@ -31,14 +31,16 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * {@link AsyncToolRegistry} backed by {@link AbstractFilesystem}.
+ * 基于 {@link AbstractFilesystem} 的 {@link AsyncToolRegistry}。
  *
- * <p>Each async tool record is persisted as a JSON file under
- * {@code {registryRoot}/async-tools/{sessionId}/{recordId}.json}. This ensures records survive
- * process crashes — {@link io.agentscope.harness.agent.middleware.InboxMiddleware} can detect
- * stale RUNNING records on session recovery and notify the LLM.
+ * <p>每条记录保存为 {@code {registryRoot}/async-tools/{sessionId}/{recordId}.json}。
+ * 后端保留这些文件时，记录可跨进程崩溃保留；
+ * {@link io.agentscope.harness.agent.middleware.InboxMiddleware} 在恢复会话时检测过期 RUNNING 记录并通知模型。
  *
- * <p>Works with any filesystem backend (local, remote, sandbox).
+ * <p>适用于本地、远程和沙箱文件系统。
+ *
+ * <p>【学习提示】complete/fail 这里只更新状态，不保存 result/error 文本；结果通知由上层负责。
+ * 状态更新先删除再写入，并非事务性原地替换，不能据此推断跨进程恰好一次语义。
  */
 public class WorkspaceAsyncToolRegistry implements AsyncToolRegistry {
 
@@ -49,8 +51,8 @@ public class WorkspaceAsyncToolRegistry implements AsyncToolRegistry {
     private final String registryRoot;
 
     /**
-     * @param filesystem   any {@link AbstractFilesystem} implementation
-     * @param registryRoot absolute path within the filesystem (e.g. {@code "/bus/async-tools"})
+     * @param filesystem 任意 {@link AbstractFilesystem} 实现
+     * @param registryRoot 文件系统内的绝对路径，例如 {@code "/bus/async-tools"}
      */
     public WorkspaceAsyncToolRegistry(AbstractFilesystem filesystem, String registryRoot) {
         this.fs = filesystem;

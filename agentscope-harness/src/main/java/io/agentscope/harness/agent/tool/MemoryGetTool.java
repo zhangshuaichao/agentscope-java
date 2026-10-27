@@ -24,8 +24,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Tool for reading specific lines from memory files, typically used after
- * {@link MemorySearchTool} to fetch surrounding context.
+ * 读取记忆文件指定行的工具，通常在 {@link MemorySearchTool}
+ * 之后使用，以获取周围上下文。
  */
 public class MemoryGetTool {
 

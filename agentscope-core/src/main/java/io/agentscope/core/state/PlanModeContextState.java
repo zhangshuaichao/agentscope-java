@@ -21,17 +21,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.Objects;
 
 /**
- * Persisted plan-mode flag for an agent.
+ * 智能体持久化的规划模式标记。
  *
- * <p>Plan mode is a read-only "design first" phase: while {@link #planActive} is {@code true}, the
- * {@code PlanModeMiddleware} denies mutating tool calls so the agent can investigate and draft a
- * plan without changing anything. {@link #currentPlanFile} is the workspace-relative path of the
- * markdown blueprint the agent is editing (if any).
+ * <p>规划模式是只读的“先设计”阶段：当 {@link #planActive} 为 {@code true} 时，
+ * {@code PlanModeMiddleware} 会拒绝修改型工具调用，让智能体能够调研并起草计划，
+ * 而不实际修改内容。{@link #currentPlanFile} 是正在编辑的 Markdown 方案文件
+ * 相对于工作区的路径（如果存在）。
  *
- * <p>This lives inside {@link AgentState} (rather than in volatile in-process memory) precisely
- * because agentscope agents are distributed and resumable: a plan-mode session must survive process
- * restarts and hand-offs across nodes. Toggling the flag and persisting the {@link AgentState} is
- * therefore the canonical way to switch modes dynamically at runtime.
+ * <p>此状态放在 {@link AgentState} 内，而不是易失的进程内存中，因为 AgentScope
+ * 智能体支持分布式执行和恢复：规划模式会话必须能够跨进程重启和节点交接存续。
+ * 因此，切换该标记并持久化 {@link AgentState} 是运行时动态切换模式的标准方式。
  */
 @JsonPropertyOrder({"plan_active", "current_plan_file"})
 public final class PlanModeContextState {

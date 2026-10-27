@@ -21,10 +21,9 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Represents a chat completion response from a language model.
+ * 表示语言模型的聊天补全响应。
  *
- * <p>This immutable data class contains the response content, usage information,
- * and optional metadata returned by the model after processing a chat request.
+ * <p>此不可变数据类包含模型处理聊天请求后返回的内容、用量信息及可选元数据。
  */
 public class ChatResponse {
 
@@ -35,13 +34,13 @@ public class ChatResponse {
     private final String finishReason;
 
     /**
-     * Creates a new ChatResponse instance.
+     * 创建新的 ChatResponse 实例。
      *
-     * @param id the unique identifier for this response
-     * @param content the list of content blocks containing the response content
-     * @param usage the token usage information for this response
-     * @param metadata additional metadata from the model provider
-     * @param finishReason the reason for
+     * @param id 此响应的唯一标识符
+     * @param content 承载响应内容的内容块列表
+     * @param usage 此响应的词元用量信息
+     * @param metadata 模型服务商提供的附加元数据
+     * @param finishReason 生成结束的原因
      */
     public ChatResponse(
             String id,
@@ -57,73 +56,70 @@ public class ChatResponse {
     }
 
     /**
-     * Gets the unique identifier for this response.
+     * 获取此响应的唯一标识符。
      *
-     * @return the response identifier
+     * @return 响应标识符
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the content blocks containing the response content.
+     * 获取承载响应内容的内容块。
      *
-     * @return the list of content blocks
+     * @return 内容块列表
      */
     public List<ContentBlock> getContent() {
         return content;
     }
 
     /**
-     * Gets the token usage information for this response.
+     * 获取此响应的词元用量信息。
      *
-     * @return the usage information
+     * @return 用量信息
      */
     public ChatUsage getUsage() {
         return usage;
     }
 
     /**
-     * Gets the metadata from the model provider.
+     * 获取模型服务商提供的元数据。
      *
-     * @return the metadata map
+     * @return 元数据映射
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Gets the reason the model stopped generating tokens.
+     * 获取模型停止生成词元的原因。
      *
-     * @return the finish reason
-     * */
+     * @return 结束原因
+     */
     public String getFinishReason() {
         return finishReason;
     }
 
     /**
-     * Creates a new instance of ChatResponse with the specified ID,
-     * copying all other fields from this instance.
+     * 使用指定 ID 创建新的 ChatResponse，并从当前实例复制其他所有字段。
      *
-     * @param newId the new identifier
-     * @return a new ChatResponse instance
+     * @param newId 新标识符
+     * @return 新的 ChatResponse 实例
      */
     public ChatResponse withId(String newId) {
         return new ChatResponse(newId, this.content, this.usage, this.metadata, this.finishReason);
     }
 
     /**
-     * Creates a new builder for ChatResponse.
+     * 创建新的 ChatResponse 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for creating ChatResponse instances.
-     */
+    /** 创建 ChatResponse 实例的建造者。 */
     public static class Builder {
         private String id;
         private List<ContentBlock> content;
@@ -132,10 +128,10 @@ public class ChatResponse {
         private String finishReason;
 
         /**
-         * Sets the response identifier.
+         * 设置响应标识符。
          *
-         * @param id the unique identifier for this response
-         * @return this builder instance
+         * @param id 此响应的唯一标识符
+         * @return 当前建造者实例
          */
         public Builder id(String id) {
             this.id = id;
@@ -143,10 +139,10 @@ public class ChatResponse {
         }
 
         /**
-         * Sets the content blocks for the response.
+         * 设置响应的内容块。
          *
-         * @param content the list of content blocks containing the response content
-         * @return this builder instance
+         * @param content 承载响应内容的内容块列表
+         * @return 当前建造者实例
          */
         public Builder content(List<ContentBlock> content) {
             this.content = content;
@@ -154,10 +150,10 @@ public class ChatResponse {
         }
 
         /**
-         * Sets the usage information for the response.
+         * 设置响应的用量信息。
          *
-         * @param usage the token usage information
-         * @return this builder instance
+         * @param usage 词元用量信息
+         * @return 当前建造者实例
          */
         public Builder usage(ChatUsage usage) {
             this.usage = usage;
@@ -165,10 +161,10 @@ public class ChatResponse {
         }
 
         /**
-         * Sets the metadata for the response.
+         * 设置响应的元数据。
          *
-         * @param metadata additional metadata from the model provider
-         * @return this builder instance
+         * @param metadata 模型服务商提供的附加元数据
+         * @return 当前建造者实例
          */
         public Builder metadata(Map<String, Object> metadata) {
             this.metadata = metadata;
@@ -176,10 +172,10 @@ public class ChatResponse {
         }
 
         /**
-         * Sets the finish reason for the response.
+         * 设置响应的结束原因。
          *
-         * @param finishReason the finish reason sent by the model provider
-         * @return this builder instance
+         * @param finishReason 模型服务商发送的结束原因
+         * @return 当前建造者实例
          */
         public Builder finishReason(String finishReason) {
             this.finishReason = finishReason;
@@ -187,16 +183,15 @@ public class ChatResponse {
         }
 
         /**
-         * Builds a new ChatResponse instance with the set values.
+         * 使用已设置的值构建新的 ChatResponse 实例。
          * <p>
-         * If no id was set (or is empty/blank), a random UUID will be generated
-         * automatically. This ensures compatibility with LLM providers (like Ollama)
-         * that don't return an id field in their API responses.
+         * 若未设置 id（或为空字符串／空白字符串），则自动生成随机 UUID，
+         * 兼容 Ollama 等不会在 API 响应中返回 id 字段的模型服务商。
          *
-         * @return a new ChatResponse instance
+         * @return 新的 ChatResponse 实例
          */
         public ChatResponse build() {
-            // Auto-generate id if not set, empty, or blank (for providers like Ollama)
+            // 未设置 id 或 id 为空／空白时自动生成（适用于 Ollama 等服务商）
             String responseId = this.id;
             if (responseId == null || responseId.trim().isEmpty()) {
                 responseId = UUID.randomUUID().toString();

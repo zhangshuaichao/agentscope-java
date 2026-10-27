@@ -34,17 +34,19 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * {@link MessageBus} implementation backed by {@link AbstractFilesystem}.
+ * 基于 {@link AbstractFilesystem} 的 {@link MessageBus} 实现。
  *
- * <p>Works with any filesystem backend (local, remote, sandbox). Cross-process delivery only
- * works when the filesystem backend is actually shared (for example a remote/KV-backed store);
- * a pure local disk backend remains single-process.
+ * <p>适用于本地、远程和沙箱后端。跨进程交付要求后端真正共享，例如远程或 KV 存储；
+ * 纯本地磁盘实现不提供跨机器共享能力。
  *
- * <p>Mode D (pub/sub) is degraded to polling: {@link #subscribe} returns a {@code Flux} that emits
- * an empty signal every 3 seconds by default (configurable via constructor); {@link #publish} is a
- * no-op.
+ * <p>模式 D 的发布订阅退化为轮询：{@link #subscribe} 返回的 {@code Flux} 默认每 3 秒发出空信号，
+ * 可由构造器配置间隔；{@link #publish} 不执行操作。
  *
- * <p>File layout under {@code busRoot}:
+ * <p>【学习提示】queueDrain 实际执行列目录、读取、删除，并没有跨进程锁或原子认领。
+ * 因此不要把接口描述理解为该文件实现保证并发消费者之间的恰好一次处理。
+ * Mono.fromCallable 只延迟文件操作，不自动切换线程；阻塞后端仍需调用方安排调度器。
+ *
+ * <p>{@code busRoot} 下的文件布局：
  * <pre>
  * {busRoot}/
  *   queues/{key-hash}/
@@ -65,18 +67,17 @@ public class WorkspaceMessageBus implements MessageBus {
     private final AtomicLong seq = new AtomicLong(System.nanoTime());
 
     /**
-     * @param filesystem any {@link AbstractFilesystem} implementation
-     * @param busRoot    absolute path within the filesystem for bus data (e.g. {@code "/bus"})
+     * @param filesystem 任意 {@link AbstractFilesystem} 实现
+     * @param busRoot 文件系统中保存总线数据的绝对路径，例如 {@code "/bus"}
      */
     public WorkspaceMessageBus(AbstractFilesystem filesystem, String busRoot) {
         this(filesystem, busRoot, DEFAULT_POLL_INTERVAL);
     }
 
     /**
-     * @param filesystem   any {@link AbstractFilesystem} implementation
-     * @param busRoot      absolute path within the filesystem for bus data (e.g. {@code "/bus"})
-     * @param pollInterval interval between {@link #subscribe} heartbeat ticks; tests pass a small
-     *     value so signal-driven waiting does not pay the production 3s granularity
+     * @param filesystem 任意 {@link AbstractFilesystem} 实现
+     * @param busRoot 文件系统中保存总线数据的绝对路径，例如 {@code "/bus"}
+     * @param pollInterval {@link #subscribe} 心跳间隔；测试可设较小值，避免等待生产默认的 3 秒粒度
      */
     public WorkspaceMessageBus(
             AbstractFilesystem filesystem, String busRoot, Duration pollInterval) {
@@ -88,7 +89,7 @@ public class WorkspaceMessageBus implements MessageBus {
                         : pollInterval;
     }
 
-    // ---- Mode A: drain queue ----
+    // ---- 模式 A：消费并移除的队列 ----
 
     @Override
     public Mono<String> queuePush(String key, Map<String, Object> payload) {
@@ -116,8 +117,8 @@ public class WorkspaceMessageBus implements MessageBus {
                         FileInfo fi = files.get(i);
                         String content = readFileContent(fi.path());
                         if (content == null) {
-                            // Transient read failure (race with concurrent drain, I/O error).
-                            // Do NOT delete — preserve the entry so the next drain can retry it.
+                            // 临时读取失败，例如并发消费竞争或 I/O 错误。
+                            // 不要删除；保留记录，让下次消费重试。
                             log.warn(
                                     "queueDrain: failed to read entry {}, skipping without delete",
                                     fi.path());
@@ -130,8 +131,8 @@ public class WorkspaceMessageBus implements MessageBus {
                                     JsonUtils.getJsonCodec().fromJson(content, Map.class);
                             result.add(new BusEntry(entryId, payload));
                         } catch (Exception e) {
-                            // Corrupt JSON is unrecoverable; delete to avoid an infinite drain
-                            // loop on the same bad entry, but log so it can be investigated.
+                            // 损坏的 JSON 无法恢复；删除它以免持续阻塞队列，
+                            // 同时记录日志，便于定位同一坏记录导致的循环。
                             log.warn(
                                     "queueDrain: corrupt JSON in entry {} ({}), deleting to"
                                             + " unblock queue",
@@ -156,7 +157,7 @@ public class WorkspaceMessageBus implements MessageBus {
         return Mono.fromCallable(() -> !listSorted(queueDir(key)).isEmpty());
     }
 
-    // ---- Mode C: replay log ----
+    // ---- 模式 C：可重放日志 ----
 
     @Override
     public Mono<String> logAppend(String key, Map<String, Object> payload, int maxLen) {
@@ -224,7 +225,7 @@ public class WorkspaceMessageBus implements MessageBus {
         return Mono.fromRunnable(() -> fs.delete(RC, logDir(key)));
     }
 
-    // ---- Mode D: degraded pub/sub ----
+    // ---- 模式 D：退化的发布订阅 ----
 
     @Override
     public Mono<Void> publish(String key, Map<String, Object> payload) {
@@ -237,7 +238,7 @@ public class WorkspaceMessageBus implements MessageBus {
                 .map(tick -> Map.<String, Object>of());
     }
 
-    // ---- Internal helpers ----
+    // ---- 内部辅助方法 ----
 
     private String queueDir(String key) {
         return busRoot + "/queues/" + hashKey(key);

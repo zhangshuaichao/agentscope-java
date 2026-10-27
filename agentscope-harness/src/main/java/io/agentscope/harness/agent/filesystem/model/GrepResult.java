@@ -18,10 +18,10 @@ package io.agentscope.harness.agent.filesystem.model;
 import java.util.List;
 
 /**
- * Result from abstract filesystem grep operations.
+ * 抽象文件系统 grep 操作的结果。
  *
- * @param error error message on failure, {@code null} on success
- * @param matches list of grep matches on success, {@code null} on failure
+ * @param error 失败时的错误消息；成功时为 {@code null}
+ * @param matches 成功时的 grep 匹配项列表；失败时为 {@code null}
  */
 public record GrepResult(String error, List<GrepMatch> matches) {
 

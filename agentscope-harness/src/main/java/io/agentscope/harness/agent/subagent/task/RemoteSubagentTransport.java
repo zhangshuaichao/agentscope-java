@@ -22,11 +22,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Transport abstraction for remote subagent execution (Agent Protocol today; A2A later).
+ * 远程子智能体执行的传输抽象（当前使用 Agent Protocol，未来支持 A2A）。
  */
 public interface RemoteSubagentTransport {
 
-    /** Stable transport type string persisted on {@link TaskRecord#getTransportType()}. */
+    /**
+     * 持久化到 {@link TaskRecord#getTransportType()} 的稳定传输类型字符串。
+     */
     String transportType();
 
     void submit(
@@ -47,10 +49,10 @@ public interface RemoteSubagentTransport {
             throws Exception;
 
     /**
-     * Opens an event stream for the remote task. Default is a no-op so transports without streaming
-     * degrade gracefully to polling.
+     * 打开远程任务的事件流。默认不执行操作，使不支持流式传输的实现
+     * 能平稳降级为轮询。
      *
-     * @return closeable handle that stops the subscription
+     * @return 关闭后停止订阅的可关闭句柄
      */
     default Closeable streamEvents(
             RemoteTarget target, String taskId, long fromSeq, Consumer<RemoteAgentEvent> consumer) {

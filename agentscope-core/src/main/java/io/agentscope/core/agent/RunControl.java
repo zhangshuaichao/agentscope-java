@@ -26,7 +26,9 @@ import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
-/** Runtime-only control for one execution; never stored in conversation state. */
+/**
+ * 单次执行的纯运行时控制对象；绝不存入会话状态。
+ */
 public final class RunControl {
     static final Object CONTEXT_KEY = new Object();
     private final String agentId;
@@ -45,12 +47,16 @@ public final class RunControl {
         this.runId = runId == null || runId.isBlank() ? RuntimeContext.generateRunId() : runId;
     }
 
-    /** Same identifier used by AgentRun and the native SessionEvent executionRunId. */
+    /**
+     * 与 AgentRun 及原生 SessionEvent 的 executionRunId 使用相同的标识符。
+     */
     public String runId() {
         return runId;
     }
 
-    /** Runtime propagation; nested calls without this control allocate their own run. */
+    /**
+     * 用于运行时传播；未携带此控制对象的嵌套调用将分配独立的运行。
+     */
     public static RunControl current(ContextView context, String agentId) {
         RunControl control = context.getOrDefault(CONTEXT_KEY, null);
         return control != null && control.belongsTo(agentId) ? control : null;
@@ -88,7 +94,9 @@ public final class RunControl {
         return true;
     }
 
-    /** Cancel this execution immediately, including before subscription or while queued. */
+    /**
+     * 立即取消本次执行，包括订阅之前或排队期间。
+     */
     public boolean cancel() {
         synchronized (this) {
             if (status.isTerminal()) {
@@ -101,7 +109,9 @@ public final class RunControl {
         return true;
     }
 
-    /** Running calls interrupt cooperatively; calls not yet admitted are cancelled. */
+    /**
+     * 正在运行的调用采用协作式中断；尚未获准进入的调用则被取消。
+     */
     public boolean interrupt(InterruptSource source, Msg message) {
         synchronized (this) {
             if (status.isTerminal()) {
@@ -125,7 +135,9 @@ public final class RunControl {
         termination.tryEmitValue(outcome);
     }
 
-    /** Cancel upstream first, then report cancellation instead of a successful empty completion. */
+    /**
+     * 先取消上游，再报告取消，而不是将其视为成功的空完成。
+     */
     <T> Flux<T> guard(Publisher<T> source) {
         return Flux.from(source)
                 .takeUntilOther(cancellation.asMono())

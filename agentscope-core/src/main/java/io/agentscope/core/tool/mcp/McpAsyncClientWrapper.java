@@ -24,11 +24,9 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Wrapper for asynchronous MCP clients using Project Reactor.
- * This implementation delegates to {@link McpAsyncClient} and provides
- * reactive operations that return Mono types.
+ * 使用 Project Reactor 的异步 MCP 客户端包装器，委托给 {@link McpAsyncClient}，提供返回 Mono 的响应式操作。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * McpAsyncClient client = ... // created via McpClient.async()
  * McpAsyncClientWrapper wrapper = new McpAsyncClientWrapper("my-mcp", client);
@@ -44,10 +42,10 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     private final McpAsyncClient client;
 
     /**
-     * Constructs a new asynchronous MCP client wrapper.
+     * 构造异步 MCP 客户端包装器。
      *
-     * @param name unique identifier for this client
-     * @param client the underlying async MCP client
+     * @param name 客户端唯一标识符
+     * @param client 底层异步 MCP 客户端
      */
     public McpAsyncClientWrapper(String name, McpAsyncClient client) {
         super(name);
@@ -55,12 +53,11 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Initializes the async MCP client connection and caches available tools.
+     * 初始化异步 MCP 连接并缓存可用工具。
      *
-     * <p>This method connects to the MCP server, discovers available tools, and caches them for
-     * later use. If already initialized, this method returns immediately without re-initializing.
+     * <p>连接服务器、发现工具并缓存供后续使用。已初始化时立即返回，不重复初始化。
      *
-     * @return a Mono that completes when initialization is finished
+     * @return 初始化完成时完成的 Mono
      */
     @Override
     public Mono<Void> initialize() {
@@ -84,7 +81,7 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
                                     "MCP client '{}' discovered {} tools",
                                     name,
                                     result.tools().size());
-                            // Cache all tools
+                            // 缓存全部工具
                             result.tools().forEach(tool -> cachedTools.put(tool.name(), tool));
                         })
                 .doOnSuccess(v -> initialized = true)
@@ -93,13 +90,12 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Lists all tools available from the MCP server.
+     * 列出 MCP 服务器的全部可用工具。
      *
-     * <p>This method queries the MCP server for its current list of tools. The client must be
-     * initialized before calling this method.
+     * <p>查询服务器当前工具列表，调用前必须初始化客户端。
      *
-     * @return a Mono emitting the list of available tools
-     * @throws IllegalStateException if the client is not initialized
+     * @return 发出可用工具列表的 Mono
+     * @throws IllegalStateException 当客户端未初始化时
      */
     @Override
     public Mono<List<McpSchema.Tool>> listTools() {
@@ -112,15 +108,14 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Invokes a tool on the MCP server asynchronously.
+     * 异步调用 MCP 服务器工具。
      *
-     * <p>This method sends a tool call request to the MCP server and returns the result
-     * asynchronously. The client must be initialized before calling this method.
+     * <p>发送工具调用请求并异步返回结果，调用前必须初始化客户端。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @return a Mono emitting the tool call result (may contain error information)
-     * @throws IllegalStateException if the client is not initialized
+     * @param toolName 待调用工具名称
+     * @param arguments 传给工具的参数
+     * @return 发出工具调用结果的 Mono（可包含错误信息）
+     * @throws IllegalStateException 当客户端未初始化时
      */
     @Override
     public Mono<McpSchema.CallToolResult> callTool(String toolName, Map<String, Object> arguments) {
@@ -128,17 +123,16 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Invokes a tool on the MCP server asynchronously with additional metadata.
+     * 携带附加元数据异步调用 MCP 服务器工具。
      *
-     * <p>This method sends a tool call request to the MCP server and returns the result
-     * asynchronously. The client must be initialized before calling this method.
+     * <p>发送请求并异步返回结果，调用前必须初始化客户端。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @param meta additional metadata to include in the request
-     * @return a Mono emitting the tool call result (may contain error information)
-     * @throws IllegalStateException if the client is not initialized
-     * */
+     * @param toolName 待调用工具名称
+     * @param arguments 传给工具的参数
+     * @param meta 请求附加元数据
+     * @return 发出工具调用结果的 Mono（可包含错误信息）
+     * @throws IllegalStateException 当客户端未初始化时
+     */
     @Override
     public Mono<McpSchema.CallToolResult> callTool(
             String toolName, Map<String, Object> arguments, Map<String, Object> meta) {
@@ -173,10 +167,9 @@ public class McpAsyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Closes the MCP client connection and releases all resources.
+     * 关闭 MCP 客户端连接并释放所有资源。
      *
-     * <p>This method attempts to close the client gracefully, falling back to forceful closure if
-     * graceful closure fails. This method is idempotent and can be called multiple times safely.
+     * <p>先尝试优雅关闭，失败时强制关闭。方法幂等，可安全地重复调用。
      */
     @Override
     public void close() {

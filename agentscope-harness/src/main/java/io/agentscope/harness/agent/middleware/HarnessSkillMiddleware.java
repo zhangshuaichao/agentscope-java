@@ -48,31 +48,32 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Harness-native skill middleware. Replaces the legacy {@code DynamicSkillMiddleware} subclass
- * with a standalone implementation that owns a {@link SkillRuntime}.
+ * Harness 原生技能中间件，替代旧版 {@code DynamicSkillMiddleware} 子类，
+ * 使用自行拥有 {@link SkillRuntime} 的独立实现。
  *
- * <p>Per {@code onSystemPrompt} pass:
- *
+ * <p>每次 {@code onSystemPrompt} 阶段：
  * <ol>
- *   <li>Resolve the current {@link RuntimeContext} from the agent.
- *   <li>Iterate repositories low-to-high priority and merge by {@code AgentSkill.name} (later
- *       wins).
- *   <li>Apply the optional {@link SkillVisibilityFilter}.
- *   <li>Stage Layer-1/Layer-2 marketplace skills' resources into
- *       {@code <wsRoot>/.skills-cache/<source-ns>/<skill>/} via {@link MarketplaceStager}.
- *   <li>Build a {@link SkillCatalog} of {@link HarnessSkillEntry} (with lazy resources and
- *       resolved {@code filesRoot}).
- *   <li>Bind the catalog to the current {@link RuntimeContext} through {@link SkillRuntime}, which
- *       also (idempotently) registers {@code load_skill_through_path} on the runtime toolkit.
- *   <li>Render the {@code <available_skills>} prompt block and register it as a tail runtime
- *       material ({@code WorkspaceContextMaterials}) instead of appending it to the system
- *       prompt, keeping the system head byte-stable across steps.
+ *   <li>从智能体解析当前 {@link RuntimeContext}。
+ *   <li>按低到高优先级遍历仓库，以 {@code AgentSkill.name} 合并，后者优先。
+ *   <li>应用可选的 {@link SkillVisibilityFilter}。
+ *   <li>将第 1／第 2 层市场技能的资源暂存到
+ *       {@code <wsRoot>/.skills-cache/<source-ns>/<skill>/}，通过 {@link MarketplaceStager} 完成。
+ *   <li>构建 {@link SkillCatalog}，由 {@link HarnessSkillEntry} 组成，
+ *       保留延迟资源和解析后的 {@code filesRoot}。
+ *   <li>将目录绑定到当前 {@link RuntimeContext}，通过 {@link SkillRuntime} 完成，
+ *       同时幂等地向运行时工具集注册 {@code load_skill_through_path}。
+ *   <li>渲染 {@code <available_skills>} 提示块，将其注册为尾部运行时材料
+ *       （{@code WorkspaceContextMaterials}），而不是追加到系统提示，
+ *       使不同步骤之间的系统头部保持字节稳定。
  * </ol>
  *
- * <p><b>Toolkit note:</b> construction registers the load tool as ungrouped before {@link
- * io.agentscope.core.ReActAgent ReActAgent} copies the toolkit, so persisted sessions with an empty
- * active-group list still see it. Each system-prompt pass also verifies the live toolkit, so direct
- * middleware usage remains supported.
+ * <p><b>工具集说明：</b>构造时会在 {@link
+ * io.agentscope.core.ReActAgent ReActAgent} 复制工具集之前，将加载工具注册为不分组工具，
+ * 因此已持久化但活动组列表为空的会话仍能看到它。
+ * 每次系统提示阶段也会检查活动工具集，继续支持直接使用中间件。
+ *
+ * <p>【学习提示】技能目录、资源暂存、实际加载工具是不同层次。
+ * 目录用于发现；延迟访问减少不必要的资源加载；每次调用的隔离范围则决定缓存清理能触及哪些数据。
  */
 @SuppressWarnings("deprecation")
 public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
@@ -90,10 +91,9 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     private IsolationScope isolationScope;
 
     /**
-     * Per-call cache scope, mirroring the identity {@link IsolationScope} already applies to
-     * runtime data. Calls that share a scope share a {@code .skills-cache} subtree, and only
-     * those calls can sweep it — which is what makes one call's visible-skill white-list
-     * authoritative for everything the sweep can reach.
+     * 每次调用的缓存作用域，与 {@link IsolationScope} 已用于运行时数据的身份维度一致。
+     * 共享作用域的调用共享 {@code .skills-cache} 子树，且只有这些调用能清理它；
+     * 因此，一次调用的可见技能允许列表才能对清理所能触及的全部内容具有权威性。
      */
     private String scopeKeyFor(RuntimeContext ctx) {
         IsolationScope scope = isolationScope != null ? isolationScope : IsolationScope.USER;
@@ -103,9 +103,9 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
                 if (uid != null && !uid.isBlank()) {
                     yield uid;
                 }
-                // Mirrors IsolationScope.USER's documented fall back to the session identity.
-                // null means "no identity to key on" and is distinct from an identity that
-                // happens to be spelled like the stager's shared bucket.
+                // 保持 IsolationScope.USER 文档所述的回退到会话身份的逻辑。
+                // null 表示“没有可作为键的身份”，不同于恰好拼写为
+                // 暂存器共享分区名称的真实身份。
                 String sid = ctx != null ? ctx.getSessionId() : null;
                 yield sid != null && !sid.isBlank() ? sid : null;
             }
@@ -113,7 +113,7 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
                 String sid = ctx != null ? ctx.getSessionId() : null;
                 yield sid != null && !sid.isBlank() ? sid : null;
             }
-            // The workspace is already per-agent, so these need no further separation.
+            // 工作区已按智能体隔离，因此无需进一步分隔。
             case AGENT, GLOBAL -> null;
         };
     }
@@ -142,16 +142,15 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Full constructor.
+     * 完整构造方法。
      *
-     * @param repositories     compose-ordered list (low-to-high priority)
-     * @param toolkit          toolkit being assembled for the agent
-     * @param builderFilter    skill filter passed at agent build time (may be {@code null})
-     * @param visibilityFilter optional per-request filter (canary/allow-list)
-     * @param stager           marketplace stager; {@code null} disables staging entirely
-     * @param shellPathPolicy  policy for resolving {@code <files-root>} per shell mode; never
-     *                         {@code null} — pass {@link ShellPathPolicy#noShell()} when no
-     *                         shell tool is registered
+     * @param repositories 按组合顺序排列的仓库列表（低到高优先级）
+     * @param toolkit 正在为智能体组装的工具集
+     * @param builderFilter 构建智能体时传入的技能过滤器（可为 {@code null}）
+     * @param visibilityFilter 可选的逐请求过滤器（金丝雀／允许列表）
+     * @param stager 市场资源暂存器；{@code null} 完全禁用暂存
+     * @param shellPathPolicy 按 shell 模式解析 {@code <files-root>} 的策略；不可为
+     *     {@code null}，未注册 shell 工具时传入 {@link ShellPathPolicy#noShell()}
      */
     public HarnessSkillMiddleware(
             List<AgentSkillRepository> repositories,
@@ -171,8 +170,8 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Creates a middleware whose merged repository view is captured once during construction.
-     * Filters remain per-call, and lazy resource access remains bound to the current context.
+     * 创建在构造时仅捕获一次合并仓库视图的中间件。
+     * 过滤仍按调用执行，延迟资源访问仍绑定到当前上下文。
      */
     public static HarnessSkillMiddleware frozen(
             List<AgentSkillRepository> repositories,
@@ -207,8 +206,8 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
                 shellPathPolicy != null ? shellPathPolicy : ShellPathPolicy.noShell();
         this.isolationScope = IsolationScope.USER;
         this.runtime = new SkillRuntime();
-        // Pre-resolve source namespaces once at build time. The compose order is fixed for
-        // the lifetime of the middleware, so this is safe and avoids repeated work per call.
+        // 在构建时一次性解析来源命名空间。中间件整个生命周期中的
+        // 组合顺序固定，因此这种做法安全且避免每次调用重复工作。
         this.sourceNamespaces = MarketplaceStager.resolveSourceNamespaces(this.repositories);
         this.frozenSkills =
                 freezeRepositories
@@ -218,38 +217,37 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
         this.runtime.prepareToolkit(toolkit);
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_SYSTEM_PROMPT);
     }
 
-    /** Visible for tests / introspection. */
+    /** 供测试／自省访问。 */
     public SkillRuntime runtime() {
         return runtime;
     }
 
     /**
-     * Overrides the isolation dimension used to separate {@code .skills-cache} subtrees.
-     * Defaults to {@link IsolationScope#USER}, matching the default for runtime data.
+     * 覆盖用于隔离 {@code .skills-cache} 子树的维度。
+     * 默认为 {@link IsolationScope#USER}，与运行时数据的默认值一致。
      */
     public HarnessSkillMiddleware isolationScope(IsolationScope scope) {
         this.isolationScope = scope;
         return this;
     }
 
-    /** Whether repository enumeration is frozen to the construction-time snapshot. */
+    /** 是否将仓库枚举固定为构造时的快照。 */
     public boolean isFrozen() {
         return frozenSkills != null;
     }
 
     /**
-     * Pre-stages marketplace skill resources to {@code .skills-cache/} on the host workspace.
-     * Intended to be called <em>before</em> sandbox start so that workspace projection picks up
-     * the staged content in the same call. Safe to call multiple times — staging is idempotent
-     * (content-hash guarded).
+     * 预先将市场技能资源暂存到宿主机工作区的 {@code .skills-cache/}。
+     * 应在沙箱启动<em>之前</em>调用，让本次工作区投影包含这些内容。
+     * 可安全重复调用，因为暂存通过内容哈希保护而具备幂等性。
      *
-     * @param ctx the per-call runtime context
+     * @param ctx 每次调用的运行上下文
      */
     public void prestageMarketplaceSkills(RuntimeContext ctx) {
         if (stager == null) {
@@ -323,11 +321,10 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Ships the rendered {@code <available_skills>} block as a tail runtime material instead of
-     * appending it to the system prompt: the catalog changes while a session runs (skills are
-     * installed or removed), and head bytes must stay stable for prefix caching. Registering a
-     * blank item keeps the sourceId deterministic when nothing is visible. The catalog is
-     * required so skill discovery remains available when conversation history is compacted.
+     * 将渲染后的 {@code <available_skills>} 块作为尾部运行时材料提供，而非追加到系统提示。
+     * 会话运行期间目录可能因技能安装或移除而变化；系统头部字节需稳定以支持前缀缓存。
+     * 没有可见技能时仍注册空白项，保持 sourceId 确定。
+     * 对话历史压缩后，仍需该目录维持技能发现能力。
      */
     private static void registerSkillsMaterial(RuntimeContext ctx, String block) {
         WorkspaceContextMaterials.register(
@@ -335,7 +332,7 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     }
 
     // ---------------------------------------------------------------------
-    //  Internals
+    //  内部实现
     // ---------------------------------------------------------------------
 
     private Map<String, RepoBound> skillsForCall(RuntimeContext ctx) {
@@ -362,9 +359,8 @@ public class HarnessSkillMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Merge skills from every repository, in compose order. Later entries with the same
-     * {@code AgentSkill.name} win. Also remembers the source repository per winning skill so
-     * subsequent steps (lazy resources, marketplace stage) can act on it.
+     * 按组合顺序合并各仓库的技能。相同 {@code AgentSkill.name} 的后续条目优先。
+     * 同时记录胜出技能的来源仓库，供后续延迟资源访问和市场暂存使用。
      */
     private LinkedHashMap<String, RepoBound> mergeRepositories(RuntimeContext ctx) {
         LinkedHashMap<String, RepoBound> merged = new LinkedHashMap<>();

@@ -44,23 +44,25 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Middleware that performs conversation compaction before each LLM reasoning call.
+ * 在每次 LLM 推理调用前压缩对话的中间件。
  *
- * <p>Fires on {@link #onReasoning}. When the compaction threshold is exceeded:
+ * <p>在 {@link #onReasoning} 触发。超过压缩阈值时：
  * <ol>
- *   <li>Long-term memories are flushed from the prefix via {@link MemoryFlushManager}.</li>
- *   <li>The native session log retains the complete conversation before compaction.</li>
- *   <li>The prefix is distilled into a structured summary via one LLM call.</li>
- *   <li>The agent's working {@link AgentState#contextMutable() context} is replaced with
- *       {@code [summaryMsg] + preservedTail}.</li>
- *   <li>The downstream {@link ReasoningInput} is rebuilt with
- *       {@code [systemMsg] + [summaryMsg] + preservedTail}.</li>
+ *   <li>通过 {@link MemoryFlushManager} 从前缀中提取并写入长期记忆。</li>
+ *   <li>原生会话日志保留压缩前的完整对话。</li>
+ *   <li>通过一次 LLM 调用将前缀提炼为结构化摘要。</li>
+ *   <li>将智能体工作的 {@link AgentState#contextMutable() context} 替换为
+ *       {@code [summaryMsg] + preservedTail}。</li>
+ *   <li>重建下游 {@link ReasoningInput}，内容为
+ *       {@code [systemMsg] + [summaryMsg] + preservedTail}。</li>
  * </ol>
  *
- * <p>When {@link CompactionConfig#getTriggerTokens()} is 0 (dynamic mode, the default), the
- * effective trigger threshold is computed as {@code model.getContextWindowSize() - reserved}.
- * If the model does not report its context window, falls back to
- * {@link CompactionConfig#FALLBACK_TRIGGER_TOKENS}.
+ * <p>{@link CompactionConfig#getTriggerTokens()} 为 0 时采用默认动态模式，
+ * 有效触发阈值按 {@code model.getContextWindowSize() - reserved} 计算。
+ * 若模型不报告上下文窗口，则回退到 {@link CompactionConfig#FALLBACK_TRIGGER_TOKENS}。
+ *
+ * <p>【学习提示】压缩改变的是当前工作上下文，不是删除完整会话事实。
+ * 长期记忆提取、会话日志留存、模型输入摘要是三个不同职责，不应混同为同一种“记忆”。
  */
 public class CompactionMiddleware implements HarnessRuntimeMiddleware {
 
@@ -77,7 +79,7 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
         this.config = config;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_REASONING);
@@ -111,7 +113,7 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                                                 prepared.options())));
     }
 
-    /** Retry provider context overflow inside the same execution, before its recorder is closed. */
+    /** 在同一次执行内重试服务商的上下文溢出，确保记录器尚未关闭。 */
     public HarnessRuntimeMiddleware overflowRecovery() {
         return new HarnessRuntimeMiddleware() {
             @Override
@@ -132,8 +134,8 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                             if (state == null || state.getContext().isEmpty())
                                 return Flux.error(error);
                             List<Msg> before = List.copyOf(state.getContext());
-                            // The final request preparer may already have compacted state before
-                            // the provider rejected the request. Retry from that latest history.
+                            // 服务商拒绝请求前，最终请求准备器可能已经压缩了状态。
+                            // 应从这份最新历史重试。
                             var retryMessages = new ArrayList<Msg>();
                             input.messages().stream()
                                     .filter(
@@ -169,8 +171,8 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                                                         || !state.getContext().equals(before))
                                                     return Flux.error(error);
                                                 applyToContext(state, candidate.history());
-                                                // next creates a new model call; the turn,
-                                                // execution and writer stay unchanged.
+                                                // next 创建新的模型调用，但本轮、
+                                                // 执行实例和写入器保持不变。
                                                 return next.apply(
                                                         new ReasoningInput(
                                                                 candidate.input().messages(),
@@ -195,7 +197,7 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                 || lower.contains("reduce the length");
     }
 
-    /** Compact at the final model boundary, using the actual request's conversation allowance. */
+    /** 在最终模型边界执行压缩，采用实际请求可分配给对话的容量。 */
     public Mono<ModelCallInput> prepare(
             Agent agent, RuntimeContext ctx, ModelCallInput input, int conversationBudget) {
         return Mono.defer(
@@ -215,7 +217,7 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                 });
     }
 
-    /** A model view and candidate durable history. Creating it never replaces active history. */
+    /** 模型视图与候选持久化历史；创建它们绝不会替换活动历史。 */
     public record Candidate(ModelCallInput input, List<Msg> history) {
         public Candidate {
             history = List.copyOf(history);
@@ -262,9 +264,9 @@ public class CompactionMiddleware implements HarnessRuntimeMiddleware {
                     ConversationCompactor compactor =
                             new ConversationCompactor(
                                     model, new MemoryFlushManager(workspaceManager, model));
-                    // Commit only if the view is exactly the canonical history. Hook-added context
-                    // must never leak into durable history, and concurrent changes must not be
-                    // erased.
+                    // 仅当视图与权威历史完全一致时才提交。钩子附加的上下文
+                    // 绝不能泄漏到持久化历史，也不能抹除并发发生的
+                    // 其他修改。
                     boolean canCommit = canonical.equals(conversation);
                     return compactor
                             .compactIfNeeded(

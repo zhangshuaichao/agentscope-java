@@ -22,32 +22,32 @@ import io.agentscope.core.message.ToolUseBlock;
 import io.agentscope.core.tool.Toolkit;
 
 /**
- * Event fired after tool execution completes.
+ * 工具执行完成后触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setToolResult(ToolResultBlock)}
+ * <p><b>可修改：</b>是，通过 {@link #setToolResult(ToolResultBlock)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getToolkit()} - The toolkit instance</li>
- *   <li>{@link #getToolUse()} - The original tool call</li>
- *   <li>{@link #getToolResult()} - The tool execution result (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getToolkit()}：工具集实例</li>
+ *   <li>{@link #getToolUse()}：原始工具调用</li>
+ *   <li>{@link #getToolResult()}：工具执行结果（可修改）</li>
  * </ul>
  *
- * <p><b>Note:</b> This is called once per tool execution.
+ * <p><b>注意：</b>每次工具执行调用一次。
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Post-process individual tool results</li>
- *   <li>Filter or sanitize tool output</li>
- *   <li>Add metadata to results</li>
- *   <li>Handle tool execution errors</li>
- *   <li>Transform result format</li>
- *   <li>Request to stop the agent for human review via {@link #stopAgent()}</li>
+ *   <li>对单个工具结果进行后处理</li>
+ *   <li>过滤或清理工具输出</li>
+ *   <li>为结果添加元数据</li>
+ *   <li>处理工具执行错误</li>
+ *   <li>转换结果格式</li>
+ *   <li>通过 {@link #stopAgent()} 请求停止智能体，以便人工审核</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PostActingEvent extends ActingEvent {
@@ -57,12 +57,12 @@ public final class PostActingEvent extends ActingEvent {
     private boolean stopRequested = false;
 
     /**
-     * Constructor for PostActingEvent.
+     * PostActingEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param toolkit The toolkit instance (must not be null)
-     * @param toolUse The original tool call (can be null for empty events)
-     * @param toolResult The tool execution result (can be null for empty events)
+     * @param agent 智能体实例（不可为 null）
+     * @param toolkit 工具集实例（不可为 null）
+     * @param toolUse 原始工具调用（空事件时可为 null）
+     * @param toolResult 工具执行结果（空事件时可为 null）
      */
     public PostActingEvent(
             Agent agent, Toolkit toolkit, ToolUseBlock toolUse, ToolResultBlock toolResult) {
@@ -71,59 +71,59 @@ public final class PostActingEvent extends ActingEvent {
     }
 
     /**
-     * Get the tool execution result.
+     * 获取工具执行结果。
      *
-     * @return The tool result block
+     * @return 工具结果块
      */
     public ToolResultBlock getToolResult() {
         return toolResult;
     }
 
     /**
-     * Modify the tool execution result.
+     * 修改工具执行结果。
      *
-     * @param toolResult The new tool result
+     * @param toolResult 新的工具结果
      */
     public void setToolResult(ToolResultBlock toolResult) {
         this.toolResult = toolResult;
     }
 
     /**
-     * Request to stop the agent after this acting phase.
+     * 请求智能体在本次行动阶段后停止。
      *
-     * <p>When called, the agent will return the current message containing the ToolResultBlock
-     * instead of continuing to the next reasoning iteration. The user can then review the
-     * tool execution result and resume execution by calling {@code agent.call()} with no arguments.
+     * <p>调用后，智能体会返回当前包含 ToolResultBlock 的消息，
+     * 而不继续下一轮推理。用户随后可审核
+     * 工具执行结果，并通过无参调用 {@code agent.call()} 恢复执行。
      *
-     * <p>This enables human-in-the-loop scenarios where tool execution results need
-     * user review before the agent continues reasoning.
+     * <p>这支持人在回路场景：智能体继续推理之前，
+     * 先由用户审核工具执行结果。
      */
     public void stopAgent() {
         this.stopRequested = true;
     }
 
     /**
-     * Check if a stop has been requested.
+     * 检查是否已请求停止。
      *
-     * @return true if {@link #stopAgent()} has been called, false otherwise
+     * @return 调用过 {@link #stopAgent()} 时为 true，否则为 false
      */
     public boolean isStopRequested() {
         return stopRequested;
     }
 
     /**
-     * Get the tool result message.
+     * 获取工具结果消息。
      *
-     * @return The tool result message
+     * @return 工具结果消息
      */
     public Msg getToolResultMsg() {
         return toolResultMsg;
     }
 
     /**
-     * Set the tool result message.
+     * 设置工具结果消息。
      *
-     * @param toolResultMsg The tool result message
+     * @param toolResultMsg 工具结果消息
      */
     public void setToolResultMsg(Msg toolResultMsg) {
         this.toolResultMsg = toolResultMsg;

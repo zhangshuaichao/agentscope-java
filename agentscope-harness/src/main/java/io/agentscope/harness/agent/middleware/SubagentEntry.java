@@ -19,9 +19,9 @@ import io.agentscope.harness.agent.subagent.SubagentDeclaration;
 import io.agentscope.harness.agent.subagent.SubagentFactory;
 
 /**
- * Descriptor for a subagent identified by agent id, with its description,
- * {@link SubagentFactory}, and optional {@link SubagentDeclaration} (for
- * remote URL and headers).
+ * 以智能体 ID 标识的子智能体描述项，包含描述、
+ * {@link SubagentFactory}，以及可选的 {@link SubagentDeclaration}
+ * （用于远程 URL 和请求头）。
  */
 public record SubagentEntry(
         String name, String description, SubagentFactory factory, SubagentDeclaration declaration) {

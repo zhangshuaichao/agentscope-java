@@ -19,13 +19,13 @@ import io.agentscope.core.agent.RuntimeContext;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-/** Per-agent-call authorized workspace snapshot. Never shared in a global cross-user cache. */
+/** 每次智能体调用的已授权工作区快照。不得放入跨用户共享的全局缓存。 */
 public record WorkspaceContextMaterials(List<ContextItem> items) {
     public WorkspaceContextMaterials {
         items = List.copyOf(items);
     }
 
-    /** Replace sources by ID, preserving other providers in this call-scoped snapshot. */
+    /** 按 ID 替换来源，同时保留此调用级快照中的其他提供者。 */
     public static void register(RuntimeContext context, List<ContextItem> additions) {
         var merged = new LinkedHashMap<String, ContextItem>();
         var previous = context.get(WorkspaceContextMaterials.class);

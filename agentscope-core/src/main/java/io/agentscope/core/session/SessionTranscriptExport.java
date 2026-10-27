@@ -29,7 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Read-time export for clients that still consume flat transcript entries. Never writes a log. */
+/** 供仍使用扁平对话条目的客户端在读取时导出。绝不写入日志。 */
 public final class SessionTranscriptExport {
     private static final DateTimeFormatter TIMESTAMP =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");

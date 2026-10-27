@@ -19,61 +19,57 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Abstract interface for a namespace-based key-value store.
+ * 基于命名空间的键值存储抽象接口。
  *
- * <p>Items are organized by namespaces (hierarchical path-like tuples)
- * and identified by a key within each namespace.
+ * <p>条目按命名空间（类似层级路径的元组）组织，并由命名空间内的键标识。
  */
 public interface BaseStore {
-    /** Explicit opt-in: versioned reads and durable cross-writer compare-and-set are supported. */
+    /**
+     * 显式声明支持：带版本读取以及跨写入者的持久比较并设置。
+     */
     default boolean supportsAtomicSessionStorage() {
         return false;
     }
 
     /**
-     * Get a single item by namespace and key.
+     * 按命名空间和键获取单个条目。
      *
-     * @param namespace hierarchical namespace path
-     * @param key the item key within the namespace
-     * @return the store item, or {@code null} if not found
+     * @param namespace 层级命名空间路径
+     * @param key 命名空间内的条目键
+     * @return 存储条目；未找到时为 {@code null}
      */
     StoreItem get(List<String> namespace, String key);
 
     /**
-     * Store or update an item.
+     * 存储或更新条目。
      *
-     * @param namespace hierarchical namespace path
-     * @param key the item key within the namespace
-     * @param value the data to store
+     * @param namespace 层级命名空间路径
+     * @param key 命名空间内的条目键
+     * @param value 要存储的数据
      */
     void put(List<String> namespace, String key, Map<String, Object> value);
 
     /**
-     * Conditional update: stores the item only when the current stored version matches
-     * {@code expectedVersion}.
+     * 条件更新：仅当当前存储版本与 {@code expectedVersion} 一致时保存条目。
      *
-     * <p>This is a compare-and-swap (CAS) operation that prevents lost updates when multiple
-     * writers concurrently modify the same key. Callers should:
+     * <p>这是比较并交换（CAS）操作，用于防止多个写入者并发修改同一键时丢失更新。调用方应：
      * <ol>
-     *   <li>Read the item with {@link #get} and remember {@link StoreItem#version()}.
-     *   <li>Compute the new value locally.
-     *   <li>Call {@code putIfVersion} passing the remembered version as {@code expectedVersion}.
-     *   <li>If the call returns {@code false}, the item was modified by another writer; retry
-     *       from step 1.
+     *   <li>通过 {@link #get} 读取条目，并记住 {@link StoreItem#version()}。
+     *   <li>在本地计算新值。
+     *   <li>调用 {@code putIfVersion}，将记住的版本作为 {@code expectedVersion}。
+     *   <li>若返回 {@code false}，说明条目已被其他写入者修改；从第 1 步重试。
      * </ol>
      *
-     * <p>A special value of {@code 0} for {@code expectedVersion} means "write only if the key
-     * does not yet exist" (i.e. create-if-absent).
+     * <p>{@code expectedVersion} 的特殊值 {@code 0} 表示“仅在键尚不存在时写入”（即不存在时创建）。
      *
-     * <p>The default implementation always returns {@code false} so that existing store
-     * implementations compile without changes. Backends that support distributed deployments
-     * should override this method with a proper server-side atomic check.
+     * <p>默认实现始终返回 {@code false}，使现有存储实现无需修改即可编译。
+     * 支持分布式部署的后端应覆盖此方法，实现真正的服务端原子检查。
      *
-     * @param namespace hierarchical namespace path
-     * @param key the item key within the namespace
-     * @param value the new data to store
-     * @param expectedVersion the version the caller observed; must match the current stored version
-     * @return {@code true} if the item was written, {@code false} if the version did not match
+     * @param namespace 层级命名空间路径
+     * @param key 命名空间内的条目键
+     * @param value 要存储的新数据
+     * @param expectedVersion 调用方观察到的版本，必须与当前存储版本匹配
+     * @return 写入成功时为 {@code true}；版本不匹配时为 {@code false}
      */
     default boolean putIfVersion(
             List<String> namespace, String key, Map<String, Object> value, long expectedVersion) {
@@ -81,20 +77,20 @@ public interface BaseStore {
     }
 
     /**
-     * Search for items within a namespace with pagination.
+     * 分页搜索命名空间内的条目。
      *
-     * @param namespace hierarchical namespace path
-     * @param limit maximum number of items to return
-     * @param offset number of items to skip
-     * @return list of matching store items
+     * @param namespace 层级命名空间路径
+     * @param limit 最多返回的条目数量
+     * @param offset 跳过的条目数量
+     * @return 匹配的存储条目列表
      */
     List<StoreItem> search(List<String> namespace, int limit, int offset);
 
     /**
-     * Delete an item by namespace and key.
+     * 按命名空间和键删除条目。
      *
-     * @param namespace hierarchical namespace path
-     * @param key the item key to delete
+     * @param namespace 层级命名空间路径
+     * @param key 要删除的条目键
      */
     void delete(List<String> namespace, String key);
 }

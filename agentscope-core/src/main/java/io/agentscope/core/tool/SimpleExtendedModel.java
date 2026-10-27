@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Simple implementation of ExtendedModel using maps.
+ * 基于映射的简单 ExtendedModel 实现。
  */
 public class SimpleExtendedModel implements ExtendedModel {
 

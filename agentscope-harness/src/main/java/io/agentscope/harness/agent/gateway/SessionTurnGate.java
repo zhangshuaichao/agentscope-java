@@ -16,32 +16,30 @@
 package io.agentscope.harness.agent.gateway;
 
 /**
- * Per-key mutual exclusion for gateway turns (user/channel inbound runs and subagent notification).
+ * 网关轮次的按键互斥，覆盖用户／渠道入站执行和子智能体通知。
  *
- * <p>Implementations include {@link LocalSessionTurnGate} (process-local fair semaphore) and
- * control-plane hosted locks for cross-node coordination. When using a distributed turn gate,
- * {@link io.agentscope.core.ReActAgent} {@code conflictPolicy} should be set to {@code FAIL} so
- * concurrent state writes surface as errors rather than silent overwrites.
+ * <p>实现包括 {@link LocalSessionTurnGate}（进程内公平信号量）及控制面托管的跨节点协调锁。
+ * 使用分布式轮次门控时，应将 {@link io.agentscope.core.ReActAgent} 的
+ * {@code conflictPolicy} 设为 {@code FAIL}，使并发状态写入显式报错，而不是静默覆盖。
  */
 public interface SessionTurnGate {
 
     /**
-     * Acquires the turn slot for the given key, blocking until available or throwing when busy.
+     * 获取指定键的轮次槽位，阻塞等待可用，或在繁忙时抛出异常。
      *
-     * @param key canonical gate key (typically {@link MsgContext#canonicalKey()})
-     * @return a lease that must be closed to release the slot
-     * @throws InterruptedException if the waiting thread is interrupted
-     * @throws TurnBusyException if the slot is held and the implementation uses a short acquire
-     *     timeout (distributed gates)
+     * @param key 规范门控键（通常为 {@link MsgContext#canonicalKey()}）
+     * @return 必须关闭以释放槽位的租约
+     * @throws InterruptedException 等待线程被中断时抛出
+     * @throws TurnBusyException 槽位已被占用，且实现采用较短获取超时（分布式门控）时抛出
      */
     TurnLease acquire(String key) throws InterruptedException, TurnBusyException;
 
     /**
-     * Non-blocking check: returns {@code true} when a turn is currently held for the given key.
-     * Used by {@link WakeupDispatcher} to skip sessions that are already active.
+     * 非阻塞检查：指定键当前有轮次占用时返回 {@code true}。
+     * {@link WakeupDispatcher} 用它跳过已经活跃的会话。
      *
-     * @param key canonical gate key
-     * @return {@code true} when a turn is in progress for the key
+     * @param key 规范门控键
+     * @return 该键有轮次正在执行时为 {@code true}
      */
     boolean isRunning(String key);
 }

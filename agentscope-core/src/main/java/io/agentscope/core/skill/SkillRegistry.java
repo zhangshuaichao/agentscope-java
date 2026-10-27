@@ -23,30 +23,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Pure storage layer for {@link AgentSkill}s, keyed by skill id.
+ * 以技能 ID 为键存储 {@link AgentSkill} 的纯存储层。
  *
- * <p>The skill activation state is not stored here: it is the per-session {@code activatedGroups}
- * on {@link io.agentscope.core.state.ToolContextState}.
+ * <p>技能激活状态不在这里保存，而是保存在 {@link io.agentscope.core.state.ToolContextState} 的会话级 {@code activatedGroups} 中。
  *
- * <p>This is a pure storage layer: parameters are assumed non-null and validation is performed at
- * the {@code Toolkit} layer.
+ * <p>作为纯存储层，此处假定参数非 null，校验由 {@code Toolkit} 层完成。
  */
 class SkillRegistry {
     private static final Logger logger = LoggerFactory.getLogger(SkillRegistry.class);
 
     private final Map<String, AgentSkill> skills = new ConcurrentHashMap<>();
 
-    // ==================== Registration ====================
+    // ==================== 注册 ====================
 
     /**
-     * Registers a skill, replacing any existing skill with the same id. Re-registering the same
-     * {@code (name, source)} pair (a content update) is the normal path. With the standard name
-     * charset (no underscores) distinct pairs cannot share an id, so the collision warning below
-     * is unreachable for valid skills and acts only as a tripwire against future rule relaxations
-     * or caller-supplied mismatched ids.
+     * 注册技能，替换同 ID 的已有技能。重复注册相同 {@code (name, source)} 对（更新内容）是正常路径。标准名称字符集不含下划线，不同的组合不会共享 ID，因此下方冲突警告对合法技能不可达，仅用于防范未来放宽规则或调用方提供不匹配 ID。
      *
-     * @param skillId The unique skill identifier (must not be null)
-     * @param skill The skill implementation (must not be null)
+     * @param skillId 唯一技能标识（不能为 null）
+     * @param skill 技能实现（不能为 null）
      */
     void registerSkill(String skillId, AgentSkill skill) {
         AgentSkill existing = skills.get(skillId);
@@ -66,14 +60,11 @@ class SkillRegistry {
     }
 
     /**
-     * Returns whether registering {@code incoming} under an id already held by {@code existing}
-     * is an ambiguous id collision, i.e. the two skills are different {@code (name, source)}
-     * pairs that map to the same concatenated id. Re-registration of the same pair (a content
-     * update) is not a collision.
+     * 判断将 {@code incoming} 注册到 {@code existing} 已占用的 ID 是否构成歧义冲突，即不同的 {@code (name, source)} 对映射到相同拼接 ID。重复注册同一组合（更新内容）不算冲突。
      *
-     * @param existing the currently registered skill under the id ({@code null} when absent)
-     * @param incoming the skill about to be registered under the same id
-     * @return {@code true} when the overwrite is ambiguous, {@code false} otherwise
+     * @param existing 此 ID 当前已注册的技能（不存在时为 {@code null}）
+     * @param incoming 即将注册到同一 ID 的技能
+     * @return 覆盖有歧义时为 {@code true}，否则为 {@code false}
      */
     static boolean isAmbiguousIdCollision(AgentSkill existing, AgentSkill incoming) {
         return existing != null
@@ -81,43 +72,43 @@ class SkillRegistry {
                         || !existing.getSource().equals(incoming.getSource()));
     }
 
-    // ==================== Query Operations ====================
+    // ==================== 查询操作 ====================
 
     /**
-     * Gets a skill by ID.
+     * 按 ID 获取技能。
      *
-     * @param skillId The skill ID (must not be null)
-     * @return The skill instance, or null if not found
+     * @param skillId 技能 ID（不能为 null）
+     * @return 技能实例；未找到时为 null
      */
     AgentSkill getSkill(String skillId) {
         return skills.get(skillId);
     }
 
     /**
-     * Gets all skill IDs.
+     * 获取全部技能 ID。
      *
-     * @return Set of skill IDs (never null, may be empty)
+     * @return 技能 ID 集合（不会为 null，可以为空）
      */
     Set<String> getSkillIds() {
         return new TreeSet<>(skills.keySet());
     }
 
     /**
-     * Checks if a skill exists.
+     * 检查技能是否存在。
      *
-     * @param skillId The skill ID (must not be null)
-     * @return true if the skill exists, false otherwise
+     * @param skillId 技能 ID（不能为 null）
+     * @return 存在时为 true，否则为 false
      */
     boolean exists(String skillId) {
         return skills.containsKey(skillId);
     }
 
-    // ==================== Removal Operations ====================
+    // ==================== 移除操作 ====================
 
     /**
-     * Removes a skill completely.
+     * 完全移除技能。
      *
-     * @param skillId The skill ID (must not be null)
+     * @param skillId 技能 ID（不能为 null）
      */
     void removeSkill(String skillId) {
         skills.remove(skillId);

@@ -23,10 +23,10 @@ import io.agentscope.core.model.ChatModelBase;
 import java.util.Objects;
 
 /**
- * Credential for the xAI API.
+ * xAI API 的凭据。
  *
- * <p>No {@code XAIChatModel} class ships in agentscope-core yet, so {@link #getChatModelClass()}
- * throws {@link UnsupportedOperationException}.
+ * <p>agentscope-core 尚未提供 {@code XAIChatModel} 类，因此 {@link #getChatModelClass()}
+ * 抛出 {@link UnsupportedOperationException}。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"id", "type", "api_key"})

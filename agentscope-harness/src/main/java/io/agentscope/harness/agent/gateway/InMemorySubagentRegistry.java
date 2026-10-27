@@ -20,8 +20,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Default single-process {@link SubagentRegistry}. Records live only for the JVM's lifetime; this
- * preserves the legacy in-memory exposure behaviour when no distributed store is configured.
+ * 默认单进程 {@link SubagentRegistry}。记录仅在 JVM 生命周期内存在；
+ * 未配置分布式存储时，保留旧的内存公开行为。
  */
 public final class InMemorySubagentRegistry implements SubagentRegistry {
 

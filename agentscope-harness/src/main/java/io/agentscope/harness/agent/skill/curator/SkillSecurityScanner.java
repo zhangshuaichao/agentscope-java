@@ -22,26 +22,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Static-analysis scanner for SKILL.md and skill support files. Ported from hermes-agent's
- * {@code tools/skills_guard.py} regex library plus the trust-level × verdict install policy.
+ * SKILL.md 及技能辅助文件的静态分析扫描器。移植自 hermes-agent 的 {@code tools/skills_guard.py} 正则库，以及“信任级别 × 判定结果”的安装策略。
  *
- * <p>Detection categories (one or more regexes per category):
+ * <p>检测类别（每类包含一个或多个正则）：
  * <ul>
- *   <li>{@link Category#EXFILTRATION} — data exfiltration via curl/wget POST</li>
- *   <li>{@link Category#INJECTION} — prompt-injection markers in markdown</li>
- *   <li>{@link Category#DESTRUCTIVE} — {@code rm -rf /}, {@code mkfs}, {@code dd of=/dev}</li>
- *   <li>{@link Category#PERSISTENCE} — crontab / systemd / shell-rc tampering</li>
- *   <li>{@link Category#NETWORK} — listen sockets / reverse shells</li>
- *   <li>{@link Category#OBFUSCATION} — base64 → bash, eval $(curl …), etc.</li>
+ * <li>{@link Category#EXFILTRATION}：通过 curl/wget POST 外传数据。</li>
+ * <li>{@link Category#INJECTION}：Markdown 中的提示注入标记。</li>
+ * <li>{@link Category#DESTRUCTIVE}：{@code rm -rf /}、{@code mkfs}、{@code dd of=/dev}。</li>
+ * <li>{@link Category#PERSISTENCE}：篡改 crontab、systemd 或 shell-rc。</li>
+ * <li>{@link Category#NETWORK}：监听套接字、反向 Shell。</li>
+ * <li>{@link Category#OBFUSCATION}：base64 转 bash、eval $(curl …) 等混淆。</li>
  * </ul>
  *
- * <p>The scan returns a {@link Verdict} (SAFE / CAUTION / DANGEROUS) plus the list of findings.
- * Callers (e.g. {@code SkillManageTool}, {@code HarnessAgent.promoteSkill}) consult
- * {@link #shouldAllow(TrustLevel, Verdict)} to map verdict + provenance to an install decision.
+ * <p>扫描返回 {@link Verdict}（SAFE / CAUTION / DANGEROUS）及发现列表。调用方（例如 {@code SkillManageTool}、{@code HarnessAgent.promoteSkill}）通过 {@link #shouldAllow(TrustLevel, Verdict)} 将判定与来源映射为安装决策。
  *
- * <p>This is intentionally a Java-side approximation, not a security boundary. Skills always
- * run inside whatever sandbox the host configured (see {@code ShellExecuteTool}); the scanner
- * is here to catch the obvious mistakes during authoring, NOT to replace the sandbox.
+ * <p>【学习提示】SAFE 只表示当前正则未发现匹配，不等于代码经过安全证明；模式可能漏报或误报。来源信任策略、人工审批、执行权限与操作系统隔离仍是不同防线，扫描结果不能替代任何一层。
+ *
+ * <p>这有意只是 Java 侧近似检测，不是安全边界。技能仍运行在宿主配置的执行环境中（见 {@code ShellExecuteTool}）；扫描器用于在编写时捕获明显错误，不能替代沙箱。
  */
 public final class SkillSecurityScanner {
 
@@ -67,7 +64,9 @@ public final class SkillSecurityScanner {
         DANGEROUS
     }
 
-    /** Where the skill came from. */
+    /**
+     * 技能的来源。
+     */
     public enum TrustLevel {
         BUILTIN,
         TRUSTED,
@@ -86,12 +85,14 @@ public final class SkillSecurityScanner {
 
     public record ScanResult(Verdict verdict, List<Finding> findings, String reportText) {}
 
-    /** Single regex pattern entry. */
+    /**
+     * 单条正则规则。
+     */
     private record Rule(
             String id, Severity severity, Category category, Pattern pattern, String description) {}
 
     // ---------------------------------------------------------------------
-    //  Built-in rule library (ported from hermes tools/skills_guard.py)
+    // 内置规则库（移植自 hermes tools/skills_guard.py）
     // ---------------------------------------------------------------------
 
     private static final List<Rule> RULES = buildRules();
@@ -99,7 +100,7 @@ public final class SkillSecurityScanner {
     private static List<Rule> buildRules() {
         List<Rule> rules = new ArrayList<>();
 
-        // EXFILTRATION ----------------------------------------------------
+        // 数据外传（EXFILTRATION）--------------------------------------------
         rules.add(
                 new Rule(
                         "exfil-curl-post",
@@ -122,7 +123,7 @@ public final class SkillSecurityScanner {
                         Pattern.compile("\\b(cat|tar|gzip)\\s+[^\\n]*\\|\\s*nc\\s"),
                         "piping local data into netcat — exfiltration"));
 
-        // INJECTION -------------------------------------------------------
+        // 提示注入（INJECTION）-----------------------------------------------
         rules.add(
                 new Rule(
                         "inj-ignore-prev",
@@ -146,7 +147,7 @@ public final class SkillSecurityScanner {
                         Pattern.compile("(?i)\\b(DAN|jailbreak|developer\\s+mode)\\b"),
                         "prompt-injection marker: jailbreak vocabulary"));
 
-        // DESTRUCTIVE -----------------------------------------------------
+        // 破坏性操作（DESTRUCTIVE）------------------------------------------
         rules.add(
                 new Rule(
                         "dest-rm-rf-root",
@@ -176,7 +177,7 @@ public final class SkillSecurityScanner {
                         Pattern.compile(">\\s*/dev/(sd|nvme|hd|xvd)[a-z0-9]*"),
                         "shell redirect to a raw disk device"));
 
-        // PERSISTENCE -----------------------------------------------------
+        // 持久化篡改（PERSISTENCE）------------------------------------------
         rules.add(
                 new Rule(
                         "pers-crontab-install",
@@ -201,7 +202,7 @@ public final class SkillSecurityScanner {
                         Pattern.compile("echo\\s+[^\\n]*>>\\s+~?/?(\\.bashrc|\\.zshrc|\\.profile)"),
                         "writes shell-rc — persistence"));
 
-        // NETWORK ---------------------------------------------------------
+        // 网络行为（NETWORK）------------------------------------------------
         rules.add(
                 new Rule(
                         "net-reverse-shell-bash",
@@ -224,7 +225,7 @@ public final class SkillSecurityScanner {
                         Pattern.compile("\\bnc\\s+(?:[^\\n]*\\s)?-e\\b"),
                         "netcat -e (command execution)"));
 
-        // OBFUSCATION -----------------------------------------------------
+        // 混淆（OBFUSCATION）-------------------------------------------------
         rules.add(
                 new Rule(
                         "obf-base64-pipe-shell",
@@ -251,13 +252,11 @@ public final class SkillSecurityScanner {
     }
 
     // ---------------------------------------------------------------------
-    //  Public API
+    // 公共 API
     // ---------------------------------------------------------------------
 
     /**
-     * Scan a complete skill: SKILL.md + every support file. {@code resources} is a map of
-     * relative path → content (matching {@code AgentSkill.getResources()}). Returns
-     * the most severe verdict across all files.
+     * 扫描完整技能：SKILL.md 加全部辅助文件。{@code resources} 是“相对路径 → 内容”的映射（与 {@code AgentSkill.getResources()} 一致）。返回所有文件中最严重的判定。
      */
     public static ScanResult scan(String skillName, String skillMd, Map<String, String> resources) {
         List<Finding> all = new ArrayList<>();
@@ -276,7 +275,9 @@ public final class SkillSecurityScanner {
         return new ScanResult(verdict, all, formatReport(skillName, verdict, all));
     }
 
-    /** Scan a single file (used after {@code write_file} / {@code patch}). */
+    /**
+     * 扫描单个文件（在 {@code write_file} / {@code patch} 后使用）。
+     */
     public static ScanResult scanSingleFile(String relPath, String content) {
         List<Finding> findings = scanText(relPath, content);
         Verdict verdict = verdictFor(findings);
@@ -284,27 +285,25 @@ public final class SkillSecurityScanner {
     }
 
     /**
-     * Map (trust × verdict) to an install decision. Mirrors hermes
-     * {@code tools/skills_guard.py::INSTALL_POLICY}.
+     * 将“信任级别 × 判定结果”映射为安装决策，对齐 hermes 的 {@code tools/skills_guard.py::INSTALL_POLICY}。
      *
-     * @return {@code true} if writing the skill should proceed; {@code false} if it must be
-     *     blocked / rolled back.
+     * @return {@code true} 表示可继续写入技能；{@code false} 表示必须阻止或回滚
      */
     public static boolean shouldAllow(TrustLevel trust, Verdict verdict) {
         return switch (trust) {
-            case BUILTIN -> true; // built-ins are trusted unconditionally
+            case BUILTIN -> true; // 无条件信任内置技能。
             case TRUSTED -> verdict != Verdict.DANGEROUS;
             case COMMUNITY -> verdict == Verdict.SAFE;
             case AGENT_CREATED ->
-                    // SAFE / CAUTION allowed; DANGEROUS blocked. Hermes' "ASK" mode collapses
-                    // to BLOCK in the Java port — the agent will have to revise its skill body
-                    // rather than be prompted; matching enterprise default.
+                    // 允许 SAFE / CAUTION，阻止 DANGEROUS。Java 移植版将 Hermes 的 ASK 模式
+                    // 收敛为 BLOCK，智能体必须修改技能正文，而不是等待交互确认，
+                    // 符合企业默认策略。
                     verdict != Verdict.DANGEROUS;
         };
     }
 
     // ---------------------------------------------------------------------
-    //  Internal helpers
+    // 内部辅助方法
     // ---------------------------------------------------------------------
 
     private static List<Finding> scanText(String fileLabel, String content) {
@@ -312,7 +311,7 @@ public final class SkillSecurityScanner {
         if (content == null || content.isEmpty()) {
             return findings;
         }
-        // Per-rule scan; report all matches with line numbers.
+        // 逐规则扫描，报告全部匹配及行号。
         for (Rule rule : RULES) {
             Matcher m = rule.pattern().matcher(content);
             while (m.find()) {

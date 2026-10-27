@@ -19,10 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
 /**
- * Process-local fair per-key mutual exclusion for gateway turns.
+ * 网关轮次使用的进程内、按键公平互斥。
  *
- * <p>Uses a fair {@link Semaphore} per key. {@link #acquire(String)} blocks until the slot is
- * available; it never throws {@link TurnBusyException}.
+ * <p>每个键使用一个公平 {@link Semaphore}。{@link #acquire(String)} 阻塞等待槽位可用；
+ * 不会抛出 {@link TurnBusyException}。
+ *
+ * <p>【学习提示】这里的公平队列只协调当前进程中的同键调用，不保护其他节点。
+ * 接口相同不等于锁范围相同；跨节点部署必须核对实际注入的 SessionTurnGate 实现。
  */
 public final class LocalSessionTurnGate implements SessionTurnGate {
 
@@ -32,6 +35,8 @@ public final class LocalSessionTurnGate implements SessionTurnGate {
     public TurnLease acquire(String key) throws InterruptedException {
         Semaphore semaphore = gates.computeIfAbsent(key, k -> new Semaphore(1, true));
         semaphore.acquire();
+        // 【学习提示】TurnLease 契约要求幂等，但此返回值直接调用 release，没有一次性保护。
+        // 重复 close 会增加许可数；调用路径不能依赖本实现自动防止重复释放。
         return semaphore::release;
     }
 

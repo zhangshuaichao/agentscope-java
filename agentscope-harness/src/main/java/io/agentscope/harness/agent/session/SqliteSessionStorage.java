@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.sqlite.SQLiteConfig;
 
-/** Windows local journal storage, using atomic SQL writes and synchronous rollback journals. */
+/**
+ * Windows 本地日志存储，使用原子 SQL 写入与同步回滚日志。
+ */
 final class SqliteSessionStorage implements AtomicSessionStorage {
     private final Path database;
 
@@ -42,12 +44,12 @@ final class SqliteSessionStorage implements AtomicSessionStorage {
                 throw new SessionLogException("Journal symlink paths are not supported");
         }
         Files.createDirectories(database.getParent());
-        // The JDBC driver probes a missing database with createNewFile/delete. Reserve the
-        // empty file atomically first so concurrent initial opens cannot delete another's file.
+        // JDBC 驱动会通过 createNewFile/delete 探测不存在的数据库。先原子地预留
+        // 空文件，避免并发首次打开时删除其他调用创建的文件。
         try {
             Files.createFile(database);
         } catch (FileAlreadyExistsException alreadyCreated) {
-            // Another writer owns initialization; SQLite serializes its schema transaction.
+            // 另一个写入者负责初始化；SQLite 会串行化其 schema 事务。
         }
         var config = new SQLiteConfig();
         config.setBusyTimeout(10_000);
@@ -113,8 +115,8 @@ final class SqliteSessionStorage implements AtomicSessionStorage {
     public boolean compareAndSet(String path, long expected, byte[] bytes) {
         if (expected < 0 || expected == Long.MAX_VALUE)
             throw new IllegalArgumentException("Invalid journal object version");
-        // One SQL statement is the entire transaction: readers never see a partial write, and
-        // SQLite serializes competing writers across connections and processes.
+        // 一条 SQL 语句就是整个事务：读取者不会看到部分写入，
+        // 且 SQLite 会在不同连接和进程之间串行化竞争写入者。
         String sql =
                 expected == 0
                         ? "INSERT INTO session_objects(path, version, payload) VALUES (?, 1, ?)"

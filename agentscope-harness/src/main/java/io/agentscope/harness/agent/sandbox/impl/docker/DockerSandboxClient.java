@@ -31,10 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link SandboxClient} implementation for the Docker sandbox store.
+ * Docker 沙箱存储的 {@link SandboxClient} 实现。
  *
- * <p>Creates and manages Docker containers via the {@code docker} CLI. The Docker daemon must
- * be accessible from the host's {@code PATH}.
+ * <p>通过 {@code docker} 命令行创建和管理 Docker 容器。宿主 {@code PATH} 中须能找到命令，并能访问 Docker 守护进程。
  */
 public class DockerSandboxClient implements SandboxClient<DockerSandboxClientOptions> {
 
@@ -50,9 +49,7 @@ public class DockerSandboxClient implements SandboxClient<DockerSandboxClientOpt
     }
 
     /**
-     * Uses the given mapper as-is. For {@link SandboxState} JSON round-trip, register {@link
-     * HarnessSandboxJacksonModule} (and any extra {@code NamedType} for custom state subclasses)
-     * on this mapper before calling {@link #deserializeState}.
+     * 原样使用给定映射器。要对 {@link SandboxState} 进行 JSON 往返转换，应在调用 {@link #deserializeState} 前向该映射器注册 {@link HarnessSandboxJacksonModule}（以及自定义状态子类所需的额外 {@code NamedType}）。
      */
     public DockerSandboxClient(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -111,7 +108,7 @@ public class DockerSandboxClient implements SandboxClient<DockerSandboxClientOpt
 
     @Override
     public void delete(Sandbox sandbox) {
-        // No-op: cleanup is handled by DockerSandbox.shutdown()
+        // 不执行操作：清理由 DockerSandbox.shutdown() 负责
     }
 
     @Override

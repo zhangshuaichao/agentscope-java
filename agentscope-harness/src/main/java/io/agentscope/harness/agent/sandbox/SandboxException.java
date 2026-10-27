@@ -18,12 +18,12 @@ package io.agentscope.harness.agent.sandbox;
 import java.nio.file.Path;
 
 /**
- * Base exception for all sandbox operations.
+ * 所有沙箱操作的异常基类。
  *
- * <p>Specialized subclasses are provided as static nested classes for common failure modes:
- * {@link SandboxConfigurationException}, {@link SandboxRuntimeException},
- * {@link WorkspaceStartException}, {@link WorkspaceStopException},
- * {@link ExecException}, {@link ExecTimeoutException}, {@link SnapshotException}.
+ * <p>通过静态嵌套类提供常见失败模式的专用子类：
+ * {@link SandboxConfigurationException}、{@link SandboxRuntimeException}、
+ * {@link WorkspaceStartException}、{@link WorkspaceStopException}、
+ * {@link ExecException}、{@link ExecTimeoutException}、{@link SnapshotException}。
  */
 public class SandboxException extends RuntimeException {
 
@@ -31,10 +31,10 @@ public class SandboxException extends RuntimeException {
     private final String op;
 
     /**
-     * Creates a sandbox exception with an error code and message.
+     * 创建带错误码和消息的沙箱异常。
      *
-     * @param errorCode the error code classifying the failure
-     * @param message human-readable description
+     * @param errorCode 对失败分类的错误码
+     * @param message 人类可读的描述
      */
     public SandboxException(SandboxErrorCode errorCode, String message) {
         super(message);
@@ -43,11 +43,11 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Creates a sandbox exception with an error code, message, and cause.
+     * 创建带错误码、消息和原因的沙箱异常。
      *
-     * @param errorCode the error code classifying the failure
-     * @param message human-readable description
-     * @param cause the underlying cause
+     * @param errorCode 对失败分类的错误码
+     * @param message 人类可读的描述
+     * @param cause 底层原因
      */
     public SandboxException(SandboxErrorCode errorCode, String message, Throwable cause) {
         super(message, cause);
@@ -56,12 +56,12 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Creates a sandbox exception with an error code, operation name, message, and cause.
+     * 创建带错误码、操作名、消息和原因的沙箱异常。
      *
-     * @param errorCode the error code classifying the failure
-     * @param op the operation that failed (e.g. "start", "exec", "persist")
-     * @param message human-readable description
-     * @param cause the underlying cause
+     * @param errorCode 对失败分类的错误码
+     * @param op 失败的操作（例如 "start"、"exec"、"persist"）
+     * @param message 人类可读的描述
+     * @param cause 底层原因
      */
     public SandboxException(
             SandboxErrorCode errorCode, String op, String message, Throwable cause) {
@@ -71,44 +71,44 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Returns the error code classifying this failure.
+     * 返回对此失败分类的错误码。
      *
-     * @return the error code
+     * @return 错误码
      */
     public SandboxErrorCode getErrorCode() {
         return errorCode;
     }
 
     /**
-     * Returns the operation name that failed, or {@code null} if not specified.
+     * 返回失败的操作名；未指定时为 {@code null}。
      *
-     * @return operation name, may be null
+     * @return 操作名，可为 null
      */
     public String getOp() {
         return op;
     }
 
-    // ---- Specialized subclasses ----
+    // ---- 专用子类 ----
 
     /**
-     * Thrown when sandbox configuration is invalid or missing (e.g. no client configured).
+     * 沙箱配置无效或缺失时抛出（例如未配置客户端）。
      */
     public static class SandboxConfigurationException extends SandboxException {
 
         /**
-         * Creates a configuration exception.
+         * 创建配置异常。
          *
-         * @param message description of the configuration problem
+         * @param message 配置问题描述
          */
         public SandboxConfigurationException(String message) {
             super(SandboxErrorCode.CONFIGURATION_ERROR, message);
         }
 
         /**
-         * Creates a configuration exception with cause.
+         * 创建带原因的配置异常。
          *
-         * @param message description of the configuration problem
-         * @param cause the underlying cause
+         * @param message 配置问题描述
+         * @param cause 底层原因
          */
         public SandboxConfigurationException(String message, Throwable cause) {
             super(SandboxErrorCode.CONFIGURATION_ERROR, message, cause);
@@ -116,26 +116,26 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown for general sandbox runtime failures not covered by a more specific subclass.
+     * 没有更具体子类覆盖的一般沙箱运行时失败。
      */
     public static class SandboxRuntimeException extends SandboxException {
 
         /**
-         * Creates a runtime exception with an error code and message.
+         * 创建带错误码和消息的运行时异常。
          *
-         * @param errorCode the error code classifying the failure
-         * @param message human-readable description
+         * @param errorCode 对失败分类的错误码
+         * @param message 人类可读的描述
          */
         public SandboxRuntimeException(SandboxErrorCode errorCode, String message) {
             super(errorCode, message);
         }
 
         /**
-         * Creates a runtime exception with an error code, message, and cause.
+         * 创建带错误码、消息和原因的运行时异常。
          *
-         * @param errorCode the error code classifying the failure
-         * @param message human-readable description
-         * @param cause the underlying cause
+         * @param errorCode 对失败分类的错误码
+         * @param message 人类可读的描述
+         * @param cause 底层原因
          */
         public SandboxRuntimeException(
                 SandboxErrorCode errorCode, String message, Throwable cause) {
@@ -143,10 +143,10 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Creates a runtime exception with a message and cause.
+         * 创建带消息和原因的运行时异常。
          *
-         * @param message human-readable description
-         * @param cause the underlying cause
+         * @param message 人类可读的描述
+         * @param cause 底层原因
          */
         public SandboxRuntimeException(String message, Throwable cause) {
             super(SandboxErrorCode.WORKSPACE_START_ERROR, message, cause);
@@ -154,17 +154,17 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown when the workspace backend fails to start.
+     * 工作区后端启动失败时抛出。
      */
     public static class WorkspaceStartException extends SandboxException {
 
         private final Path path;
 
         /**
-         * Creates a workspace-start exception.
+         * 创建工作区启动异常。
          *
-         * @param path the workspace path that could not be started
-         * @param cause the underlying cause
+         * @param path 无法启动的工作区路径
+         * @param cause 底层原因
          */
         public WorkspaceStartException(Path path, Throwable cause) {
             super(
@@ -175,9 +175,9 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Returns the workspace path that failed to start.
+         * 返回启动失败的工作区路径。
          *
-         * @return workspace path
+         * @return 工作区路径
          */
         public Path getPath() {
             return path;
@@ -185,17 +185,17 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown when the workspace backend fails to stop.
+     * 工作区后端停止失败时抛出。
      */
     public static class WorkspaceStopException extends SandboxException {
 
         private final Path path;
 
         /**
-         * Creates a workspace-stop exception.
+         * 创建工作区停止异常。
          *
-         * @param path the workspace path that could not be stopped
-         * @param cause the underlying cause
+         * @param path 无法停止的工作区路径
+         * @param cause 底层原因
          */
         public WorkspaceStopException(Path path, Throwable cause) {
             super(
@@ -206,9 +206,9 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Returns the workspace path that failed to stop.
+         * 返回停止失败的工作区路径。
          *
-         * @return workspace path
+         * @return 工作区路径
          */
         public Path getPath() {
             return path;
@@ -216,7 +216,7 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown when a sandbox command exits with a non-zero exit code.
+     * 沙箱命令以非零退出码结束时抛出。
      */
     public static class ExecException extends SandboxException {
 
@@ -225,11 +225,11 @@ public class SandboxException extends RuntimeException {
         private final String stderr;
 
         /**
-         * Creates an exec exception.
+         * 创建执行异常。
          *
-         * @param exitCode the process exit code
-         * @param stdout captured standard output
-         * @param stderr captured standard error
+         * @param exitCode 进程退出码
+         * @param stdout 捕获的标准输出
+         * @param stderr 捕获的标准错误
          */
         public ExecException(int exitCode, String stdout, String stderr) {
             super(
@@ -241,27 +241,27 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Returns the process exit code.
+         * 返回进程退出码。
          *
-         * @return exit code
+         * @return 退出码
          */
         public int getExitCode() {
             return exitCode;
         }
 
         /**
-         * Returns captured standard output.
+         * 返回捕获的标准输出。
          *
-         * @return stdout
+         * @return 标准输出
          */
         public String getStdout() {
             return stdout;
         }
 
         /**
-         * Returns captured standard error.
+         * 返回捕获的标准错误。
          *
-         * @return stderr
+         * @return 标准错误
          */
         public String getStderr() {
             return stderr;
@@ -269,21 +269,17 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown when a sandbox command times out.
+     * 沙箱命令超时时抛出。
      *
-     * <p>The message carries only the timeout duration, never the command text: commands
-     * are model-generated and may inline secrets, while the caller already holds the
-     * command in its own context. This matches the official E2B SDKs' fixed timeout
-     * wording.
+     * <p>消息只携带超时时长，不包含命令文本：命令由模型生成，可能内嵌秘密信息，而调用方在自己的上下文中已持有命令。这与官方 E2B SDK 的固定超时措辞一致。
      */
     public static class ExecTimeoutException extends SandboxException {
 
         /**
-         * Creates an exec timeout exception.
+         * 创建执行超时异常。
          *
-         * @param command the command that timed out (retained for signature
-         *     compatibility; not included in the message)
-         * @param timeoutSeconds the timeout that was exceeded
+         * @param command 超时的命令（为保持签名兼容而保留，不包含在消息中）
+         * @param timeoutSeconds 被超过的超时时长
          */
         public ExecTimeoutException(String command, int timeoutSeconds) {
             super(SandboxErrorCode.EXEC_TIMEOUT, "Command timed out after " + timeoutSeconds + "s");
@@ -291,18 +287,18 @@ public class SandboxException extends RuntimeException {
     }
 
     /**
-     * Thrown when a snapshot operation (persist or restore) fails.
+     * 快照操作（持久化或恢复）失败时抛出。
      */
     public static class SnapshotException extends SandboxException {
 
         private final String snapshotId;
 
         /**
-         * Creates a snapshot exception.
+         * 创建快照异常。
          *
-         * @param snapshotId the snapshot identifier
-         * @param message human-readable description
-         * @param cause the underlying cause
+         * @param snapshotId 快照标识符
+         * @param message 人类可读的描述
+         * @param cause 底层原因
          */
         public SnapshotException(String snapshotId, String message, Throwable cause) {
             super(SandboxErrorCode.SNAPSHOT_PERSIST_ERROR, message, cause);
@@ -310,9 +306,9 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Creates a snapshot exception for a non-restorable snapshot.
+         * 为不可恢复的快照创建快照异常。
          *
-         * @param snapshotId the snapshot identifier
+         * @param snapshotId 快照标识符
          */
         public SnapshotException(String snapshotId) {
             super(
@@ -322,9 +318,9 @@ public class SandboxException extends RuntimeException {
         }
 
         /**
-         * Returns the snapshot identifier associated with this failure.
+         * 返回与此失败关联的快照标识符。
          *
-         * @return snapshot id
+         * @return 快照 ID
          */
         public String getSnapshotId() {
             return snapshotId;

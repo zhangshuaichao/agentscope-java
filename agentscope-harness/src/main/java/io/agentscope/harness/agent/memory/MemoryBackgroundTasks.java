@@ -20,14 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tracks in-flight fire-and-forget memory background tasks (flush, maintenance) so
- * {@code HarnessAgent.close()} can wait for them to quiesce before releasing resources.
+ * 跟踪已启动但尚未完成的记忆后台任务（提取写入、维护），使
+ * {@code HarnessAgent.close()} 能在释放资源前等待它们结束。
  *
- * <p>The middleware instances that dispatch these tasks are created per agent call, so they
- * cannot be reached from the agent's {@code close()} method. The in-flight count is
- * process-wide: {@code close()} blocks until every background task started
- * before the call has finished, so async workspace writes do not race with resource cleanup
- * (e.g. temp workspace deletion in tests).
+ * <p>分发这些任务的中间件实例按智能体调用创建，因此智能体的 {@code close()} 方法无法直接访问它们。
+ * 在途计数是进程级的：{@code close()} 会等待本次等待调用之前启动的所有后台任务完成，
+ * 避免异步工作区写入与资源清理竞争（例如测试删除临时工作区）。
  */
 public final class MemoryBackgroundTasks {
 
@@ -38,14 +36,14 @@ public final class MemoryBackgroundTasks {
 
     private MemoryBackgroundTasks() {}
 
-    /** Marks the start of a fire-and-forget background task. */
+    /** 标记一个无需调用方等待的后台任务开始。 */
     public static void begin() {
         synchronized (MONITOR) {
             inFlight++;
         }
     }
 
-    /** Marks the end of a fire-and-forget background task (must pair with {@link #begin()}). */
+    /** 标记一个无需调用方等待的后台任务结束，必须与 {@link #begin()} 配对。 */
     public static void end() {
         synchronized (MONITOR) {
             if (inFlight > 0) {
@@ -58,12 +56,11 @@ public final class MemoryBackgroundTasks {
     }
 
     /**
-     * Blocks until all background tasks started before this call have finished, or the timeout
-     * elapses.
+     * 阻塞等待本次调用前启动的所有后台任务完成，或等待超时。
      *
-     * @param timeout maximum time to wait
-     * @param unit time unit of {@code timeout}
-     * @return {@code true} if the tasks quiesced within the timeout
+     * @param timeout 最长等待时间
+     * @param unit {@code timeout} 的时间单位
+     * @return 任务在超时前全部结束时返回 {@code true}
      */
     public static boolean awaitQuiescence(long timeout, TimeUnit unit) {
         long deadline = System.nanoTime() + unit.toNanos(timeout);

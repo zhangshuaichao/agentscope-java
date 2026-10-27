@@ -19,29 +19,26 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * WebSocket connection interface.
+ * WebSocket 连接接口。
  *
- * <p>Represents an active WebSocket connection with send/receive capabilities. Uses generic type
- * parameter to support different message formats:
- *
+ * <p>表示具有发送／接收能力的活动 WebSocket 连接，通过泛型参数支持不同消息格式：
  * <ul>
- *   <li>{@code WebSocketConnection<String>} - Text protocol (JSON over WebSocket)
- *   <li>{@code WebSocketConnection<byte[]>} - Binary protocol
+ *   <li>{@code WebSocketConnection<String>} — 文本协议（通过 WebSocket 传递 JSON）
+ *   <li>{@code WebSocketConnection<byte[]>} — 二进制协议
  * </ul>
  *
- * <p>Error handling: All methods return Mono/Flux that propagate errors through Reactor's error
- * channel. Errors are wrapped in {@link WebSocketTransportException} with connection context.
+ * <p>错误处理：所有方法返回 Mono/Flux，通过 Reactor 错误通道传播错误。
+ * 错误包装为带连接上下文的 {@link WebSocketTransportException}。
  *
- * <p>Logging: Implementations should log at appropriate levels:
- *
+ * <p>日志：实现应使用合适的日志级别：
  * <ul>
- *   <li>INFO: Connection established/closed
- *   <li>DEBUG: Message send/receive operations
- *   <li>TRACE: Detailed message content (size, preview)
- *   <li>ERROR: Connection errors, send/receive failures
+ *   <li>INFO：连接建立／关闭
+ *   <li>DEBUG：消息发送／接收操作
+ *   <li>TRACE：详细消息内容（大小、预览）
+ *   <li>ERROR：连接错误及发送／接收失败
  * </ul>
  *
- * <p>Usage example (text protocol):
+ * <p>文本协议用法示例：
  *
  * <pre>{@code
  * WebSocketTransport client = JdkWebSocketTransport.create();
@@ -59,7 +56,7 @@ import reactor.core.publisher.Mono;
  *     );
  * }</pre>
  *
- * <p>Usage example (binary protocol):
+ * <p>二进制协议用法示例：
  *
  * <pre>{@code
  * client.connect(request, byte[].class)
@@ -76,76 +73,72 @@ import reactor.core.publisher.Mono;
  *     );
  * }</pre>
  *
- * @param <T> Message type: String for text protocols, byte[] for binary protocols
+ * @param <T> 消息类型：文本协议为 String，二进制协议为 byte[]
  */
 public interface WebSocketConnection<T> {
 
     /**
-     * Send a message.
+     * 发送消息。
      *
-     * <p>Implementation should:
-     *
+     * <p>实现应：
      * <ul>
-     *   <li>Log at DEBUG level before sending
-     *   <li>Log at TRACE level with message size
-     *   <li>Wrap errors in WebSocketTransportException using onErrorMap
-     *   <li>Log errors at ERROR level with full context
+     *   <li>发送前记录 DEBUG 日志
+     *   <li>在 TRACE 日志中记录消息大小
+     *   <li>使用 onErrorMap 将错误包装为 WebSocketTransportException
+     *   <li>以 ERROR 级别记录含完整上下文的错误
      * </ul>
      *
-     * @param data Message data (String or byte[])
-     * @return Mono that completes when send is done, or emits WebSocketTransportException on error
+     * @param data 消息数据（String 或 byte[]）
+     * @return 发送结束时完成的 Mono；发生错误时发出 WebSocketTransportException
      */
     Mono<Void> send(T data);
 
     /**
-     * Receive message stream.
+     * 接收消息流。
      *
-     * <p>The returned Flux:
-     *
+     * <p>返回的 Flux：
      * <ul>
-     *   <li>Completes when connection is closed normally
-     *   <li>Emits error (WebSocketTransportException) on connection failure
-     *   <li>Logs each received message at TRACE level
+     *   <li>连接正常关闭时完成
+     *   <li>连接失败时发出错误（WebSocketTransportException）
+     *   <li>以 TRACE 级别记录每条收到的消息
      * </ul>
      *
-     * <p>Implementation should:
-     *
+     * <p>实现应：
      * <ul>
-     *   <li>Log received messages at TRACE level with size
-     *   <li>Wrap errors in WebSocketTransportException using onErrorMap
-     *   <li>Log errors at ERROR level with connection context
+     *   <li>以 TRACE 级别记录收到的消息及大小
+     *   <li>使用 onErrorMap 将错误包装为 WebSocketTransportException
+     *   <li>以 ERROR 级别记录带连接上下文的错误
      * </ul>
      *
-     * @return Message stream (String or byte[])
+     * @return 消息流（String 或 byte[]）
      */
     Flux<T> receive();
 
     /**
-     * Close the connection.
+     * 关闭连接。
      *
-     * <p>Implementation should:
-     *
+     * <p>实现应：
      * <ul>
-     *   <li>Log at INFO level with close code and reason
-     *   <li>Send WebSocket close frame with code 1000 (normal closure)
-     *   <li>Clean up resources
+     *   <li>以 INFO 级别记录关闭码和原因
+     *   <li>发送关闭码为 1000（正常关闭）的 WebSocket 关闭帧
+     *   <li>清理资源
      * </ul>
      *
-     * @return Mono that completes when connection is closed
+     * @return 连接关闭时完成的 Mono
      */
     Mono<Void> close();
 
     /**
-     * Check if connection is open.
+     * 检查连接是否打开。
      *
-     * @return true if connection is open
+     * @return 连接打开时返回 true
      */
     boolean isOpen();
 
     /**
-     * Get close information (if closed).
+     * 获取关闭信息（如果已关闭）。
      *
-     * @return Close info, or null if not closed
+     * @return 关闭信息；尚未关闭时为 null
      */
     CloseInfo getCloseInfo();
 }

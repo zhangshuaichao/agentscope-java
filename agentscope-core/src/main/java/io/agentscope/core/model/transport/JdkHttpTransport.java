@@ -53,19 +53,18 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Pure JDK implementation of the HttpTransport interface.
+ * HttpTransport 接口的纯 JDK 实现。
  *
- * <p>This implementation uses JDK's built-in HttpClient (java.net.http.HttpClient)
- * for HTTP communication and supports:
+ * <p>使用 JDK 内置 HttpClient（java.net.http.HttpClient）进行 HTTP 通信，支持：
  * <ul>
- *   <li>Synchronous HTTP requests</li>
- *   <li>Server-Sent Events (SSE) streaming</li>
- *   <li>HTTP/2 with fallback to HTTP/1.1</li>
- *   <li>Connection pooling (built-in)</li>
- *   <li>Configurable timeouts</li>
+ *   <li>同步 HTTP 请求</li>
+ *   <li>服务器发送事件（SSE）流</li>
+ *   <li>HTTP/2，并可回退到 HTTP/1.1</li>
+ *   <li>内置连接池</li>
+ *   <li>可配置超时</li>
  * </ul>
  *
- * <p>This implementation has no external dependencies beyond the JDK.
+ * <p>除 JDK 外无需其他依赖。
  */
 public class JdkHttpTransport implements HttpTransport {
 
@@ -77,18 +76,16 @@ public class JdkHttpTransport implements HttpTransport {
     private final HttpTransportConfig config;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    /**
-     * Create a new JdkHttpTransport with default configuration.
-     */
+    /** 使用默认配置创建新的 JdkHttpTransport。 */
     JdkHttpTransport() {
         this(HttpTransportConfig.defaults());
     }
 
     /**
-     * Create a new JdkHttpTransport with custom configuration.
+     * 使用自定义配置创建新的 JdkHttpTransport。
      *
-     * @param config the transport configuration
-     * @throws NullPointerException if config is null
+     * @param config 传输配置
+     * @throws NullPointerException config 为 null 时抛出
      */
     JdkHttpTransport(HttpTransportConfig config) {
         this.config = Objects.requireNonNull(config, "config must not be null");
@@ -96,14 +93,13 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a new JdkHttpTransport with an existing HttpClient.
+     * 使用现有 HttpClient 创建新的 JdkHttpTransport。
      *
-     * <p>Use this constructor when you want to share an HttpClient instance
-     * across multiple components.
+     * <p>需要在多个组件之间共享 HttpClient 实例时使用此构造方法。
      *
-     * @param client the HttpClient to use
-     * @param config the transport configuration (used for reference only)
-     * @throws NullPointerException if client or config is null
+     * @param client 要使用的 HttpClient
+     * @param config 传输配置（仅供参考）
+     * @throws NullPointerException client 或 config 为 null 时抛出
      */
     public JdkHttpTransport(HttpClient client, HttpTransportConfig config) {
         this.client = Objects.requireNonNull(client, "client must not be null");
@@ -113,9 +109,9 @@ public class JdkHttpTransport implements HttpTransport {
     private static HttpClient buildClient(HttpTransportConfig config) {
         HttpClient.Builder builder =
                 HttpClient.newBuilder()
-                        // Client-level HTTP/2 serves https via ALPN; cleartext requests are
-                        // downgraded per request in buildJdkRequest, so one connection per
-                        // version per origin — intentional.
+                        // 客户端级 HTTP/2 通过 ALPN 服务于 https；明文请求会在
+                        // buildJdkRequest 中逐请求降级。因此，每个源站按每个协议版本
+                        // 分别建立连接，这是有意的设计。
                         .version(
                                 config.getHttpVersion() != null
                                         ? config.getHttpVersion().toJdkHttpVersion()
@@ -140,7 +136,7 @@ public class JdkHttpTransport implements HttpTransport {
             }
         }
 
-        // Configure proxy
+        // 配置代理
         if (config.getProxyConfig() != null) {
             ProxyConfig proxyConfig = config.getProxyConfig();
 
@@ -154,8 +150,8 @@ public class JdkHttpTransport implements HttpTransport {
                                         proxyConfig.getHost(), proxyConfig.getPort())));
             }
 
-            // Note: JDK HttpClient does not support SOCKS5 authentication directly.
-            // For HTTP proxy authentication, use Authenticator.
+            // 注意：JDK HttpClient 不直接支持 SOCKS5 认证。
+            // HTTP 代理认证使用 Authenticator。
             if (proxyConfig.hasAuthentication() && proxyConfig.getType() == ProxyType.HTTP) {
                 final String username = proxyConfig.getUsername();
                 final String password = proxyConfig.getPassword();
@@ -222,7 +218,10 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Send a streaming request and propagate Reactor cancellation to the JDK future/socket.
+     * 发送流式请求，并将 Reactor 取消信号传播到 JDK future／套接字。
+     *
+     * <p>【学习提示】取消订阅不仅意味着下游不再读取；还需停止在途网络工作并释放资源，
+     * 否则可能出现用户已停止但连接仍占用的情况。
      */
     private Mono<java.net.http.HttpResponse<InputStream>> sendInputStreamAsync(
             java.net.http.HttpRequest request, AtomicReference<InputStream> responseBody) {
@@ -255,9 +254,7 @@ public class JdkHttpTransport implements HttpTransport {
                 });
     }
 
-    /**
-     * Validate the streaming response and apply first-chunk and inter-chunk timeouts.
-     */
+    /** 验证流式响应，并应用首块超时和数据块间隔超时。 */
     private Flux<String> handleStreamResponse(
             java.net.http.HttpResponse<InputStream> response,
             HttpRequest request,
@@ -291,42 +288,43 @@ public class JdkHttpTransport implements HttpTransport {
 
         return processStreamResponse(inputStream, request)
                 .timeout(
-                        // Timeout strategy 1: Time To First Chunk.
-                        // This uses the remaining response timeout budget from request start.
+                        // 超时策略 1：等待首个数据块的时间。
+                        // 使用从请求开始计算的响应超时预算中的剩余时间。
                         Mono.delay(remainingResponseTimeout(requestStartNanos)),
 
-                        // Timeout strategy 2: Inter-token gap (Stream Idle Timeout).
-                        // The maximum time to wait between receiving two consecutive data chunks.
+                        // 超时策略 2：数据块之间的间隔（流空闲超时）。
+                        // 限制接收连续两个数据块之间的最长等待时间。
                         data -> Mono.delay(streamIdleTimeout()));
     }
 
     /**
-     * Parse SSE or NDJSON lines on a bounded elastic worker because BufferedReader blocks.
+     * 在有界弹性工作线程上解析 SSE 或 NDJSON 行，因为 BufferedReader 会阻塞。
+     *
+     * <p>【学习提示】响应式返回类型不会自动让底层 I/O 变成非阻塞。
+     * 阻塞读取必须安排到合适的调度器，同时保留资源关闭与取消链路。
      */
     private Flux<String> processStreamResponse(InputStream inputStream, HttpRequest request) {
         if (inputStream == null) {
             return Flux.empty();
         }
 
-        // Check if the request has the NDJSON format header
+        // 检查请求是否带有 NDJSON 格式请求头
         boolean isNdjson =
                 TransportConstants.STREAM_FORMAT_NDJSON.equals(
                         request.getHeaders().get(TransportConstants.STREAM_FORMAT_HEADER));
 
-        // Use Flux.using to manage resource lifecycle
+        // 使用 Flux.using 管理资源生命周期
         return Flux.using(
                         () ->
                                 new BufferedReader(
                                         new InputStreamReader(inputStream, StandardCharsets.UTF_8)),
                         reader -> isNdjson ? readNdJsonLines(reader) : readSseLines(reader),
                         this::closeQuietly)
-                // reader.lines() uses blocking I/O internally
+                // reader.lines() 内部使用阻塞 I/O
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Extract non-empty SSE data payloads and stop before the terminal marker.
-     */
+    /** 提取非空 SSE 数据载荷，并在终止标记前停止。 */
     private Flux<String> readSseLines(BufferedReader reader) {
         return Flux.fromStream(reader.lines())
                 .filter(line -> line.startsWith(SSE_DATA_PREFIX))
@@ -336,9 +334,7 @@ public class JdkHttpTransport implements HttpTransport {
                 .filter(data -> !data.isEmpty());
     }
 
-    /**
-     * Extract non-empty NDJSON records as already-delimited stream chunks.
-     */
+    /** 提取非空 NDJSON 记录，作为已经分隔好的流数据块。 */
     private Flux<String> readNdJsonLines(BufferedReader reader) {
         return Flux.fromStream(reader.lines())
                 .doOnNext(line -> log.debug("Received NDJSON line"))
@@ -348,33 +344,33 @@ public class JdkHttpTransport implements HttpTransport {
     @Override
     public void close() {
         closed.set(true);
-        // HttpClient does not require explicit cleanup - it manages its own resources
+        // HttpClient 不需要显式清理，它自行管理资源
     }
 
     /**
-     * Get the underlying HttpClient instance.
+     * 获取底层 HttpClient 实例。
      *
-     * <p>This can be useful for advanced configuration or debugging.
+     * <p>可用于高级配置或调试。
      *
-     * @return the HttpClient
+     * @return HttpClient
      */
     HttpClient getClient() {
         return client;
     }
 
     /**
-     * Get the transport configuration.
+     * 获取传输配置。
      *
-     * @return the configuration
+     * @return 配置
      */
     HttpTransportConfig getConfig() {
         return config;
     }
 
     /**
-     * Check if this transport has been closed.
+     * 检查传输是否已关闭。
      *
-     * @return true if closed
+     * @return 已关闭时返回 true
      */
     public boolean isClosed() {
         return closed.get();
@@ -427,14 +423,13 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Resolves the per-request HTTP version: explicit values win verbatim (including HTTP_2 on
-     * cleartext as an h2c opt-in); null (auto) downgrades cleartext requests to HTTP/1.1 (the
-     * JDK's h2c upgrade makes some servers drop the request body) and lets https requests
-     * return null to inherit the client-level version (HTTP/2 via ALPN).
+     * 确定逐请求的 HTTP 版本：显式配置原样优先（包括在明文 URL 上显式启用 HTTP_2 的 h2c 升级）。
+     * null（自动）会将明文请求降级为 HTTP/1.1，避免 JDK 的 h2c 升级导致某些服务端丢弃请求体；
+     * https 请求则返回 null，继承客户端级版本（通过 ALPN 使用 HTTP/2）。
      *
-     * @param configured the configured version, or null for auto
-     * @param uri the request URI
-     * @return the version to set on the request, or null to inherit the client version
+     * @param configured 配置的版本；null 表示自动选择
+     * @param uri 请求 URI
+     * @return 要设置到请求上的版本；null 表示继承客户端版本
      */
     static HttpClient.Version resolveRequestVersion(HttpVersion configured, URI uri) {
         if (configured != null) {
@@ -478,18 +473,14 @@ public class JdkHttpTransport implements HttpTransport {
         }
     }
 
-    /**
-     * Read an error response body away from the JDK HTTP worker threads.
-     */
+    /** 在 JDK HTTP 工作线程之外读取错误响应体。 */
     private Mono<String> readInputStreamAsync(InputStream inputStream) {
         return Mono.fromCallable(() -> readInputStream(inputStream))
                 .defaultIfEmpty("")
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    /**
-     * Resolve the configured request-start-to-first-chunk timeout.
-     */
+    /** 解析配置的请求开始至首个数据块的超时。 */
     private Duration streamResponseTimeout() {
         return config.getResponseTimeout() != null
                 ? config.getResponseTimeout()
@@ -497,7 +488,10 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Keep the first-chunk timeout as one budget across header wait and body parsing.
+     * 让首块超时在等待响应头和解析响应体期间共享同一个时间预算。
+     *
+     * <p>【学习提示】如果两个阶段各重新计时一次，实际等待可能超过用户配置。
+     * 这里扣除已经消耗的时间，而不是给后续阶段重新分配完整预算。
      */
     private Duration remainingResponseTimeout(long requestStartNanos) {
         Duration elapsed = Duration.ofNanos(System.nanoTime() - requestStartNanos);
@@ -505,18 +499,14 @@ public class JdkHttpTransport implements HttpTransport {
         return remaining.isNegative() || remaining.isZero() ? Duration.ZERO : remaining;
     }
 
-    /**
-     * Resolve the configured maximum idle gap between emitted stream chunks.
-     */
+    /** 解析已发出流数据块之间允许的最大空闲间隔。 */
     private Duration streamIdleTimeout() {
         return config.getStreamIdleTimeout() != null
                 ? config.getStreamIdleTimeout()
                 : HttpTransportConfig.DEFAULT_STREAM_IDLE_TIMEOUT;
     }
 
-    /**
-     * Normalize low-level streaming failures into the transport exception type.
-     */
+    /** 将底层流式失败统一转换为传输异常类型。 */
     private Throwable mapStreamError(Throwable e) {
         if (e instanceof TimeoutException) {
             return new HttpTransportException("Stream timeout: " + e.getMessage(), e);
@@ -542,26 +532,24 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * Create a new builder for JdkHttpTransport.
+     * 创建新的 JdkHttpTransport 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for JdkHttpTransport.
-     */
+    /** JdkHttpTransport 的建造者。 */
     public static class Builder {
         private HttpTransportConfig config = HttpTransportConfig.defaults();
         private HttpClient existingClient = null;
 
         /**
-         * Set the transport configuration.
+         * 设置传输配置。
          *
-         * @param config the configuration
-         * @return this builder
+         * @param config 配置
+         * @return 当前建造者
          */
         public Builder config(HttpTransportConfig config) {
             this.config = config;
@@ -569,13 +557,12 @@ public class JdkHttpTransport implements HttpTransport {
         }
 
         /**
-         * Use an existing HttpClient instance.
+         * 使用现有 HttpClient 实例。
          *
-         * <p>When set, the configuration will only be used for reference,
-         * and the provided client will be used as-is.
+         * <p>设置后，配置仅供参考，传入的客户端会原样使用。
          *
-         * @param client the existing HttpClient
-         * @return this builder
+         * @param client 现有 HttpClient
+         * @return 当前建造者
          */
         public Builder client(HttpClient client) {
             this.existingClient = client;
@@ -583,9 +570,9 @@ public class JdkHttpTransport implements HttpTransport {
         }
 
         /**
-         * Build the JdkHttpTransport.
+         * 构建 JdkHttpTransport。
          *
-         * @return a new JdkHttpTransport instance
+         * @return 新的 JdkHttpTransport 实例
          */
         public JdkHttpTransport build() {
             if (existingClient != null) {
@@ -596,20 +583,19 @@ public class JdkHttpTransport implements HttpTransport {
     }
 
     /**
-     * A TrustManager that trusts all certificates.
+     * 信任所有证书的 TrustManager。
      *
-     * <p><b>Warning:</b> This disables SSL certificate verification and should only be used for
-     * testing or with trusted self-signed certificates.
+     * <p><b>警告：</b>这会禁用 SSL 证书验证，仅应用于测试或可信自签名证书场景。
      */
     private static class TrustAllManager implements X509TrustManager {
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) {
-            // Trust all client certificates
+            // 信任所有客户端证书
         }
 
         @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType) {
-            // Trust all server certificates
+            // 信任所有服务端证书
         }
 
         @Override
@@ -618,9 +604,7 @@ public class JdkHttpTransport implements HttpTransport {
         }
     }
 
-    /**
-     * ProxySelector that respects non-proxy hosts configuration.
-     */
+    /** 遵循非代理主机配置的 ProxySelector。 */
     private static class NonProxyHostsSelector extends ProxySelector {
         private final ProxyConfig proxyConfig;
         private final List<Proxy> proxyList;

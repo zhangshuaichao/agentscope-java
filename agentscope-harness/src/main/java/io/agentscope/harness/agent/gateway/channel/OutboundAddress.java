@@ -20,14 +20,14 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Delivery target for outbound (proactive) messages. Constructed by {@link ChannelRouter} during
- * inbound routing and stored by the gateway as the session's "last route" so that proactive replies
- * (e.g. subagent completion announces) can be delivered back to the correct channel and peer.
+ * 出站主动消息的投递目标。由 {@link ChannelRouter} 在入站路由期间构造，
+ * 网关将它保存为会话的“最近路由”，使主动回复（例如子智能体完成公告）
+ * 能返回正确的渠道和对端。
  *
- * @param channelId the channel adapter to deliver through (e.g. {@code "chatui"}, {@code "slack"})
- * @param accountId optional multi-account identifier (nullable for single-account channels)
- * @param to delivery address in {@code "channelId:peerKind:peerId"} format (e.g. {@code "dingtalk:GROUP:cidXXX"})
- * @param threadId optional thread context for threaded replies (nullable)
+ * @param channelId 投递所用的渠道适配器（例如 {@code "chatui"}、{@code "slack"}）
+ * @param accountId 可选多账户标识（单账户渠道可为 null）
+ * @param to 格式为 {@code "channelId:peerKind:peerId"} 的投递地址（例如 {@code "dingtalk:GROUP:cidXXX"}）
+ * @param threadId 线程回复使用的可选线程上下文（可为 null）
  */
 public record OutboundAddress(String channelId, String accountId, String to, String threadId) {
 
@@ -36,17 +36,23 @@ public record OutboundAddress(String channelId, String accountId, String to, Str
         Objects.requireNonNull(to, "to");
     }
 
-    /** Creates an address for a direct (non-threaded) message. */
+    /**
+     * 创建直接消息地址（不带线程）。
+     */
     public static OutboundAddress direct(String channelId, String to) {
         return new OutboundAddress(channelId, null, to, null);
     }
 
-    /** Creates an address with account context. */
+    /**
+     * 创建带账户上下文的地址。
+     */
     public static OutboundAddress withAccount(String channelId, String accountId, String to) {
         return new OutboundAddress(channelId, accountId, to, null);
     }
 
-    /** Serializes this address to a flat map for {@code BaseStore} persistence. */
+    /**
+     * 将地址序列化为扁平映射，供 {@code BaseStore} 持久化。
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> m = new HashMap<>();
         m.put("channelId", channelId);
@@ -60,7 +66,9 @@ public record OutboundAddress(String channelId, String accountId, String to, Str
         return m;
     }
 
-    /** Reconstructs an address from a persisted map, tolerating missing optional fields. */
+    /**
+     * 从持久化映射重建地址，容忍缺失可选字段。
+     */
     public static OutboundAddress fromMap(Map<String, Object> m) {
         if (m == null) {
             return null;

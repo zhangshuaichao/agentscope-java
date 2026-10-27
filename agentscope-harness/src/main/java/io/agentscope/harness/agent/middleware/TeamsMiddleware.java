@@ -49,24 +49,24 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Injects AgentTeams context and exposes a role-clipped {@link TeamTool}: stable team guidance
- * goes into the system prompt head, while volatile state (roster statuses, board digest, buffered
- * notices) rides a synthetic tail message so the head stays byte-stable across steps.
+ * 注入 AgentTeams 上下文，并暴露按角色裁剪能力的 {@link TeamTool}：
+ * 稳定的团队指导进入系统提示头部，易变状态（成员状态、看板摘要、缓冲通知）
+ * 随合成尾部消息传递，保持头部在各步骤间字节稳定。
  *
- * <p>Optional {@link #wireMessageBus(MessageBus, String)} pushes mailbox wakeups into the session
- * inbox path used by {@link InboxMiddleware}.
+ * <p>可选的 {@link #wireMessageBus(MessageBus, String)} 将邮箱唤醒推入
+ * {@link InboxMiddleware} 使用的会话收件箱路径。
  */
 public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(TeamsMiddleware.class);
 
-    /** sessionId → middleware, for ASDP TeamEvent → wakeup bridging. */
+    /** sessionId → 中间件，用于将 ASDP TeamEvent 桥接为唤醒。 */
     private static final ConcurrentHashMap<String, TeamsMiddleware> BY_SESSION =
             new ConcurrentHashMap<>();
 
     /**
-     * "team|role" → middleware, so a TeamEvent that only names the member can reach the session
-     * before (or without) a session id being bound.
+     * "team|role" → 中间件，使只包含成员名称的 TeamEvent
+     * 也能在会话 ID 绑定前或没有会话 ID 时到达会话。
      */
     private static final ConcurrentHashMap<String, TeamsMiddleware> BY_MEMBER =
             new ConcurrentHashMap<>();
@@ -77,19 +77,19 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Duration BOARD_PROBE_TIMEOUT = Duration.ofSeconds(5);
 
-    /** Roster name of the lead, assigned by the control plane when a team starts. */
+    /** 团队启动时由控制面分配的负责人名册名称。 */
     private static final String LEAD = "lead";
 
-    /** Longest closing message recorded as a failure reason; a summary, not a transcript. */
+    /** 记录为失败原因的结束消息最大长度；保留摘要，而非完整对话。 */
     private static final int MAX_CLOSING_REASON = 4000;
 
-    /** Longest per-task result echoed in the lead's board digest. */
+    /** 在负责人看板摘要中回显的单项任务结果最大长度。 */
     private static final int MAX_DIGEST_RESULT = 600;
 
-    /** Board as of this turn's start, rendered for the lead. Empty for workers and empty boards. */
+    /** 本轮开始时的看板，为负责人渲染。工作成员或空看板时为空。 */
     private volatile String boardDigest = "";
 
-    /** Notices buffered because no session was bound (or the inbox push failed). */
+    /** 因尚未绑定会话或收件箱推送失败而缓冲的通知。 */
     private final Queue<String> pendingNotices = new ConcurrentLinkedQueue<>();
 
     private volatile MessageBus messageBus;
@@ -97,8 +97,8 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     private volatile String boundSessionId;
 
     static {
-        // Lets TeamClient implementations wake a member by name; they cannot
-        // resolve runtime session ids on their own.
+        // 让 TeamClient 实现能够按成员名称唤醒成员；它们无法
+        // 自行解析运行时会话 ID。
         TeamWakeups.register(TeamsMiddleware::wakeupTeamMember);
     }
 
@@ -112,13 +112,13 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         }
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT, ExtensionPoint.ON_REASONING);
     }
 
-    /** Registers this middleware under a runtime session id for TeamEvent delivery. */
+    /** 以运行时会话 ID 注册此中间件，用于 TeamEvent 投递。 */
     public void bindSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return;
@@ -131,7 +131,7 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         BY_SESSION.put(sessionId, this);
     }
 
-    /** Registers {@code sessionId} against an already-built middleware instance. */
+    /** 为已构建的中间件实例注册 {@code sessionId}。 */
     public static void registerSession(String sessionId, TeamsMiddleware middleware) {
         if (middleware != null) {
             middleware.bindSession(sessionId);
@@ -139,12 +139,11 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Drops every registry entry for a session that is gone for good, so a later team reusing the
-     * same team and member names cannot wake this dead session. Call it only when the session was
-     * deleted, not when it merely went idle.
+     * 移除已永久消失会话的全部注册项，防止后续团队复用相同团队名和成员名时，
+     * 唤醒已死亡的会话。仅在会话被删除时调用，不能在仅仅空闲时调用。
      *
-     * <p>The member entry is removed only while it still points at this instance: a member that was
-     * rebuilt under a new session has already replaced it.
+     * <p>只有成员注册项仍指向当前实例时才移除；若成员已在新会话下重建，
+     * 新实例已经替换了该项。
      */
     public static void unregisterSession(String sessionId) {
         if (sessionId == null) {
@@ -163,12 +162,12 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         }
     }
 
-    /** Wakes the teammate bound to {@code sessionId}. Returns false when unknown. */
+    /** 唤醒绑定到 {@code sessionId} 的队友；未知时返回 false。 */
     public static boolean wakeupSession(String sessionId) {
         return wakeupSession(sessionId, null);
     }
 
-    /** Wakes the teammate bound to {@code sessionId}, injecting {@code notice} into its next turn. */
+    /** 唤醒绑定到 {@code sessionId} 的队友，并把 {@code notice} 注入其下一轮。 */
     public static boolean wakeupSession(String sessionId, String notice) {
         TeamsMiddleware mw = sessionId == null ? null : BY_SESSION.get(sessionId);
         if (mw == null) {
@@ -178,12 +177,12 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         return true;
     }
 
-    /** Wakes a teammate identified by team + member name. Returns false when unknown. */
+    /** 按团队与成员名称唤醒队友；未知时返回 false。 */
     public static boolean wakeupTeamMember(String teamName, String memberName) {
         return wakeupTeamMember(teamName, memberName, null);
     }
 
-    /** Wakes a teammate by team + member name, injecting {@code notice} into its next turn. */
+    /** 按团队与成员名称唤醒队友，并把 {@code notice} 注入其下一轮。 */
     public static boolean wakeupTeamMember(String teamName, String memberName, String notice) {
         String key = memberKey(teamName, memberName);
         TeamsMiddleware mw = key == null ? null : BY_MEMBER.get(key);
@@ -201,7 +200,7 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         return teamName + "|" + memberName;
     }
 
-    /** Tools to register on the agent toolkit at build time. */
+    /** 构建时要注册到智能体工具集的工具。 */
     public List<Object> getTools() {
         return List.of(teamTool);
     }
@@ -215,8 +214,8 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Wires mailbox wakeups. {@code agentId} is passed to {@link MessageBus#enqueueWakeup} so the
-     * gateway can route idle rounds.
+     * 连接邮箱唤醒。将 {@code agentId} 传给 {@link MessageBus#enqueueWakeup}，
+     * 让网关能够为空闲轮次路由。
      */
     public void wireMessageBus(MessageBus messageBus, String agentId) {
         this.messageBus = messageBus;
@@ -225,17 +224,17 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         }
     }
 
-    /** Notifies this teammate session that a team event arrived (message / task settled). */
+    /** 通知此队友会话有团队事件到达（消息／任务进入终态）。 */
     public void notifyWakeup(String sessionId) {
         notifyWakeup(sessionId, null);
     }
 
     /**
-     * Notifies this teammate session, injecting {@code notice} so the woken turn starts with the
-     * event content instead of an empty prompt. Safe to call from adapters or team client hooks.
+     * 通知此队友会话，并注入 {@code notice}，让被唤醒的轮次从事件内容而非空提示开始。
+     * 可从适配器或团队客户端钩子安全调用。
      *
-     * <p>When no session is bound yet the notice is buffered and injected on the next reasoning
-     * step, so events that race session binding are not lost.
+     * <p>尚未绑定会话时先缓冲通知，在下一次推理时注入，
+     * 避免与会话绑定竞争的事件丢失。
      */
     public void notifyWakeup(String sessionId, String notice) {
         MessageBus bus = this.messageBus;
@@ -288,9 +287,9 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Gives the lead the board as it stands when its turn starts, and settles a worker's tasks when
-     * its turn ends. The lead's tasks are left alone: it answers to a user who can pick the
-     * conversation back up, so its turn ending is not the end of its execution.
+     * 在负责人轮次开始时提供当时的看板，在工作成员轮次结束时结算其任务。
+     * 负责人的任务不受影响，因为负责人面向可以继续对话的用户，
+     * 因此其一轮结束并不代表整个执行结束。
      */
     @Override
     public Flux<AgentEvent> onAgent(
@@ -327,13 +326,16 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Fails every task this member was still executing, using its closing message as the reason.
+     * 将此成员仍在执行的全部任务标记为失败，以其结束消息作为原因。
      *
-     * <p>A worker's turn is its whole execution: it runs when woken and stops when the turn ends,
-     * with no human to answer it and no later round of its own. So a task it has not settled by then
-     * is not being worked on by anyone, and leaving it in progress makes the board claim otherwise
-     * while the lead waits for a result that is never coming. Failing it records what the worker
-     * last said and notifies the lead, who decides whether to answer, retry or drop it.
+     * <p>工作成员的一轮就是完整执行：被唤醒时运行，轮次结束时停止，
+     * 没有人类向它回复，也没有它自行发起的后续轮次。
+     * 因此，此时未结算的任务已无人处理；若仍保留进行中状态，
+     * 会误导看板，让负责人等待永远不会到达的结果。
+     * 标记失败会记录成员最后的话并通知负责人，由负责人决定回答、重试或放弃。
+     *
+     * <p>【学习提示】角色决定生命周期语义：负责人可跨用户轮次继续，工作成员结束则需结算在途任务。
+     * 但仅分配、尚未开始执行的任务仍待唤醒，不能混同为本轮执行失败。
      */
     void settleOwnedTasks(String closing) {
         String me = teamContext.myRole();
@@ -360,8 +362,8 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Tasks this member was executing during the turn. A task merely assigned to it is still pending
-     * and waiting for its own wakeup, so it is not something this turn failed to finish.
+     * 此成员在本轮实际执行的任务。仅被分配给它的任务仍处于待处理状态，
+     * 等待自己的唤醒，不能算作本轮未能完成的任务。
      */
     private List<TeamTask> tasksInProgressBy(String me) {
         List<TeamTask> tasks =
@@ -415,7 +417,7 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         return next.apply(new ReasoningInput(rebuilt, input.tools(), input.options()));
     }
 
-    /** Reads the board once per turn, so every step of the turn renders the same digest. */
+    /** 每轮读取看板一次，使同一轮的每一步渲染相同摘要。 */
     private void refreshBoardDigest() {
         List<TeamTask> tasks;
         try {
@@ -431,13 +433,11 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Renders the whole board for the lead: what every task is, who owns it, and what the settled
-     * ones produced.
+     * 为负责人渲染完整看板：各任务内容、拥有者及已结算任务的结果。
      *
-     * <p>Without this the lead only ever learns about tasks one notification at a time and has to
-     * poll for the rest, so it loses track of what it took on itself and cannot tell that the
-     * objective is finished. The results are included because the final summary is written from
-     * them.
+     * <p>否则负责人只能逐条通知获知任务情况，并轮询其余部分，
+     * 容易忘记自己承担的工作，也无法判断目标是否完成。
+     * 包含结果是因为最终总结需要依据这些结果编写。
      */
     static String renderBoardDigest(List<TeamTask> tasks, String me) {
         if (tasks == null || tasks.isEmpty()) {
@@ -492,8 +492,8 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Reports whether the shared board still has non-terminal tasks, so blocking waits know that
-     * teammates are still working even when this session owns no background subagent tasks.
+     * 报告共享看板是否仍有非终态任务，让阻塞等待知道队友仍在工作，
+     * 即使本会话没有自己的后台子智能体任务。
      */
     public boolean hasOutstandingTeamWork() {
         try {
@@ -511,7 +511,7 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
         }
     }
 
-    /** Consumes notices that could not be delivered through the inbox. */
+    /** 消费未能通过收件箱投递的通知。 */
     String drainPendingNotices() {
         if (pendingNotices.isEmpty()) {
             return "";
@@ -525,15 +525,15 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Renders the full team section: stable guidance plus the roster. Also used by BYO {@code
-     * team_join} kickoff. The middleware itself prepends only {@link #renderTeamGuidance} to the
-     * system head and ships the roster (member statuses are runtime state) in the tail message.
+     * 渲染完整团队段落：稳定指导和成员名册。也用于 BYO {@code
+     * team_join} 启动。中间件本身仅把 {@link #renderTeamGuidance} 放入系统头部，
+     * 名册随尾部消息发送，因为成员状态属于运行时状态。
      */
     public static String renderTeamSection(TeamContext ctx) {
         return renderTeamGuidance(ctx) + renderRoster(ctx);
     }
 
-    /** Renders the per-configuration stable team guidance: identity, objective, rules, role discipline. */
+    /** 渲染按配置稳定的团队指导：身份、目标、规则、角色约束。 */
     private static String renderTeamGuidance(TeamContext ctx) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n## Agent Team\n\n");
@@ -656,8 +656,8 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Renders the roster snapshot. Member statuses change as teammates work, so this travels in
-     * the tail state message, not the system head. Empty when the context carries no members.
+     * 渲染成员名册快照。成员状态随队友工作而变化，
+     * 因此放入尾部状态消息，而非系统头部。上下文无成员时为空。
      */
     private static String renderRoster(TeamContext ctx) {
         if (ctx.members() == null || ctx.members().isEmpty()) {
@@ -681,12 +681,11 @@ public final class TeamsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds the synthetic tail message carrying the volatile team state: the roster snapshot, the
-     * lead's board digest, and notices buffered while no session was bound. Returns {@code null}
-     * when all parts are empty.
+     * 构建携带易变团队状态的合成尾部消息：成员名册快照、负责人的看板摘要，
+     * 以及尚未绑定会话期间缓冲的通知。各部分都为空时返回 {@code null}。
      *
-     * <p>Role and metadata mirror the harness reminder messages: the layout places it after the
-     * conversation, and compaction keeps synthetic messages out of the durable summary.
+     * <p>角色和元数据与 Harness 提醒消息一致：布局将其放在对话之后，
+     * 压缩时不会把合成消息加入持久化摘要。
      */
     private static Msg buildTeamStateMsg(TeamContext ctx, String boardDigest, String notices) {
         String roster = renderRoster(ctx);

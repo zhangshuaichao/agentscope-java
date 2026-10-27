@@ -22,38 +22,38 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Interface for extended model that adds properties to tool parameters.
+ * 为工具参数添加属性的扩展模型接口。
  */
 public interface ExtendedModel {
 
     /**
-     * Get the additional properties to merge into base schema.
+     * 获取要合并到基础模式中的附加属性。
      */
     Map<String, Object> getAdditionalProperties();
 
     /**
-     * Get the additional required fields.
+     * 获取附加必填字段。
      */
     List<String> getAdditionalRequired();
 
     /**
-     * Merge this extended model with base schema from tool.
+     * 将扩展模型与工具的基础模式合并。
      *
-     * @param baseParameters Base parameter schema from AgentTool
-     * @return Merged schema
-     * @throws IllegalStateException if properties conflict
+     * @param baseParameters 来自 AgentTool 的基础参数模式
+     * @return 合并后的模式
+     * @throws IllegalStateException 当属性冲突时
      */
     default Map<String, Object> mergeWithBaseSchema(Map<String, Object> baseParameters) {
         Map<String, Object> merged = new HashMap<>(baseParameters);
 
-        // Get base properties and required
+        // 获取基础属性和必填字段
         @SuppressWarnings("unchecked")
         Map<String, Object> baseProps =
                 (Map<String, Object>) merged.getOrDefault("properties", new HashMap<>());
         @SuppressWarnings("unchecked")
         List<String> baseRequired = (List<String>) merged.getOrDefault("required", List.of());
 
-        // Merge properties with conflict detection
+        // 合并属性并检测冲突
         Map<String, Object> extendedProps = getAdditionalProperties();
         Set<String> conflicts = new HashSet<>();
         for (String key : extendedProps.keySet()) {
@@ -71,7 +71,7 @@ public interface ExtendedModel {
         mergedProps.putAll(extendedProps);
         merged.put("properties", mergedProps);
 
-        // Merge required arrays
+        // 合并必填字段数组
         List<String> extendedRequired = getAdditionalRequired();
         if (!extendedRequired.isEmpty()) {
             Set<String> mergedRequired = new HashSet<>(baseRequired);

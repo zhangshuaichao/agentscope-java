@@ -16,22 +16,22 @@
 package io.agentscope.core.interruption;
 
 /**
- * Enum representing the source of an interruption.
+ * 表示中断来源的枚举。
  *
- * <p>This indicates who or what initiated the interruption:
+ * <p>说明由谁或什么事件发起中断：
  * <ul>
- *   <li>{@link #USER}: Interruption triggered by user request</li>
- *   <li>{@link #TOOL}: Interruption triggered by tool execution logic</li>
- *   <li>{@link #SYSTEM}: Interruption triggered by system (timeout, resource limit, etc.)</li>
+ *   <li>{@link #USER}: 用户请求触发的中断</li>
+ *   <li>{@link #TOOL}: 工具执行逻辑触发的中断</li>
+ *   <li>{@link #SYSTEM}: 系统触发的中断（超时、资源限制等）</li>
  * </ul>
  */
 public enum InterruptSource {
-    /** Interruption initiated by user request. */
+    /** 由用户请求发起的中断。 */
     USER,
 
-    /** Interruption initiated by tool execution logic. */
+    /** 由工具执行逻辑发起的中断。 */
     TOOL,
 
-    /** Interruption initiated by system (timeout, resource limit, etc.). */
+    /** 由系统发起的中断（超时、资源限制等）。 */
     SYSTEM
 }

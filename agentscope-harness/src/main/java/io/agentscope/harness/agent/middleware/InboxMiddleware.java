@@ -44,22 +44,23 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Middleware that drains the message bus inbox before each reasoning step and injects the messages
- * as {@link HintBlock}s into the agent's context.
+ * 在每次推理前取出消息总线收件箱内容，并以 {@link HintBlock} 形式注入智能体上下文的中间件。
  *
- * <p>Producers (e.g. {@link AsyncToolMiddleware}, team tools, schedulers) push {@link HintBlock}
- * payloads into the per-session inbox via {@link MessageBus#inboxPush}. This middleware drains
- * them at the start of each reasoning step, appends them to the agent's context as user-role
- * notification messages (also passed into the next reasoning step so they reach the immediately
- * following model request), and emits a {@link HintBlockEvent} for each so the front-end event
- * stream can render them in real time.
+ * <p>生产者（例如 {@link AsyncToolMiddleware}、团队工具、调度器）通过
+ * {@link HintBlock} 载荷和 {@link MessageBus#inboxPush} 向会话收件箱推送消息。
+ * 此中间件在每次推理开始时取出消息，作为 user 角色的通知追加到智能体上下文，
+ * 同时传入下一步推理，确保紧随其后的模型请求能看到它们；
+ * 并为每条消息发出 {@link HintBlockEvent}，让前端事件流实时渲染。
+ *
+ * <p>【学习提示】消息在数据结构上使用 user 角色，不代表其来源是真实用户，
+ * 更不能自动当作用户批准。来源说明用于保留通知与直接用户输入的边界。
  */
 public class InboxMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(InboxMiddleware.class);
     private static final Duration DEFAULT_STALE_TTL = Duration.ofMinutes(10);
 
-    // Metadata keys carried by each synthetic notification message (see injectHintsToContext).
+    // 每条合成通知消息携带的元数据键（见 injectHintsToContext）。
     private static final String METADATA_SYNTHETIC = "synthetic";
     private static final String METADATA_REMINDER_KIND = "reminderKind";
     private static final String METADATA_SOURCE = "source";
@@ -89,7 +90,7 @@ public class InboxMiddleware implements HarnessRuntimeMiddleware {
         this.staleTtl = staleTtl != null ? staleTtl : DEFAULT_STALE_TTL;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_REASONING);
@@ -198,11 +199,10 @@ public class InboxMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Appends the drained hints to the agent's context in queue order, one user-role message per
-     * hint, each led by a provenance sentence so the model cannot mistake them for real user
-     * input or an approval. USER messages cannot carry {@link HintBlock}s (role content
-     * contract), so each hint is rendered as its own text block — formatters project hints as
-     * text anyway. Returns the created messages in order.
+     * 按队列顺序将提示追加到智能体上下文，每条提示对应一条 user 角色消息。
+     * 每条消息先声明来源，避免模型误认为真实用户输入或批准。
+     * USER 消息按角色内容契约不能携带 {@link HintBlock}，因此每条提示渲染为独立文本块；
+     * 格式化器本来也会将提示投影为文本。按顺序返回创建的消息。
      */
     static List<Msg> injectHintsToContext(AgentState state, List<HintBlock> hints) {
         List<Msg> context = state.contextMutable();
@@ -239,7 +239,7 @@ public class InboxMiddleware implements HarnessRuntimeMiddleware {
         return notifications;
     }
 
-    /** Passes the notification messages into the next reasoning step instead of the raw input. */
+    /** 将通知消息而非原始输入传递到下一步推理。 */
     private static ReasoningInput appendNotifications(
             ReasoningInput input, List<Msg> notifications) {
         if (notifications.isEmpty()) {

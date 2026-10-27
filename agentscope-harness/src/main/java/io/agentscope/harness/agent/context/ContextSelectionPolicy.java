@@ -18,7 +18,7 @@ package io.agentscope.harness.agent.context;
 import java.util.Comparator;
 import java.util.List;
 
-/** Returns optional source IDs in eviction order. Cannot rewrite content or remove required items. */
+/** 按淘汰顺序返回可选来源的 ID。不能改写内容或移除必需条目。 */
 @FunctionalInterface
 public interface ContextSelectionPolicy {
     List<String> omissionOrder(List<ContextItem> materials);

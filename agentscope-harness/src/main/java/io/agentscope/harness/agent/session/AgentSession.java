@@ -52,12 +52,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * A session's durable task operations and read views. Commands are accepted synchronously;
- * this runtime owns execution subscriptions, independently of observers. Storage calls block.
- * Obtaining a handle and reading views never starts inference. Close the owning HarnessAgent.
+ * 会话的持久化任务操作与只读视图。命令同步接收；
+ * 此运行时负责执行订阅，不依赖观察者。存储调用会阻塞。
+ * 获取句柄和读取视图绝不会启动推理。应关闭拥有该会话的 HarnessAgent。
  */
 public final class AgentSession implements AutoCloseable {
-    /** Command receipt. A queued task may not yet have a runId. IDs are assigned by the framework. */
+    /**
+     * 命令回执。排队中的任务可能尚无 runId。ID 由框架分配。
+     */
     public record Task(String commandId, String turnId, String runId, String status, String error) {
         public boolean settled() {
             return !status.equals("queued")
@@ -113,7 +115,9 @@ public final class AgentSession implements AutoCloseable {
         return error;
     }
 
-    /** Start dispatching durable queued tasks, for example after application restart. */
+    /**
+     * 开始分派已持久化的排队任务，例如在应用重启后调用。
+     */
     public synchronized void start() {
         ensureOpen();
         if (dispatcher == null)
@@ -134,7 +138,9 @@ public final class AgentSession implements AutoCloseable {
         return submit(UUID.randomUUID().toString(), input);
     }
 
-    /** Reuse the key and identical input when retrying a network submission. */
+    /**
+     * 重试网络提交时，复用同一个键和完全相同的输入。
+     */
     public Task submit(String idempotencyKey, String input) {
         return submit(idempotencyKey, List.of(new UserMessage(Objects.requireNonNull(input))));
     }
@@ -146,6 +152,8 @@ public final class AgentSession implements AutoCloseable {
         String turn =
                 UUID.nameUUIDFromBytes(("turn:" + id).getBytes(StandardCharsets.UTF_8)).toString();
         var command = new SessionInbox.Command(id, "submit", turn, freeze(id, input), List.of());
+        // 【学习提示】先持久化接收命令，再启动执行调度；提交回执不代表推理已完成。
+        // 重试提交应复用幂等键和原输入，而不是生成新键再次发起任务。
         inbox.locked(tx -> tx.accept(command));
         start();
         return receipt(command);
@@ -196,7 +204,9 @@ public final class AgentSession implements AutoCloseable {
         return respond(Map.of(requestId, answer));
     }
 
-    /** Resolve request ownership and encode existing Core HITL inputs; never accept invented tool IDs. */
+    /**
+     * 解析请求归属并编码现有 Core HITL 输入；绝不接受凭空构造的工具 ID。
+     */
     public Task respond(Map<String, SessionAnswer> answers) {
         ensureOpen();
         requireIdle();
@@ -261,7 +271,9 @@ public final class AgentSession implements AutoCloseable {
         return steer(null, input);
     }
 
-    /** Bind steering to a known task, rejecting a stale operation after the session moves on. */
+    /**
+     * 将引导绑定到已知任务，在会话转向后续任务后拒绝过时操作。
+     */
     public InputReceipt steer(Task task, String input) {
         return steer(task.turnId(), List.of(new UserMessage(input)));
     }
@@ -302,12 +314,16 @@ public final class AgentSession implements AutoCloseable {
         return new InputReceipt(id, null);
     }
 
-    /** Stop the current execution. Queued tasks remain parked until the interrupted task continues. */
+    /**
+     * 停止当前执行。排队任务保持挂起，直到被中断的任务继续执行。
+     */
     public boolean interrupt() {
         return interrupt(null);
     }
 
-    /** Optional execution guard prevents a stale UI action from stopping a newer run. */
+    /**
+     * 可选的执行保护可防止过时的 UI 操作停止较新的运行。
+     */
     public boolean interrupt(String expectedRunId) {
         ensureOpen();
         return inbox.locked(
@@ -335,7 +351,9 @@ public final class AgentSession implements AutoCloseable {
         return List.copyOf(tasks.values());
     }
 
-    /** Observe this accepted execution until it completes, suspends, is interrupted, or fails. */
+    /**
+     * 观察这次已接受的执行，直到其完成、挂起、被中断或失败。
+     */
     public Mono<Task> await(Task task) {
         return Flux.interval(Duration.ZERO, Duration.ofMillis(100))
                 .onBackpressureLatest()
@@ -440,6 +458,8 @@ public final class AgentSession implements AutoCloseable {
         AgentRun<AgentEvent> run = agent.prepareRun(command.messages(), rc);
         active = run;
         activeCommand = command.id();
+        // 【学习提示】执行订阅由会话运行时持有，而不是由 await 的观察者持有。
+        // 因此停止等待结果不等于中断任务；显式中断走会话命令与 run.interrupt 路径。
         run.stream()
                 .subscribeOn(Schedulers.boundedElastic())
                 .doFinally(

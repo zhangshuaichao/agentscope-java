@@ -24,16 +24,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of ToolResultConverter.
- * Handles JSON serialization with schema information.
+ * ToolResultConverter 的默认实现，处理带模式信息的 JSON 序列化。
  *
- * <p>This converter:
+ * <p>此转换器：
  * <ul>
- *   <li>Converts null results to "null" text</li>
- *   <li>Converts void results to "Done" text</li>
- *   <li>Passes through ToolResultBlock instances unchanged</li>
- *   <li>Serializes objects to JSON with schema information</li>
- *   <li>Falls back to toString() if serialization fails</li>
+ * <li>将 null 结果转换为 "null" 文本</li>
+ * <li>将 void 结果转换为 "Done" 文本</li>
+ * <li>原样传递 ToolResultBlock 实例</li>
+ * <li>将对象序列化为带模式信息的 JSON</li>
+ * <li>序列化失败时回退到 toString()</li>
  * </ul>
  */
 public class DefaultToolResultConverter implements ToolResultConverter {
@@ -50,7 +49,7 @@ public class DefaultToolResultConverter implements ToolResultConverter {
             return handleVoid();
         }
 
-        // If result is already a ToolResultBlock, return it directly
+        // 结果已是 ToolResultBlock 时直接返回
         if (result instanceof ToolResultBlock) {
             return (ToolResultBlock) result;
         }
@@ -59,36 +58,36 @@ public class DefaultToolResultConverter implements ToolResultConverter {
     }
 
     /**
-     * Handle null result.
+     * 处理 null 结果。
      *
-     * @return ToolResultBlock with "null" text
+     * @return 包含 "null" 文本的 ToolResultBlock
      */
     protected ToolResultBlock handleNull() {
         return ToolResultBlock.of(List.of(TextBlock.builder().text("null").build()));
     }
 
     /**
-     * Handle void return type.
+     * 处理 void 返回类型。
      *
-     * @return ToolResultBlock with "Done" text
+     * @return 包含 "Done" 文本的 ToolResultBlock
      */
     protected ToolResultBlock handleVoid() {
         return ToolResultBlock.of(List.of(TextBlock.builder().text("Done").build()));
     }
 
     /**
-     * Serialize result to JSON string with schema.
+     * 将结果序列化为带模式信息的 JSON 字符串。
      *
-     * @param result the result to serialize
-     * @param returnType the return type
-     * @return ToolResultBlock with JSON string and schema
+     * @param result 要序列化的结果
+     * @param returnType 返回类型
+     * @return 包含 JSON 字符串和模式的 ToolResultBlock
      */
     protected ToolResultBlock serialize(Object result, Type returnType) {
         try {
             String json = JsonUtils.getJsonCodec().toJson(result);
             return ToolResultBlock.of(List.of(TextBlock.builder().text(json).build()));
         } catch (Exception e) {
-            // Fallback to string representation
+            // 回退到字符串表示
             logger.warn("Failed to serialize result to JSON, falling back to toString()", e);
             return ToolResultBlock.of(
                     List.of(TextBlock.builder().text(String.valueOf(result)).build()));

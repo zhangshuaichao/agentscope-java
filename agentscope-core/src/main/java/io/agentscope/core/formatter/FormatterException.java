@@ -16,27 +16,26 @@
 package io.agentscope.core.formatter;
 
 /**
- * Exception thrown when formatter encounters an error during message formatting or response parsing.
+ * 格式化器在消息转换或响应解析中遇到错误时抛出的异常。
  *
- * <p>This exception is used to wrap underlying errors (JSON parsing, SDK errors, etc.)
- * and provide consistent error handling across all formatter implementations.
+ * <p>用于包装底层错误（JSON 解析、SDK 错误等），让各格式化器实现采用一致的错误处理方式。
  */
 public class FormatterException extends RuntimeException {
 
     /**
-     * Constructs a new FormatterException with the specified detail message.
+     * 使用指定详细消息构造 FormatterException。
      *
-     * @param message The detail message
+     * @param message 详细消息
      */
     public FormatterException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new FormatterException with the specified detail message and cause.
+     * 使用指定详细消息和原因构造 FormatterException。
      *
-     * @param message The detail message
-     * @param cause The cause of the exception
+     * @param message 详细消息
+     * @param cause 异常原因
      */
     public FormatterException(String message, Throwable cause) {
         super(message, cause);

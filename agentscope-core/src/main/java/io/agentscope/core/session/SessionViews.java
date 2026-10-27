@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-/** Rebuildable human/history views; context replacement never erases earlier messages. */
+/** 可重建的人类可读／历史视图；替换上下文绝不擦除更早的消息。 */
 public final class SessionViews {
     private SessionViews() {}
 

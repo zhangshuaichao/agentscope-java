@@ -23,25 +23,22 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Type-namespace marker for MCP (Model Context Protocol) request metadata.
+ * MCP（模型上下文协议）请求元数据的类型命名空间标记。
  *
- * <p>Register an instance of this class in a {@link RuntimeContext} (via
- * {@link RuntimeContext}) to have its entries automatically included as the
- * {@code meta} field of every MCP {@link McpSchema.CallToolRequest} sent through {@link McpTool}.
+ * <p>通过 {@link RuntimeContext} 将本类实例注册到 {@link RuntimeContext}，其条目会自动作为 {@link McpTool} 发出的每个 MCP {@link McpSchema.CallToolRequest} 的 {@code meta} 字段。
  *
- * <p>Only objects registered under the {@code McpMeta.class} type key are extracted — other
- * context objects (DI beans, configs, etc.) are never leaked into MCP meta.
+ * <p>只提取以 {@code McpMeta.class} 类型键注册的对象，其他上下文对象（依赖注入 Bean、配置等）不会泄漏到 MCP meta。
  *
- * <p><b>Usage examples:</b>
+ * <p><b>使用示例：</b>
  *
- * <p>1) Via {@code RuntimeContext}:
+ * <p>1）通过 {@code RuntimeContext}：
  * <pre>{@code
  * RuntimeContext rtCtx = RuntimeContext.builder()
  *     .put(McpMeta.class, new McpMeta(Map.of("traceId", "abc-123")))
  *     .build();
  * }</pre>
  *
- * <p>2) Merging multiple meta sources (later entries override earlier ones for the same key):
+ * <p>2）合并多个元数据来源，同名键以后者覆盖前者：
  * <pre>{@code
  * McpMeta base = new McpMeta(Map.of("traceId", "abc-123"));
  * McpMeta extra = new McpMeta(Map.of("callbackUrl", "https://hook.example.com"));
@@ -54,9 +51,9 @@ import java.util.Objects;
 public record McpMeta(Map<String, Object> entries) {
 
     /**
-     * Creates an McpMeta with the given entries.
+     * 使用给定条目创建 McpMeta。
      *
-     * @param entries the metadata entries (may be null or empty); the map is defensively copied
+     * @param entries 元数据条目（可为 null 或空）；映射会进行防御性复制
      */
     public McpMeta(Map<String, Object> entries) {
         this.entries =
@@ -66,9 +63,9 @@ public record McpMeta(Map<String, Object> entries) {
     }
 
     /**
-     * Returns the metadata entries as an unmodifiable map.
+     * 以不可修改映射返回元数据条目。
      *
-     * @return the entries, never null (may be empty)
+     * @return 条目，永不为 null（可以为空）
      */
     @Override
     public Map<String, Object> entries() {
@@ -76,21 +73,21 @@ public record McpMeta(Map<String, Object> entries) {
     }
 
     /**
-     * Returns whether this meta contains no entries.
+     * 返回元数据是否没有条目。
      *
-     * @return true if empty, false otherwise
+     * @return 为空为 true，否则为 false
      */
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
     /**
-     * Merges multiple {@code McpMeta} instances into one.
+     * 将多个 {@code McpMeta} 合并为一个。
      *
-     * <p>Entries from later instances override earlier ones for the same key (last-wins).
+     * <p>同名键以后面的实例覆盖前面的实例。
      *
-     * @param metas the meta instances to merge (nulls are silently skipped)
-     * @return a new merged McpMeta, or an empty one if all inputs are null/empty
+     * @param metas 待合并元数据实例（静默跳过 null）
+     * @return 合并后的新 McpMeta；输入均为 null 或空时返回空实例
      */
     public static McpMeta merge(McpMeta... metas) {
         if (metas == null || metas.length == 0) {

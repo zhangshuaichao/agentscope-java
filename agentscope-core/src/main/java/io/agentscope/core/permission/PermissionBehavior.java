@@ -20,13 +20,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Locale;
 
 /**
- * Outcome of a permission rule or tool self-check.
+ * 权限规则或工具自检的结果。
  *
  * <ul>
- *   <li>{@link #ALLOW}: proceed without further checks.
- *   <li>{@link #DENY}: reject the tool invocation.
- *   <li>{@link #ASK}: defer to the user for a confirmation.
- *   <li>{@link #PASSTHROUGH}: tool defers decision back to the engine for rule matching.
+ *   <li>{@link #ALLOW}：继续执行，无须进一步检查。
+ *   <li>{@link #DENY}：拒绝工具调用。
+ *   <li>{@link #ASK}：交由用户确认。
+ *   <li>{@link #PASSTHROUGH}：工具将决定权交还引擎，继续匹配规则。
  * </ul>
  */
 public enum PermissionBehavior {
@@ -47,11 +47,11 @@ public enum PermissionBehavior {
     }
 
     /**
-     * Resolves a string (case-insensitive) to a {@code PermissionBehavior}.
+     * 将字符串解析为 {@code PermissionBehavior}，不区分大小写。
      *
-     * @param value JSON / config string representation
-     * @return matching behavior
-     * @throws IllegalArgumentException if no enum value matches
+     * @param value JSON／配置中的字符串表示
+     * @return 匹配的行为
+     * @throws IllegalArgumentException 没有匹配的枚举值时抛出
      */
     @JsonCreator
     public static PermissionBehavior fromString(String value) {

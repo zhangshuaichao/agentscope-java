@@ -23,20 +23,15 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Per-skill operational telemetry plus enterprise-staging audit fields. Persisted as a single
- * JSON object inside the workspace sidecar {@code skills/.usage.json} (one record per skill,
- * keyed by skill name).
+ * 每个技能的运行遥测及企业暂存审计字段。作为单个 JSON 对象持久化到工作区旁挂文件 {@code skills/.usage.json}（每个技能一条记录，以技能名称为键）。
  *
- * <p>Field naming intentionally mirrors hermes-agent's {@code tools/skill_usage.py} sidecar
- * shape (snake_case via {@link JsonProperty}) so the two ecosystems can share telemetry files
- * if a user copies skills between them.
+ * <p>字段命名有意对齐 hermes-agent 的 {@code tools/skill_usage.py} 旁挂文件格式（通过 {@link JsonProperty} 使用 snake_case），使用户在两个生态间复制技能时可以共享遥测文件。
  *
- * <p>{@code createdBy} provenance values:
+ * <p>{@code createdBy} 来源值：
  * <ul>
- *   <li>{@code null} — user-authored / hub-installed / pre-existing skill (NOT eligible for
- *       curator auto-management or canary gating)</li>
- *   <li>{@code "agent-draft"} — agent created via {@code skill_manage} but not yet promoted</li>
- *   <li>{@code "agent"} — agent-created skill that has been promoted to the live skills root</li>
+ * <li>{@code null}：用户编写、技能中心安装或原有技能（不参与 curator 自动管理或灰度门控）。</li>
+ * <li>{@code "agent-draft"}：智能体通过 {@code skill_manage} 创建，但尚未晋级。</li>
+ * <li>{@code "agent"}：智能体创建且已晋级到正式技能根目录的技能。</li>
  * </ul>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -68,7 +63,9 @@ public record SkillUsageRecord(
         ARCHIVED
     }
 
-    /** Default record for a newly-tracked skill (just appeared on disk). */
+    /**
+     * 新纳入跟踪的技能（刚出现在磁盘上）的默认记录。
+     */
     public static SkillUsageRecord defaults() {
         return new SkillUsageRecord(
                 null,
@@ -88,7 +85,9 @@ public record SkillUsageRecord(
                 List.of());
     }
 
-    /** Default record for a freshly created agent draft. */
+    /**
+     * 新创建的智能体草稿的默认记录。
+     */
     public static SkillUsageRecord newAgentDraft(String sessionId) {
         return new SkillUsageRecord(
                 "agent-draft",
@@ -108,7 +107,9 @@ public record SkillUsageRecord(
                 List.of("draft"));
     }
 
-    /** Jackson constructor for tolerant decoding (missing fields default to null/0/false). */
+    /**
+     * 支持宽容解码的 Jackson 构造方法（缺失字段默认为 null/0/false）。
+     */
     @JsonCreator
     public static SkillUsageRecord ofJson(
             @JsonProperty("created_by") String createdBy,
@@ -144,7 +145,9 @@ public record SkillUsageRecord(
                 environments == null ? List.of() : environments);
     }
 
-    /** Latest of {@code last_used_at}, {@code last_viewed_at}, {@code last_patched_at}. */
+    /**
+     * {@code last_used_at}、{@code last_viewed_at}、{@code last_patched_at} 中最新的时间。
+     */
     @JsonIgnore
     public Instant latestActivityAt() {
         Instant latest = null;
@@ -156,13 +159,17 @@ public record SkillUsageRecord(
         return latest;
     }
 
-    /** Sum of {@code use_count}, {@code view_count}, {@code patch_count}. */
+    /**
+     * {@code use_count}、{@code view_count}、{@code patch_count} 之和。
+     */
     @JsonIgnore
     public long activityCount() {
         return useCount + viewCount + patchCount;
     }
 
-    /** Whether this skill is eligible for curator auto-management / canary visibility filtering. */
+    /**
+     * 此技能是否符合 curator 自动管理或灰度可见性过滤的条件。
+     */
     @JsonIgnore
     public boolean isAgentCreated() {
         return "agent".equals(createdBy);

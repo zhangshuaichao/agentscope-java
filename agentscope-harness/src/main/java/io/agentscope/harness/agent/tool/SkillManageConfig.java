@@ -16,22 +16,25 @@
 package io.agentscope.harness.agent.tool;
 
 /**
- * Configuration for {@link SkillManageTool}.
+ * {@link SkillManageTool} 的配置。
  *
- * <p>Default values are tuned for enterprise production deployment: new skills land in a draft
- * subdirectory (not the live skills root), static security scanning is on, and the agent cannot
- * silently overwrite an existing skill via {@code create}.
+ * <p>默认值面向企业生产部署：新技能写入草稿子目录（而非正式技能根目录），
+ * 启用静态安全扫描，且智能体不能通过 {@code create} 静默覆盖现有技能。
  *
- * <p>For personal-assistant / experimental use the recommended override is
- * {@code SkillManageConfig.builder().autoPromote(true).build()} — agent writes go straight to the
- * live skills root, becoming visible on the next reasoning turn.
+ * <p>对于个人助理或实验用途，建议覆盖为
+ * {@code SkillManageConfig.builder().autoPromote(true).build()}：
+ * 智能体直接写入正式技能根目录，在下一轮推理中可见。
  */
 public final class SkillManageConfig {
 
-    /** Default subdirectory under workspace for staging drafts. */
+    /**
+     * 工作区下默认的草稿暂存子目录。
+     */
     public static final String DEFAULT_DRAFTS_DIR = "skills/_drafts";
 
-    /** Default subdirectory under workspace for promoted skills. */
+    /**
+     * 工作区下默认的已晋升技能子目录。
+     */
     public static final String DEFAULT_MAIN_DIR = "skills";
 
     private final boolean autoPromote;
@@ -46,22 +49,30 @@ public final class SkillManageConfig {
         this.mainDir = b.mainDir;
     }
 
-    /** Skip the draft staging path and write directly to the live skills root. */
+    /**
+     * 跳过草稿暂存路径，直接写入正式技能根目录。
+     */
     public boolean autoPromote() {
         return autoPromote;
     }
 
-    /** Run {@code SkillSecurityScanner} after every write. */
+    /**
+     * 每次写入后运行 {@code SkillSecurityScanner}。
+     */
     public boolean securityScan() {
         return securityScan;
     }
 
-    /** Workspace-relative directory where drafts land. */
+    /**
+     * 草稿存放目录，相对于工作区。
+     */
     public String draftsDir() {
         return draftsDir;
     }
 
-    /** Workspace-relative directory where promoted skills live. */
+    /**
+     * 已晋升技能存放目录，相对于工作区。
+     */
     public String mainDir() {
         return mainDir;
     }

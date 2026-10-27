@@ -23,31 +23,26 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Channel adapter — ingests inbound messages from one messaging platform (or a programmatic
- * caller), routes them through {@link ChannelRouter} to resolve the target agent and session, and
- * delegates execution to {@link Gateway}.
+ * 渠道适配器：从一个消息平台（或编程调用方）接收入站消息，
+ * 通过 {@link ChannelRouter} 解析目标智能体与会话，再委托 {@link Gateway} 执行。
  *
- * <h2>Lifecycle</h2>
+ * <h2>生命周期</h2>
  *
  * <ol>
- *   <li>{@link #init(Gateway)} — called by the gateway bootstrap to inject the auto-wired
- *       {@link Gateway} before start-up. Implementations should store the gateway and perform any
- *       pre-connection setup. The default is a no-op for channels that receive the gateway at
- *       construction time.
- *   <li>{@link #start()} — connects to the external event source (webhook endpoint, long-poll,
- *       websocket, etc.) and begins dispatching inbound messages. Programmatic channels may
- *       implement this as a no-op.
- *   <li>{@link #stop()} — disconnects and releases resources.
+ *   <li>{@link #init(Gateway)} — 由网关启动引导在启动前注入自动装配的 {@link Gateway}。
+ *       实现应保存网关并完成连接前准备。构造时已接收网关的渠道可使用默认空操作。
+ *   <li>{@link #start()} — 连接外部事件源（webhook 端点、长轮询、WebSocket 等），
+ *       开始分发入站消息；编程式渠道可不执行操作。
+ *   <li>{@link #stop()} — 断开连接并释放资源。
  * </ol>
  *
- * <h2>Message dispatch</h2>
+ * <h2>消息分发</h2>
  *
- * Implementations call {@link Gateway#run} with the {@link
- * io.agentscope.harness.agent.gateway.MsgContext} produced by {@link ChannelRouter#resolveRoute},
- * the resolved {@link OutboundAddress}, and any caller {@link
- * io.agentscope.core.agent.RuntimeContext} carried on {@link InboundMessage#runtimeContext()}.
- * The returned {@link Msg} reply is delivered back to the originating platform by the channel
- * adapter.
+ * 实现调用 {@link Gateway#run}，传入 {@link ChannelRouter#resolveRoute} 生成的
+ * {@link io.agentscope.harness.agent.gateway.MsgContext}、解析出的 {@link OutboundAddress}，
+ * 以及 {@link InboundMessage#runtimeContext()} 携带的调用方
+ * {@link io.agentscope.core.agent.RuntimeContext}。
+ * 返回的 {@link Msg} 回复由渠道适配器送回原平台。
  *
  * @see ChannelConfig
  * @see ChannelRouter
@@ -56,71 +51,69 @@ import reactor.core.publisher.Mono;
 public interface Channel {
 
     /**
-     * Logical identifier for this channel (e.g. {@code "chatui"}, {@code "slack"},
-     * {@code "discord"}). Must match {@link ChannelConfig#channelId()}.
+     * 此渠道的逻辑标识（例如 {@code "chatui"}、{@code "slack"}、{@code "discord"}）。
+     * 必须匹配 {@link ChannelConfig#channelId()}。
      */
     String channelId();
 
-    /** Returns the routing configuration for this channel. */
+    /**
+     * 返回此渠道的路由配置。
+     */
     ChannelConfig config();
 
     /**
-     * Called by the gateway bootstrap before {@link #start()} to supply the auto-wired
-     * {@link Gateway}. Implementations that need a gateway but do not receive it at construction
-     * time should override this method. The default is a no-op.
+     * 由网关启动引导在 {@link #start()} 前调用，提供自动装配的 {@link Gateway}。
+     * 需要网关但未在构造时接收它的实现应覆盖此方法。默认不执行操作。
      */
     default void init(Gateway gateway) {}
 
     /**
-     * Connects to the external event source and starts dispatching inbound messages. Programmatic
-     * channels may make this a no-op.
+     * 连接外部事件源并开始分发入站消息。编程式渠道可不执行操作。
      */
     default void start() {}
 
     /**
-     * Disconnects from the external event source and releases resources. Programmatic channels may
-     * make this a no-op.
+     * 断开外部事件源并释放资源。编程式渠道可不执行操作。
      */
     default void stop() {}
 
     /**
-     * Dispatches a fully constructed {@link InboundMessage} through routing and returns the agent
-     * reply. The channel implementation is responsible for:
+     * 将完整构造的 {@link InboundMessage} 经路由分发，返回智能体回复。
+     * 渠道实现负责：
      *
      * <ol>
-     *   <li>Calling {@link ChannelRouter#resolveRoute} to obtain a {@link RouteResult} (which
-     *       includes the {@link OutboundAddress} for reply routing)
-     *   <li>Passing the {@link RouteResult#context()}, messages, and {@link
-     *       RouteResult#outboundAddress()} to {@link Gateway#run}
+     *   <li>调用 {@link ChannelRouter#resolveRoute} 获得 {@link RouteResult}
+     *       （其中包含回复路由的 {@link OutboundAddress}）
+     *   <li>将 {@link RouteResult#context()}、消息和 {@link
+     *       RouteResult#outboundAddress()} 传给 {@link Gateway#run}
      * </ol>
      */
     Mono<Msg> dispatch(InboundMessage message);
 
     /**
-     * Streaming variant of {@link #dispatch(InboundMessage)}. Returns fine-grained
-     * {@link AgentEvent}s instead of a single reply.
+     * {@link #dispatch(InboundMessage)} 的流式变体。
+     * 返回细粒度 {@link AgentEvent}，而不是单个回复。
      *
-     * <p>The default delegates to {@link Gateway#runStream} with the resolved route.
+     * <p>默认根据解析出的路由委托给 {@link Gateway#runStream}。
      */
     default Flux<AgentEvent> dispatchStream(InboundMessage message) {
         return Flux.error(new UnsupportedOperationException("Streaming dispatch not supported"));
     }
 
     /**
-     * Delivers proactive outbound messages (e.g. subagent completion announces) to this channel's
-     * transport. Called by the gateway when an agent produces a reply that needs to be pushed to
-     * the originating channel/peer rather than returned synchronously.
+     * 将主动出站消息（例如子智能体完成公告）投递到此渠道的传输层。
+     * 智能体产生需要推送回原始渠道／对端、而不是同步返回的回复时，由网关调用。
      *
-     * <p>The default implementation is a no-op, suitable for pull-based channels that do not
-     * support proactive push.
+     * <p>默认实现不执行操作，适用于不支持主动推送的拉取式渠道。
      *
-     * @param address the delivery target (peer, thread, account context)
-     * @param messages the messages to deliver
+     * @param address 投递目标（对端、线程、账户上下文）
+     * @param messages 要投递的消息
      */
     default void deliver(OutboundAddress address, List<Msg> messages) {}
 
-    /** Delivers one durable notification and returns the provider message ID, not a local ack.
-     * Unsupported transports fail explicitly so callers can keep the notification pending.
+    /**
+     * 投递一条持久化通知并返回服务商消息 ID，而非本地确认。
+     * 不支持的传输必须显式失败，使调用方能够保持通知待处理状态。
      */
     default Mono<String> deliverWithReceipt(
             OutboundAddress address, Msg message, String deliveryId) {
@@ -128,18 +121,14 @@ public interface Channel {
     }
 
     /**
-     * Applies a new routing {@link ChannelConfig} (bindings, dmScope, defaultAgentId) without
-     * tearing down the channel's transport. Implementations that hold their {@link #config()} in a
-     * mutable / volatile reference can override this to support hot reload of bindings.
+     * 应用新的路由 {@link ChannelConfig}（绑定、dmScope、defaultAgentId），而不拆除渠道传输。
+     * 将 {@link #config()} 保存在可变／volatile 引用中的实现可覆盖此方法，以支持绑定热加载。
      *
-     * <p>The default implementation returns {@code false} to signal that this channel does not
-     * support live config swap. Returning {@code true} means the swap was applied and subsequent
-     * inbound messages will route under the new config.
+     * <p>默认返回 {@code false} 表示不支持在线替换配置。
+     * 返回 {@code true} 表示替换已应用，后续入站消息将使用新配置路由。
      *
-     * @param newConfig the new routing configuration to install (channelId must match
-     *     {@link #channelId()})
-     * @return {@code true} if the config was applied live; {@code false} if the channel requires a
-     *     restart to pick up the new config
+     * @param newConfig 要安装的新路由配置（channelId 必须匹配 {@link #channelId()}）
+     * @return 在线应用成功为 {@code true}；需要重启渠道才能采用新配置时为 {@code false}
      */
     default boolean applyRoutingConfig(ChannelConfig newConfig) {
         return false;

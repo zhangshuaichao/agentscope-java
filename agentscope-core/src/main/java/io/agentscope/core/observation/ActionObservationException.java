@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.observation;
 
-/** An observation could not be acknowledged. Never convert this into a retryable tool result. */
+/** 观察记录未能得到确认。绝不能将其转换为可重试的工具结果。 */
 public final class ActionObservationException extends RuntimeException {
     public ActionObservationException(Throwable cause) {
         super(

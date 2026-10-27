@@ -16,16 +16,16 @@
 package io.agentscope.core.state;
 
 /**
- * A state value paired with its optimistic-concurrency version from an {@link AgentStateStore}.
+ * 状态值及其在 {@link AgentStateStore} 中对应的乐观并发版本。
  *
- * @param <T> the state type
- * @param value the loaded state, or {@code null} when the key is absent
- * @param version the store version; {@link AgentStateStore#UNVERSIONED} when the backend does not
- *     support versioning, or {@code 0} when the key does not yet exist on a versioning backend
+ * @param <T> 状态类型
+ * @param value 加载的状态；键不存在时为 {@code null}
+ * @param version 存储版本；后端不支持版本控制时为 {@link AgentStateStore#UNVERSIONED}，
+ *     支持版本控制但键尚不存在时为 {@code 0}
  */
 public record VersionedState<T extends State>(T value, long version) {
 
-    /** Returns {@code true} when a value was present in the store. */
+    /** 存储中存在值时返回 {@code true}。 */
     public boolean isPresent() {
         return value != null;
     }

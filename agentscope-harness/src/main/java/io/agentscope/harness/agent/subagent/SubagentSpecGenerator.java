@@ -27,19 +27,20 @@ import java.util.Objects;
 import reactor.core.publisher.Mono;
 
 /**
- * LLM-driven generator for {@link SubagentDeclaration} markdown specs.
+ * 由 LLM 驱动的 {@link SubagentDeclaration} Markdown 规格生成器。
  *
- * <p>Given a free-form description of an agent's purpose, prompts the supplied {@link Model} to
- * emit a markdown document with YAML frontmatter conforming to {@link AgentSpecLoader}'s schema.
- * The output is parseable round-trip via {@link AgentSpecLoader#parse}.
+ * <p>根据自由文本描述的智能体用途，提示所提供的 {@link Model}
+ * 输出符合 {@link AgentSpecLoader} schema 的带 YAML 前置元数据的 Markdown 文档。
+ * 输出可通过 {@link AgentSpecLoader#parse} 重新解析。
  *
- * <p>This is the Java analogue of opencode's {@code Agent.generate} flow ({@code
- * opencode/packages/opencode/src/agent/agent.ts}). Intended to be called from a CLI scaffolder or
- * from {@link io.agentscope.harness.agent.tool.AgentGenerateTool} during a live session.
+ * <p>这是 opencode 的 {@code Agent.generate} 流程
+ * （{@code opencode/packages/opencode/src/agent/agent.ts}）的 Java 对应实现。
+ * 用于从 CLI 脚手架调用，或在实时会话中由
+ * {@link io.agentscope.harness.agent.tool.AgentGenerateTool} 调用。
  *
- * <p>Reuses the same {@code model.stream(messages, null, null).reduce(...)} pattern used by
- * {@link io.agentscope.harness.agent.memory.compaction.ConversationCompactor} for one-shot LLM
- * calls, so behaviour stays consistent with other internal LLM users in the harness.
+ * <p>复用 {@link io.agentscope.harness.agent.memory.compaction.ConversationCompactor}
+ * 进行单次 LLM 调用时采用的 {@code model.stream(messages, null, null).reduce(...)}
+ * 模式，使行为与 Harness 中其他内部 LLM 使用方保持一致。
  */
 public final class SubagentSpecGenerator {
 
@@ -84,13 +85,13 @@ public final class SubagentSpecGenerator {
     }
 
     /**
-     * Generates a markdown spec for a new subagent without validation. Prefer
-     * {@link #generateAndValidate} unless you need to inspect or massage the markdown before it
-     * goes through {@link AgentSpecLoader}.
+     * 生成新子智能体的 Markdown 规格，不执行验证。除非需要在交给
+     * {@link AgentSpecLoader} 前检查或调整 Markdown，否则优先使用
+     * {@link #generateAndValidate}。
      *
-     * @param description free-form description of what the agent should do
-     * @param existingIds names already registered; the model is told to avoid these
-     * @return raw markdown returned by the model (trimmed; otherwise unprocessed)
+     * @param description 对智能体应做什么的自由文本描述
+     * @param existingIds 已注册的名称；会要求模型避免使用它们
+     * @return 模型返回的原始 Markdown（去除首尾空白，除此之外不处理）
      */
     public Mono<String> generateMarkdown(String description, Collection<String> existingIds) {
         String existingList =
@@ -122,17 +123,16 @@ public final class SubagentSpecGenerator {
     }
 
     /**
-     * Generates a markdown spec and validates it by round-tripping through
-     * {@link AgentSpecLoader#parse}. Emits an {@link IllegalStateException} if the LLM output is
-     * malformed (missing frontmatter terminator, missing required {@code description}, etc.).
+     * 生成 Markdown 规格，并通过 {@link AgentSpecLoader#parse} 重新解析以验证。
+     * LLM 输出格式错误（缺少前置元数据结束标记、缺少必填的 {@code description} 等）
+     * 时发出 {@link IllegalStateException}。
      *
-     * @param description free-form description
-     * @param agentName name to assign the parsed declaration (also reserved against
-     *     {@code existingIds})
-     * @param existingIds existing agent ids
-     * @param mainWorkspace workspace root for resolving any relative {@code workspace.path}; may
-     *     be {@code null}
-     * @return tuple of the raw markdown and the parsed {@link SubagentDeclaration}
+     * @param description 自由文本描述
+     * @param agentName 赋给已解析声明的名称（也会与 {@code existingIds} 一同保留，避免冲突）
+     * @param existingIds 现有智能体 ID
+     * @param mainWorkspace 用于解析相对 {@code workspace.path} 的工作区根目录；
+     *     可以为 {@code null}
+     * @return 原始 Markdown 与已解析 {@link SubagentDeclaration} 组成的二元组
      */
     public Mono<GeneratedSpec> generateAndValidate(
             String description,
@@ -154,6 +154,8 @@ public final class SubagentSpecGenerator {
                         });
     }
 
-    /** Pair of the raw markdown and the parsed {@link SubagentDeclaration}. */
+    /**
+     * 原始 Markdown 与已解析 {@link SubagentDeclaration} 的组合。
+     */
     public record GeneratedSpec(String markdown, SubagentDeclaration declaration) {}
 }

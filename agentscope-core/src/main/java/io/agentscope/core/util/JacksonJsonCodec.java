@@ -27,16 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Jackson-based implementation of {@link JsonCodec}.
+ * 基于 Jackson 的 {@link JsonCodec} 实现。
  *
- * <p>This is the default implementation used by {@link JsonUtils}. It uses
- * Jackson's ObjectMapper with the following configuration:
+ * <p>这是 {@link JsonUtils} 默认采用的实现，使用如下 ObjectMapper 配置：
  * <ul>
- *   <li>{@code FAIL_ON_UNKNOWN_PROPERTIES = false} - allows unknown fields in JSON</li>
+ * <li>{@code FAIL_ON_UNKNOWN_PROPERTIES = false}：允许 JSON 含未知字段</li>
  * </ul>
  *
- * <p>Users can access the underlying ObjectMapper via {@link #getObjectMapper()}
- * for advanced operations not covered by the JsonCodec interface.
+ * <p>用户可通过 {@link #getObjectMapper()} 访问底层 ObjectMapper，执行 JsonCodec 接口未涵盖的高级操作。
  *
  * @see JsonCodec
  * @see JsonUtils
@@ -48,25 +46,25 @@ public class JacksonJsonCodec implements JsonCodec {
     private final ObjectMapper objectMapper;
 
     /**
-     * Creates a new JacksonJsonCodec with default ObjectMapper configuration.
+     * 使用默认 ObjectMapper 配置创建新的 JacksonJsonCodec。
      */
     public JacksonJsonCodec() {
         this.objectMapper = createDefaultObjectMapper();
     }
 
     /**
-     * Creates a new JacksonJsonCodec with a custom ObjectMapper.
+     * 使用自定义 ObjectMapper 创建新的 JacksonJsonCodec。
      *
-     * @param objectMapper the ObjectMapper to use
+     * @param objectMapper 要使用的 ObjectMapper
      */
     public JacksonJsonCodec(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     /**
-     * Creates the default ObjectMapper with standard configuration.
+     * 使用标准配置创建默认 ObjectMapper。
      *
-     * @return configured ObjectMapper
+     * @return 已配置的 ObjectMapper
      */
     private static ObjectMapper createDefaultObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
@@ -76,9 +74,9 @@ public class JacksonJsonCodec implements JsonCodec {
     }
 
     /**
-     * Get the underlying ObjectMapper for advanced operations.
+     * 获取底层 ObjectMapper 以执行高级操作。
      *
-     * @return the ObjectMapper instance
+     * @return ObjectMapper 实例
      */
     public ObjectMapper getObjectMapper() {
         return objectMapper;

@@ -27,24 +27,24 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Represents an agent skill that can be loaded and used by agents.
+ * 表示智能体可加载和使用的技能。
  *
- * <p>A skill consists of:
+ * <p>技能包含：
  * <ul>
- *   <li>Name and description - identifying the skill
- *   <li>Skill content - the actual skill implementation or instructions
- *   <li>Resources - supporting files or data referenced by the skill
- *   <li>Version and source - tracking skill origin and versioning
+ * <li>名称和描述：标识技能。
+ * <li>技能内容：实际实现或指令。
+ * <li>资源：技能引用的辅助文件或数据。
+ * <li>版本和来源：跟踪技能来源与版本。
  * </ul>
  *
- * <p><b>Creation options:</b>
+ * <p><b>创建方式：</b>
  * <ul>
- *   <li>From markdown with YAML frontmatter - metadata extracted automatically
- *   <li>From explicit parameters - direct construction with all fields
- *   <li>From builder - for creating modified versions of existing skills
+ * <li>从带 YAML frontmatter 的 Markdown 创建，自动提取元数据。
+ * <li>通过显式参数直接构造全部字段。
+ * <li>通过构建器创建现有技能的修改版本。
  * </ul>
  *
- * <p><b>Usage examples:</b>
+ * <p><b>用法示例：</b>
  * <pre>{@code
  * // From markdown with frontmatter (use SkillUtil)
  * String skillMd = "---\nname: my-skill\ndescription: Does something\n---\nContent here";
@@ -64,7 +64,7 @@ import java.util.Set;
  *
  * @see io.agentscope.core.skill.util.SkillUtil
  * @see io.agentscope.core.skill.util.MarkdownSkillParser
- * Manage markdown skill catalogs in application code.
+ * 在应用代码中管理 Markdown 技能目录。
  */
 public class AgentSkill {
     private final Map<String, Object> metadata;
@@ -73,24 +73,20 @@ public class AgentSkill {
     private final String source;
 
     /**
-     * Optional absolute path to the skill's on-disk source directory. When present, the prompt
-     * provider can emit a {@code <files-root>} per skill so the LLM can shell-execute scripts
-     * directly without going through {@code uploadSkillFiles}; the load tool can also use it as
-     * a disk-fallback when an in-memory resource is missing.
+     * 技能在磁盘上的源目录绝对路径，可选。存在时，提示提供者可为每个技能输出 {@code <files-root>}，使 LLM 无需经过 {@code uploadSkillFiles} 即可通过 Shell 直接执行脚本；加载工具也可在内存资源缺失时回退到此目录。
      */
     private final Path originDir;
 
     /**
-     * Creates an AgentSkill with explicit parameters.
+     * 使用显式参数创建 AgentSkill。
      *
-     * <p>Use this constructor when you want to create a skill directly without parsing
-     * markdown. Uses "custom" as the default source.
+     * <p>适合无需解析 Markdown、直接创建技能的情况。默认来源为 "custom"。
      *
-     * @param name Skill name (must not be null or empty)
-     * @param description Skill description (must not be null or empty)
-     * @param skillContent The skill implementation or instructions (must not be null or empty)
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @throws IllegalArgumentException if name, description, or skillContent is null or empty
+     * @param name 技能名称（不能为 null 或空）
+     * @param description 技能描述（不能为 null 或空）
+     * @param skillContent 技能实现或指令（不能为 null 或空）
+     * @param resources 技能引用的辅助资源（可为 null）
+     * @throws IllegalArgumentException 当 name、description 或 skillContent 为 null 或空时
      */
     public AgentSkill(
             String name, String description, String skillContent, Map<String, String> resources) {
@@ -98,17 +94,16 @@ public class AgentSkill {
     }
 
     /**
-     * Creates an AgentSkill with explicit parameters and custom source.
+     * 使用显式参数和自定义来源创建 AgentSkill。
      *
-     * <p>Use this constructor when you want to create a skill directly without parsing
-     * markdown. The source parameter indicates where the skill originated from.
+     * <p>适合无需解析 Markdown、直接创建技能的情况。source 参数标识技能的来源。
      *
-     * @param name Skill name (must not be null or empty)
-     * @param description Skill description (must not be null or empty)
-     * @param skillContent The skill implementation or instructions (must not be null or empty)
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @throws IllegalArgumentException if name, description, or skillContent is null or empty
+     * @param name 技能名称（不能为 null 或空）
+     * @param description 技能描述（不能为 null 或空）
+     * @param skillContent 技能实现或指令（不能为 null 或空）
+     * @param resources 技能引用的辅助资源（可为 null）
+     * @param source 技能来源标识（null 默认为 "custom"）
+     * @throws IllegalArgumentException 当 name、description 或 skillContent 为 null 或空时
      */
     public AgentSkill(
             String name,
@@ -120,16 +115,15 @@ public class AgentSkill {
     }
 
     /**
-     * Creates an AgentSkill with explicit metadata.
+     * 使用显式元数据创建 AgentSkill。
      *
-     * <p>The metadata must include non-empty string values for {@code name} and
-     * {@code description}. The metadata map is copied and stored as immutable.
+     * <p>元数据必须包含非空字符串 {@code name} 和 {@code description}。元数据映射复制后以不可变形式保存。
      *
-     * @param metadata Skill metadata including required {@code name} and {@code description}
-     * @param skillContent The skill implementation or instructions (must not be null or empty)
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @throws IllegalArgumentException if metadata is invalid or skillContent is null or empty
+     * @param metadata 技能元数据，包含必填的 {@code name} 和 {@code description}
+     * @param skillContent 技能实现或指令（不能为 null 或空）
+     * @param resources 技能引用的辅助资源（可为 null）
+     * @param source 技能来源标识（null 默认为 "custom"）
+     * @throws IllegalArgumentException 当元数据无效或 skillContent 为 null 或空时
      */
     public AgentSkill(
             Map<String, Object> metadata,
@@ -140,20 +134,16 @@ public class AgentSkill {
     }
 
     /**
-     * Creates an AgentSkill with explicit metadata and an on-disk origin directory.
+     * 使用显式元数据和磁盘源目录创建 AgentSkill。
      *
-     * <p>The {@code name} must conform to the standard naming rule ({@link
-     * SkillUtil#VALID_SKILL_NAME_PATTERN}, at most {@link SkillUtil#MAX_SKILL_NAME_LENGTH}
-     * characters) because names are used verbatim as directory keys during materialization.
+     * <p>{@code name} 必须符合标准命名规则（{@link SkillUtil#VALID_SKILL_NAME_PATTERN}，最多 {@link SkillUtil#MAX_SKILL_NAME_LENGTH} 个字符），因为物化文件时会将名称原样作为目录键。
      *
-     * @param metadata Skill metadata including required {@code name} and {@code description}
-     * @param skillContent The skill implementation or instructions (must not be null or empty)
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @param originDir Absolute path to the skill's source directory, or {@code null} if not
-     *                  filesystem-backed (e.g. classpath / remote / synthetic). Stored as-is.
-     * @throws IllegalArgumentException if metadata is invalid, skillContent is null or empty, or
-     *                                  the name does not conform to the standard naming rule
+     * @param metadata 技能元数据，包含必填的 {@code name} 和 {@code description}
+     * @param skillContent 技能实现或指令（不能为 null 或空）
+     * @param resources 技能引用的辅助资源（可为 null）
+     * @param source 技能来源标识（null 默认为 "custom"）
+     * @param originDir 技能源目录的绝对路径；非文件系统来源（如 classpath、远程、合成来源）为 {@code null}，按原值保存
+     * @throws IllegalArgumentException 当元数据无效、skillContent 为 null 或空，或名称不符合标准命名规则时
      */
     public AgentSkill(
             Map<String, Object> metadata,
@@ -180,141 +170,134 @@ public class AgentSkill {
     }
 
     /**
-     * Gets the skill name.
+     * 获取技能名称。
      *
-     * @return The skill name (never null)
+     * @return 技能名称（不会为 null）
      */
     public String getName() {
         return (String) metadata.get("name");
     }
 
     /**
-     * Gets the skill description.
+     * 获取技能描述。
      *
-     * @return The skill description (never null)
+     * @return 技能描述（不会为 null）
      */
     public String getDescription() {
         return (String) metadata.get("description");
     }
 
     /**
-     * Gets the skill metadata.
+     * 获取技能元数据。
      *
-     * @return The immutable metadata map (never null, may be empty except required fields)
+     * @return 不可变元数据映射（不会为 null；除必填字段外可以为空）
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Gets a metadata value by key.
+     * 按键获取元数据值。
      *
-     * @param key The metadata key
-     * @return The metadata value, or null if not found
+     * @param key 元数据键
+     * @return 元数据值；未找到时为 null
      */
     public Object getMetadataValue(String key) {
         return metadata.get(key);
     }
 
     /**
-     * Gets the skill content.
+     * 获取技能内容。
      *
-     * <p>This contains the actual skill implementation or instructions.
+     * <p>包含实际的技能实现或指令。
      *
-     * @return The skill content (never null)
+     * @return 技能内容（不会为 null）
      */
     public String getSkillContent() {
         return skillContent;
     }
 
     /**
-     * Gets the skill source identifier.
+     * 获取技能来源标识。
      *
-     * @return The source identifier (never null)
+     * @return 来源标识（不会为 null）
      */
     public String getSource() {
         return source;
     }
 
     /**
-     * Gets the skill resources.
+     * 获取技能资源。
      *
-     * @return The resources map (never null, may be empty)
+     * @return 资源映射（不会为 null，可以为空）
      */
     public Map<String, String> getResources() {
         return new HashMap<>(resources);
     }
 
     /**
-     * Gets the resource content by path.
+     * 按路径获取资源内容。
      *
-     * @param resourcePath The resource path
-     * @return The resource content, or null if not found
+     * @param resourcePath 资源路径
+     * @return 资源内容；未找到时为 null
      */
     public String getResource(String resourcePath) {
         return resources.get(resourcePath);
     }
 
     /**
-     * Gets all resource paths for this skill.
+     * 获取此技能的全部资源路径。
      *
-     * @return Unmodifiable set of resource paths
+     * @return 不可修改的资源路径集合
      */
     public Set<String> getResourcePaths() {
         return Collections.unmodifiableSet(new HashSet<>(resources.keySet()));
     }
 
     /**
-     * Gets a unique identifier for this skill.
+     * 获取此技能的唯一标识。
      *
-     * <p>The ID is composed of name and source: "name_source". Because the standard naming rule
-     * forbids underscores in names, the ID splits deterministically at the first underscore, so
-     * distinct {@code (name, source)} pairs always produce distinct IDs. {@code SkillRegistry}
-     * additionally warns if a same-ID registration ever overwrites a different {@code (name,
-     * source)} pair — with the current charset this is unreachable and serves purely as a
-     * tripwire against future rule relaxations.
+     * <p>ID 由名称与来源组成："name_source"。标准命名规则禁止名称包含下划线，因此可在首个下划线处确定性拆分，不同的 {@code (name, source)} 对总会生成不同 ID。若同 ID 注册覆盖了不同的 {@code (name, source)} 对，{@code SkillRegistry} 还会发出警告；在当前字符集规则下此情况不可达，仅用于防范未来放宽规则造成的问题。
      *
-     * @return Unique skill identifier (never null)
+     * @return 唯一技能标识（不会为 null）
      */
     public String getSkillId() {
         return getName() + "_" + source;
     }
 
     /**
-     * Returns the absolute path to this skill's on-disk source directory, when available. Used
-     * by the prompt provider to emit per-skill {@code <files-root>} entries and by the load tool
-     * as a disk-fallback when an in-memory resource is missing.
+     * 返回技能在磁盘上的源目录绝对路径（若可用）。提示提供者据此输出每个技能的 {@code <files-root>} 条目；加载工具在内存资源缺失时也可回退到磁盘读取。
      *
-     * @return the origin directory, empty when the skill is not filesystem-backed
+     * @return 源目录；非文件系统来源时为空
      */
     public Optional<Path> getOriginDir() {
         return Optional.ofNullable(originDir);
     }
 
     /**
-     * Creates a builder initialized with this skill's values.
+     * 创建用当前技能值初始化的构建器。
      *
-     * <p>This is useful for creating modified versions of existing skills.
+     * <p>适合创建现有技能的修改版本。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public Builder toBuilder() {
         return new Builder(this);
     }
 
     /**
-     * Creates a new builder for creating a skill from scratch.
+     * 创建从零构建技能的构建器。
      *
-     * @return A new builder instance with empty fields
+     * @return 字段为空的新构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Returns a string representation of this skill.
+     * 返回此技能的字符串表示。
      *
-     * @return String representation including name, description, and source
+     * @return 包含名称、描述和来源的字符串表示
      */
     @Override
     public String toString() {
@@ -328,12 +311,11 @@ public class AgentSkill {
     }
 
     /**
-     * Builder for creating AgentSkill instances.
+     * 创建 AgentSkill 实例的构建器。
      *
-     * <p>This builder allows selective modification of skill fields to create
-     * new skill instances based on existing ones, or to create new skills from scratch.
+     * <p>可选择性修改技能字段，在已有技能基础上创建新实例，或从零创建技能。
      *
-     * <p><b>Usage examples:</b>
+     * <p><b>用法示例：</b>
      * <pre>{@code
      * // Create from scratch
      * AgentSkill skill = AgentSkill.builder()
@@ -358,7 +340,7 @@ public class AgentSkill {
         private Path originDir;
 
         /**
-         * Creates an empty builder.
+         * 创建空构建器。
          */
         private Builder() {
             this.metadata = new LinkedHashMap<>();
@@ -366,9 +348,9 @@ public class AgentSkill {
         }
 
         /**
-         * Creates a builder initialized with values from an existing skill.
+         * 创建用现有技能值初始化的构建器。
          *
-         * @param baseSkill The skill to copy values from
+         * @param baseSkill 提供待复制值的技能
          */
         private Builder(AgentSkill baseSkill) {
             this.metadata = new LinkedHashMap<>(baseSkill.metadata);
@@ -379,10 +361,10 @@ public class AgentSkill {
         }
 
         /**
-         * Sets the skill name.
+         * 设置技能名称。
          *
-         * @param name The skill name
-         * @return This builder
+         * @param name 技能名称
+         * @return 当前构建器
          */
         public Builder name(String name) {
             this.metadata.put("name", name);
@@ -390,10 +372,10 @@ public class AgentSkill {
         }
 
         /**
-         * Sets the skill description.
+         * 设置技能描述。
          *
-         * @param description The skill description
-         * @return This builder
+         * @param description 技能描述
+         * @return 当前构建器
          */
         public Builder description(String description) {
             this.metadata.put("description", description);
@@ -401,10 +383,10 @@ public class AgentSkill {
         }
 
         /**
-         * Replaces all metadata with a new map.
+         * 用新映射替换全部元数据。
          *
-         * @param metadata The new metadata map
-         * @return This builder
+         * @param metadata 新元数据映射
+         * @return 当前构建器
          */
         public Builder metadata(Map<String, Object> metadata) {
             this.metadata =
@@ -413,11 +395,11 @@ public class AgentSkill {
         }
 
         /**
-         * Adds or updates a single metadata entry.
+         * 添加或更新一个元数据条目。
          *
-         * @param key The metadata key
-         * @param value The metadata value
-         * @return This builder
+         * @param key 元数据键
+         * @param value 元数据值
+         * @return 当前构建器
          */
         public Builder putMetadata(String key, Object value) {
             this.metadata.put(key, value);
@@ -425,10 +407,10 @@ public class AgentSkill {
         }
 
         /**
-         * Removes a metadata entry.
+         * 移除一个元数据条目。
          *
-         * @param key The metadata key to remove
-         * @return This builder
+         * @param key 要移除的元数据键
+         * @return 当前构建器
          */
         public Builder removeMetadata(String key) {
             this.metadata.remove(key);
@@ -436,10 +418,10 @@ public class AgentSkill {
         }
 
         /**
-         * Sets the skill content.
+         * 设置技能内容。
          *
-         * @param skillContent The skill content/instructions
-         * @return This builder
+         * @param skillContent 技能内容或指令
+         * @return 当前构建器
          */
         public Builder skillContent(String skillContent) {
             this.skillContent = skillContent;
@@ -447,10 +429,10 @@ public class AgentSkill {
         }
 
         /**
-         * Replaces all resources with a new map.
+         * 用新映射替换全部资源。
          *
-         * @param resources The new resources map
-         * @return This builder
+         * @param resources 新资源映射
+         * @return 当前构建器
          */
         public Builder resources(Map<String, String> resources) {
             this.resources = new HashMap<>(resources);
@@ -458,11 +440,11 @@ public class AgentSkill {
         }
 
         /**
-         * Adds or updates a single resource.
+         * 添加或更新一个资源。
          *
-         * @param path The resource path
-         * @param content The resource content
-         * @return This builder
+         * @param path 资源路径
+         * @param content 资源内容
+         * @return 当前构建器
          */
         public Builder addResource(String path, String content) {
             this.resources.put(path, content);
@@ -470,10 +452,10 @@ public class AgentSkill {
         }
 
         /**
-         * Removes a resource.
+         * 移除资源。
          *
-         * @param path The resource path to remove
-         * @return This builder
+         * @param path 要移除的资源路径
+         * @return 当前构建器
          */
         public Builder removeResource(String path) {
             this.resources.remove(path);
@@ -481,9 +463,9 @@ public class AgentSkill {
         }
 
         /**
-         * Clears all resources.
+         * 清空全部资源。
          *
-         * @return This builder
+         * @return 当前构建器
          */
         public Builder clearResources() {
             this.resources.clear();
@@ -491,10 +473,10 @@ public class AgentSkill {
         }
 
         /**
-         * Sets the source identifier.
+         * 设置来源标识。
          *
-         * @param source The source identifier
-         * @return This builder
+         * @param source 来源标识
+         * @return 当前构建器
          */
         public Builder source(String source) {
             this.source = source;
@@ -502,12 +484,10 @@ public class AgentSkill {
         }
 
         /**
-         * Sets the on-disk origin directory for this skill. Repositories that materialise a
-         * skill from a local directory should call this so the prompt provider can emit a
-         * {@code <files-root>} and the load tool can fall back to disk reads.
+         * 设置技能在磁盘上的源目录。从本地目录物化技能的仓库应调用此方法，以便提示提供者输出 {@code <files-root>}，并让加载工具可回退到磁盘读取。
          *
-         * @param originDir absolute path to the skill's source directory, or {@code null}
-         * @return This builder
+         * @param originDir 技能源目录的绝对路径，或 {@code null}
+         * @return 当前构建器
          */
         public Builder originDir(Path originDir) {
             this.originDir = originDir;
@@ -515,10 +495,10 @@ public class AgentSkill {
         }
 
         /**
-         * Builds the AgentSkill instance.
+         * 构建 AgentSkill 实例。
          *
-         * @return A new AgentSkill instance
-         * @throws IllegalArgumentException if required fields are missing
+         * @return 新的 AgentSkill 实例
+         * @throws IllegalArgumentException 当缺少必填字段时
          */
         public AgentSkill build() {
             return new AgentSkill(metadata, skillContent, resources, source, originDir);

@@ -24,16 +24,13 @@ import java.util.Objects;
 import reactor.core.publisher.Mono;
 
 /**
- * An external tool implementation that only contains schema definition without execution logic.
+ * 仅包含模式定义、不包含执行逻辑的外部工具实现。
  *
- * <p>This class is used for registering external tools that will be executed outside the framework.
- * When a model returns a call to a SchemaOnlyTool, Toolkit surfaces the call as a pending
- * {@link ToolResultBlock}, then the agent returns a suspended message to the user.
+ * <p>用于注册在框架外部执行的工具。模型返回 SchemaOnlyTool 调用时，Toolkit 将其呈现为待处理的 {@link ToolResultBlock}，随后智能体向用户返回挂起消息。
  *
- * <p>The {@link #callAsync(ToolCallParam)} method still throws a {@link ToolSuspendException}
- * for direct invocations outside the Toolkit execution path.
+ * <p>在 Toolkit 执行路径之外直接调用 {@link #callAsync(ToolCallParam)} 时，仍会抛出 {@link ToolSuspendException}。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * ToolSchema schema = ToolSchema.builder()
  *     .name("query_database")
@@ -59,11 +56,10 @@ public class SchemaOnlyTool extends ToolBase {
     private final Boolean deferLoading;
 
     /**
-     * Creates a new SchemaOnlyTool from a ToolSchema.
+     * 从 ToolSchema 创建 SchemaOnlyTool。
      *
-     * @param schema The tool schema containing name, description, parameters, strict mode, and
-     *     deferred loading configuration
-     * @throws NullPointerException if schema is null
+     * @param schema 包含名称、描述、参数、严格模式和延迟加载配置的工具模式
+     * @throws NullPointerException 当 schema 为 null 时
      */
     public SchemaOnlyTool(ToolSchema schema) {
         this(
@@ -75,33 +71,30 @@ public class SchemaOnlyTool extends ToolBase {
     }
 
     /**
-     * Creates a new SchemaOnlyTool with the specified name, description, and parameters.
+     * 使用指定名称、描述和参数创建 SchemaOnlyTool。
      *
-     * <p>Strict mode is set to null (unspecified).
+     * <p>严格模式设为 null（未指定）。
      *
-     * @param name The tool name
-     * @param description The tool description
-     * @param parameters The tool parameters schema
-     * @throws NullPointerException if name or description is null
+     * @param name 工具名称
+     * @param description 工具描述
+     * @param parameters 工具参数模式
+     * @throws NullPointerException 当 name 或 description 为 null 时
      */
     public SchemaOnlyTool(String name, String description, Map<String, Object> parameters) {
         this(name, description, parameters, null);
     }
 
     /**
-     * Creates a new SchemaOnlyTool with the specified name, description, parameters, and strict
-     * mode configuration.
+     * 使用指定名称、描述、参数和严格模式配置创建 SchemaOnlyTool。
      *
-     * <p>The parameters map is defensively copied to prevent external mutations from affecting
-     * the tool's internal state.
+     * <p>对参数映射进行防御性复制，防止外部修改影响工具内部状态。
      *
-     * @param name The tool name
-     * @param description The tool description
-     * @param parameters The tool parameters schema
-     * @param strict Whether the tool should use strict schema validation (null if unspecified)
-     * @param deferLoading Whether to defer loading this tool's schema until tool search (null if
-     *     unspecified)
-     * @throws NullPointerException if name or description is null
+     * @param name 工具名称
+     * @param description 工具描述
+     * @param parameters 工具参数模式
+     * @param strict 是否启用严格模式验证（未指定时为 null）
+     * @param deferLoading 是否将模式加载推迟到工具搜索时（未指定时为 null）
+     * @throws NullPointerException 当 name 或 description 为 null 时
      */
     public SchemaOnlyTool(
             String name,
@@ -126,16 +119,15 @@ public class SchemaOnlyTool extends ToolBase {
     }
 
     /**
-     * Creates a new SchemaOnlyTool with the specified name, description, parameters, and strict
-     * mode configuration.
+     * 使用指定名称、描述、参数和严格模式配置创建 SchemaOnlyTool。
      *
-     * <p>Deferred loading is set to null (unspecified).
+     * <p>延迟加载设为 null（未指定）。
      *
-     * @param name The tool name
-     * @param description The tool description
-     * @param parameters The tool parameters schema
-     * @param strict Whether the tool should use strict schema validation (null if unspecified)
-     * @throws NullPointerException if name or description is null
+     * @param name 工具名称
+     * @param description 工具描述
+     * @param parameters 工具参数模式
+     * @param strict 是否启用严格模式验证（未指定时为 null）
+     * @throws NullPointerException 当 name 或 description 为 null 时
      */
     public SchemaOnlyTool(
             String name, String description, Map<String, Object> parameters, Boolean strict) {
@@ -153,14 +145,13 @@ public class SchemaOnlyTool extends ToolBase {
     }
 
     /**
-     * Throws a ToolSuspendException to signal that this tool requires external execution.
+     * 抛出 ToolSuspendException，表示工具需要外部执行。
      *
-     * <p>Toolkit execution short-circuits external tools before invoking this method. Direct
-     * invocations keep the same suspension signal.
+     * <p>Toolkit 在调用此方法前即对外部工具短路处理。直接调用仍保留同样的挂起信号。
      *
-     * @param param The tool call parameters (ignored)
-     * @return Never returns normally
-     * @throws ToolSuspendException always, to signal external execution is required
+     * @param param 工具调用参数（忽略）
+     * @return 从不正常返回
+     * @throws ToolSuspendException 始终抛出，表示需要外部执行
      */
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {

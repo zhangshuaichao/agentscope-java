@@ -26,17 +26,15 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Dedicated tool for persisting user memories to both {@code MEMORY.md} and
- * today's daily ledger ({@code memory/YYYY-MM-DD.md}).
+ * 专门用于将用户记忆同时持久化到 {@code MEMORY.md}
+ * 与当日日志（{@code memory/YYYY-MM-DD.md}）的工具。
  *
- * <p>This is the <b>only</b> sanctioned entry point for the agent to write long-term
- * memories. The system prompt directs the LLM to use this tool instead of
- * {@code write_file}/{@code edit_file} on memory paths, eliminating the
- * non-determinism of the LLM choosing arbitrary file names or skipping the
- * daily ledger.
+ * <p>这是智能体写入长期记忆的<b>唯一</b>指定入口。系统提示要求 LLM 使用此工具，
+ * 而不是对记忆路径使用 {@code write_file}/{@code edit_file}，
+ * 从而消除 LLM 任意选择文件名或跳过每日日志带来的不确定性。
  *
- * <p>Writes are append-only; deduplication and size-trimming are handled by the
- * periodic {@link io.agentscope.harness.agent.memory.MemoryConsolidator}.
+ * <p>写入仅追加；去重与大小裁剪由周期性的
+ * {@link io.agentscope.harness.agent.memory.MemoryConsolidator} 处理。
  */
 public class MemorySaveTool {
 

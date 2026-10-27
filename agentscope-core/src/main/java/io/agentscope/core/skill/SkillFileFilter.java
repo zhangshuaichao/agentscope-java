@@ -17,24 +17,23 @@
 package io.agentscope.core.skill;
 
 /**
- * Filter for deciding whether a skill resource should be uploaded.
- *
+ * 判断是否上传技能资源的过滤器。
  */
 @FunctionalInterface
 public interface SkillFileFilter {
 
     /**
-     * Determines whether a resource path should be accepted for upload.
+     * 判断是否接受上传指定资源路径。
      *
-     * @param resourcePath The resource path (relative to the skill root)
-     * @return true if the resource should be uploaded, false otherwise
+     * @param resourcePath 资源路径（相对于技能根目录）
+     * @return 应上传时为 true，否则为 false
      */
     boolean accept(String resourcePath);
 
     /**
-     * Returns a filter that accepts all files.
+     * 返回接受全部文件的过滤器。
      *
-     * @return A filter that accepts all files
+     * @return 接受全部文件的过滤器
      */
     static SkillFileFilter acceptAll() {
         return path -> true;

@@ -22,24 +22,22 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Provides tool schemas in various formats for model consumption.
+ * 为模型提供多种格式的工具模式。
  *
- * <p>This class is responsible for generating tool schemas that are sent to LLMs to inform them
- * about available tools. It filters tools based on active tool groups, ensuring that only tools
- * from active groups (or ungrouped tools) are included in the schemas.
+ * <p>生成发送给模型的工具模式，告知其可用工具。按激活工具组筛选，仅包含激活组中的工具或未分组工具。
  *
- * <p><b>Key Responsibilities:</b>
+ * <p><b>主要职责：</b>
  * <ul>
- *   <li>Generate tool schemas in OpenAI format (Map-based representation)</li>
- *   <li>Generate tool schemas as {@link ToolSchema} objects for model APIs</li>
- *   <li>Filter tools based on {@link ToolGroupManager} activation state</li>
- *   <li>Use extended parameters from {@link RegisteredToolFunction} for accurate schemas</li>
+ * <li>生成 OpenAI 格式的工具模式（基于 Map）</li>
+ * <li>生成供模型 API 使用的 {@link ToolSchema} 对象</li>
+ * <li>根据 {@link ToolGroupManager} 激活状态筛选</li>
+ * <li>使用 {@link RegisteredToolFunction} 扩展参数保证模式准确</li>
  * </ul>
  *
- * <p><b>Filtering Logic:</b> A tool is included in schemas if and only if:
+ * <p><b>筛选逻辑：</b>工具当且仅当满足以下条件之一时纳入模式：
  * <ul>
- *   <li>It is ungrouped (not assigned to any tool group), OR</li>
- *   <li>It belongs to at least one group that is currently active</li>
+ * <li>未分组，即未分配给任何工具组</li>
+ * <li>至少属于一个当前已激活的组</li>
  * </ul>
  */
 class ToolSchemaProvider {
@@ -48,10 +46,10 @@ class ToolSchemaProvider {
     private final ToolGroupManager groupManager;
 
     /**
-     * Creates a ToolSchemaProvider with the given registry and group manager.
+     * 使用给定注册表和工具组管理器创建 ToolSchemaProvider。
      *
-     * @param toolRegistry The tool registry to retrieve registered tools from
-     * @param groupManager The group manager to check tool group activation status
+     * @param toolRegistry 用于检索已注册工具的注册表
+     * @param groupManager 用于检查工具组激活状态的管理器
      */
     ToolSchemaProvider(ToolRegistry toolRegistry, ToolGroupManager groupManager) {
         this.toolRegistry = toolRegistry;
@@ -59,22 +57,19 @@ class ToolSchemaProvider {
     }
 
     /**
-     * Get tool schemas as ToolSchema objects for model consumption.
-     * Updated to respect active tool groups.
+     * 获取供模型使用的 ToolSchema 对象，遵循激活工具组的筛选规则。
      *
-     * @return List of ToolSchema objects
+     * @return ToolSchema 对象列表
      */
     List<ToolSchema> getToolSchemas() {
         return buildSchemas(groupManager.getActiveToolNames());
     }
 
     /**
-     * Get tool schemas filtered by an explicitly supplied set of active group names, independent
-     * of the shared per-group activation flags. Per-call / stateless variant of
-     * {@link #getToolSchemas()}.
+     * 根据显式提供的激活组名称筛选工具模式，不依赖共享的逐组激活标志，是 {@link #getToolSchemas()} 的逐调用、无状态版本。
      *
-     * @param activeGroups the group names to treat as active
-     * @return List of ToolSchema objects visible for the supplied groups (plus all ungrouped tools)
+     * @param activeGroups 视为激活的组名称
+     * @return 对给定组可见的 ToolSchema 列表（包括全部未分组工具）
      */
     List<ToolSchema> getToolSchemas(Collection<String> activeGroups) {
         return buildSchemas(groupManager.getActiveToolNames(activeGroups));
@@ -89,9 +84,9 @@ class ToolSchemaProvider {
             AgentTool tool = registered.getTool();
             String toolName = tool.getName();
 
-            // Filter: include ungrouped tools, or tools in any active group
+            // 筛选：包含未分组工具或任意激活组中的工具
             if (groupManager.isGroupedTool(toolName) && !activeTools.contains(toolName)) {
-                continue; // Skip inactive grouped tools
+                continue; // 跳过未激活的已分组工具
             }
 
             ToolSchema schema =

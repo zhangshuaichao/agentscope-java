@@ -22,13 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to describe parameters of a tool method.
+ * 描述工具方法参数的注解。
  *
- * <p>This annotation is required for all parameters of methods annotated with {@link Tool} (except
- * {@link ToolEmitter} which is auto-injected). It provides metadata for generating JSON schemas
- * that describe the tool's parameters to LLMs.
+ * <p>带 {@link Tool} 注解的方法，其参数都需要此注解（自动注入的 {@link ToolEmitter} 除外）。提供生成 JSON 模式的元数据，向大语言模型描述工具参数。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  *
  * <pre>{@code
  * @Tool(name = "calculate_area", description = "Calculate rectangle area")
@@ -44,13 +42,12 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * <p><b>Important Notes:</b>
+ * <p><b>重要说明：</b>
  * <ul>
- *   <li>The {@code name} attribute is <b>required</b> because Java does not preserve parameter
- *       names at runtime by default</li>
- *   <li>Parameter names should follow snake_case convention for LLM compatibility</li>
- *   <li>Descriptions help the LLM understand what values to provide</li>
- *   <li>{@link ToolEmitter} parameters do not need this annotation (they are framework-injected)</li>
+ * <li>{@code name} 属性<b>必填</b>，因为 Java 默认不在运行时保留参数名</li>
+ * <li>参数名应遵循 snake_case 约定以兼容模型</li>
+ * <li>描述帮助模型理解应提供的值</li>
+ * <li>{@link ToolEmitter} 参数由框架注入，无需此注解</li>
  * </ul>
  *
  * @see Tool
@@ -62,43 +59,38 @@ import java.lang.annotation.Target;
 public @interface ToolParam {
 
     /**
-     * The name of the tool parameter.
+     * 工具参数名称。
      *
-     * <p><b>This attribute is required</b> because Java does not preserve parameter names at
-     * runtime by default (unless compiled with {@code -parameters} flag, which is not reliable).
-     * The toolkit uses this name to map LLM-provided arguments to method parameters.
+     * <p><b>此属性必填</b>，因为 Java 默认不在运行时保留参数名（除非编译时使用 {@code -parameters}，但不能依赖该设置）。工具集用此名称将模型参数映射到方法参数。
      *
-     * <p>Names should follow snake_case convention (e.g., "file_path", "max_results") for
-     * compatibility with various LLM providers.
+     * <p>应遵循 snake_case 约定（例如 "file_path"、"max_results"），以兼容不同模型提供商。
      *
-     * @return The parameter name as it should appear in the tool schema
+     * @return 工具模式中应出现的参数名
      */
     String name();
 
     /**
-     * Whether this parameter is required.
+     * 此参数是否必填。
      *
-     * <p>Required parameters must be provided by the LLM when invoking the tool. Optional
-     * parameters can be omitted, and the method will receive null (for objects) or default values
-     * (for primitives).
+     * <p>模型调用工具时必须提供必填参数。可选参数可以省略，此时对象参数接收 null，基本类型接收默认值。
      *
-     * @return true if required (default), false if optional
+     * @return true 表示必填（默认），false 表示可选
      */
     boolean required() default true;
 
     /**
-     * The description of this parameter.
+     * 参数描述。
      *
-     * <p>This description is sent to the LLM as part of the tool schema to help it understand:
+     * <p>作为工具模式的一部分发送给模型，帮助它理解：
      * <ul>
-     *   <li>What this parameter represents</li>
-     *   <li>What format or values are expected</li>
-     *   <li>Any constraints or validation rules</li>
+     * <li>参数代表什么</li>
+     * <li>预期格式或取值</li>
+     * <li>约束与验证规则</li>
      * </ul>
      *
-     * <p>Good descriptions improve the LLM's ability to provide correct parameter values.
+     * <p>良好描述有助于模型提供正确参数。
      *
-     * @return The parameter description, or empty string if not provided
+     * @return 参数描述；未提供时为空字符串
      */
     String description() default "";
 }

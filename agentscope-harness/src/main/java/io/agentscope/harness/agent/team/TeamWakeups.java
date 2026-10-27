@@ -18,15 +18,15 @@ package io.agentscope.harness.agent.team;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Bridge from {@link TeamClient} implementations to whatever runtime owns teammate sessions.
+ * 连接 {@link TeamClient} 实现与实际管理队友会话的运行时。
  *
- * <p>A {@link TeamClient} knows member names ({@code lead}, {@code w1}) but not runtime session ids,
- * so it cannot wake a teammate on its own. The middleware that hosts the teammate registers a
- * {@link Hook} here; clients then notify members without depending on the middleware package.
+ * <p>{@link TeamClient} 只知道成员名称（如 {@code lead}、{@code w1}），不知道运行时会话 ID，
+ * 因此无法自行唤醒队友。承载队友的中间件在此注册 {@link Hook}，
+ * 客户端随后即可通知成员，而无需依赖中间件包。
  */
 public final class TeamWakeups {
 
-    /** Wakes a teammate, optionally injecting {@code notice} into its next turn. */
+    /** 唤醒队友，可选地将 {@code notice} 注入其下一轮次。 */
     @FunctionalInterface
     public interface Hook {
         boolean wake(String teamName, String memberName, String notice);
@@ -36,12 +36,12 @@ public final class TeamWakeups {
 
     private TeamWakeups() {}
 
-    /** Registers the process-wide wakeup hook. */
+    /** 注册进程级唤醒钩子。 */
     public static void register(Hook hook) {
         HOOK.set(hook);
     }
 
-    /** Wakes {@code memberName}; returns {@code false} when no hook or no live session. */
+    /** 唤醒 {@code memberName}；没有钩子或存活会话时返回 {@code false}。 */
     public static boolean wake(String teamName, String memberName, String notice) {
         Hook hook = HOOK.get();
         if (hook == null || teamName == null || memberName == null || memberName.isBlank()) {

@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.session;
 
-/** Durable outbox cursor. A lost ACK re-delivers the same immutable event, never re-executes it. */
+/** 持久化发件箱游标。ACK 丢失时重新投递同一个不可变事件，绝不重新执行它。 */
 public final class SessionLogExporter {
     private final SessionLog log;
     private final SessionExportSink sink;
@@ -28,6 +28,8 @@ public final class SessionLogExporter {
     public synchronized void drain() {
         long cursor = log.exportCursor(sink.name());
         for (var event : log.scan(cursor, log.head().seq())) {
+            // 【学习提示】先确认接收，再推进导出游标。若二者之间发生故障，
+            // 下次会重复投递同一事件，因此接收端必须按 eventId 去重，而不是重做工具操作。
             sink.accept(event);
             log.advanceExportCursor(sink.name(), cursor, event.seq());
             cursor = event.seq();

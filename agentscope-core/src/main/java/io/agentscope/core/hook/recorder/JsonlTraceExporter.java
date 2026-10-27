@@ -65,21 +65,21 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * A built-in, out-of-the-box JSONL trace exporter based on the Hook event system.
+ * 基于 Hook 事件系统、开箱即用的内置 JSONL 跟踪导出器。
  *
- * <p>Each HookEvent is written as a single JSON object per line. This is designed for local
- * debugging, offline troubleshooting, and attaching logs to issues.
+ * <p>每个 HookEvent 写为独占一行的 JSON 对象，适用于本地调试、
+ * 离线排障以及在问题报告中附加日志。
  *
- * <p>Notes:
+ * <p>注意：
  *
  * <ul>
- *   <li>This exporter is best-effort by default: serialization / IO errors do not break agent
- *       execution unless {@link Builder#failFast(boolean)} is enabled.</li>
- *   <li>This exporter performs blocking file IO on an internal single-threaded queue to keep file
- *       order, step IDs, and run IDs consistent.</li>
+ *   <li>此导出器默认尽力而为：除非启用 {@link Builder#failFast(boolean)}，
+ *       序列化或 IO 错误不会中断智能体执行。</li>
+ *   <li>此导出器在内部单线程队列中执行阻塞式文件 IO，
+ *       以保持文件顺序、步骤 ID 和运行 ID 一致。</li>
  * </ul>
  *
- * @deprecated since 2.0.0. The hook system is replaced by
+ * @deprecated 自 2.0.0 起弃用。Hook 系统已由以下机制替代：
  *     {@link io.agentscope.core.middleware.MiddlewareBase}.
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
@@ -101,9 +101,9 @@ public final class JsonlTraceExporter implements Hook, AutoCloseable {
     private final ExecutorService exportExecutor;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    // WeakHashMap keeps per-agent run state from accumulating indefinitely after agent instances
-    // become unreachable. Concurrency safety does not rely on WeakHashMap itself: all access to
-    // this map is serialized through the exporter’s single-threaded queue.
+    // WeakHashMap 使用弱键避免运行状态无限累积。这里的键实际是智能体 ID 字符串，
+    // 回收取决于该键是否仍被强引用，并不直接追踪智能体实例的生命周期。并发安全不依赖
+    // WeakHashMap 本身：对此映射的访问通过导出器的单线程队列串行执行。
     private final Map<String, RunState> runStates = new WeakHashMap<>();
 
     private JsonlTraceExporter(
@@ -465,33 +465,33 @@ public final class JsonlTraceExporter implements Hook, AutoCloseable {
             this.outputFile = Objects.requireNonNull(outputFile, "outputFile cannot be null");
         }
 
-        /** Appends to existing file if present (default: true). */
+        /** 若文件已存在则追加写入（默认 true）。 */
         public Builder append(boolean append) {
             this.append = append;
             return this;
         }
 
-        /** Flushes after each JSONL line (default: true). */
+        /** 写入每行 JSONL 后刷新（默认 true）。 */
         public Builder flushEveryLine(boolean flushEveryLine) {
             this.flushEveryLine = flushEveryLine;
             return this;
         }
 
         /**
-         * If enabled, exporter errors fail the agent execution (default: false, best-effort).
+         * 启用后，导出器错误会使智能体执行失败（默认 false，即尽力而为）。
          */
         public Builder failFast(boolean failFast) {
             this.failFast = failFast;
             return this;
         }
 
-        /** Hook priority (default: 900, low priority for logging/export). */
+        /** Hook 优先级（默认 900，日志与导出使用低优先级）。 */
         public Builder priority(int priority) {
             this.priority = priority;
             return this;
         }
 
-        /** Enables exactly these event types (chunk and summary helpers still apply). */
+        /** 仅启用指定事件类型（分块和摘要辅助开关仍然生效）。 */
         public Builder enabledEvents(Set<HookEventType> enabledEvents) {
             this.enabledEvents =
                     enabledEvents == null || enabledEvents.isEmpty()
@@ -500,25 +500,25 @@ public final class JsonlTraceExporter implements Hook, AutoCloseable {
             return this;
         }
 
-        /** Includes reasoning streaming events (ReasoningChunkEvent). */
+        /** 包含推理流式事件（ReasoningChunkEvent）。 */
         public Builder includeReasoningChunks(boolean includeReasoningChunks) {
             this.includeReasoningChunks = includeReasoningChunks;
             return this;
         }
 
-        /** Includes tool streaming events (ActingChunkEvent). */
+        /** 包含工具流式事件（ActingChunkEvent）。 */
         public Builder includeActingChunks(boolean includeActingChunks) {
             this.includeActingChunks = includeActingChunks;
             return this;
         }
 
-        /** Includes summary events (PreSummaryEvent/PostSummaryEvent). */
+        /** 包含摘要事件（PreSummaryEvent/PostSummaryEvent）。 */
         public Builder includeSummary(boolean includeSummary) {
             this.includeSummary = includeSummary;
             return this;
         }
 
-        /** Includes summary streaming events (SummaryChunkEvent). */
+        /** 包含摘要流式事件（SummaryChunkEvent）。 */
         public Builder includeSummaryChunks(boolean includeSummaryChunks) {
             this.includeSummaryChunks = includeSummaryChunks;
             return this;

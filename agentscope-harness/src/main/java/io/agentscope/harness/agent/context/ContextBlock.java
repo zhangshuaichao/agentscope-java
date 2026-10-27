@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.context;
 
 import java.util.Objects;
 
-/** Dynamic data, never system instructions. Instances are immutable; fluent methods return copies. */
+/** 动态数据，绝不是系统指令。实例不可变，流式配置方法返回副本。 */
 public final class ContextBlock {
     private final ContextItem item;
 
@@ -43,7 +43,7 @@ public final class ContextBlock {
                 new ContextItem(kind, id, initial.revision(), placement, false, 0, content));
     }
 
-    /** A business revision is optional; the default revision is a content hash, not acceptance evidence. */
+    /** 业务修订号可选；默认修订号是内容哈希，不是验收证据。 */
     public ContextBlock withRevision(String revision) {
         if (Objects.requireNonNull(revision).isBlank())
             throw new IllegalArgumentException("Revision must not be blank");
@@ -58,7 +58,7 @@ public final class ContextBlock {
                         item.content()));
     }
 
-    /** Prevents budget eviction; cannot be used with an OMIT source. */
+    /** 禁止因预算不足而淘汰；不能与 OMIT 来源搭配使用。 */
     public ContextBlock required() {
         return new ContextBlock(
                 new ContextItem(
@@ -71,7 +71,7 @@ public final class ContextBlock {
                         item.content()));
     }
 
-    /** Lower priorities are considered for eviction first within the same material category. */
+    /** 在同类材料内，优先级较低的条目优先进入淘汰候选。 */
     public ContextBlock withPriority(int priority) {
         return new ContextBlock(
                 new ContextItem(

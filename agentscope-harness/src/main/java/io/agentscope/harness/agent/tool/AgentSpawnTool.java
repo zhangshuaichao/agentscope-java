@@ -79,31 +79,28 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 /**
- * Simple subagent tool for agent-internal use. Much lighter than {@code SessionsTool}:
- *
+ * 供智能体内部使用的简单子智能体工具，比 {@code SessionsTool} 轻量得多：
  * <ul>
- *   <li>{@code agent_spawn} — spawn a subagent, run task, return result (sync or async)
- *   <li>{@code agent_send} — send follow-up message to a previously spawned subagent
- *   <li>{@code agent_list} — list active subagents
+ *   <li>{@code agent_spawn}：启动子智能体、执行任务并返回结果（同步或异步）
+ *   <li>{@code agent_send}：向先前启动的子智能体发送后续消息
+ *   <li>{@code agent_list}：列出活动子智能体
  * </ul>
  *
- * <p>No sessions, no lanes, no run registry, no announce dispatch. Just "create agent, invoke,
- * return result". Uses {@link DefaultAgentManager} for agent creation and invocation only.
+ * <p>没有会话管理、执行通道、运行注册表或通知分派。只负责“创建智能体、调用、返回结果”。
+ * 仅使用 {@link DefaultAgentManager} 创建和调用智能体。
  *
- * <p>Async tasks ({@code timeout_seconds=0}) are submitted to the {@link TaskRepository} scoped
- * by the current session ID from {@link RuntimeContext}. This makes task state visible in
- * workspace storage for cross-node retrieval and recovery after compaction.
+ * <p>异步任务（{@code timeout_seconds=0}）提交到 {@link TaskRepository}，
+ * 作用域由 {@link RuntimeContext} 中的当前会话 ID 确定。这使工作区存储中的任务状态
+ * 可用于跨节点读取和压缩后的恢复。
  *
- * <h2>Streaming</h2>
+ * <h2>流式处理</h2>
  *
- * <p>{@code agent_spawn} and {@code agent_send} return {@link Mono}{@code <ToolResultBlock>} so that the
- * framework's reactive tool-invocation pipeline (see {@code ToolMethodInvoker}) can subscribe them
- * within the parent agent's streaming chain. When a {@link SubagentEventBus} is present in the
- * Reactor Context (injected by {@code AgentBase.createEventStream}), every child {@link
- * io.agentscope.core.agent.Event} is forwarded to the parent sink in real time, giving consumers
- * a flattened event stream across the full call hierarchy. When no bus is present (plain {@code
- * call()} mode), execution falls back to the non-streaming {@code invokeAgent} path with no
- * overhead.
+ * <p>{@code agent_spawn} 和 {@code agent_send} 返回 {@link Mono}{@code <ToolResultBlock>}，
+ * 使框架的响应式工具调用管线（参见 {@code ToolMethodInvoker}）可在父级流式链中订阅它们。
+ * 当 Reactor Context 中存在 {@link SubagentEventBus}（由 {@code AgentBase.createEventStream}
+ * 注入）时，每个子级 {@link io.agentscope.core.agent.Event} 都实时转发到父级 sink，
+ * 向消费者提供覆盖整个调用层级的扁平事件流。没有总线时（普通 {@code call()} 模式），
+ * 执行回退到非流式 {@code invokeAgent} 路径，不产生额外开销。
  */
 public class AgentSpawnTool {
 
@@ -114,11 +111,11 @@ public class AgentSpawnTool {
     private static final int MAX_SPAWN_DEPTH = 3;
 
     /**
-     * {@link RuntimeContext} string key for a per-call override of subagent user-exposure. Put a
-     * {@link Boolean} (or its string form) under this key to control exposure for every
-     * {@code agent_spawn} in the current call, independent of what the LLM requests.
+     * {@link RuntimeContext} 字符串键，用于单次调用覆盖子智能体的用户可见性。
+     * 在该键下放入 {@link Boolean}（或其字符串形式），即可控制当前调用中
+     * 每次 {@code agent_spawn} 的可见性，不受 LLM 请求影响。
      *
-     * <p>Example:
+     * <p>示例：
      * <pre>{@code
      * RuntimeContext ctx = RuntimeContext.builder()
      *     .userId("user-1")
@@ -126,24 +123,22 @@ public class AgentSpawnTool {
      *     .build();
      * }</pre>
      *
-     * <p>Resolution precedence (highest first): this context value → the spawned subagent's
-     * {@link SubagentDeclaration#getExposeToUser()} policy → the LLM's {@code expose_to_user}
-     * argument → {@code false}.
+     * <p>解析优先级（由高到低）：此上下文值 → 被启动子智能体的
+     * {@link SubagentDeclaration#getExposeToUser()} 策略 → LLM 的 {@code expose_to_user}
+     * 参数 → {@code false}。
      */
     public static final String CTX_EXPOSE_TO_USER = "agentscope.subagent.expose_to_user";
 
     /**
-     * {@link RuntimeContext} string key for the immutable subagent registry selected by the
-     * current parent-agent invocation. {@link
-     * io.agentscope.harness.agent.middleware.SubagentsMiddleware} installs a namespace-scoped
-     * manager here so concurrent callers never overwrite each other's declarations.
+     * {@link RuntimeContext} 字符串键，保存当前父级调用选定的不可变子智能体注册表。
+     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware}
+     * 在此安装具有命名空间作用域的管理器，避免并发调用方相互覆盖声明。
      */
     public static final String CTX_AGENT_MANAGER = "agentscope.subagent.agent_manager";
 
     /**
-     * {@link RuntimeContext} string key holding a {@code Map<String, Object>} of caller-defined
-     * attributes to send with every remote subagent submission of the current call, as
-     * {@code context.attributes}:
+     * {@link RuntimeContext} 字符串键，保存调用方定义的 {@code Map<String, Object>}
+     * 属性，在当前调用的每次远程子智能体提交中作为 {@code context.attributes} 发送：
      *
      * <pre>{@code
      * RuntimeContext ctx = RuntimeContext.builder()
@@ -152,26 +147,23 @@ public class AgentSpawnTool {
      *     .build();
      * }</pre>
      *
-     * <p>Merged over the subagent's static {@link
-     * SubagentDeclaration#getRemoteContextAttributes()}, so a per-call value wins on conflict.
-     * Values must be JSON-serializable.
+     * <p>在子智能体的静态 {@link SubagentDeclaration#getRemoteContextAttributes()}
+     * 上合并，因此冲突时单次调用值优先。值必须可序列化为 JSON。
      */
     public static final String CTX_REMOTE_CONTEXT_ATTRIBUTES =
             "agentscope.subagent.remote_context_attributes";
 
     /**
-     * {@link RuntimeContext} string key that forces synchronous subagent execution for the current
-     * call. Put a {@link Boolean} (or its string form) under this key to ignore LLM-requested
-     * background mode ({@code timeout_seconds=0}) and to disable timeout promotion to a background
-     * {@code task_id}.
+     * {@link RuntimeContext} 字符串键，强制当前调用同步执行子智能体。
+     * 在此键下放入 {@link Boolean}（或其字符串形式），即可忽略 LLM 请求的后台模式
+     * （{@code timeout_seconds=0}），并禁止超时后提升为后台 {@code task_id}。
      *
-     * <p>When force-sync is on:
-     *
+     * <p>启用 force-sync 时：
      * <ul>
-     *   <li>{@code timeout_seconds=0} is coerced to the default sync timeout (30s), unless {@link
-     *       #CTX_FORCE_SYNC_TIMEOUT_SECONDS} supplies an absolute override
-     *   <li>If the sync wait exceeds the timeout, the subagent is interrupted and the tool returns
-     *       {@code status: timeout} — it is <em>not</em> promoted to an async background task
+     *   <li>{@code timeout_seconds=0} 转为默认同步超时（30 秒），除非
+     *       {@link #CTX_FORCE_SYNC_TIMEOUT_SECONDS} 提供绝对覆盖值
+     *   <li>同步等待超时后，中断子智能体并返回 {@code status: timeout}，
+     *       <em>不会</em>提升为异步后台任务
      * </ul>
      *
      * <pre>{@code
@@ -182,20 +174,20 @@ public class AgentSpawnTool {
      *     .build();
      * }</pre>
      *
-     * <p>Applies to {@code agent_spawn} and {@code agent_send}. Multiple sync tool calls in one
-     * turn still run in parallel by default (Toolkit {@code parallel=true}).
+     * <p>适用于 {@code agent_spawn} 和 {@code agent_send}。
+     * 同一轮中的多个同步工具调用默认仍并行执行（Toolkit {@code parallel=true}）。
      */
     public static final String CTX_FORCE_SYNC = "agentscope.subagent.force_sync";
 
     /**
-     * Optional {@link RuntimeContext} override for the sync wait (seconds) when {@link
-     * #CTX_FORCE_SYNC} is enabled. Accepts an {@link Integer}/{@link Number} or its string form.
+     * 启用 {@link #CTX_FORCE_SYNC} 时，同步等待时间（秒）的可选
+     * {@link RuntimeContext} 覆盖值。接受 {@link Integer}/{@link Number} 或其字符串形式。
      *
-     * <p>When present (and force-sync is on), this value fully replaces the LLM's {@code
-     * timeout_seconds} for the call. Values {@code <= 0} fall back to the default sync timeout
-     * (30s); values above 600 are clamped.
+     * <p>存在此值且启用 force-sync 时，它会完全替代本次调用中 LLM 的
+     * {@code timeout_seconds}。{@code <= 0} 的值回退到默认同步超时（30 秒）；
+     * 超过 600 的值截断为 600。
      *
-     * <p>Ignored when force-sync is off.
+     * <p>未启用 force-sync 时忽略。
      *
      * <pre>{@code
      * RuntimeContext ctx = RuntimeContext.builder()
@@ -221,7 +213,9 @@ public class AgentSpawnTool {
             Do not read the task's output files to watch progress; wait for the result instead.\
             """;
 
-    /** Short poll interval used while waiting for a remote sync task, to detect awaiting_confirm promptly. */
+    /**
+     * 等待远程同步任务时使用的短轮询间隔，以便及时发现 awaiting_confirm。
+     */
     private static final long REMOTE_CONFIRM_POLL_MS = 1_000L;
 
     private final DefaultAgentManager agentManager;
@@ -240,13 +234,12 @@ public class AgentSpawnTool {
     private final ConcurrentHashMap<LabelKey, String> labelToKey = new ConcurrentHashMap<>();
 
     /**
-     * Creates an {@code AgentSpawnTool} that derives the active user-id from each tool call's
-     * {@link RuntimeContext}, rather than a shared supplier — this prevents identity races when a
-     * single agent instance serves concurrent callers.
+     * 创建 {@code AgentSpawnTool}，从每次工具调用的 {@link RuntimeContext}
+     * 获取活动用户 ID，而非使用共享 supplier，防止同一智能体实例服务并发调用方时发生身份竞争。
      *
-     * @param agentManager factory and invoker for subagents
-     * @param taskRepository background task store
-     * @param parentSpawnDepth current spawn-depth of the parent (0 for top-level main agent)
+     * @param agentManager 子智能体工厂与调用器
+     * @param taskRepository 后台任务存储
+     * @param parentSpawnDepth 父级当前启动深度（顶层主智能体为 0）
      */
     public AgentSpawnTool(
             DefaultAgentManager agentManager, TaskRepository taskRepository, int parentSpawnDepth) {
@@ -254,13 +247,13 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Creates an {@code AgentSpawnTool} with an optional gateway bridge for exposing subagents
-     * as user-addressable threads.
+     * 创建带可选网关桥接器的 {@code AgentSpawnTool}，
+     * 用于将子智能体暴露为用户可访问的线程。
      *
-     * @param agentManager factory and invoker for subagents
-     * @param taskRepository background task store
-     * @param parentSpawnDepth current spawn-depth of the parent (0 for top-level main agent)
-     * @param gatewayBridge optional bridge for thread exposure; null for standalone mode
+     * @param agentManager 子智能体工厂与调用器
+     * @param taskRepository 后台任务存储
+     * @param parentSpawnDepth 父级当前启动深度（顶层主智能体为 0）
+     * @param gatewayBridge 可选的线程暴露桥接器；独立模式下为 null
      */
     public AgentSpawnTool(
             DefaultAgentManager agentManager,
@@ -274,21 +267,22 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Wires (or re-wires) the gateway bridge used to expose subagents as user-addressable threads.
+     * 连接或重新连接用于将子智能体暴露为用户可访问线程的网关桥接器。
      *
-     * <p>Mutating the bridge on the live instance — rather than constructing a replacement — is
-     * essential: the toolkit binds {@code agent_spawn} to this exact object at orchestration time,
-     * so a replacement tool would never receive calls. The bridge is typically supplied lazily,
-     * after the agent is built, when its internal gateway is created (see
-     * {@code HarnessAgent#ensureGateway}).
+     * <p>必须修改现有实例上的桥接器，而不是构造替代对象：工具集在编排时
+     * 将 {@code agent_spawn} 绑定到这个具体对象，因此替代工具永远不会收到调用。
+     * 桥接器通常在智能体构建后、创建内部网关时延迟提供
+     * （参见 {@code HarnessAgent#ensureGateway}）。
      *
-     * @param gatewayBridge the bridge implementation, or {@code null} to disable exposure
+     * @param gatewayBridge 桥接器实现，或用 {@code null} 禁用暴露
      */
     public void setGatewayBridge(SubagentGatewayBridge gatewayBridge) {
         this.gatewayBridge = gatewayBridge;
     }
 
-    /** Test-only hook to inject a fake {@link RemoteSubagentTransport} for remote streaming/HITL tests. */
+    /**
+     * 仅用于测试的钩子，为远程流式／HITL 测试注入假的 {@link RemoteSubagentTransport}。
+     */
     void setRemoteTransport(RemoteSubagentTransport remoteTransport) {
         this.remoteTransport = Objects.requireNonNull(remoteTransport, "remoteTransport");
     }
@@ -395,7 +389,7 @@ public class AgentSpawnTool {
             return Mono.just(ToolResultBlock.error("Label already in use: " + canonLabel));
         }
 
-        // Create only on a cache miss, including concurrent spawns of the same identity.
+        // 仅在缓存未命中时创建，包括并发启动同一身份的情况。
         AtomicBoolean created = new AtomicBoolean();
         SpawnedAgent spawned =
                 agentsByKey.computeIfAbsent(
@@ -450,16 +444,16 @@ public class AgentSpawnTool {
                                             .agentId()
                                     : agentId));
 
-        // Propagate plan mode: if parent is in plan mode, force child into read-only mode too.
+        // 传播计划模式：父级处于计划模式时，也强制子级进入只读模式。
         propagatePlanMode(parentState, currentUserId, sessionId, agent);
 
-        // Propagate DENY permission rules from parent to child (security boundary inheritance).
+        // 从父级向子级传播 DENY 权限规则（继承安全边界）。
         propagateParentDenyRules(parentState, currentUserId, sessionId, agent, declOpt);
 
-        // Expose subagent to user via gateway bridge if requested. The effective decision combines
-        // (in priority order) a per-call RuntimeContext override, the declaration policy, and the
-        // LLM-supplied argument — so application code can force or forbid exposure regardless of
-        // what the model decides.
+        // 请求时通过网关桥接器向用户暴露子智能体。最终决策组合
+        // 单次调用的 RuntimeContext 覆盖值、声明策略及 LLM 提供的参数
+        // （按上述优先级），使应用代码可以强制允许或禁止暴露，
+        // 不受模型决定影响。
         boolean effectiveExpose = resolveExposeToUser(exposeToUser, declOpt, runtimeContext);
         String subagentId = null;
         if (effectiveExpose && gatewayBridge != null) {
@@ -549,10 +543,10 @@ public class AgentSpawnTool {
                     canonLabel);
         }
 
-        // Sync-local execution with timeout promotion: if the agent doesn't finish within the
-        // timeout, its in-flight execution is promoted to an async task instead of being lost —
-        // unless force-sync is on, in which case the agent is interrupted and status: timeout
-        // is returned.
+        // 带超时转后台的本地同步执行：智能体未在超时前完成时，
+        // 将正在进行的执行转为异步任务，避免丢失；
+        // 但启用 force-sync 时会中断智能体，
+        // 并返回 status: timeout。
         final String finalTask = task.trim();
         final String finalSpawnInfo = spawnInfo;
         final String finalSubagentId = subagentId;
@@ -747,7 +741,7 @@ public class AgentSpawnTool {
     }
 
     // -----------------------------------------------------------------
-    //  Helpers
+    // 辅助方法
     // -----------------------------------------------------------------
 
     private DefaultAgentManager managerFor(RuntimeContext runtimeContext) {
@@ -759,11 +753,10 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Activates plan mode on a local child immediately before it can be invoked.
+     * 在本地子智能体即将被调用之前激活计划模式。
      *
-     * <p>This must run for both newly-created and reused children. In particular, a persistent
-     * child may have been created while its parent was in build mode and then reused after the
-     * parent entered plan mode.
+     * <p>新建和复用的子智能体都必须执行此步骤。尤其是持久化子智能体可能
+     * 在父级处于构建模式时创建，却在父级进入计划模式后被复用。
      */
     private static void propagatePlanMode(
             AgentState parentState, String userId, String sessionId, Agent child) {
@@ -775,24 +768,22 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Returns a {@link Mono} that invokes the local subagent.
+     * 返回调用本地子智能体的 {@link Mono}。
      *
-     * <p>Three paths, checked in order:
-     *
+     * <p>依次检查三条路径：
      * <ol>
-     *   <li><b>{@code streamEvents()} path</b> — an {@link AgentEventEmitter} is present in the
-     *       Reactor Context (set by {@code ReActAgent.streamEvents}). Child events are forwarded
-     *       into the parent's {@code Flux<AgentEvent>} via a source-tagging wrapper emitter.
-     *   <li><b>{@code stream()} path</b> (deprecated) — a {@link SubagentEventBus} is present.
-     *       Child events are forwarded via the bus with {@link EventSource} metadata.
-     *   <li><b>Non-streaming path</b> — plain {@code call()}, no event forwarding.
+     *   <li><b>{@code streamEvents()} 路径</b>：Reactor Context 中存在
+     *       {@link AgentEventEmitter}（由 {@code ReActAgent.streamEvents} 设置）。
+     *       子事件通过附加来源标签的包装 emitter 转发到父级 {@code Flux<AgentEvent>}。
+     *   <li><b>{@code stream()} 路径</b>（已弃用）：存在 {@link SubagentEventBus}。
+     *       子事件通过总线转发，并带上 {@link EventSource} 元数据。
+     *   <li><b>非流式路径</b>：普通 {@code call()}，不转发事件。
      * </ol>
      *
-     * <p><b>Context propagation note:</b> this method returns a {@code Mono} whose
-     * {@code deferContextual} is subscribed by {@code ToolMethodInvoker}'s {@code flatMap}, which
-     * correctly inherits the Reactor Context from the parent streaming chain. Do NOT call
-     * {@code .block()} on this Mono directly inside a tool method that returns {@link String},
-     * because {@code block()} creates an isolated subscription that loses the Context.
+     * <p><b>上下文传播说明：</b>此方法返回的 {@code Mono} 中，{@code deferContextual}
+     * 由 {@code ToolMethodInvoker} 的 {@code flatMap} 订阅，能够正确继承父级流式链的
+     * Reactor Context。不要在返回 {@link String} 的工具方法内直接对此 Mono 调用
+     * {@code .block()}，因为 {@code block()} 创建隔离订阅，会丢失 Context。
      */
     private Mono<Msg> execLocalSync(
             Agent agent,
@@ -804,7 +795,7 @@ public class AgentSpawnTool {
         return Mono.deferContextual(
                         ctxView -> {
                             DefaultAgentManager manager = managerFor(parentCtx);
-                            // ── Path 1: streamEvents() — AgentEvent forwarding ──
+                            // ── 路径 1：streamEvents()，转发 AgentEvent ──
                             Optional<AgentEventEmitter> emitterOpt =
                                     AgentEventEmitter.fromContext(ctxView);
                             if (emitterOpt.isPresent()) {
@@ -839,14 +830,14 @@ public class AgentSpawnTool {
                                                                 AgentEventEmitter
                                                                         .FORWARDING_CONTEXT_KEY,
                                                                 taggedEmitter))
-                                        // Emit before success or error reaches the parent, which
-                                        // may
-                                        // otherwise complete its event sink before doFinally runs.
+                                        // 在成功或错误到达父级之前发出事件，否则父级
+                                        // 可能
+                                        // 在 doFinally 运行前就已完成其事件 sink。
                                         .doOnSuccess(ignored -> emitEnd.run())
                                         .doOnError(ignored -> emitEnd.run())
-                                        // Preserve best-effort cancellation signaling without
-                                        // emitting a
-                                        // duplicate if cancellation races with normal termination.
+                                        // 保留尽力而为的取消信号，同时避免
+                                        // 取消与正常终止发生竞争时
+                                        // 重复发出事件。
                                         .doFinally(
                                                 signal -> {
                                                     if (signal == SignalType.CANCEL) {
@@ -855,7 +846,7 @@ public class AgentSpawnTool {
                                                 });
                             }
 
-                            // ── Path 2: stream() (deprecated) — SubagentEventBus forwarding ──
+                            // ── 路径 2：stream()（已弃用），通过 SubagentEventBus 转发 ──
                             if (ctxView.hasKey(SubagentEventBus.CONTEXT_KEY)) {
                                 SubagentEventBus bus = ctxView.get(SubagentEventBus.CONTEXT_KEY);
                                 EventSource childSource = buildChildSource(spawned, parentCtx);
@@ -894,7 +885,7 @@ public class AgentSpawnTool {
                                                                         prompt, parentCtx)));
                             }
 
-                            // ── Path 3: non-streaming ──
+                            // ── 路径 3：非流式 ──
                             return manager.invokeAgent(agent, sessionId, userId, prompt, parentCtx);
                         })
                 .doOnSuccess(
@@ -915,25 +906,22 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Executes a local subagent with timeout promotion: if the agent doesn't finish within
-     * {@code timeoutMs}, the in-flight execution is promoted to an async background task instead
-     * of being cancelled and lost — unless {@code forceSync} is true, in which case the agent is
-     * interrupted and {@code status: timeout} is returned with no background promotion.
+     * 执行本地子智能体并支持超时转后台：智能体未在 {@code timeoutMs} 内完成时，
+     * 将正在进行的执行提升为异步后台任务，而不是取消并丢失它；但 {@code forceSync}
+     * 为 true 时会中断智能体并返回 {@code status: timeout}，不会转入后台。
      *
-     * <p>The key mechanism is a {@link CompletableFuture} bridge that decouples execution from
-     * observation. The Mono from {@link #execLocalSync} is subscribed with Reactor Context
-     * propagation (so streaming events flow during the sync wait period), and its result feeds
-     * the bridge. A race future derived from the bridge adds a timeout without cancelling the
-     * original:
-     *
+     * <p>关键机制是使用 {@link CompletableFuture} 桥接执行与观察，将两者解耦。
+     * 订阅 {@link #execLocalSync} 返回的 Mono 时传播 Reactor Context
+     * （使同步等待期间仍流转事件），并将结果写入桥接 future。
+     * 从桥接 future 派生一个竞争 future 来增加超时，而不取消原始执行：
      * <ul>
-     *   <li>Agent finishes before timeout → normal result returned
-     *   <li>Timeout fires first (default) → bridge (still running) is registered in {@link
-     *       TaskRepository} as an {@link TaskRunSpec.AdoptedTaskRunSpec}, and a {@code task_id} is
-     *       returned
-     *   <li>Timeout fires first ({@code forceSync}) → agent interrupted, {@code status: timeout},
-     *       no {@code task_id}
-     *   <li>Agent errors → error message returned
+     *   <li>智能体先于超时完成：返回正常结果
+     *   <li>超时先发生（默认）：将仍运行的桥接 future 以
+     *       {@link TaskRunSpec.AdoptedTaskRunSpec} 注册到 {@link TaskRepository}，
+     *       并返回 {@code task_id}
+     *   <li>超时先发生（{@code forceSync}）：中断智能体，返回 {@code status: timeout}，
+     *       不返回 {@code task_id}
+     *   <li>智能体出错：返回错误消息
      * </ul>
      */
     private Mono<ToolResultBlock> execWithTimeoutPromotion(
@@ -968,18 +956,18 @@ public class AgentSpawnTool {
                                                                             parentCtx))
                                                     .doFinally(
                                                             signal -> {
-                                                                // Parent subscription was
-                                                                // cancelled (outer Mono.timeout,
-                                                                // user stop, or upstream Reactor
-                                                                // cancel). The fire-and-forget
-                                                                // subscribe below detaches the
-                                                                // inner execution from the parent
-                                                                // lifecycle, so without this
-                                                                // doFinally the sub-agent would
-                                                                // keep running as an orphan and
-                                                                // the eventual sink.success(...)
-                                                                // would be a no-op on the
-                                                                // already-cancelled sink.
+                                                                // 父级订阅已被取消
+                                                                // （外层 Mono.timeout、
+                                                                // 用户停止，或上游 Reactor
+                                                                // 取消）。下面即发即弃的
+                                                                // subscribe 将内部执行
+                                                                // 从父级生命周期中分离，
+                                                                // 因此如果没有此处的
+                                                                // doFinally，子智能体将
+                                                                // 作为孤立执行继续运行，
+                                                                // 最终的 sink.success(...)
+                                                                // 在已取消的 sink 上
+                                                                // 也不会产生任何作用。
                                                                 if (signal == SignalType.CANCEL) {
                                                                     interruptAgent(
                                                                             agent, runtimeContext);
@@ -996,9 +984,11 @@ public class AgentSpawnTool {
                                                         }
                                                     });
 
-                                    // Race against timeout without cancelling the bridge.
-                                    // thenApply(m -> m) creates a dependent future so orTimeout
-                                    // completes the race copy, not the original bridge.
+                                    // 与超时竞争，但不取消桥接 future。
+                                    // thenApply(m -> m) 创建依赖 future，让 orTimeout
+                                    // 完成竞争副本，而不是原始桥接 future。
+                                    // 【学习提示】超时约束的是同步观察窗口，不默认终止执行。
+                                    // 保留原始 bridge，才能将同一次执行交给任务仓库继续跟踪，避免重跑。
                                     CompletableFuture<Msg> race = bridge.thenApply(m -> m);
                                     race.orTimeout(timeoutMs, TimeUnit.MILLISECONDS);
 
@@ -1026,22 +1016,25 @@ public class AgentSpawnTool {
                                                 }
                                             });
 
-                                    // Propagate parent cancellation to the inner fire-and-forget
-                                    // subscription. Without this, doFinally(CANCEL) above never
-                                    // fires because the inner is subscribed independently of the
-                                    // parent Mono.create sink.
+                                    // 将父级取消传播到内部即发即弃的订阅。
+                                    // 否则，上面的 doFinally(CANCEL) 永远不会
+                                    // 触发，因为内部订阅独立于
+                                    // 父级 Mono.create 的 sink。
+                                    // 【学习提示】主动取消与“等待超时转后台”是两种不同策略；
+                                    // 手动 subscribe 建立了独立订阅，因此必须显式接回父级取消信号。
                                     sink.onCancel(innerSub);
                                 }));
     }
 
     /**
-     * Interrupts the sub-agent's reasoning loop when its parent tool-call subscription is
-     * cancelled. Mirrors the fix in core {@code SubAgentTool.interruptAgent} (commit
-     * {@code 029cc55e}, issue #1783) — see issue #2062 for the harness-side equivalent.
+     * 当父级工具调用订阅被取消时，中断子智能体推理循环。
+     * 对应 core 中 {@code SubAgentTool.interruptAgent} 的修复
+     * （提交 {@code 029cc55e}，issue #1783）；Harness 对应问题参见 issue #2062。
      *
-     * <p>Only {@link ReActAgent} exposes {@code interrupt(RuntimeContext)}. Other {@link Agent}
-     * implementations are no-ops here; their inner execution will still be disposed by the caller's
-     * {@code sink.onCancel(innerSub::dispose)}, which is enough for non-looping agents.
+     * <p>只有 {@link ReActAgent} 暴露 {@code interrupt(RuntimeContext)}。
+     * 其他 {@link Agent} 实现在此不执行操作；调用方的
+     * {@code sink.onCancel(innerSub::dispose)} 仍会释放其内部执行，
+     * 对没有循环的智能体已经足够。
      */
     private void interruptAgent(Agent agent, RuntimeContext ctx) {
         if (agent instanceof ReActAgent ra) {
@@ -1055,9 +1048,9 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Handles errors from the race future in {@link #execWithTimeoutPromotion}. Separated to keep
-     * the lambda readable — it distinguishes timeout (→ promote, or hard-fail under force-sync)
-     * from real errors (→ report).
+     * 处理 {@link #execWithTimeoutPromotion} 中竞争 future 的错误。
+     * 独立为方法以保持 lambda 可读性：区分超时（转入后台，或 force-sync 下直接失败）
+     * 与真实错误（报告）。
      */
     private void handleExecError(
             Throwable err,
@@ -1073,7 +1066,7 @@ public class AgentSpawnTool {
         Throwable cause = err instanceof CompletionException ? err.getCause() : err;
         if (cause instanceof TimeoutException) {
             if (forceSync) {
-                // Hard timeout: dispose triggers doFinally(CANCEL) → interruptAgent; no promote.
+                // 硬超时：dispose 触发 doFinally(CANCEL) → interruptAgent，不转入后台。
                 if (innerSub != null && !innerSub.isDisposed()) {
                     innerSub.dispose();
                 }
@@ -1214,9 +1207,9 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Builds an {@link EventSource} for a freshly spawned or known subagent. The path is
-     * constructed from the parent session ID (or {@code "main"} as fallback) plus the child's
-     * {@code agentId}, separated by {@code "/"}.
+     * 为新启动或已知子智能体构建 {@link EventSource}。
+     * 路径由父会话 ID（回退值为 {@code "main"}）与子级 {@code agentId}
+     * 组成，使用 {@code "/"} 分隔。
      */
     private EventSource buildChildSource(SpawnedAgent spawned, RuntimeContext parentCtx) {
         String parentName =
@@ -1234,8 +1227,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Builds a source path string for the {@link AgentEvent#withSource} tag. Uses the same
-     * parent-session / child-agent-id convention as {@link #buildChildSource}.
+     * 为 {@link AgentEvent#withSource} 标签构建来源路径字符串。
+     * 使用与 {@link #buildChildSource} 相同的父会话／子智能体 ID 约定。
      */
     private String buildSourcePath(SpawnedAgent spawned, RuntimeContext parentCtx) {
         String parentName =
@@ -1246,8 +1239,7 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Builds a {@code parentSession/agentId} source path for remote events forwarded into the
-     * parent's stream.
+     * 为转发到父级流的远程事件构建 {@code parentSession/agentId} 来源路径。
      */
     static String buildRemoteSourcePath(String parentSessionId, String agentId) {
         String parent =
@@ -1257,10 +1249,10 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Tags a remote-forwarded {@link AgentEvent} with the parent-visible {@code source} path, the
-     * harness {@link AgentEvent#METADATA_TASK_ID}, and {@link
-     * AgentEvent#METADATA_PARENT_SESSION_ID} so concurrent calls to the same remote agent stay
-     * correlatable to distinct {@code TaskRecord}s and to the parent session that spawned them.
+     * 为远程转发的 {@link AgentEvent} 标记父级可见的 {@code source} 路径、
+     * Harness 的 {@link AgentEvent#METADATA_TASK_ID} 和
+     * {@link AgentEvent#METADATA_PARENT_SESSION_ID}，使对同一远程智能体的并发调用
+     * 仍能关联到各自的 {@code TaskRecord} 及发起它们的父会话。
      */
     static AgentEvent tagRemoteForwardedEvent(
             AgentEvent event, String sourcePath, String taskId, String parentSessionId) {
@@ -1278,8 +1270,7 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Builds submission metadata for a remote task (streaming preference, parent identity, denied
-     * permission rules, caller-defined attributes).
+     * 构建远程任务的提交元数据（流式偏好、父级身份、拒绝权限规则、调用方自定义属性）。
      */
     private RemoteSubmitContext buildRemoteSubmitContext(
             RuntimeContext runtimeContext, AgentState parentState, SubagentDeclaration decl) {
@@ -1299,8 +1290,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Merges the subagent's declared static attributes with the per-call ones from {@link
-     * #CTX_REMOTE_CONTEXT_ATTRIBUTES}; per-call entries win on conflict.
+     * 将子智能体声明的静态属性与 {@link #CTX_REMOTE_CONTEXT_ATTRIBUTES}
+     * 中的单次调用属性合并；冲突时单次调用条目优先。
      */
     static Map<String, Object> collectRemoteContextAttributes(
             RuntimeContext runtimeContext, SubagentDeclaration decl) {
@@ -1321,8 +1312,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Flattens parent DENY rules into wire maps for {@link RemoteSubmitContext}. Returns an empty
-     * list when inheritance is disabled or the parent has no DENY rules.
+     * 将父级 DENY 规则展平为 {@link RemoteSubmitContext} 的传输映射。
+     * 禁用继承或父级没有 DENY 规则时返回空列表。
      */
     static List<Map<String, String>> collectParentDenyRules(
             AgentState parentState, Optional<SubagentDeclaration> declaration) {
@@ -1355,8 +1346,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Reactive entry for remote sync execution. Captures {@link AgentEventEmitter} from Reactor
-     * Context before blocking on the remote task.
+     * 远程同步执行的响应式入口。在阻塞等待远程任务之前，
+     * 从 Reactor Context 捕获 {@link AgentEventEmitter}。
      */
     private Mono<ToolResultBlock> runRemoteSyncReactive(
             RuntimeContext runtimeContext,
@@ -1388,13 +1379,13 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Submits a remote task through {@link TaskRepository} (for durable state) and blocks until
-     * it completes or the timeout elapses.
+     * 通过 {@link TaskRepository} 提交远程任务（用于持久化状态），
+     * 并阻塞直到任务完成或超时。
      *
-     * <p>When an {@link AgentEventEmitter} is present and {@link SubagentDeclaration#isRemoteStreaming()}
-     * is true, remote events are forwarded into the parent stream. Without an emitter, or when
-     * {@link RemoteAskPolicy#DENY} applies, pending remote confirmations are auto-denied via
-     * {@link RemoteSubagentTransport#resume}.
+     * <p>存在 {@link AgentEventEmitter} 且 {@link SubagentDeclaration#isRemoteStreaming()}
+     * 为 true 时，将远程事件转发到父级流。没有 emitter 或应用
+     * {@link RemoteAskPolicy#DENY} 时，通过 {@link RemoteSubagentTransport#resume}
+     * 自动拒绝待处理的远程确认。
      */
     private ToolResultBlock runRemoteSync(
             RuntimeContext runtimeContext,
@@ -1419,6 +1410,8 @@ public class AgentSpawnTool {
         RemoteTarget target = new RemoteTarget(decl.getUrl(), decl.getHeaders());
         RemoteSubagentTransport transport = this.remoteTransport;
         String sourcePath = buildRemoteSourcePath(parentSessionId, agentId);
+        // 【学习提示】远程任务先进入持久化任务仓库，事件流只是观察通道。
+        // 是否流式转发与任务是否存在是不同维度，不能把断开观察等同于远程执行结束。
         boolean wantStream = emitter != null && decl.isRemoteStreaming();
         AtomicBoolean autoDenied = new AtomicBoolean(false);
         AtomicBoolean resumedEpisode = new AtomicBoolean(false);
@@ -1531,17 +1524,16 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Resolves the effective user-exposure decision for a spawn.
+     * 解析此次启动的最终用户可见性决策。
      *
-     * <p>Precedence (highest first):
-     *
+     * <p>优先级由高到低：
      * <ol>
-     *   <li>A per-call {@link RuntimeContext} value under {@link #CTX_EXPOSE_TO_USER} — lets the
-     *       embedding application force/forbid exposure for the whole call.
-     *   <li>The spawned subagent's {@link SubagentDeclaration#getExposeToUser()} policy — a static
-     *       per-type default; {@code null} means "no opinion".
-     *   <li>The LLM-supplied {@code expose_to_user} tool argument.
-     *   <li>{@code false} when none of the above expresses an opinion.
+     *   <li>单次调用 {@link RuntimeContext} 中 {@link #CTX_EXPOSE_TO_USER} 对应的值：
+     *       允许宿主应用为整次调用强制允许／禁止暴露。
+     *   <li>被启动子智能体的 {@link SubagentDeclaration#getExposeToUser()} 策略：
+     *       按类型的静态默认值；{@code null} 表示“不指定”。
+     *   <li>LLM 提供的 {@code expose_to_user} 工具参数。
+     *   <li>以上均未指定时使用 {@code false}。
      * </ol>
      */
     private static boolean resolveExposeToUser(
@@ -1559,7 +1551,9 @@ public class AgentSpawnTool {
         return Boolean.TRUE.equals(llmParam);
     }
 
-    /** Coerces a context value (Boolean or its string form) to a tri-state Boolean. */
+    /**
+     * 将上下文值（Boolean 或其字符串形式）转换为三态 Boolean。
+     */
     private static Boolean asBoolean(Object v) {
         if (v instanceof Boolean b) {
             return b;
@@ -1581,7 +1575,7 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Whether {@link #CTX_FORCE_SYNC} is enabled on the current call.
+     * 当前调用是否启用 {@link #CTX_FORCE_SYNC}。
      */
     static boolean isForceSync(RuntimeContext ctx) {
         if (ctx == null) {
@@ -1591,17 +1585,16 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Resolves the effective sync wait for the current call.
+     * 解析当前调用实际采用的同步等待时间。
      *
-     * <p>Precedence under force-sync (highest first):
-     *
+     * <p>force-sync 下的优先级由高到低：
      * <ol>
-     *   <li>{@link #CTX_FORCE_SYNC_TIMEOUT_SECONDS} when present — absolute app override
-     *   <li>LLM {@code timeout_seconds}, with {@code 0} coerced to the default sync timeout
+     *   <li>存在 {@link #CTX_FORCE_SYNC_TIMEOUT_SECONDS} 时使用它，作为应用的绝对覆盖值
+     *   <li>LLM 的 {@code timeout_seconds}，其中 {@code 0} 转为默认同步超时
      * </ol>
      *
-     * <p>Without force-sync, behavior matches {@link #resolveTimeoutMs} (including async {@code
-     * 0}).
+     * <p>未启用 force-sync 时，行为与 {@link #resolveTimeoutMs} 一致
+     * （包括表示异步的 {@code 0}）。
      */
     static long resolveEffectiveTimeoutMs(Integer timeoutSeconds, RuntimeContext ctx) {
         boolean forceSync = isForceSync(ctx);
@@ -1619,7 +1612,9 @@ public class AgentSpawnTool {
         return timeoutMs;
     }
 
-    /** Reads {@link #CTX_FORCE_SYNC_TIMEOUT_SECONDS}; {@code null} means "no override". */
+    /**
+     * 读取 {@link #CTX_FORCE_SYNC_TIMEOUT_SECONDS}；{@code null} 表示“不覆盖”。
+     */
     static Integer forceSyncTimeoutSeconds(RuntimeContext ctx) {
         if (ctx == null) {
             return null;
@@ -1627,7 +1622,9 @@ public class AgentSpawnTool {
         return asPositiveOrZeroInt(ctx.get(CTX_FORCE_SYNC_TIMEOUT_SECONDS));
     }
 
-    /** Coerces a context value ({@link Number} or numeric string) to Integer; blank/invalid → null. */
+    /**
+     * 将上下文值（{@link Number} 或数字字符串）转换为 Integer；空白／无效值返回 null。
+     */
     private static Integer asPositiveOrZeroInt(Object v) {
         if (v instanceof Number n) {
             return n.intValue();
@@ -1643,9 +1640,9 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Wraps a {@code Mono<ToolResultBlock>} to emit a {@link SubagentExposedEvent} into the parent's event
-     * stream when {@code subagentId} is non-null. When subagentId is null (no expose), returns the
-     * original Mono unchanged.
+     * 包装 {@code Mono<ToolResultBlock>}，在 {@code subagentId} 非 null 时向父级
+     * 事件流发出 {@link SubagentExposedEvent}。subagentId 为 null（不暴露）时，
+     * 原样返回原始 Mono。
      */
     private static Mono<ToolResultBlock> withSubagentExposedEvent(
             Mono<ToolResultBlock> source,
@@ -1685,9 +1682,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Executes a task against a previously spawned (or reused) subagent. Factored out of
-     * {@code agentSpawn} to handle the deterministic-key reuse path without duplicating the
-     * sync/async/remote dispatch logic.
+     * 对先前启动或复用的子智能体执行任务。从 {@code agentSpawn} 提取出来，
+     * 用于处理确定性键复用路径，避免重复同步／异步／远程分派逻辑。
      */
     private Mono<ToolResultBlock> execSpawnTask(
             SpawnedAgent spawned,
@@ -1778,9 +1774,8 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Derives a deterministic 12-char hex hash from (userId, parentSessionId, agentId, label).
-     * Length prefixes distinguish null values and embedded separators without changing the
-     * external key format.
+     * 根据 (userId, parentSessionId, agentId, label) 派生确定性的 12 字符十六进制哈希。
+     * 长度前缀可区分 null 值与内嵌分隔符，而不改变外部键格式。
      */
     static String deterministicHash(
             String userId, String parentSessionId, String agentId, String label) {
@@ -1834,12 +1829,11 @@ public class AgentSpawnTool {
     }
 
     /**
-     * Adds parent DENY rules without widening the child's configured permissions.
+     * 添加父级 DENY 规则，不扩大子级配置的权限。
      *
-     * <p>A trivial child uses the legacy lightweight permission path, where a tool-level
-     * {@code PASSTHROUGH} is allowed. Adding the first DENY rule makes the context non-trivial and
-     * activates the full engine; {@link PermissionMode#BYPASS} preserves that prior fallback while
-     * explicit DENY rules still take precedence.
+     * <p>简单权限配置的子级使用旧版轻量级权限路径，允许工具级
+     * {@code PASSTHROUGH}。添加首条 DENY 规则会使上下文不再简单，从而激活完整引擎；
+     * {@link PermissionMode#BYPASS} 保留先前的回退行为，而显式 DENY 规则仍然优先。
      */
     private static PermissionContextState mergeParentDenyRules(
             PermissionContextState child, PermissionContextState parent) {

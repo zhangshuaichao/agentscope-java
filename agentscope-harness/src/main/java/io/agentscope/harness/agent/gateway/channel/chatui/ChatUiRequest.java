@@ -21,23 +21,20 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Request object for {@link ChatUiChannel}. Carries the peer identity (optional) and the messages
- * to send to the agent.
+ * {@link ChatUiChannel} 的请求对象，携带可选对端身份及要发送给智能体的消息。
  *
- * <p>The {@code peerId} is used by the channel router to build a stable session key:
+ * <p>渠道路由器使用 {@code peerId} 构建稳定会话键：
  *
  * <ul>
- *   <li>If {@code peerId} is null and the channel's DmScope is MAIN, all requests share one
- *       session — convenient for single-user or testing scenarios.
- *   <li>If {@code peerId} is provided, each distinct peer gets its own session (when using
- *       PER_PEER or similar scopes).
+ *   <li>{@code peerId} 为 null 且渠道 DmScope 为 MAIN 时，全部请求共享一个会话，
+ *       适合单用户或测试场景。
+ *   <li>提供 {@code peerId} 时，每个不同对端拥有自己的会话（使用 PER_PEER 等作用域时）。
  * </ul>
  *
- * @param peerId optional user / peer identifier; null means "no peer" (single-session mode)
- * @param agentId optional explicit agent override; null for normal binding-driven routing
- * @param subagentId optional exposed subagent id for direct subagent routing; null for normal
- *     routing
- * @param messages one or more messages to send
+ * @param peerId 可选用户／对端标识；null 表示“无对端”（单会话模式）
+ * @param agentId 可选的明确智能体覆盖；null 表示普通绑定路由
+ * @param subagentId 可选已公开子智能体 ID，用于直接子智能体路由；null 表示普通路由
+ * @param messages 要发送的一个或多个消息
  */
 public record ChatUiRequest(String peerId, String agentId, String subagentId, List<Msg> messages) {
 
@@ -48,39 +45,51 @@ public record ChatUiRequest(String peerId, String agentId, String subagentId, Li
         }
     }
 
-    /** Single user-text message in single-session mode (no peer). */
+    /**
+     * 单会话模式下的单条用户文本消息（无对端）。
+     */
     public static ChatUiRequest of(String text) {
         Objects.requireNonNull(text, "text");
         return new ChatUiRequest(null, null, null, List.of(userMsg(text)));
     }
 
-    /** Single user-text message associated with a specific peer id. */
+    /**
+     * 关联指定对端 ID 的单条用户文本消息。
+     */
     public static ChatUiRequest withPeer(String peerId, String text) {
         Objects.requireNonNull(peerId, "peerId");
         Objects.requireNonNull(text, "text");
         return new ChatUiRequest(peerId, null, null, List.of(userMsg(text)));
     }
 
-    /** Single user-text message targeted at a specific agent. */
+    /**
+     * 发给指定智能体的单条用户文本消息。
+     */
     public static ChatUiRequest forAgent(String peerId, String agentId, String text) {
         Objects.requireNonNull(agentId, "agentId");
         Objects.requireNonNull(text, "text");
         return new ChatUiRequest(peerId, agentId, null, List.of(userMsg(text)));
     }
 
-    /** Single user-text message routed directly to an exposed subagent. */
+    /**
+     * 直接路由到已公开子智能体的单条用户文本消息。
+     */
     public static ChatUiRequest toSubagent(String subagentId, String text) {
         Objects.requireNonNull(subagentId, "subagentId");
         Objects.requireNonNull(text, "text");
         return new ChatUiRequest(null, null, subagentId, List.of(userMsg(text)));
     }
 
-    /** Multi-message request without a peer (single-session mode). */
+    /**
+     * 不带对端的多消息请求（单会话模式）。
+     */
     public static ChatUiRequest of(List<Msg> messages) {
         return new ChatUiRequest(null, null, null, messages);
     }
 
-    /** Multi-message request for a specific peer. */
+    /**
+     * 面向指定对端的多消息请求。
+     */
     public static ChatUiRequest withPeer(String peerId, List<Msg> messages) {
         return new ChatUiRequest(peerId, null, null, messages);
     }

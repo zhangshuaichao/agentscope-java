@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 
-/** Logical identity; storage namespaces remain the responsibility of the workspace backend. */
+/** 逻辑身份；存储命名空间仍由工作区后端负责。 */
 public record SessionKey(String userId, String agentId, String sessionId) {
     public SessionKey {
         Objects.requireNonNull(agentId, "agentId");

@@ -20,25 +20,24 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * No-op snapshot that does not persist anything.
+ * 不持久保存任何内容的空操作快照。
  *
- * <p>When using {@code NoopSandboxSnapshot}, workspace state is NOT preserved between
- * session stops. Each time a session is started fresh, the full manifest is applied
- * (Branch D of the start logic). Use this when workspace durability is not required.
+ * <p>使用 {@code NoopSandboxSnapshot} 时，不会通过快照跨会话停止保留工作区状态。每次全新启动会应用完整清单（启动逻辑的分支 D）。无需工作区持久性时使用。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NoopSandboxSnapshot implements SandboxSnapshot {
 
     private static final String ID = "noop";
 
-    /** Creates a noop snapshot. */
+    /**
+ * 创建空操作快照。
+ */
     public NoopSandboxSnapshot() {}
 
     /**
      * {@inheritDoc}
      *
-     * <p>Returns {@code false} — workspace archiving is skipped entirely when this
-     * snapshot is in use, so this method is never called in normal operation.
+     * <p>返回 {@code false}。使用此快照时会完全跳过工作区归档步骤，因此正常流程无需进行归档。
      */
     @Override
     public boolean isPersistenceEnabled() {
@@ -48,11 +47,11 @@ public class NoopSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation discards the archive stream entirely.
+     * <p>此实现完全丢弃归档流。
      */
     @Override
     public void persist(InputStream workspaceArchive) throws Exception {
-        // Intentionally discard — no-op snapshot does not persist anything
+        // 有意丢弃：空操作快照不持久保存任何内容
         if (workspaceArchive != null) {
             workspaceArchive.transferTo(OutputStream.nullOutputStream());
         }
@@ -61,8 +60,7 @@ public class NoopSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * <p>Always throws {@link io.agentscope.harness.agent.sandbox.SandboxException.SnapshotException}
-     * since noop snapshots are never restorable.
+     * <p>始终抛出 {@link io.agentscope.harness.agent.sandbox.SandboxException.SnapshotException}，因为空操作快照永远不可恢复。
      */
     @Override
     public InputStream restore() throws Exception {
@@ -72,7 +70,7 @@ public class NoopSandboxSnapshot implements SandboxSnapshot {
     /**
      * {@inheritDoc}
      *
-     * @return always {@code false}
+     * @return 始终为 {@code false}
      */
     @Override
     public boolean isRestorable() {

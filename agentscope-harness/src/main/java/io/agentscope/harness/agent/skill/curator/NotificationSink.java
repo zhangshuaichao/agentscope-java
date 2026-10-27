@@ -20,20 +20,22 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Pushes {@link SkillCandidate} metadata to an external system (Slack webhook, ticket service,
- * Nacos config item, …). {@code NotifyAndWaitGate} fires its sinks once per draft submission;
- * sinks are best-effort and never block the gate.
+ * 向外部系统（Slack webhook、工单服务、Nacos 配置项等）推送 {@link SkillCandidate} 元数据。{@code NotifyAndWaitGate} 每次草稿提交触发一次接收端；通知尽力而为，不应因失败阻止门控。
  */
 public interface NotificationSink {
 
     Mono<Void> notify(SkillCandidate candidate);
 
-    /** No-op — useful as the "I'll wire my own sink later" default. */
+    /**
+     * 空操作，适合作为稍后自行接入通知端的默认值。
+     */
     static NotificationSink noOp() {
         return c -> Mono.empty();
     }
 
-    /** Logs the candidate at INFO; production setups can route via slf4j → ELK / Loki. */
+    /**
+     * 以 INFO 记录候选技能；生产环境可通过 slf4j 路由到 ELK / Loki。
+     */
     static NotificationSink logging() {
         Logger log = LoggerFactory.getLogger("SkillNotificationSink.logging");
         return candidate -> {

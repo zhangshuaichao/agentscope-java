@@ -24,13 +24,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
- * Shared utility functions for filesystem implementations.
+ * 文件系统实现共用的工具函数。
  */
 public final class FilesystemUtils {
 
     private FilesystemUtils() {}
 
-    /** Decode UTF-8 strictly, rejecting malformed or unmappable byte sequences. */
+    /**
+     * 严格解码 UTF-8，拒绝格式错误或无法映射的字节序列。
+     */
     public static String decodeUtf8Strict(byte[] bytes) throws CharacterCodingException {
         CharsetDecoder decoder =
                 StandardCharsets.UTF_8
@@ -49,7 +51,7 @@ public final class FilesystemUtils {
                     ".rar", ".class", ".jar", ".war", ".ear", ".so", ".dll", ".dylib", ".exe");
 
     /**
-     * Classify a file as "text" or "binary" based on extension.
+     * 根据扩展名将文件归类为文本或二进制文件。
      */
     public static String getFileType(String path) {
         if (path == null) {
@@ -63,7 +65,9 @@ public final class FilesystemUtils {
         return BINARY_EXTENSIONS.contains(ext) ? "binary" : "text";
     }
 
-    /** Result of a string replacement operation. */
+    /**
+     * 字符串替换操作的结果。
+     */
     public record ReplacementResult(String content, int occurrences, String error) {
 
         public static ReplacementResult success(String content, int occurrences) {
@@ -80,15 +84,13 @@ public final class FilesystemUtils {
     }
 
     /**
-     * Validates {@code edit()} arguments shared by every filesystem implementation.
+     * 验证所有文件系统实现共用的 {@code edit()} 参数。
      *
-     * <p>Both are rejected uniformly so all implementations behave identically: a {@code null}
-     * {@code newString} is not a deletion (pass {@code ""} for that, which keeps the normal
-     * replacement semantics and occurrence count), and an empty {@code oldString} is invalid.
-     * {@link #countOccurrences} defensively treats an empty substring as zero matches.
+     * <p>统一拒绝两种情况，以确保各实现行为一致：{@code null} 的 {@code newString}
+     * 不表示删除（删除请传 {@code ""}，保留正常替换语义和计数），空 {@code oldString} 也无效。
+     * {@link #countOccurrences} 防御性地将空子串视为零次匹配。
      *
-     * @return an {@link EditResult#fail} result when the arguments are invalid, otherwise
-     *         {@code null} to signal that the edit may proceed
+     * @return 参数无效时返回 {@link EditResult#fail} 结果，否则返回 {@code null} 表示可继续编辑
      */
     public static EditResult validateEditArguments(String oldStr, String newStr) {
         if (oldStr == null || oldStr.isEmpty()) {
@@ -103,14 +105,13 @@ public final class FilesystemUtils {
     }
 
     /**
-     * Perform string replacement with occurrence validation.
+     * 执行字符串替换并验证匹配次数。
      *
-     * @return {@code Object[]} of {@code [newContent, occurrenceCount]} on success, or a
-     *         single-element array {@code [errorMessage]} on failure
-     * @deprecated superseded by {@link #stringReplacement(String, String, String, boolean)}.
-     *     This compatibility bridge preserves the exact string-matching behavior of the
-     *     published v2.0.1-v2.0.3 implementation, including line endings. The typed method
-     *     normalizes CRLF/lone-CR to LF.
+     * @return 成功时返回包含 {@code [newContent, occurrenceCount]} 的 {@code Object[]}，
+     *     失败时返回单元素数组 {@code [errorMessage]}
+     * @deprecated 已由 {@link #stringReplacement(String, String, String, boolean)} 替代。
+     *     此兼容桥保留已发布 v2.0.1-v2.0.3 实现的精确字符串匹配行为，包括换行符；
+     *     类型化方法会将 CRLF／独立 CR 规范化为 LF。
      */
     @Deprecated
     public static Object[] performStringReplacement(
@@ -123,16 +124,14 @@ public final class FilesystemUtils {
     }
 
     /**
-     * Perform string replacement with occurrence validation.
+     * 执行字符串替换并验证匹配次数。
      *
-     * <p>Line endings are normalized to {@code \n} on the content and on both patterns first, so
-     * a caller need not care whether the file uses CRLF or lone CR. The returned content is
-     * therefore always LF-terminated: on a Unix-style filesystem CRLF is a defect worth removing,
-     * and every implementation must agree on this or the same edit would match on one backend and
-     * not on another.
+     * <p>先将内容和两个模式的换行符规范化为 {@code \n}，调用方无需关心文件使用 CRLF 还是独立 CR。
+     * 因此返回内容的换行统一为 LF：在 Unix 风格文件系统中应去除 CRLF；
+     * 所有实现必须保持一致，否则同一次编辑可能在一个后端匹配，而在另一个后端不匹配。
      *
-     * @return {@link ReplacementResult#success(String, int)} on success, or
-     *         {@link ReplacementResult#error(String)} on failure
+     * @return 成功时为 {@link ReplacementResult#success(String, int)}，
+     *     失败时为 {@link ReplacementResult#error(String)}
      */
     public static ReplacementResult stringReplacement(
             String content, String oldString, String newString, boolean replaceAll) {
@@ -151,7 +150,9 @@ public final class FilesystemUtils {
         return replaceExact(normalizedContent, normalizedOld, normalizedNew, replaceAll);
     }
 
-    /** Exact-string replacement used by the deprecated compatibility bridge. */
+    /**
+     * 已弃用兼容桥使用的精确字符串替换。
+     */
     private static ReplacementResult replaceExact(
             String content, String oldString, String newString, boolean replaceAll) {
         if (oldString == null || oldString.isEmpty()) {
@@ -193,7 +194,9 @@ public final class FilesystemUtils {
         return ReplacementResult.success(newContent, occurrences);
     }
 
-    /** Normalize CRLF and lone CR to LF. */
+    /**
+     * 将 CRLF 和独立 CR 规范化为 LF。
+     */
     private static String normalizeLineEndings(String text) {
         if (text.indexOf('\r') < 0) {
             return text;
@@ -201,7 +204,9 @@ public final class FilesystemUtils {
         return text.replace("\r\n", "\n").replace("\r", "\n");
     }
 
-    /** Count non-overlapping occurrences of a substring; an empty substring has zero matches. */
+    /**
+     * 统计子串不重叠的出现次数；空子串的匹配次数为零。
+     */
     public static int countOccurrences(String text, String sub) {
         if (sub == null || sub.isEmpty()) {
             return 0;
@@ -215,7 +220,9 @@ public final class FilesystemUtils {
         return count;
     }
 
-    /** Shell-escape a string for safe use in shell commands. */
+    /**
+     * 对字符串进行 Shell 转义，以便用于 Shell 命令。
+     */
     public static String shellQuote(String s) {
         if (s == null || s.isEmpty()) {
             return "''";

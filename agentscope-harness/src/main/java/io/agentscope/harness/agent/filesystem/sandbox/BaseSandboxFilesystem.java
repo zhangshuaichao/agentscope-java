@@ -41,25 +41,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract base sandbox implementation with {@link #execute} as the core abstract method.
+ * 以 {@link #execute} 为核心抽象方法的沙箱实现基类。
  *
- * <p>This class provides default implementations for all {@link AbstractFilesystem} methods by
- * delegating
- * to shell commands via {@link #execute}. File listing, grep, and glob use standard Unix
- * commands. Read uses server-side commands for paginated access. Write delegates content
- * transfer to {@link #uploadFiles}. Edit runs a static inline Python script inside the sandbox,
- * with {@code old}/{@code new} passed base64-encoded on the command line (that alphabet has no
- * shell metacharacters, so user content cannot break out of its argument) and the target file
- * itself never leaving the sandbox; it falls back to download via {@link #downloadFiles}, Java
- * replacement via {@link FilesystemUtils#stringReplacement(String, String, String, boolean)},
- * and re-upload via {@link #uploadFiles} when {@code python3} is unavailable.
+ * <p>此类通过 {@link #execute} 委托 Shell 命令，为全部 {@link AbstractFilesystem} 方法提供默认实现。
+ * 文件列表、grep 和 glob 使用标准 Unix 命令。读取使用服务端命令实现分页访问。
+ * 写入将内容传输委托给 {@link #uploadFiles}。编辑在沙箱内运行静态内联 Python 脚本，
+ * {@code old}/{@code new} 以 base64 编码形式通过命令行传入（该字符集没有 Shell 元字符，因此用户内容无法逃逸参数），目标文件本身不离开沙箱；
+ * 当 {@code python3} 不可用时，回退为通过 {@link #downloadFiles} 下载、通过 {@link FilesystemUtils#stringReplacement(String, String, String, boolean)} 在 Java 中替换，
+ * 再通过 {@link #uploadFiles} 重新上传。
  *
- * <p>Subclasses must implement:
+ * <p>子类必须实现：
  * <ul>
- *   <li>{@link #execute} - execute a command in the sandbox</li>
- *   <li>{@link #uploadFiles} - upload files to the sandbox</li>
- *   <li>{@link #downloadFiles} - download files from the sandbox</li>
- *   <li>{@link #id()} - unique identifier for the sandbox instance</li>
+ *   <li>{@link #execute}：在沙箱中执行命令</li>
+ *   <li>{@link #uploadFiles}：向沙箱上传文件</li>
+ *   <li>{@link #downloadFiles}：从沙箱下载文件</li>
+ *   <li>{@link #id()}：沙箱实例的唯一标识符</li>
  * </ul>
  */
 public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem {
@@ -150,10 +146,10 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
             String cmd = "base64 " + escapedPath + " 2>/dev/null";
             ExecuteResponse result = execute(runtimeContext, cmd, null);
             if (!result.isSuccess()) {
-                // Positive exit codes other than 124 (the timeout(1) convention — the command
-                // did not complete) mean the command ran and base64 could not read the file;
-                // stderr is discarded, so report the designed file_not_found signal instead of
-                // an empty error.
+                // 除 124 以外的正退出码（124 是 timeout(1) 表示命令未完成的惯例）
+                // 表示命令已经运行，但 base64 无法读取文件；
+                // 标准错误被丢弃，因此返回设计中的 file_not_found 信号，
+                // 而不是空错误。
                 boolean commandRanAndFailedToRead =
                         result.exitCode() != null
                                 && result.exitCode() > 0
@@ -240,11 +236,9 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     }
 
     /**
-     * Static Python helper executed via heredoc. User content never enters the command string
-     * in raw form: {@code old}/{@code new} arrive base64-encoded (an alphabet with no shell
-     * metacharacters), {@code sys.argv} carries the target path plus those encoded blobs, and
-     * the script body is a constant. Output is a single {@code __RESULT__{json}} line so parsing
-     * never touches user content.
+     * 通过 heredoc 执行的静态 Python 辅助脚本。用户内容从不以原始形式进入命令字符串：
+     * {@code old}/{@code new} 以 base64 编码传入（字符集中没有 Shell 元字符），{@code sys.argv} 携带目标路径与编码数据，脚本正文为常量。
+     * 输出为单行 {@code __RESULT__{json}}，因此解析不会接触用户内容。
      */
     private static final String EDIT_SCRIPT =
             """
@@ -330,21 +324,18 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     private static final String EDIT_RESULT_MARKER = "__RESULT__";
 
     /**
-     * Upper bound on the whole command string, in bytes.
+     * 整个命令字符串的字节数上限。
      *
-     * <p>The command is handed to the backend as a single argv element ({@code sh -c '<cmd>'}), so
-     * the kernel's {@code MAX_ARG_STRLEN} (32 pages = 128 KiB on Linux) applies to it in total,
-     * not per argument. The script body, the target path and the quoting all draw from the same
-     * budget as the two base64 payloads, hence the whole-string check. 112 KiB leaves 16 KiB of
-     * headroom below the kernel limit; measured E2BIG starts at 128 KiB.
+     * <p>命令作为单个 argv 元素（{@code sh -c '<cmd>'}）交给后端，因此内核的 {@code MAX_ARG_STRLEN}（Linux 上 32 页，即 128 KiB）限制适用于整个命令，而非每个参数。
+     * 脚本正文、目标路径和引号与两个 base64 载荷共用预算，所以检查完整字符串。
+     * 112 KiB 在内核上限之下留下 16 KiB 余量；实测从 128 KiB 开始出现 E2BIG。
      */
     private static final int MAX_INLINE_COMMAND_BYTES = 112 * 1024;
 
     private static final ObjectMapper NATIVE_RESULT_MAPPER = new ObjectMapper();
 
     /**
-     * Whether a {@code __RESULT__} payload reports {@code write_failed}, i.e. the atomic write
-     * did not touch the target and the transfer path should retry.
+     * 判断 {@code __RESULT__} 载荷是否报告 {@code write_failed}，即原子写入未修改目标，传输路径应重试。
      */
     private static boolean isWriteFailed(String payload) {
         try {
@@ -352,41 +343,32 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
                     NATIVE_RESULT_MAPPER.readValue(payload.trim(), NativeScriptResult.class);
             return parsed != null && "write_failed".equals(parsed.error());
         } catch (Exception e) {
-            // Unparseable payloads are reported by mapNativeResult instead.
+            // 无法解析的载荷由 mapNativeResult 报告。
             return false;
         }
     }
 
     /**
-     * Edits the file by replacing {@code oldString} with {@code newString} in the sandbox.
+     * 在沙箱中编辑文件，将 {@code oldString} 替换为 {@code newString}。
      *
-     * <p>Runs a static inline Python script in the sandbox, with {@code old}/{@code new} passed
-     * base64-encoded on the command line (the base64 alphabet has no shell metacharacters, so
-     * user content cannot break out of its argument). The file itself never crosses the
-     * boundary. Falls back to download → Java replacement → re-upload when {@code python3} is
-     * missing or the native write fails.
+     * <p>在沙箱中运行静态内联 Python 脚本，{@code old}/{@code new} 经 base64 编码后通过命令行传入（base64 字符集没有 Shell 元字符，用户内容无法逃逸参数）。
+     * 文件本身不跨越边界。当 {@code python3} 缺失或原生写入失败时，回退为下载 → Java 替换 → 重新上传。
      *
-     * <p>Arguments so large that the command would exceed {@link #MAX_INLINE_COMMAND_BYTES} are
-     * rejected with a diagnostic instead of being transferred: {@code old}/{@code new} are edit
-     * fragments, so an oversized request is a sign it should be split into several edits.
+     * <p>若参数过大导致命令超过 {@link #MAX_INLINE_COMMAND_BYTES}，将返回诊断并拒绝，而不是进行传输：
+     * {@code old}/{@code new} 是编辑片段，超大请求应拆为多次编辑。
      *
-     * <p>Contract: the edit is performed through the resolved target ({@code realpath}), so
-     * editing a symlink writes through to the file it points at and the symlink itself is
-     * preserved. The native path writes only via a same-directory temp file + atomic rename,
-     * so a {@code write_failed} result means the file is unchanged; {@code edit()} then
-     * retries through the transfer path, whose shell redirection needs only file write
-     * permission. A hard kill between temp creation and rename can leave a uniquely named
-     * sibling temp file in the workspace. It may appear in listings or snapshots; the
-     * implementation does not sweep these because an age-based cleanup could race with a slow
-     * concurrent edit.
+     * <p>契约：通过解析后的目标（{@code realpath}）进行编辑，因此编辑符号链接会写入其指向的文件，并保留链接本身。
+     * 原生路径只通过同目录临时文件加原子重命名写入，所以 {@code write_failed} 表示文件未变；
+     * 此时 {@code edit()} 通过传输路径重试，其 Shell 重定向仅需要文件写权限。
+     * 在创建临时文件与重命名之间强制终止，可能在工作区留下唯一命名的同级临时文件；它可能出现在列表或快照中。
+     * 实现不会清理这些文件，因为基于文件年龄的清理可能与缓慢的并发编辑发生竞争。
      *
-     * @param runtimeContext per-call agent context; may be {@code null}
-     * @param filePath path of the file to edit
-     * @param oldString literal string to find; must be non-empty
-     * @param newString replacement string; must not be {@code null} — pass an empty string to
-     *        delete the matched text (this keeps the normal replacement semantics)
-     * @param replaceAll replace every occurrence instead of only the first
-     * @return {@link EditResult#ok} with the occurrence count, or {@link EditResult#fail}
+     * @param runtimeContext 每次调用的智能体上下文；可为 {@code null}
+     * @param filePath 要编辑的文件路径
+     * @param oldString 要查找的字面字符串，必须非空
+     * @param newString 替换字符串，不得为 {@code null}；传入空字符串可删除匹配文本（保持通常的替换语义）
+     * @param replaceAll 是否替换全部匹配，而不仅是第一个
+     * @return 携带替换次数的 {@link EditResult#ok}，或 {@link EditResult#fail}
      */
     @Override
     public EditResult edit(
@@ -425,10 +407,10 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
         if (marker >= 0) {
             String payload = output.substring(marker + EDIT_RESULT_MARKER.length());
             if (isWriteFailed(payload)) {
-                // The native path writes target only via a same-directory temp + rename,
-                // so a failure here means target is untouched. Retry through the transfer
-                // path, whose shell redirection needs only file write permission and can
-                // succeed where a read-only directory blocked the temp file.
+                // 原生路径仅通过同目录临时文件加重命名写入目标，
+                // 因此此处失败表示目标未变。通过传输路径重试，
+                // 该路径的 Shell 重定向仅需要文件写权限，
+                // 即使只读目录阻止创建临时文件，也可能成功。
                 log.warn(
                         "[sandbox-fs] native edit write failed ({}), falling back to transfer",
                         payload.trim());
@@ -439,16 +421,14 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
         if (isPythonMissing(execResult)) {
             return editViaTransfer(runtimeContext, filePath, oldString, newString, replaceAll);
         }
-        // No __RESULT__ line and python3 did run: an execution-layer failure (timeout, transport,
-        // interpreter crash). Same convention as ls/read/grep/glob.
+        // 没有 __RESULT__ 行但 python3 确实运行了：属于执行层失败（超时、传输、
+        // 解释器崩溃）。约定与 ls/read/grep/glob 相同。
         return EditResult.fail(executeFailureMessage(execResult, "editing", filePath));
     }
 
     /**
-     * Builds the native edit command, or returns {@code null} when it would exceed
-     * {@link #MAX_INLINE_COMMAND_BYTES}. {@code old}/{@code new} travel base64-encoded: the
-     * alphabet has no shell metacharacters, so they need no quoting and cannot break out of the
-     * single-quoted argument.
+     * 构建原生编辑命令；若会超过 {@link #MAX_INLINE_COMMAND_BYTES} 则返回 {@code null}。
+     * {@code old}/{@code new} 以 base64 编码传输：其字符集没有 Shell 元字符，因此无需额外引用，也无法逃逸单引号参数。
      */
     private static String buildNativeEditCommand(
             String filePath, String oldString, String newString, boolean replaceAll) {
@@ -483,8 +463,8 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     }
 
     private static boolean isPythonMissing(ExecuteResponse response) {
-        // 127 = command not found, 126 = found but not executable (e.g. python3 present but
-        // with the execute bit cleared). Both mean the native path cannot run.
+        // 127 表示未找到命令，126 表示已找到但不可执行（例如 python3 存在但
+        // 执行位被清除）。两者都意味着原生路径无法运行。
         if (response.exitCode() != null
                 && (response.exitCode() == 127 || response.exitCode() == 126)) {
             return true;
@@ -498,9 +478,9 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     }
 
     private static EditResult mapNativeResult(String filePath, String oldString, String json) {
-        // Parse with a real JSON parser rather than substring matching: the "detail" value
-        // embeds exception text that may itself contain user-controlled paths, so scanning the
-        // raw payload can misclassify (e.g. a path containing "string_not_found").
+        // 使用真正的 JSON 解析器，而不是子字符串匹配："detail" 值
+        // 包含异常文本，可能带有用户控制的路径，扫描原始载荷
+        // 可能误判（例如路径中包含 "string_not_found"）。
         NativeScriptResult parsed;
         try {
             parsed = NATIVE_RESULT_MAPPER.readValue(json.trim(), NativeScriptResult.class);
@@ -540,7 +520,7 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
             return EditResult.fail("Error: File '" + filePath + "' is empty");
         }
         if (error != null) {
-            // read_failed / write_failed and any future token, with the script's detail.
+            // read_failed、write_failed 及未来新增的标记，附带脚本提供的详细信息。
             return EditResult.fail("Error editing file '" + filePath + "': " + json.trim());
         }
         if (parsed.count() != null) {
@@ -549,17 +529,18 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
         return EditResult.fail("Error editing file '" + filePath + "': " + json.trim());
     }
 
-    /** The {@code __RESULT__} payload the sandbox script prints on a single line. */
+    /**
+     * 沙箱脚本以单行输出的 {@code __RESULT__} 载荷。
+     */
     private record NativeScriptResult(String error, Integer count, String detail) {}
 
     /**
-     * Fallback when {@code python3} is unavailable: download, replace in Java, re-upload.
+     * 当 {@code python3} 不可用时的回退：下载、在 Java 中替换、重新上传。
      *
-     * <p>Unlike the native path, symlink handling here is delegated to {@link #uploadFiles}:
-     * this method re-uploads against {@code filePath} as given (it does not resolve
-     * {@code realpath}), so a backend whose upload writes through the link preserves it, while
-     * a backend that replaces the path may replace the symlink itself. The native path
-     * guarantees preservation; this fallback does not.
+     * <p>与原生路径不同，这里的符号链接处理委托给 {@link #uploadFiles}：
+     * 此方法按给定的 {@code filePath} 重新上传，不解析 {@code realpath}。
+     * 因此，若后端上传时沿链接写入，链接会被保留；若后端替换路径，可能替换符号链接本身。
+     * 原生路径保证保留链接，而此回退路径不保证。
      */
     private EditResult editViaTransfer(
             RuntimeContext runtimeContext,
@@ -569,9 +550,9 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
             boolean replaceAll) {
         List<FileDownloadResponse> downloaded = downloadFiles(runtimeContext, List.of(filePath));
         if (downloaded.isEmpty() || !downloaded.get(0).isSuccess()) {
-            // Distinguish "the backend could not read the file" (permissions, transport, a
-            // truncated response) from "the path does not exist": reporting a download failure
-            // as file_not_found sends the caller off to re-read a file it already has.
+            // 区分“后端无法读取文件”（权限、传输、
+            // 响应截断）与“路径不存在”：若把下载失败报告为
+            // file_not_found，会误导调用方重新读取已经持有的文件。
             String cause = downloaded.isEmpty() ? "no response" : downloaded.get(0).error();
             return EditResult.fail(
                     "Error: Could not read file '"
@@ -583,9 +564,9 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
         if (contentBytes == null || contentBytes.length == 0) {
             return EditResult.fail("Error: File '" + filePath + "' is empty");
         }
-        // Fail on malformed UTF-8 instead of silently replacing bytes: the native Python
-        // path decodes strictly, so the fallback must not quietly re-encode a legacy-encoding
-        // file it cannot represent.
+        // 遇到无效 UTF-8 时失败，而不是悄悄替换字节：原生 Python
+        // 路径采用严格解码，回退路径也不能将无法表示的旧编码
+        // 文件悄然重新编码。
         String content;
         try {
             content = FilesystemUtils.decodeUtf8Strict(contentBytes);
@@ -657,7 +638,7 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
                 try {
                     matches.add(new GrepMatch(parts[0], Integer.parseInt(parts[1]), parts[2]));
                 } catch (NumberFormatException e) {
-                    // skip malformed lines
+                    // 跳过格式错误的行
                 }
             }
         }
@@ -750,9 +731,8 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     }
 
     /**
-     * Builds the failure message for a non-successful {@link #execute} response, prefixing the
-     * operation context and falling back to the exit code when the response carries no
-     * diagnostic output.
+     * 为不成功的 {@link #execute} 响应构建失败消息，添加操作上下文前缀；
+     * 当响应没有诊断输出时，使用退出码作为回退信息。
      */
     private static String executeFailureMessage(
             ExecuteResponse result, String operation, String target) {
@@ -764,12 +744,11 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     }
 
     /**
-     * Strips the recursive glob prefix {@code **&#47;} from a pattern so it can be passed to
-     * tools like {@code find -name} or {@code grep --include=} that match only the filename
-     * portion. For example, {@code **&#47;*.java} becomes {@code *.java}.
+     * 移除模式开头的递归 glob 前缀 {@code **&#47;}，使其可传给 {@code find -name} 或 {@code grep --include=} 等仅匹配文件名部分的工具。
+     * 例如，{@code **&#47;*.java} 变为 {@code *.java}。
      *
-     * @param pattern the glob pattern, may be {@code null}
-     * @return the pattern with any leading {@code **&#47;} removed, or the original value if absent
+     * @param pattern glob 模式，可为 {@code null}
+     * @return 移除开头所有 {@code **&#47;} 后的模式；无此前缀时返回原值
      */
     private static String stripRecursivePrefix(String pattern) {
         if (pattern != null && pattern.startsWith("**/")) {

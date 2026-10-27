@@ -15,13 +15,12 @@
  */
 
 /**
- * Provider credentials for model authentication.
+ * 用于模型身份验证的服务商凭据。
  *
- * <p>{@link io.agentscope.core.credential.CredentialBase} carries the {@code id} field and exposes
- * {@code getChatModelClass()} (the consuming {@link io.agentscope.core.model.ChatModelBase}
- * subclass) plus {@code listModels()} (model catalog discovery). Concrete subclasses cover
- * DeepSeek, Kimi, and xAI. Credentials whose Java
- * model class is not yet implemented throw {@link UnsupportedOperationException} from {@code
- * getChatModelClass()} while still round-tripping through JSON for storage compatibility.
+ * <p>{@link io.agentscope.core.credential.CredentialBase} 包含 {@code id} 字段，并暴露
+ * {@code getChatModelClass()}（使用该凭据的 {@link io.agentscope.core.model.ChatModelBase}
+ * 子类）和 {@code listModels()}（模型目录发现）。具体子类覆盖 DeepSeek、Kimi 与 xAI。
+ * 若凭据对应的 Java 模型类尚未实现，{@code getChatModelClass()} 将抛出
+ * {@link UnsupportedOperationException}，但凭据仍可通过 JSON 往返转换以保持存储兼容性。
  */
 package io.agentscope.core.credential;

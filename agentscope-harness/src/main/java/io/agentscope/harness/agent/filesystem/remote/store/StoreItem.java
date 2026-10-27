@@ -18,18 +18,18 @@ package io.agentscope.harness.agent.filesystem.remote.store;
 import java.util.Map;
 
 /**
- * A single item retrieved from a {@link BaseStore}.
+ * 从 {@link BaseStore} 获取的单个条目。
  *
- * @param key the item's key within its namespace
- * @param value the item's data as a string-keyed map
- * @param version monotonically increasing version counter; starts at 1 and increments on every
- *     successful {@link BaseStore#put} or {@link BaseStore#putIfVersion}. A value of
- *     {@code 0} means the version is unknown (e.g. items returned by legacy implementations
- *     that predate versioning).
+ * @param key 条目在其命名空间内的键
+ * @param value 以字符串为键的映射形式表示的条目数据
+ * @param version 单调递增的版本计数器，从 1 开始，每次成功执行 {@link BaseStore#put} 或 {@link BaseStore#putIfVersion} 都递增。
+ *     {@code 0} 表示版本未知（例如由引入版本机制之前的旧实现返回的条目）。
  */
 public record StoreItem(String key, Map<String, Object> value, long version) {
 
-    /** Back-compat constructor for code that does not yet supply a version. */
+    /**
+     * 为尚未提供版本的代码保留的兼容构造方法。
+     */
     public StoreItem(String key, Map<String, Object> value) {
         this(key, value, 0L);
     }

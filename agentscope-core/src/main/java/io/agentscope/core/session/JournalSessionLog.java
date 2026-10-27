@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-/** Immutable commit chain made visible by one fenced CAS of its head. No listing-based recovery. */
+/** 不可变提交链通过对头指针的一次受隔离保护的 CAS 变为可见。恢复不依赖列表枚举。 */
 public final class JournalSessionLog implements SessionLog {
     private final AtomicSessionStorage storage;
     private final String prefix;
@@ -130,8 +130,8 @@ public final class JournalSessionLog implements SessionLog {
                             h.commitId());
             if (storage.compareAndSet(
                     path("head.json"), value == null ? 0 : value.version(), bytes(next))) {
-                // A seal can land between the initial check and reading this head. Do not
-                // return a writer until that race is resolved, and release any raced claim.
+                // 封存可能发生在最初检查与读取此头指针之间。在解决该竞争之前，
+                // 不得返回写入者身份，并应释放竞争中取得的占用。
                 if (sealed(owner)) {
                     sealWriter(owner);
                     throw new SessionLogException("Session writer is permanently sealed");
@@ -153,8 +153,8 @@ public final class JournalSessionLog implements SessionLog {
                     owner.equals(h.owner())
                             ? new Head(h.seq(), h.epoch() + 1, null, 0, h.commitId())
                             : h;
-            // Even an unchanged head must advance its storage version. This fences a
-            // paused acquisition/commit without revoking an unrelated active writer.
+            // 即使头指针内容未变，也必须推进存储版本。这会隔离暂停中的
+            // 租约获取／提交操作，同时不撤销无关的活跃写入者。
             if (storage.compareAndSet(
                     path("head.json"), value == null ? 0 : value.version(), bytes(next)))
                 return next;
@@ -203,7 +203,7 @@ public final class JournalSessionLog implements SessionLog {
         for (int i = 0; i < 32; i++) {
             var value = storage.read(path("head.json"));
             var h = head(value);
-            // Resolve a lost commit ACK even when a later batch has committed.
+            // 即使后续批次已经提交，也能核实此前丢失 ACK 的提交结果。
             if (h.seq() >= seq) {
                 for (String cursor = h.commitId(); cursor != null; ) {
                     var c = readCommit(cursor);

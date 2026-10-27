@@ -18,18 +18,16 @@ package io.agentscope.harness.agent.gateway.channel;
 import io.agentscope.harness.agent.gateway.MsgContext;
 
 /**
- * Output of {@link ChannelRouter#resolveRoute}: the resolved agent id, the {@link MsgContext} to
- * pass to {@link io.agentscope.harness.agent.gateway.Gateway#run}, a diagnostic {@code matchedBy}
- * label indicating which binding tier (or fallback) produced the result, and the {@link
- * OutboundAddress} for delivering replies back to the originating channel/peer.
+ * {@link ChannelRouter#resolveRoute} 的输出：解析出的智能体 ID、
+ * 传给 {@link io.agentscope.harness.agent.gateway.Gateway#run} 的 {@link MsgContext}、
+ * 表示命中绑定层或回退路径的诊断标签 {@code matchedBy}，以及将回复送回原渠道／对端的
+ * {@link OutboundAddress}。
  *
- * @param agentId the resolved target agent id
- * @param context the routing context (channel, session scope keys, agentId extra) ready for
- *     gateway execution
- * @param matchedBy human-readable label of the binding tier that matched (e.g. {@code "peer"},
- *     {@code "guild+roles"}, {@code "default"}); useful for debugging and logging
- * @param outboundAddress delivery target for proactive replies (e.g. subagent announces); derived
- *     from the inbound message's channel and peer metadata
+ * @param agentId 解析出的目标智能体 ID
+ * @param context 可供网关执行的路由上下文（渠道、会话作用域键、agentId 附加字段）
+ * @param matchedBy 可读的命中层标签（例如 {@code "peer"}、{@code "guild+roles"}、{@code "default"}），
+ *     供调试与日志使用
+ * @param outboundAddress 主动回复（例如子智能体公告）的投递目标；从入站消息的渠道与对端元数据派生
  */
 public record RouteResult(
         String agentId, MsgContext context, String matchedBy, OutboundAddress outboundAddress) {}

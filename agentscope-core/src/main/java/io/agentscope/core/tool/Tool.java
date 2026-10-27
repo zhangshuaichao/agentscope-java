@@ -22,13 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to mark a method as a tool that can be invoked by AI agents.
+ * 将方法标记为 AI 智能体可调用工具的注解。
  *
- * <p>Methods annotated with {@code @Tool} are automatically registered with the toolkit and made
- * available to agents for execution. The toolkit uses reflection to discover tool methods and
- * generate appropriate JSON schemas for LLM consumption.
+ * <p>带 {@code @Tool} 注解的方法会自动注册到工具集，供智能体执行。工具集通过反射发现工具方法，并生成供大语言模型使用的 JSON 模式。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  *
  * <pre>{@code
  * public class WeatherTools {
@@ -42,12 +40,12 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * <p><b>Requirements:</b>
+ * <p><b>要求：</b>
  * <ul>
- *   <li>All parameters must be annotated with {@link ToolParam} (except {@link ToolEmitter})</li>
- *   <li>Return type must be String, Mono&lt;String&gt;, or other reactive types</li>
- *   <li>Tool names should follow snake_case convention for LLM compatibility</li>
- *   <li>Descriptions should clearly explain what the tool does and when to use it</li>
+ * <li>所有参数必须带 {@link ToolParam} 注解（{@link ToolEmitter} 除外）</li>
+ * <li>返回类型必须为 String、Mono&lt;String&gt; 或其他响应式类型</li>
+ * <li>工具名称应遵循 snake_case 约定以兼容大语言模型</li>
+ * <li>描述应明确说明工具作用和适用时机</li>
  * </ul>
  *
  * @see ToolParam
@@ -60,166 +58,131 @@ import java.lang.annotation.Target;
 public @interface Tool {
 
     /**
-     * The name of the tool.
+     * 工具名称。
      *
-     * <p>If not provided, the method name will be used. Tool names should follow snake_case
-     * convention (e.g., "get_weather", "send_email") for compatibility with various LLM providers.
+     * <p>未提供时使用方法名。名称应遵循 snake_case 约定（例如 "get_weather"、"send_email"），以兼容不同大语言模型提供商。
      *
-     * @return The tool name, or empty string to use method name
+     * @return 工具名称；空字符串表示使用方法名
      */
     String name() default "";
 
     /**
-     * The description of the tool that explains its purpose and usage.
+     * 说明工具用途和使用方式的描述。
      *
-     * <p>This description is sent to the LLM to help it decide when to invoke the tool. It should
-     * clearly explain:
+     * <p>此描述发送给大语言模型，帮助其决定何时调用工具。应明确说明：
      * <ul>
-     *   <li>What the tool does</li>
-     *   <li>When it should be used</li>
-     *   <li>What kind of results it returns</li>
+     * <li>工具的作用</li>
+     * <li>适用时机</li>
+     * <li>返回结果的类型</li>
      * </ul>
      *
-     * <p>If not provided, a generic description based on the method name will be generated.
+     * <p>未提供时，根据方法名自动生成通用描述。
      *
-     * @return The tool description, or empty string to auto-generate
+     * @return 工具描述；空字符串表示自动生成
      */
     String description() default "";
 
     /**
-     * Whether to enable strict schema mode for this tool.
+     * 是否为工具启用严格模式。
      *
-     * <p>When enabled, the framework recursively injects {@code additionalProperties: false}
-     * into all object types in the generated schema, so that tool-argument validation rejects
-     * parameters not declared in the schema on any model provider, and the schema satisfies
-     * OpenAI's strict mode (which rejects schemas without it with 400 Bad Request). Compatible
-     * model providers additionally enforce stronger adherence to the declared JSON schema for
-     * tool arguments.
+     * <p>启用后，框架向生成模式中的所有对象类型递归注入 {@code additionalProperties: false}，使任意模型提供商的工具参数验证都能拒绝未声明参数，同时满足 OpenAI 严格模式（缺少该设置的模式会被以 400 Bad Request 拒绝）。兼容的提供商还会更严格地遵循工具参数的 JSON 模式。
      *
-     * <p>For finer-grained, per-node control of the {@code additionalProperties} keyword, provide
-     * a hand-written schema via {@link SchemaOnlyTool} or a custom {@link AgentTool} instead.
+     * <p>若需要对 {@code additionalProperties} 进行更细粒度的逐节点控制，请通过 {@link SchemaOnlyTool} 或自定义 {@link AgentTool} 提供手写模式。
      *
-     * @return true to enable strict mode for this tool
+     * @return true 表示启用严格模式
      */
     boolean strict() default false;
 
     /**
-     * Whether to defer loading this tool's full definition until the model needs it.
+     * 是否延迟加载工具完整定义，直到模型需要它。
      *
-     * <p>This is a per-tool hint for providers that support deferred tool loading (such as the
-     * OpenAI Responses {@code tool_search} server tool). The tool name and description remain
-     * visible to the model, while the parameter schema is loaded only after a tool search.
-     * Providers without deferred loading support ignore this flag.
+     * <p>这是面向支持延迟加载的提供商（例如 OpenAI Responses 的 {@code tool_search} 服务端工具）的逐工具提示。模型仍能看到名称和描述，参数模式仅在工具搜索后加载。不支持延迟加载的提供商会忽略此标记。
      *
-     * @return true to defer this tool's schema until tool search loads it
+     * @return true 表示延迟加载模式，直到工具搜索加载它
      */
     boolean deferLoading() default false;
 
     /**
-     * Whether the tool only reads data without observable side effects.
+     * 工具是否只读取数据且没有可观察的副作用。
      *
-     * <p>Read-only tools are auto-allowed under {@code PermissionMode.EXPLORE} and
-     * {@code ACCEPT_EDITS}, mirroring the {@code ToolBase.isReadOnly()} contract.
+     * <p>只读工具在 {@code PermissionMode.EXPLORE} 和 {@code ACCEPT_EDITS} 下自动获准，与 {@code ToolBase.isReadOnly()} 契约一致。
      *
-     * @return true if this tool performs no mutation
+     * @return 工具不修改状态时为 true
      */
     boolean readOnly() default false;
 
     /**
-     * Whether the tool is safe to invoke concurrently with itself.
+     * 工具是否可以安全地与自身并发调用。
      *
-     * <p>When false, the framework serialises invocations of this tool inside a parallel batch.
-     * Defaults to {@code true} to match the typical pure-function shape of {@code @Tool} methods.
+     * <p>为 false 时，框架会在并行批次中串行执行此工具的各次调用。默认为 {@code true}，符合 {@code @Tool} 方法通常为纯函数的形态。
      *
-     * @return true if multiple invocations may run in parallel without coordination
+     * @return 多次调用无需协调即可并行运行时为 true
      */
     boolean concurrencySafe() default true;
 
     /**
-     * Whether the tool is executed outside the framework.
+     * 工具是否在框架外部执行。
      *
-     * <p>External tools never run their {@code callAsync} body through Toolkit execution. The
-     * agent loop surfaces the call to the caller via a {@code TOOL_SUSPENDED} message.
+     * <p>外部工具不会通过 Toolkit 执行其 {@code callAsync} 方法体。智能体循环通过 {@code TOOL_SUSPENDED} 消息向调用方暴露此调用。
      *
-     * @return true if this tool should be surfaced as a suspended call
+     * @return 应将工具呈现为挂起调用时为 true
      */
     boolean externalTool() default false;
 
     /**
-     * Whether the tool requires the agent state to be injected at call time.
+     * 工具是否需要在调用时注入智能体状态。
      *
-     * <p>When true, the method signature must declare exactly one
-     * {@code io.agentscope.core.state.AgentState} parameter; the framework excludes that
-     * parameter from the JSON schema and binds the live state at invocation.
+     * <p>为 true 时，方法签名必须声明且只声明一个 {@code io.agentscope.core.state.AgentState} 参数；框架将其排除在 JSON 模式外，并在调用时绑定实时状态。
      *
-     * @return true if the tool method consumes the agent state
+     * @return 工具方法使用智能体状态时为 true
      */
     boolean stateInjected() default false;
 
     /**
-     * Whether to return this tool's result directly to the caller as the turn's final
-     * assistant message, bypassing the next model reasoning iteration.
+     * 是否将工具结果直接作为本轮最终助手消息返回给调用方，跳过下一次模型推理。
      *
-     * <p>The flag is invisible to the model — it is not part of the tool schema — so it
-     * never influences the model's decision to call the tool; it only controls what
-     * happens after a successful call.
+     * <p>此标记不属于工具模式，对模型不可见，因此不影响模型调用工具的决定，仅控制成功调用后的处理。
      *
-     * <p>In a batch, this takes effect only when <em>every</em> executed tool in the
-     * round has {@code returnDirect = true} <em>and</em> the round yields only
-     * {@code SUCCESS} results; otherwise all results are fed back to the model.
+     * <p>批处理中，仅当本轮<em>所有</em>已执行工具都设置 {@code returnDirect = true}，<em>且</em>全部结果均为 {@code SUCCESS} 时生效；否则所有结果反馈给模型。
      *
-     * <p>The flag applies wherever the tool's successful result is produced: for tools
-     * executed by the framework, and for results supplied by the caller when resuming
-     * after {@code TOOL_SUSPENDED} (e.g. {@code externalTool = true} tools) — in both
-     * cases the result is returned as the turn's final assistant message, in place of
-     * a closing model call. Boundary: a batch resolved across multiple resumes, or
-     * mixing externally supplied and framework-executed results, is always fed back
-     * to the model.
+     * <p>无论成功结果来自框架执行，还是 {@code TOOL_SUSPENDED} 后恢复时由调用方提供（例如 {@code externalTool = true} 工具），都可直接作为本轮最终助手消息，替代收尾模型调用。边界情况：跨多次恢复才完成的批次，或混合外部结果与框架执行结果的批次，始终反馈给模型。
      *
-     * <p>Because the successful result is presented to the caller as the turn's final
-     * answer, tools declaring {@code returnDirect = true} should ensure successful
-     * results always produce presentable content blocks — never an empty output list.
-     * The closing answer's event projection is text-only: non-text blocks (e.g. images)
-     * still travel with the message-level result but emit no text events, so a text-only
-     * consumer sees the final answer only if it is text. A zero-block result is skipped
-     * in the closing message; if the whole batch yields nothing, a defensive {@code "(no
-     * output)"} placeholder is shown instead.
+     * <p>声明 {@code returnDirect = true} 的工具必须保证成功结果含可展示内容块，不能为空输出列表。最终答复的事件投影仅包含文本：图像等非文本块仍保留在消息级结果中，但不产生文本事件，所以纯文本消费者只能看到文本形式的最终答复。收尾消息会跳过零内容块结果；若整个批次没有输出，则显示防御性占位符 {@code "(no output)"}。
      *
-     * @return true to short-circuit the ReAct loop after execution
+     * @return true 表示执行后短路 ReAct 循环
      */
     boolean returnDirect() default false;
 
     /**
-     * Sensitive filenames that must require explicit permission for this tool.
+     * 此工具必须显式请求权限的敏感文件名。
      *
-     * <p>An empty array sticks with the default list maintained by {@code ToolBase}.
+     * <p>空数组表示使用 {@code ToolBase} 维护的默认列表。
      *
-     * @return additional dangerous filenames; empty means use defaults
+     * @return 附加危险文件名；空值表示使用默认值
      */
     String[] dangerousFiles() default {};
 
     /**
-     * Sensitive directory names whose presence in any path segment marks the path dangerous.
+     * 敏感目录名称；路径任意片段包含这些名称即标记为危险路径。
      *
-     * <p>An empty array sticks with the default list maintained by {@code ToolBase}.
+     * <p>空数组表示使用 {@code ToolBase} 维护的默认列表。
      *
-     * @return additional dangerous directory names; empty means use defaults
+     * @return 附加危险目录名；空值表示使用默认值
      */
     String[] dangerousDirectories() default {};
 
     /**
-     * Custom result converter for this tool.
+     * 工具的自定义结果转换器。
      *
-     * <p>Converters transform tool method return values into {@link io.agentscope.core.message.ToolResultBlock}
-     * instances suitable for LLM consumption. Use custom converters to:
+     * <p>将工具方法返回值转换为适合大语言模型使用的 {@link io.agentscope.core.message.ToolResultBlock} 实例。自定义转换器可用于：
      * <ul>
-     *   <li>Filter sensitive data from results</li>
-     *   <li>Format output in specific ways</li>
-     *   <li>Add metadata to results</li>
-     *   <li>Compress or summarize large outputs</li>
+     * <li>过滤结果中的敏感数据</li>
+     * <li>按指定方式格式化输出</li>
+     * <li>添加结果元数据</li>
+     * <li>压缩或概括大型输出</li>
      * </ul>
      *
-     * <p><b>Usage Example:</b>
+     * <p><b>使用示例：</b>
      * <pre>{@code
      * @Tool(
      *     name = "get_data",
@@ -230,13 +193,11 @@ public @interface Tool {
      * }
      * }</pre>
      *
-     * <p>If not specified, the default converter ({@link DefaultToolResultConverter}) is used,
-     * which provides JSON serialization with schema information.
+     * <p>未指定时使用默认转换器 {@link DefaultToolResultConverter}，提供带模式信息的 JSON 序列化。
      *
-     * <p><b>Note:</b> If you need complex processing with multiple steps, implement your own
-     * converter that combines the necessary logic.
+     * <p><b>注意：</b>多步骤复杂处理应通过自定义转换器组合所需逻辑。
      *
-     * @return Converter class
+     * @return 转换器类
      * @see ToolResultConverter
      * @see DefaultToolResultConverter
      */

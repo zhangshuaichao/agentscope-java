@@ -18,13 +18,9 @@ package io.agentscope.harness.agent.skill.curator;
 import java.util.List;
 
 /**
- * Material handed to a {@link SkillPromotionGate} when a draft skill is being considered for
- * promotion. Includes the skill body, support files, telemetry record, and the result of the
- * pre-promote security scan.
+ * 草稿技能考虑晋级时交给 {@link SkillPromotionGate} 的材料，包含技能正文、辅助文件、遥测记录及晋级前安全扫描结果。
  *
- * <p>{@code scriptFiles} is the sandbox-mode-relevant payload: under {@code SkillBox
- * .codeExecution()} every {@code scripts/*} file gets uploaded into the sandbox and executed.
- * Reviewers must see the head + sha256 of every script file before saying "approve".
+ * <p>{@code scriptFiles} 是与沙箱模式相关的载荷：在 {@code SkillBox .codeExecution()} 场景中，{@code scripts/*} 文件会上传到执行环境供调用。评审者在批准前必须看到每个脚本文件的头部和 sha256；仅上传文件不代表它已自动执行。
  */
 public record SkillCandidate(
         String name,

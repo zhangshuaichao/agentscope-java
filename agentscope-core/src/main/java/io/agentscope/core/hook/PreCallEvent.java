@@ -22,26 +22,26 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Event fired before agent starts processing.
+ * 智能体开始处理之前触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setInputMessages(List)}
+ * <p><b>可修改：</b>是，通过 {@link #setInputMessages(List)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's existing memory or conversation history prior to processing this call</li>
- *   <li>{@link #getInputMessages()} - Messages input to the agent (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：处理本次调用前的智能体现有记忆或对话历史</li>
+ *   <li>{@link #getInputMessages()}：输入给智能体的消息（可修改）</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Log the start of agent execution</li>
- *   <li>Initialize execution-specific resources</li>
- *   <li>Track agent invocation metrics</li>
- *   <li>Filter or modify input messages before agent processing</li>
+ *   <li>记录智能体执行的开始</li>
+ *   <li>初始化执行专用资源</li>
+ *   <li>跟踪智能体调用指标</li>
+ *   <li>在智能体处理前过滤或修改输入消息</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PreCallEvent extends HookEvent {
@@ -49,11 +49,11 @@ public final class PreCallEvent extends HookEvent {
     private List<Msg> inputMessages;
 
     /**
-     * Constructor for PreCallEvent.
+     * PreCallEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param inputMessages The messages input to the agent (must not be null)
-     * @throws NullPointerException if agent or inputMessages is null
+     * @param agent 智能体实例（不可为 null）
+     * @param inputMessages 输入给智能体的消息（不可为 null）
+     * @throws NullPointerException 当 agent 或 inputMessages 为 null 时抛出
      */
     public PreCallEvent(Agent agent, List<Msg> inputMessages) {
         super(HookEventType.PRE_CALL, agent);
@@ -63,19 +63,19 @@ public final class PreCallEvent extends HookEvent {
     }
 
     /**
-     * Get the input messages for the agent call.
+     * 获取智能体调用的输入消息。
      *
-     * @return The input messages
+     * @return 输入消息
      */
     public List<Msg> getInputMessages() {
         return inputMessages;
     }
 
     /**
-     * Modify the input messages for the agent call.
+     * 修改智能体调用的输入消息。
      *
-     * @param inputMessages The new message list (must not be null)
-     * @throws NullPointerException if inputMessages is null
+     * @param inputMessages 新消息列表（不可为 null）
+     * @throws NullPointerException 当 inputMessages 为 null 时抛出
      */
     public void setInputMessages(List<Msg> inputMessages) {
         this.inputMessages = Objects.requireNonNull(inputMessages, "inputMessages cannot be null");

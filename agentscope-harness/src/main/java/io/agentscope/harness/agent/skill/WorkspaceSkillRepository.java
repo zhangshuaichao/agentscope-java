@@ -45,23 +45,13 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * {@link AgentSkillRepository} backed by an {@link AbstractFilesystem}, with lazy resource
- * access via {@link LazyResourceCapable}. Supersedes the legacy
- * {@code FilesystemBackedSkillRepository} + {@code WritableFilesystemSkillRepository} pair:
- * writability is now a constructor parameter rather than a subclass.
+ * 基于 {@link AbstractFilesystem} 的 {@link AgentSkillRepository}，通过 {@link LazyResourceCapable} 懒加载资源。取代旧的 {@code FilesystemBackedSkillRepository} 与 {@code WritableFilesystemSkillRepository} 组合：可写性现在通过构造参数配置，而不是子类。
  *
- * <p>Skills are discovered by globbing {@code SKILL.md} under {@code skillsRelativeDir}. Only
- * the SKILL.md text is read at registration time; resources (references, scripts, assets) are
- * fetched on demand through {@link #resourcesFor(String, RuntimeContext)} and consumed by the
- * harness skill runtime when {@code load_skill_through_path} misses the in-memory map.
+ * <p>通过在 {@code skillsRelativeDir} 下 glob 匹配 {@code SKILL.md} 发现技能。注册时仅读取 SKILL.md 文本；引用文档、脚本、素材等资源通过 {@link #resourcesFor(String, RuntimeContext)} 按需读取，在 {@code load_skill_through_path} 未命中内存映射时由 harness 技能运行时使用。
  *
- * <p>Per-user namespacing and sandbox routing are honored transparently because every
- * filesystem call passes the explicitly supplied {@link RuntimeContext}. Context-less operations
- * use the default namespace and never infer a user from another active agent call.
+ * <p>每次文件系统调用都传入显式提供的 {@link RuntimeContext}，因此透明遵循按用户命名空间隔离和沙箱路由。无上下文操作使用默认命名空间，不会从其他活动智能体调用中推断用户。
  *
- * <p>Deletes are non-destructive: skill directories are moved under
- * {@code .archive/<name>-<ts>/} rather than removed, matching the curator's never-delete
- * invariant.
+ * <p>删除为非破坏性操作：技能目录移动到 {@code .archive/<name>-<ts>/} 而不是直接移除，符合 curator 的“不删除”不变量。
  */
 @SuppressWarnings("deprecation")
 public class WorkspaceSkillRepository
@@ -81,16 +71,14 @@ public class WorkspaceSkillRepository
     private volatile boolean writable;
 
     /**
-     * Creates a read-only repository scoped to the default namespace; context-less operations
-     * resolve to {@link RuntimeContext#empty()} unless a request context is passed explicitly.
+     * 创建只读仓库，限定在默认命名空间；除非显式提供请求上下文，无上下文操作使用 {@link RuntimeContext#empty()}。
      */
     public WorkspaceSkillRepository(AbstractFilesystem filesystem, String skillsRelativeDir) {
         this(filesystem, skillsRelativeDir, null, false);
     }
 
     /**
-     * Creates a writable repository (matches the legacy
-     * {@code WritableFilesystemSkillRepository} default), scoped to the default namespace.
+     * 创建可写仓库（与旧 {@code WritableFilesystemSkillRepository} 的默认行为一致），限定在默认命名空间。
      */
     public WorkspaceSkillRepository(
             AbstractFilesystem filesystem, String skillsRelativeDir, String source) {
@@ -98,7 +86,7 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Creates a repository with explicit source and writability, scoped to the default namespace.
+     * 创建显式指定来源和可写性的仓库，限定在默认命名空间。
      */
     public WorkspaceSkillRepository(
             AbstractFilesystem filesystem,
@@ -112,7 +100,7 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Read path (AgentSkillRepository)
+    // 读取路径（AgentSkillRepository）
     // =========================================================================
 
     @Override
@@ -144,7 +132,7 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Lists skills using the caller's request-scoped context.
+     * 使用调用方的请求级上下文列出技能。
      */
     @Override
     public List<AgentSkill> getAllSkills(RuntimeContext context) {
@@ -174,9 +162,9 @@ public class WorkspaceSkillRepository
                 if (!rr.isSuccess() || rr.fileData() == null || rr.fileData().content() == null) {
                     continue;
                 }
-                // Resources are intentionally left null here; harness skill runtime resolves
-                // them lazily via resourcesFor(name, ctx) so per-call namespace switching is
-                // honored without preloading every byte.
+                // 有意将资源保留为 null；harness 技能运行时
+                // 通过 resourcesFor(name, ctx) 懒加载资源，支持逐调用切换命名空间，
+                // 无需预加载全部内容。
                 skills.add(SkillUtil.createFrom(rr.fileData().content(), null, source));
             } catch (Exception e) {
                 log.warn("Failed to load skill from '{}': {}", path, e.getMessage());
@@ -190,7 +178,9 @@ public class WorkspaceSkillRepository
         return getSkill(skillName) != null;
     }
 
-    /** Variant of {@link #skillExists(String)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #skillExists(String)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public boolean skillExists(String skillName, RuntimeContext context) {
         return getSkill(skillName, context != null ? context : RuntimeContext.empty()) != null;
     }
@@ -216,7 +206,7 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Lazy resources (LazyResourceCapable)
+    // 懒加载资源（LazyResourceCapable）
     // =========================================================================
 
     @Override
@@ -229,7 +219,7 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Write path (save / delete)
+    // 写入路径（保存/删除）
     // =========================================================================
 
     @Override
@@ -237,7 +227,9 @@ public class WorkspaceSkillRepository
         return save(skills, force, null);
     }
 
-    /** Variant of {@link #save(List, boolean)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #save(List, boolean)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public boolean save(List<AgentSkill> skills, boolean force, RuntimeContext context) {
         if (!writable) {
             log.warn("WorkspaceSkillRepository is currently read-only; save() ignored");
@@ -273,7 +265,9 @@ public class WorkspaceSkillRepository
         return delete(skillName, null);
     }
 
-    /** Variant of {@link #delete(String)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #delete(String)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public boolean delete(String skillName, RuntimeContext context) {
         if (!writable) {
             log.warn("WorkspaceSkillRepository is currently read-only; delete() ignored");
@@ -308,18 +302,20 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Sub-file operations (used by SkillManageTool for write_file / remove_file / patch)
+    // 子文件操作（供 SkillManageTool 的 write_file / remove_file / patch 使用）
     // =========================================================================
 
     /**
-     * Reads a single raw file under {@code <skillsRelativeDir>/<skillName>/<relPath>}.
-     * Returns {@code null} when the file does not exist or read fails.
+     * 读取 {@code <skillsRelativeDir>/<skillName>/<relPath>} 下的单个原始文件。
+     * 文件不存在或读取失败时返回 {@code null}。
      */
     public String readSkillFile(String skillName, String relPath) {
         return readSkillFile(skillName, relPath, null);
     }
 
-    /** Variant of {@link #readSkillFile(String, String)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #readSkillFile(String, String)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public String readSkillFile(String skillName, String relPath, RuntimeContext context) {
         if (skillName == null || skillName.isBlank() || relPath == null || relPath.isBlank()) {
             return null;
@@ -338,15 +334,16 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Writes (or overwrites) a single raw file under {@code <skillsRelativeDir>/<skillName>/<relPath>}.
-     * Caller is responsible for validating {@code relPath} (allowed subdirs, path traversal,
-     * size limits). Returns {@code true} on success.
+     * 写入或覆盖 {@code <skillsRelativeDir>/<skillName>/<relPath>} 下的单个原始文件。
+     * 调用方负责校验 {@code relPath}（允许的子目录、路径穿越、大小限制）。成功时返回 {@code true}。
      */
     public boolean writeSkillFile(String skillName, String relPath, String content) {
         return writeSkillFile(skillName, relPath, content, null);
     }
 
-    /** Variant of {@link #writeSkillFile(String, String, String)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #writeSkillFile(String, String, String)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public boolean writeSkillFile(
             String skillName, String relPath, String content, RuntimeContext context) {
         if (!writable) {
@@ -374,14 +371,16 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Deletes a single raw file under {@code <skillsRelativeDir>/<skillName>/<relPath>}.
-     * Idempotent: missing files are treated as success.
+     * 删除 {@code <skillsRelativeDir>/<skillName>/<relPath>} 下的单个原始文件。
+     * 操作幂等：文件不存在也视为成功。
      */
     public boolean deleteSkillFile(String skillName, String relPath) {
         return deleteSkillFile(skillName, relPath, null);
     }
 
-    /** Variant of {@link #deleteSkillFile(String, String)} scoped to the supplied request context; {@code null} uses the default namespace. */
+    /**
+     * {@link #deleteSkillFile(String, String)} 的请求上下文版本；{@code null} 使用默认命名空间。
+     */
     public boolean deleteSkillFile(String skillName, String relPath, RuntimeContext context) {
         if (!writable) {
             return false;
@@ -400,13 +399,15 @@ public class WorkspaceSkillRepository
         }
     }
 
-    /** Returns the relative skill root path for callers building sub-paths. */
+    /**
+     * 返回相对技能根路径，供调用方构建子路径。
+     */
     public String resolveSkillRoot(String skillName) {
         return skillDirRelative(skillName);
     }
 
     // =========================================================================
-    //  Accessors (used by harness skill runtime and supporting code)
+    // 访问器（供 harness 技能运行时及辅助代码使用）
     // =========================================================================
 
     public AbstractFilesystem filesystem() {
@@ -418,7 +419,7 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Internals
+    // 内部实现
     // =========================================================================
 
     private void writeSkill(AgentSkill skill, RuntimeContext ctx) {
@@ -469,9 +470,7 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Reassemble a skill back into a markdown document with YAML frontmatter. The reverse of
-     * {@code MarkdownSkillParser}, tolerant of whatever scalar/list/map metadata the
-     * {@link AgentSkill} carries.
+     * 将技能重新组装成带 YAML frontmatter 的 Markdown 文档，是 {@code MarkdownSkillParser} 的逆操作，兼容 {@link AgentSkill} 携带的各类标量、列表和映射元数据。
      */
     static String toMarkdown(AgentSkill skill) {
         DumperOptions options = new DumperOptions();
@@ -499,18 +498,11 @@ public class WorkspaceSkillRepository
     }
 
     /**
-     * Returns {@code true} when the path represents a skill living inside a metadata subtree
-     * (e.g. {@code _drafts/}, {@code .archive/}, {@code .audit/}, {@code .backups/}) directly
-     * under {@code base}. Looks for the pattern {@code "/<base>/<x>/"} where {@code <x>} starts
-     * with {@code _} or {@code .}.
+     * 路径表示位于 {@code base} 直属元数据子树（例如 {@code _drafts/}、{@code .archive/}、{@code .audit/}、{@code .backups/}）中的技能时，返回 {@code true}。匹配 {@code "/<base>/<x>/"} 模式，其中 {@code <x>} 以 {@code _} 或 {@code .} 开头。
      *
-     * <p>Special-cases {@code base == "."} and {@code base == ""}: in those cases checks
-     * whether the path's first segment starts with {@code _} or {@code .}, so a workspace-root
-     * scan still filters {@code .skills-cache/} and similar metadata trees.
+     * <p>特殊处理 {@code base == "."} 和 {@code base == ""}：检查路径首段是否以 {@code _} 或 {@code .} 开头，使工作区根目录扫描也能过滤 {@code .skills-cache/} 等元数据树。
      *
-     * <p>Backend-agnostic: works on absolute paths (LocalFilesystem default), virtual paths,
-     * and namespaced paths alike, because it matches a substring rather than relying on the
-     * path being relative to the search root.
+     * <p>不依赖后端：匹配的是子串，不要求路径相对于搜索根，因此同时适用于绝对路径（LocalFilesystem 默认）、虚拟路径和命名空间路径。
      */
     static boolean hasMetadataAncestor(String path, String base) {
         if (path == null || base == null) {
@@ -519,8 +511,8 @@ public class WorkspaceSkillRepository
         String normalized = path.replace('\\', '/');
         String b = base.replace('\\', '/');
 
-        // base = "." or ""  →  any path whose first non-leading-slash segment starts with
-        // '_' or '.' is metadata. Avoids the marker "/./" matching nothing.
+        // base 为 "." 或 "" 时，忽略前导斜杠后的首段若以
+        // '_' 或 '.' 开头，就属于元数据，避免标记 '/./' 无法匹配。
         if (b.isEmpty() || ".".equals(b)) {
             String trimmed = normalized.startsWith("/") ? normalized.substring(1) : normalized;
             int slash = trimmed.indexOf('/');
@@ -559,7 +551,7 @@ public class WorkspaceSkillRepository
     }
 
     // =========================================================================
-    //  Lazy resource accessor implementation
+    // 懒加载资源访问器实现
     // =========================================================================
 
     private static final class FilesystemSkillResources implements SkillResources {
@@ -651,9 +643,7 @@ public class WorkspaceSkillRepository
         }
 
         /**
-         * Strips {@code skillDir} prefix from {@code path}, handling absolute / virtual /
-         * namespaced stores uniformly by matching the last occurrence of the directory
-         * marker.
+         * 从 {@code path} 中移除 {@code skillDir} 前缀，通过匹配目录标记的最后一次出现，统一处理绝对、虚拟和命名空间存储。
          */
         private static String relativeTo(String path, String skillDir) {
             String normPath = path.replace('\\', '/');

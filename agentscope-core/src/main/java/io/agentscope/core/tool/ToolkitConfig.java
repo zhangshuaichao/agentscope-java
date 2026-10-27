@@ -23,16 +23,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 /**
- * Configuration for Toolkit execution behavior.
+ * Toolkit 执行行为配置。
  *
- * <p>This class defines how tools are executed:
- * - Parallel vs Sequential execution
- * - Custom ExecutorService (optional)
- * - Execution configuration for timeout and retry
+ * <p>定义工具执行方式：
+ * - 并行或顺序执行
+ * - 可选自定义 ExecutorService
+ * - 超时和重试配置
  *
- * <p>By default, multiple tool calls in one turn run in parallel on Reactor's Schedulers.
- * The default execution config provides 5-minute timeout with no retry (1 attempt).
- * Pass {@code parallel(false)} to serialize tool execution.
+ * <p>默认一轮中的多个工具调用在 Reactor 调度器上并行运行。默认超时为 5 分钟，不重试（1 次尝试）。传入 {@code parallel(false)} 可串行执行。
  */
 public class ToolkitConfig {
 
@@ -55,55 +53,55 @@ public class ToolkitConfig {
     }
 
     /**
-     * Whether tools should be executed in parallel.
+     * 是否并行执行工具。
      *
-     * @return true if parallel execution is enabled
+     * @return 启用并行执行时为 true
      */
     public boolean isParallel() {
         return parallel;
     }
 
     /**
-     * Get the custom executor service if provided.
+     * 获取提供的自定义执行器服务。
      *
-     * @return ExecutorService or null if using default Reactor schedulers
+     * @return ExecutorService；使用默认 Reactor 调度器时为 null
      */
     public ExecutorService getExecutorService() {
         return executorService;
     }
 
     /**
-     * Check if a custom executor service was provided.
+     * 检查是否提供了自定义执行器服务。
      *
-     * @return true if custom executor is configured
+     * @return 已配置自定义执行器时为 true
      */
     public boolean hasCustomExecutor() {
         return executorService != null;
     }
 
     /**
-     * Get the execution configuration for timeout and retry.
+     * 获取超时和重试执行配置。
      *
-     * @return ExecutionConfig or null if not configured (defaults will be applied)
+     * @return ExecutionConfig；未配置时为 null（将应用默认值）
      */
     public ExecutionConfig getExecutionConfig() {
         return executionConfig;
     }
 
     /**
-     * Check if tool deletion is allowed.
+     * 检查是否允许删除工具。
      *
-     * @return true if tool deletion is allowed (default), false otherwise
+     * @return 允许删除为 true（默认），否则为 false
      */
     public boolean isAllowToolDeletion() {
         return allowToolDeletion;
     }
 
     /**
-     * Get the default tool execution context.
+     * 获取默认工具执行上下文。
      *
-     * @return The default context, or null if not configured
-     * @deprecated Use {@link io.agentscope.core.agent.RuntimeContext} instead.
+     * @return 默认上下文；未配置时为 null
+     * @deprecated 请改用 {@link io.agentscope.core.agent.RuntimeContext}。
      */
     @Deprecated
     public ToolExecutionContext getDefaultContext() {
@@ -111,43 +109,43 @@ public class ToolkitConfig {
     }
 
     /**
-     * Get the tool call interceptors registered at build time.
+     * 获取构建期注册的工具调用拦截器。
      *
-     * @return Immutable list of interceptors (empty when none registered)
+     * @return 不可变拦截器列表（未注册时为空）
      */
     public List<ToolCallInterceptor> getInterceptors() {
         return interceptors;
     }
 
     /**
-     * Get the optional final dispatch check.
+     * 获取可选的最终分派检查。
      *
-     * @return the check, or null when not configured
+     * @return 检查器；未配置时为 null
      */
     public Consumer<ToolCallParam> getBeforeToolCall() {
         return beforeToolCall;
     }
 
     /**
-     * Create a new builder for ToolkitConfig.
+     * 创建 ToolkitConfig 构建器。
      *
-     * @return Builder instance
+     * @return 构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Get the default configuration (parallel execution using Reactor).
+     * 获取默认配置（基于 Reactor 并行执行）。
      *
-     * @return Default ToolkitConfig
+     * @return 默认 ToolkitConfig
      */
     public static ToolkitConfig defaultConfig() {
         return builder().build();
     }
 
     /**
-     * Builder for ToolkitConfig.
+     * ToolkitConfig 的构建器。
      */
     public static class Builder {
         private boolean parallel = true;
@@ -161,16 +159,10 @@ public class ToolkitConfig {
         private Builder() {}
 
         /**
-         * Set a synchronous, non-blocking check immediately before each local invocation or
-         * external-tool suspension, including retries and repeated subscriptions. Local checks
-         * run after interceptors and dispatch persistence and receive the final parameters.
-         * Throw a regular RuntimeException to reject dispatch through the existing tool-error
-         * result path. Do not throw ToolSuspendException from this check: it signals suspension
-         * rather than rejection. Already-started calls are not cancelled. Toolkit copies retain
-         * this check, so use run-scoped state or resolve it from the call's RuntimeContext.
+         * 设置在每次本地调用或外部工具挂起前立即运行的同步非阻塞检查，包括重试和重复订阅。本地检查在拦截器与分派持久化之后运行，接收最终参数。抛出普通 RuntimeException 可通过现有工具错误结果路径拒绝分派。不要抛出 ToolSuspendException，因为它表示挂起而非拒绝。不会取消已经开始的调用。工具集副本保留此检查，因此应使用运行级状态或从调用的 RuntimeContext 解析状态。
          *
-         * @param beforeToolCall optional dispatch check, or null to disable
-         * @return this builder
+         * @param beforeToolCall 可选分派检查；null 表示禁用
+         * @return 当前构建器
          */
         public Builder beforeToolCall(Consumer<ToolCallParam> beforeToolCall) {
             this.beforeToolCall = beforeToolCall;
@@ -178,10 +170,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set whether to execute tools in parallel.
+         * 设置是否并行执行工具。
          *
-         * @param parallel true for parallel execution, false for sequential
-         * @return this builder
+         * @param parallel true 表示并行，false 表示顺序
+         * @return 当前构建器
          */
         public Builder parallel(boolean parallel) {
             this.parallel = parallel;
@@ -189,11 +181,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set a custom executor service for tool execution.
-         * If not set, Reactor's Schedulers.boundedElastic() will be used.
+         * 设置工具执行使用的自定义执行器服务。未设置时使用 Reactor 的 Schedulers.boundedElastic()。
          *
-         * @param executorService Custom executor service
-         * @return this builder
+         * @param executorService 自定义执行器服务
+         * @return 当前构建器
          */
         public Builder executorService(ExecutorService executorService) {
             this.executorService = executorService;
@@ -201,11 +192,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set the execution configuration for timeout and retry behavior.
-         * If not set, tool execution defaults will be applied (5 minutes timeout, no retry).
+         * 设置超时和重试行为。未设置时应用工具执行默认值（超时 5 分钟，不重试）。
          *
-         * @param executionConfig Execution configuration for tools
-         * @return this builder
+         * @param executionConfig 工具执行配置
+         * @return 当前构建器
          */
         public Builder executionConfig(ExecutionConfig executionConfig) {
             this.executionConfig = executionConfig;
@@ -213,12 +203,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set whether tool deletion is allowed.
-         * When set to false, calls to removeTool(), removeToolGroups(), and
-         * updateToolGroups(groups, false) will be ignored.
+         * 设置是否允许删除工具。为 false 时，忽略 removeTool()、removeToolGroups() 和 updateToolGroups(groups, false) 调用。
          *
-         * @param allowToolDeletion true to allow deletion (default), false to prevent
-         * @return this builder
+         * @param allowToolDeletion true 表示允许删除（默认），false 表示禁止
+         * @return 当前构建器
          */
         public Builder allowToolDeletion(boolean allowToolDeletion) {
             this.allowToolDeletion = allowToolDeletion;
@@ -226,11 +214,11 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set the default tool execution context for all tools.
+         * 设置所有工具的默认执行上下文。
          *
-         * @param defaultContext The default execution context
-         * @return this builder
-         * @deprecated Use {@link io.agentscope.core.agent.RuntimeContext} instead.
+         * @param defaultContext 默认执行上下文
+         * @return 当前构建器
+         * @deprecated 请改用 {@link io.agentscope.core.agent.RuntimeContext}。
          */
         @Deprecated
         public Builder defaultContext(ToolExecutionContext defaultContext) {
@@ -239,10 +227,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Append one or more tool call interceptors. May be called repeatedly.
+         * 追加一个或多个工具调用拦截器，可重复调用。
          *
-         * @param interceptors Interceptors to append (none may be null)
-         * @return this builder
+         * @param interceptors 要追加的拦截器（均不能为 null）
+         * @return 当前构建器
          */
         public Builder interceptor(ToolCallInterceptor... interceptors) {
             List<ToolCallInterceptor> appended = new ArrayList<>(this.interceptors);
@@ -252,10 +240,10 @@ public class ToolkitConfig {
         }
 
         /**
-         * Set the tool call interceptor list, replacing previously appended ones.
+         * 设置工具调用拦截器列表，替换之前追加的拦截器。
          *
-         * @param interceptors Interceptors to set, or {@code null} to clear
-         * @return this builder
+         * @param interceptors 要设置的拦截器；{@code null} 表示清空
+         * @return 当前构建器
          */
         public Builder interceptors(List<ToolCallInterceptor> interceptors) {
             this.interceptors = interceptors != null ? interceptors : List.of();
@@ -263,9 +251,9 @@ public class ToolkitConfig {
         }
 
         /**
-         * Build the ToolkitConfig.
+         * 构建 ToolkitConfig。
          *
-         * @return Configured ToolkitConfig instance
+         * @return 配置完成的 ToolkitConfig 实例
          */
         public ToolkitConfig build() {
             return new ToolkitConfig(this);

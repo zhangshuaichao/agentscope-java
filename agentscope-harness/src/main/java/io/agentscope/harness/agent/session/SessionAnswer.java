@@ -20,7 +20,9 @@ import io.agentscope.core.message.ContentBlock;
 import io.agentscope.core.message.TextBlock;
 import java.util.List;
 
-/** Typed reply to a pending interaction. The session supplies the authoritative tool identity. */
+/**
+ * 针对待处理交互的类型化回复。会话提供权威的工具身份。
+ */
 public sealed interface SessionAnswer {
     record Output(List<ContentBlock> content) implements SessionAnswer {
         public Output {

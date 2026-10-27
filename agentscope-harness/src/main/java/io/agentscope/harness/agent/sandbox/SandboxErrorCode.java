@@ -16,43 +16,67 @@
 package io.agentscope.harness.agent.sandbox;
 
 /**
- * Error codes for sandbox operations, used in {@link SandboxException} and its subclasses.
+ * 沙箱操作错误码，供 {@link SandboxException} 及其子类使用。
  */
 public enum SandboxErrorCode {
 
-    /** Command exited with a non-zero exit code. */
+    /**
+ * 命令以非零退出码结束。
+ */
     EXEC_NONZERO,
 
-    /** Command execution timed out. */
+    /**
+ * 命令执行超时。
+ */
     EXEC_TIMEOUT,
 
-    /** Failed to start the workspace store. */
+    /**
+ * 工作区存储启动失败。
+ */
     WORKSPACE_START_ERROR,
 
-    /** Failed to stop/persist the workspace store. */
+    /**
+ * 工作区存储停止／持久化失败。
+ */
     WORKSPACE_STOP_ERROR,
 
-    /** An operation was attempted after the sandbox connection was closed. */
+    /**
+ * 沙箱连接关闭后仍尝试执行操作。
+ */
     SANDBOX_CONNECTION_CLOSED,
 
-    /** Failed to read or parse a workspace archive (tar). */
+    /**
+ * 读取或解析工作区 tar 归档失败。
+ */
     WORKSPACE_ARCHIVE_READ_ERROR,
 
-    /** Failed to create a workspace archive (tar). */
+    /**
+ * 创建工作区 tar 归档失败。
+ */
     WORKSPACE_ARCHIVE_WRITE_ERROR,
 
-    /** Failed to persist a snapshot. */
+    /**
+ * 快照持久化失败。
+ */
     SNAPSHOT_PERSIST_ERROR,
 
-    /** Failed to restore a snapshot. */
+    /**
+ * 快照恢复失败。
+ */
     SNAPSHOT_RESTORE_ERROR,
 
-    /** Snapshot does not exist or is not restorable. */
+    /**
+ * 快照不存在或无法恢复。
+ */
     SNAPSHOT_NOT_RESTORABLE,
 
-    /** A manifest entry contains an invalid or unsafe path. */
+    /**
+ * 清单条目包含无效或不安全的路径。
+ */
     INVALID_MANIFEST_PATH,
 
-    /** Invalid or missing sandbox configuration. */
+    /**
+ * 沙箱配置无效或缺失。
+ */
     CONFIGURATION_ERROR
 }

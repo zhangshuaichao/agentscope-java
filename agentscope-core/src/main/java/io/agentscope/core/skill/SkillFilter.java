@@ -20,20 +20,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Immutable filter that decides which skills are allowed in a prompt.
+ * 决定提示中允许包含哪些技能的不可变过滤器。
  *
- * <p>Two usage patterns:
+ * <p>两种使用模式：
  * <ul>
- *   <li><b>Standalone</b> (builder level) — {@link #all()}, {@link #none()}, {@link #only},
- *       {@link #except} express a complete policy.</li>
- *   <li><b>Overlay</b> (RuntimeContext level) — {@link #enable}, {@link #disable} express
- *       partial overrides that are merged with a base filter via {@link #overlay}.</li>
+ * <li><b>独立模式</b>（构建器层）：{@link #all()}、{@link #none()}、{@link #only}、{@link #except} 表达完整策略。</li>
+ * <li><b>叠加模式</b>（RuntimeContext 层）：{@link #enable}、{@link #disable} 表达局部覆盖，通过 {@link #overlay} 与基础过滤器合并。</li>
  * </ul>
  *
- * <p>When no {@code SkillFilter} is configured, the default behaviour is {@link #all()} —
- * every skill is enabled.
+ * <p>未配置 {@code SkillFilter} 时，默认行为为 {@link #all()}，即启用全部技能。
  *
- * <p><b>Usage example:</b>
+ * <p><b>用法示例：</b>
  * <pre>{@code
  * // Builder level: only allow two skills
  * SkillFilter base = SkillFilter.only("skill_a", "skill_b");
@@ -67,47 +64,59 @@ public class SkillFilter {
                         : Set.of();
     }
 
-    // ==================== Standalone factory methods ====================
+    // ==================== 独立模式工厂方法 ====================
 
-    /** All skills enabled (default when no filter is configured). */
+    /**
+     * 启用全部技能（未配置过滤器时的默认行为）。
+     */
     public static SkillFilter all() {
         return new SkillFilter(Mode.ALL, null);
     }
 
-    /** All skills disabled. */
+    /**
+     * 禁用全部技能。
+     */
     public static SkillFilter none() {
         return new SkillFilter(Mode.NONE, null);
     }
 
-    /** Whitelist: only the named skills are allowed. */
+    /**
+     * 允许名单：仅允许指定名称的技能。
+     */
     public static SkillFilter only(String... skillNames) {
         return new SkillFilter(Mode.WHITELIST, Set.of(skillNames));
     }
 
-    /** Blacklist: all skills except the named ones are allowed. */
+    /**
+     * 拒绝名单：允许指定名称之外的所有技能。
+     */
     public static SkillFilter except(String... skillNames) {
         return new SkillFilter(Mode.BLACKLIST, Set.of(skillNames));
     }
 
-    // ==================== Overlay factory methods ====================
+    // ==================== 叠加模式工厂方法 ====================
 
-    /** Overlay: explicitly enable these skills (others unchanged). */
+    /**
+     * 叠加规则：显式启用这些技能（其他技能不变）。
+     */
     public static SkillFilter enable(String... skillNames) {
         return new SkillFilter(Mode.OVERLAY_ENABLE, Set.of(skillNames));
     }
 
-    /** Overlay: explicitly disable these skills (others unchanged). */
+    /**
+     * 叠加规则：显式禁用这些技能（其他技能不变）。
+     */
     public static SkillFilter disable(String... skillNames) {
         return new SkillFilter(Mode.OVERLAY_DISABLE, Set.of(skillNames));
     }
 
-    // ==================== Query ====================
+    // ==================== 查询 ====================
 
     /**
-     * Whether the given skill is allowed by this filter.
+     * 判断此过滤器是否允许给定技能。
      *
-     * @param skillName the skill name to check
-     * @return true if allowed
+     * @param skillName 要检查的技能名称
+     * @return 允许时为 true
      */
     public boolean isAllowed(String skillName) {
         return switch (mode) {
@@ -121,27 +130,25 @@ public class SkillFilter {
     }
 
     /**
-     * Whether this filter is an overlay (partial override) rather than a standalone filter.
+     * 判断此过滤器是否为叠加规则（局部覆盖），而不是独立过滤器。
      *
-     * @return true if this is an overlay filter
+     * @return 是叠加过滤器时为 true
      */
     public boolean isOverlay() {
         return mode == Mode.OVERLAY_ENABLE || mode == Mode.OVERLAY_DISABLE;
     }
 
-    // ==================== Merge ====================
+    // ==================== 合并 ====================
 
     /**
-     * Merge this (base) filter with a runtime overlay.
+     * 将当前（基础）过滤器与运行时叠加规则合并。
      *
-     * <p>Skills explicitly mentioned in the overlay use the overlay's decision.
-     * Skills not mentioned in the overlay fall through to this base filter.
+     * <p>叠加规则明确提及的技能采用叠加规则的决策，未提及的技能回退到当前基础过滤器。
      *
-     * <p>If {@code runtimeOverlay} is null or is not an overlay filter, it replaces
-     * this filter entirely.
+     * <p>若 {@code runtimeOverlay} 为 null，则保留当前过滤器；若它不是叠加过滤器，则完全替换当前过滤器。
      *
-     * @param runtimeOverlay the per-call override (may be null)
-     * @return the effective filter
+     * @param runtimeOverlay 单次调用的覆盖规则（可为 null）
+     * @return 生效的过滤器
      */
     public SkillFilter overlay(SkillFilter runtimeOverlay) {
         if (runtimeOverlay == null) {

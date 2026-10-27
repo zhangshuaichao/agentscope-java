@@ -15,8 +15,7 @@
  */
 
 /**
- * Agent configuration value objects: {@link io.agentscope.core.agent.config.ModelConfig} for
- * retry / fallback wiring and {@link io.agentscope.core.agent.config.ReactConfig} for
- * reasoning-loop bounds.
+ * 智能体配置值对象：{@link io.agentscope.core.agent.config.ModelConfig} 负责重试／回退配置，
+ * {@link io.agentscope.core.agent.config.ReactConfig} 负责推理循环边界。
  */
 package io.agentscope.core.agent.config;

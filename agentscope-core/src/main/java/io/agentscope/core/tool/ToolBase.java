@@ -32,20 +32,13 @@ import java.util.Set;
 import reactor.core.publisher.Mono;
 
 /**
- * Abstract base class for tools that participate in permission evaluation and ReAct execution.
+ * 参与权限评估和 ReAct 执行的工具抽象基类。
  *
- * <p>Concrete subclasses describe themselves via the builder (name, description, input schema,
- * safety flags) and may override {@link #checkPermissions(Map, PermissionContextState)} to plug their
- * own self-check into the permission engine. The default implementation returns
- * {@link PermissionDecision#passthrough(String)}, which lets the engine fall back to its rule
- * tables and mode-based defaults.
+ * <p>具体子类通过构建器描述名称、描述、输入模式和安全标志，并可覆写 {@link #checkPermissions(Map, PermissionContextState)} 接入自检。默认返回 {@link PermissionDecision#passthrough(String)}，让引擎回退到规则表和基于模式的默认值。
  *
- * <p>{@code ToolBase} implements {@link AgentTool} so instances plug directly into the existing
- * {@code Toolkit} dispatch. Tools that produce results outside the framework (external tools)
- * should mark {@code externalTool=true}; the {@code ToolExecutor} surfaces the call through a
- * {@link ToolSuspendException} instead of invoking it locally.
+ * <p>{@code ToolBase} 实现 {@link AgentTool}，可直接接入现有 {@code Toolkit} 分派。框架外部产生结果的工具应标记 {@code externalTool=true}；{@code ToolExecutor} 通过 {@link ToolSuspendException} 暴露调用，而不在本地执行。
  *
- * <p>Builder usage:
+ * <p>构建器用法：
  *
  * <pre>{@code
  * super(ToolBase.builder()
@@ -70,14 +63,20 @@ public abstract class ToolBase implements AgentTool {
     private final String mcpName;
     private final boolean returnDirect;
 
-    /** Sensitive files; subclasses may replace this list to widen or narrow protection. */
+    /**
+     * 敏感文件；子类可替换列表，扩大或缩小保护范围。
+     */
     protected List<String> dangerousFiles = ToolDangerousPathConstants.DEFAULT_DANGEROUS_FILES;
 
-    /** Sensitive directory names; segment-level matching applies to absolute paths. */
+    /**
+     * 敏感目录名；绝对路径采用逐片段匹配。
+     */
     protected List<String> dangerousDirectories =
             ToolDangerousPathConstants.DEFAULT_DANGEROUS_DIRECTORIES;
 
-    /** Builder-based constructor (preferred). */
+    /**
+     * 基于构建器的构造器（推荐）。
+     */
     protected ToolBase(Builder builder) {
         this(
                 builder.name,
@@ -100,8 +99,7 @@ public abstract class ToolBase implements AgentTool {
     }
 
     /**
-     * Positional constructor used by built-in tools and any subclass that prefers explicit
-     * arguments over {@link #builder()}. New code is encouraged to use the builder for clarity.
+     * 供内置工具和偏好显式参数而非 {@link #builder()} 的子类使用的位置参数构造器。新代码建议使用构建器以提高可读性。
      */
     protected ToolBase(
             String name,
@@ -185,11 +183,9 @@ public abstract class ToolBase implements AgentTool {
     }
 
     /**
-     * Whether this tool's result should short-circuit the ReAct loop and be returned directly
-     * to the caller as the turn's final answer, instead of being fed back to the model for
-     * another reasoning iteration. Defaults to {@code false}.
+     * 工具结果是否应短路 ReAct 循环，直接作为本轮最终答复返回，而不反馈给模型进行下一轮推理。默认为 {@code false}。
      *
-     * @return {@code true} to return the result directly and skip the follow-up model call
+     * @return {@code true} 表示直接返回结果，跳过后续模型调用
      */
     @Override
     public final boolean isReturnDirect() {
@@ -213,8 +209,7 @@ public abstract class ToolBase implements AgentTool {
     }
 
     /**
-     * Default tool invocation. External tools must not be invoked locally; non-external subclasses
-     * must override this method.
+     * 默认工具调用。外部工具不得本地执行；非外部工具子类必须覆写此方法。
      */
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
@@ -230,17 +225,13 @@ public abstract class ToolBase implements AgentTool {
     }
 
     /**
-     * Tool self-check invoked by the permission engine when {@code allowRules}/{@code askRules}
-     * neither allow nor reject the call outright.
+     * 当 {@code allowRules}/{@code askRules} 未直接允许或拒绝调用时，由权限引擎执行工具自检。
      *
-     * <p>The default implementation returns {@link PermissionDecision#passthrough(String)},
-     * delegating the decision to the engine's rule tables and mode defaults. Tools with
-     * fine-grained semantics (Bash, file writers, MCP tools) should override this to surface their
-     * own ALLOW / ASK / DENY policy.
+     * <p>默认返回 {@link PermissionDecision#passthrough(String)}，将决定交给规则表和模式默认值。具有细粒度语义的工具（Bash、文件写入器、MCP 工具）应覆写此方法，给出自己的 ALLOW / ASK / DENY 策略。
      *
-     * @param toolInput the parsed tool arguments
-     * @param context current permission evaluation context
-     * @return a Mono emitting the decision; never {@code null}
+     * @param toolInput 已解析的工具参数
+     * @param context 当前权限评估上下文
+     * @return 发出决策的 Mono，永不为 {@code null}
      */
     public Mono<PermissionDecision> checkPermissions(
             Map<String, Object> toolInput, PermissionContextState context) {
@@ -248,27 +239,21 @@ public abstract class ToolBase implements AgentTool {
     }
 
     /**
-     * Default rule matcher: a {@code null} {@code ruleContent} matches every invocation; any
-     * non-null pattern is rejected so subclasses can layer their own semantics on top.
+     * 默认规则匹配器：{@code ruleContent} 为 {@code null} 时匹配所有调用；任何非 null 模式都拒绝匹配，以便子类叠加自己的语义。
      */
     public boolean matchRule(String ruleContent, Map<String, Object> toolInput) {
         return ruleContent == null;
     }
 
     /**
-     * Default suggestion: a single tool-name-level {@link PermissionBehavior#ALLOW} rule sourced
-     * from {@code "suggested"}. Subclasses with finer-grained context (file paths, command
-     * prefixes) override this to produce more specific patterns.
+     * 默认建议：来源为 {@code "suggested"} 的单条工具名称级 {@link PermissionBehavior#ALLOW} 规则。具有文件路径、命令前缀等细粒度上下文的子类应覆写此方法以生成更精确的模式。
      */
     public List<PermissionRule> generateSuggestions(Map<String, Object> toolInput) {
         return List.of(new PermissionRule(name, null, PermissionBehavior.ALLOW, "suggested"));
     }
 
     /**
-     * @return {@code true} when {@code filePath}'s filename matches one of {@link #dangerousFiles}
-     *     (case-insensitive), or when any segment matches one of {@link #dangerousDirectories}.
-     *     Also resolves symlinks and re-checks the real path to prevent bypass via symlink
-     *     pointing at a dangerous target.
+     * @return 当 {@code filePath} 的文件名匹配 {@link #dangerousFiles}（忽略大小写），或任意路径片段匹配 {@link #dangerousDirectories} 时为 {@code true}。同时解析符号链接并重新检查真实路径，防止通过指向危险目标的符号链接绕过保护。
      */
     protected boolean isDangerousPath(String filePath) {
         if (filePath == null || filePath.isBlank()) {
@@ -284,7 +269,7 @@ public abstract class ToolBase implements AgentTool {
                 return true;
             }
         } catch (IOException ignored) {
-            // If we can't resolve, stick with the logical-path result
+            // 无法解析时，保留逻辑路径检查结果
         }
         return false;
     }
@@ -319,7 +304,9 @@ public abstract class ToolBase implements AgentTool {
         return new Builder();
     }
 
-    /** Fluent builder for {@link ToolBase} subclasses. */
+    /**
+     * {@link ToolBase} 子类的链式构建器。
+     */
     public static final class Builder {
         private String name;
         private String description;
@@ -347,7 +334,9 @@ public abstract class ToolBase implements AgentTool {
             return this;
         }
 
-        /** Sets the human-readable display name surfaced through {@link #getTitle()}. */
+        /**
+         * 设置通过 {@link #getTitle()} 公开的可读显示名称。
+         */
         public Builder title(String title) {
             this.title = title;
             return this;
@@ -378,13 +367,17 @@ public abstract class ToolBase implements AgentTool {
             return this;
         }
 
-        /** Sets whether this tool's result should be returned directly to the caller. */
+        /**
+         * 设置是否将工具结果直接返回给调用方。
+         */
         public Builder returnDirect(boolean returnDirect) {
             this.returnDirect = returnDirect;
             return this;
         }
 
-        /** Marks the tool as an MCP tool and records the MCP server name. */
+        /**
+         * 标记为 MCP 工具并记录 MCP 服务器名称。
+         */
         public Builder mcp(String mcpName) {
             this.mcp = true;
             this.mcpName = mcpName;

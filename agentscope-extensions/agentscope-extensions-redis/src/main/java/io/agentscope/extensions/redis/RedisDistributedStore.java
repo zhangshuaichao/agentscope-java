@@ -29,10 +29,9 @@ import java.util.Objects;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * Redis-backed {@link DistributedStore} that configures all distributed storage components
- * with a single Jedis connection.
+ * 基于 Redis 的 {@link DistributedStore}，通过一个 Jedis 连接配置各个分布式存储组件。
  *
- * <p>Usage:
+ * <p>用法：
  * <pre>{@code
  * JedisPooled jedis = new JedisPooled("redis://localhost:6379");
  * RedisDistributedStore store = RedisDistributedStore.fromJedis(jedis);
@@ -46,13 +45,11 @@ import redis.clients.jedis.UnifiedJedis;
  *     .build();
  * }</pre>
  *
- * <p>This provides:
- * <ul>
- *   <li>{@link RedisAgentStateStore} — agent session state (auto-wired by distributedStore)</li>
- *   <li>{@link RedisStore} — workspace filesystem KV (via {@link #baseStore()})</li>
- *   <li>{@link RedisSnapshotSpec} — sandbox snapshot storage (auto-wired for sandbox mode)</li>
- *   <li>{@link RedisSandboxExecutionGuard} — sandbox concurrency lock (auto-wired for sandbox mode)</li>
- * </ul>
+ * <p>提供以下组件：
+ * <ul><li>{@link RedisAgentStateStore}：智能体会话状态，由 distributedStore 自动装配。</li>
+ * <li>{@link RedisStore}：工作区文件系统 KV 存储，通过 {@link #baseStore()} 获取。</li>
+ * <li>{@link RedisSnapshotSpec}：沙箱快照存储，在沙箱模式自动装配。</li>
+ * <li>{@link RedisSandboxExecutionGuard}：沙箱并发锁，在沙箱模式自动装配。</li></ul>
  */
 public class RedisDistributedStore implements DistributedStore {
 
@@ -68,33 +65,30 @@ public class RedisDistributedStore implements DistributedStore {
     }
 
     /**
-     * Creates a Redis distributed store from a Jedis client with the default key prefix.
-     *
-     * @param jedis initialized Jedis client (e.g. {@code new JedisPooled("redis://localhost:6379")})
-     * @return a new Redis distributed store
+     * 用 Jedis 客户端与默认键前缀创建 Redis 分布式存储。
+     * @param jedis 已初始化的 Jedis 客户端，例如 {@code new JedisPooled("redis://localhost:6379")}
+     * @return 新建的 Redis 分布式存储
      */
     public static RedisDistributedStore fromJedis(UnifiedJedis jedis) {
         return new RedisDistributedStore(jedis, null, KeyLayoutVersion.V0);
     }
 
     /**
-     * Creates a Redis distributed store from a Jedis client with a custom key prefix.
-     *
-     * @param jedis initialized Jedis client
-     * @param keyPrefix prefix for all Redis keys (e.g. {@code "myapp:"})
-     * @return a new Redis distributed store
+     * 用 Jedis 客户端与自定义键前缀创建 Redis 分布式存储。
+     * @param jedis 已初始化的 Jedis 客户端
+     * @param keyPrefix 所有 Redis 键的前缀，例如 {@code "myapp:"}
+     * @return 新建的 Redis 分布式存储
      */
     public static RedisDistributedStore fromJedis(UnifiedJedis jedis, String keyPrefix) {
         return new RedisDistributedStore(jedis, keyPrefix, KeyLayoutVersion.V0);
     }
 
     /**
-     * Creates a Redis distributed store with a custom key prefix and agent-state key layout.
-     *
-     * @param jedis initialized Jedis client
-     * @param keyPrefix prefix for all Redis keys (e.g. {@code "myapp:"})
-     * @param keyLayoutVersion key layout used by the agent-state store
-     * @return a new Redis distributed store
+     * 使用自定义键前缀与智能体状态键布局创建 Redis 分布式存储。
+     * @param jedis 已初始化的 Jedis 客户端
+     * @param keyPrefix 所有 Redis 键的前缀，例如 {@code "myapp:"}
+     * @param keyLayoutVersion 智能体状态存储采用的键布局
+     * @return 新建的 Redis 分布式存储
      */
     public static RedisDistributedStore fromJedis(
             UnifiedJedis jedis, String keyPrefix, KeyLayoutVersion keyLayoutVersion) {

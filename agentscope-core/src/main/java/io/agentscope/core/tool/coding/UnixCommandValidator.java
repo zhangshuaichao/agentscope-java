@@ -20,26 +20,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command validator for Unix-like systems (Linux, macOS).
+ * Unix 类系统（Linux、macOS）的命令验证器。
  *
- * <p><b>Validation Order:</b>
+ * <p><b>验证顺序：</b>
  * <ol>
- *   <li>Extract executable from command (remove quotes, extract first token, remove extensions)</li>
- *   <li>If no whitelist configured → allow (backward compatible)</li>
- *   <li>Check for multiple command separators → reject if found</li>
- *   <li>Check relative path safety (commands starting with {@code ./}) → reject if escapes current directory</li>
- *   <li>Check whitelist → reject if not in whitelist</li>
+ * <li>提取可执行程序（移除引号、提取首个词元、移除扩展名）</li>
+ * <li>未配置白名单时允许（向后兼容）</li>
+ * <li>检测到多命令分隔符时拒绝</li>
+ * <li>以 {@code ./} 开头的相对路径逃逸当前目录时拒绝</li>
+ * <li>不在白名单中时拒绝</li>
  * </ol>
  *
- * <p><b>Multiple Command Detection:</b> Detects Unix-specific separators:
- * {@code &}, {@code &&}, {@code |}, {@code ||}, {@code ;}, newline
- * (ignores separators within quotes or after escape {@code \})
+ * <p><b>多命令检测：</b>检测 Unix 特有分隔符 {@code &}、{@code &&}、{@code |}、{@code ||}、{@code ;} 和换行，
+ * 忽略引号内或转义符 {@code \} 后的分隔符。
  *
- * <p><b>Executable Extraction:</b>
+ * <p><b>可执行程序提取：</b>
  * <ul>
- *   <li>Handles quoted commands (single or double quotes)</li>
- *   <li>Extracts first token before space/tab</li>
- *   <li>Removes script extensions: {@code .sh}, {@code .py}, {@code .rb}, {@code .pl}, {@code .bash}, {@code .zsh}</li>
+ * <li>处理单引号或双引号包围的命令</li>
+ * <li>提取空格或制表符前的首个词元</li>
+ * <li>移除脚本扩展名：{@code .sh}、{@code .py}、{@code .rb}、{@code .pl}、{@code .bash}、{@code .zsh}</li>
  * </ul>
  */
 public class UnixCommandValidator implements CommandValidator {
@@ -48,15 +47,15 @@ public class UnixCommandValidator implements CommandValidator {
 
     @Override
     public ValidationResult validate(String command, Set<String> allowedCommands) {
-        // Extract and check executable
+        // 提取并检查可执行程序
         String executable = extractExecutable(command);
 
-        // If no whitelist is configured, allow all commands (backward compatible)
+        // 未配置白名单时允许全部命令（向后兼容）
         if (allowedCommands == null || allowedCommands.isEmpty()) {
             return ValidationResult.allowed(executable);
         }
 
-        // Check for multiple commands
+        // 检查是否包含多个命令
         if (containsMultipleCommands(command)) {
             logger.debug("Command contains multiple command separators: {}", command);
             return ValidationResult.rejected(
@@ -64,7 +63,7 @@ public class UnixCommandValidator implements CommandValidator {
                     extractExecutable(command));
         }
 
-        // execute executables with relative paths only if they are within the current directory
+        // 相对路径可执行程序仅在当前目录范围内才允许执行
         if (executable.startsWith("./")) {
             if (isPathWithinCurrentDirectory(executable)) {
                 logger.debug(
@@ -100,23 +99,23 @@ public class UnixCommandValidator implements CommandValidator {
             String trimmed = command.trim();
             String executable;
 
-            // Handle quoted commands: 'command' or "command"
+            // 处理带引号命令：单引号或双引号包围
             if (trimmed.startsWith("\"") || trimmed.startsWith("'")) {
                 char quote = trimmed.charAt(0);
                 int endQuote = trimmed.indexOf(quote, 1);
                 if (endQuote > 0) {
                     executable = trimmed.substring(1, endQuote);
                 } else {
-                    // No closing quote, treat as unquoted
+                    // 没有闭合引号，按无引号处理
                     executable = extractFirstToken(trimmed);
                 }
             } else {
-                // Extract first token
+                // 提取首个词元
                 executable = extractFirstToken(trimmed);
             }
 
-            // Remove common script extensions if present (.sh, .py, .rb, .pl, etc.)
-            // This ensures consistency with whitelist matching
+            // 移除常见脚本扩展名（.sh、.py、.rb、.pl 等）
+            // 保证与白名单匹配一致
             if (executable.endsWith(".sh")
                     || executable.endsWith(".py")
                     || executable.endsWith(".rb")
@@ -137,10 +136,10 @@ public class UnixCommandValidator implements CommandValidator {
     }
 
     /**
-     * Extract the first token from the command string.
+     * 从命令字符串提取首个词元。
      *
-     * @param command the command string
-     * @return the first token
+     * @param command 命令字符串
+     * @return 首个词元
      */
     private String extractFirstToken(String command) {
         int spaceIndex = command.indexOf(' ');
@@ -159,12 +158,12 @@ public class UnixCommandValidator implements CommandValidator {
     }
 
     /**
-     * Check if the command contains multiple command separators outside of quotes.
+     * 检查引号外是否包含多命令分隔符。
      *
-     * <p>Detects: &amp;, |, ;, newline (ignores separators within quotes or after escape \)
+     * <p>检测 &amp;、|、; 和换行，忽略引号内或反斜杠转义后的分隔符。
      *
-     * @param command The command to check
-     * @return true if multiple commands are detected, false otherwise
+     * @param command 待检查命令
+     * @return 检测到多命令时为 true，否则为 false
      */
     @Override
     public boolean containsMultipleCommands(String command) {
@@ -179,7 +178,7 @@ public class UnixCommandValidator implements CommandValidator {
         for (int i = 0; i < command.length(); i++) {
             char c = command.charAt(i);
 
-            // Handle escape sequences
+            // 处理转义序列
             if (escaped) {
                 escaped = false;
                 continue;
@@ -190,7 +189,7 @@ public class UnixCommandValidator implements CommandValidator {
                 continue;
             }
 
-            // Track quote state
+            // 跟踪引号状态
             if (c == '\'' && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
                 continue;
@@ -201,9 +200,9 @@ public class UnixCommandValidator implements CommandValidator {
                 continue;
             }
 
-            // Only check for separators outside quotes
+            // 只检查引号外的分隔符
             if (!inSingleQuote && !inDoubleQuote) {
-                // Check for command separators
+                // 检查命令分隔符
                 if (c == '&' || c == '|' || c == ';' || c == '\n') {
                     return true;
                 }

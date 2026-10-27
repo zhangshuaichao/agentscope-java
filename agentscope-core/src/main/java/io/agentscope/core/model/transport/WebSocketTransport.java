@@ -20,25 +20,23 @@ import io.agentscope.core.model.transport.websocket.WebSocketRequest;
 import reactor.core.publisher.Mono;
 
 /**
- * WebSocket client interface.
+ * WebSocket 客户端接口。
  *
- * <p>Similar to HTTPClient design:
- *
+ * <p>设计与 HTTPClient 类似：
  * <ul>
- *   <li>Client instance is stateless and reusable
- *   <li>Each connect() creates a new connection
- *   <li>Connection configuration is passed via WebSocketRequest
- *   <li>Supports generic type parameter for message format (String or byte[])
+ *   <li>客户端实例无状态，可重复使用
+ *   <li>每次 connect() 创建新连接
+ *   <li>连接配置通过 WebSocketRequest 传入
+ *   <li>使用泛型参数支持不同消息格式（String 或 byte[]）
  * </ul>
  *
- * <p>Implementations:
- *
+ * <p>实现：
  * <ul>
- *   <li>{@code JdkWebSocketTransport} - Based on JDK 11+ HttpClient
- *   <li>{@code OkHttpWebSocketTransport} - Based on OkHttp
+ *   <li>{@code JdkWebSocketTransport} — 基于 JDK 11+ HttpClient
+ *   <li>{@code OkHttpWebSocketTransport} — 基于 OkHttp
  * </ul>
  *
- * <p>Usage example (text protocol):
+ * <p>文本协议用法示例：
  *
  * <pre>{@code
  * // Create client (reusable)
@@ -60,7 +58,7 @@ import reactor.core.publisher.Mono;
  *     .subscribe(json -> handleMessage(json));
  * }</pre>
  *
- * <p>Usage example (binary protocol):
+ * <p>二进制协议用法示例：
  *
  * <pre>{@code
  * // Establish connection (specify byte[] type)
@@ -77,19 +75,19 @@ import reactor.core.publisher.Mono;
 public interface WebSocketTransport {
 
     /**
-     * Establish a WebSocket connection.
+     * 建立 WebSocket 连接。
      *
-     * @param <T> Message type: String for text protocol, byte[] for binary protocol
-     * @param request Connection request configuration
-     * @param messageType Class object for message type (String.class or byte[].class)
-     * @return Mono that emits WebSocketConnection on successful connection
+     * @param <T> 消息类型：文本协议为 String，二进制协议为 byte[]
+     * @param request 连接请求配置
+     * @param messageType 消息类型的 Class 对象（String.class 或 byte[].class）
+     * @return 连接成功时发出 WebSocketConnection 的 Mono
      */
     <T> Mono<WebSocketConnection<T>> connect(WebSocketRequest request, Class<T> messageType);
 
     /**
-     * Shutdown the client and release resources.
+     * 关闭客户端并释放资源。
      *
-     * <p>After shutdown, this client should not be used anymore.
+     * <p>关闭后，不应再使用此客户端。
      */
     void shutdown();
 }

@@ -18,25 +18,19 @@ package io.agentscope.core.tool;
 import io.agentscope.core.message.ToolResultBlock;
 
 /**
- * Interface for emitting streaming responses during tool execution.
+ * 在工具执行期间发送流式响应的接口。
  *
- * <p>Tool methods can declare a ToolEmitter parameter to send intermediate progress updates and
- * messages during execution. These streaming chunks are delivered to registered hooks via
- * {@code onActingChunk()} events and to event-stream subscribers as {@link
- * io.agentscope.core.event.ToolProgressEvent}, but are NOT sent to the LLM. Only the final return
- * value of the tool method is sent to the LLM as the tool result, which is what {@link
- * io.agentscope.core.event.ToolResultTextDeltaEvent} and {@link
- * io.agentscope.core.event.ToolResultDataDeltaEvent} carry.
+ * <p>工具方法可声明 ToolEmitter 参数，在执行中发送中间进度和消息。数据块通过 {@code onActingChunk()} 事件传给已注册钩子，并以 {@link io.agentscope.core.event.ToolProgressEvent} 传给事件流订阅者，但不发送给大语言模型。只有方法最终返回值作为工具结果发送给模型，由 {@link io.agentscope.core.event.ToolResultTextDeltaEvent} 和 {@link io.agentscope.core.event.ToolResultDataDeltaEvent} 携带。
  *
- * <p><b>Key Characteristics:</b>
+ * <p><b>关键特性：</b>
  * <ul>
- *   <li>ToolEmitter is auto-injected by the framework - no {@link ToolParam} annotation needed</li>
- *   <li>Emitted chunks go to hooks (for monitoring/logging), not to the LLM</li>
- *   <li>Useful for long-running tools to provide progress feedback</li>
- *   <li>Does not affect the tool schema visible to the LLM</li>
+ * <li>框架自动注入 ToolEmitter，无需 {@link ToolParam} 注解</li>
+ * <li>发出的数据块传给钩子用于监控或日志，不传给模型</li>
+ * <li>适合长时间运行工具提供进度反馈</li>
+ * <li>不影响模型可见的工具模式</li>
  * </ul>
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  *
  * <pre>{@code
  * @Tool(name = "long_task", description = "Execute a long running task")
@@ -62,23 +56,20 @@ import io.agentscope.core.message.ToolResultBlock;
 public interface ToolEmitter {
 
     /**
-     * Emit a streaming response chunk during tool execution.
+     * 在工具执行期间发送流式响应数据块。
      *
-     * <p>This method sends intermediate messages to registered hooks via {@code onToolChunk()}.
-     * The emitted chunks do NOT affect what the LLM receives - only the tool method's return value
-     * is sent to the LLM.
+     * <p>通过 {@code onToolChunk()} 向已注册钩子发送中间消息，不影响模型接收的内容；只有工具方法返回值会发送给模型。
      *
-     * @param chunk The chunk to emit
+     * @param chunk 要发送的数据块
      */
     void emit(ToolResultBlock chunk);
 
     /**
-     * Returns the ID of the tool call associated with this emitter.
+     * 返回此发射器关联的工具调用 ID。
      *
-     * <p>The default implementation returns {@code null} so custom emitters without tool call
-     * context remain compatible.
+     * <p>默认返回 {@code null}，使没有工具调用上下文的自定义发射器保持兼容。
      *
-     * @return The tool call ID, or {@code null} if it is not available
+     * @return 工具调用 ID；不可用时为 {@code null}
      */
     default String getToolCallId() {
         return null;

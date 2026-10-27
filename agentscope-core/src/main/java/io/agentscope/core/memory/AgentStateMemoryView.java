@@ -23,21 +23,21 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Read-only {@link Memory} adapter that proxies {@link #getMessages()} to a live
- * {@link AgentState#getContext()} resolved at call time.
+ * 只读 {@link Memory} 适配器，将 {@link #getMessages()} 代理到调用时解析出的
+ * 实时 {@link AgentState#getContext()}。
  *
- * <p>Exists solely so deprecated 1.x hooks and tools (notably
- * {@link StaticLongTermMemoryHook}) keep working after the 2.0 builder dropped agent-owned
- * {@code Memory}. All mutating operations throw {@link UnsupportedOperationException}; mutate
- * context via {@code AgentState.context} instead.
+ * <p>此适配器仅用于使已弃用的 1.x 钩子和工具（尤其是
+ * {@link StaticLongTermMemoryHook}）在 2.0 构建器移除智能体自有
+ * {@code Memory} 后继续工作。所有修改操作都抛出 {@link UnsupportedOperationException}；
+ * 应改为通过 {@code AgentState.context} 修改上下文。
  *
- * <p>The {@link Supplier} contract is "best-effort": a {@code null} return is interpreted as
- * "agent not yet bound" and surfaces as an empty message list rather than an exception, so
- * callers may instantiate the view before the owning {@link io.agentscope.core.ReActAgent} is
- * constructed.
+ * <p>{@link Supplier} 的契约是“尽力而为”：返回 {@code null} 时，解释为
+ * “智能体尚未绑定”，表现为空消息列表而非异常，因此
+ * 调用方可以在所属 {@link io.agentscope.core.ReActAgent}
+ * 构建之前实例化此视图。
  *
- * @deprecated since 2.0.0. New code should read context directly from
- *     {@link AgentState#getContext()}.
+ * @deprecated 自 2.0.0 起弃用。新代码应直接从
+ *     {@link AgentState#getContext()} 读取上下文。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class AgentStateMemoryView implements Memory {
@@ -50,6 +50,8 @@ public final class AgentStateMemoryView implements Memory {
 
     @Override
     public List<Msg> getMessages() {
+        // 【学习提示】读取时才解析当前状态，而不是在构造视图时缓存某个会话。
+        // 视图只负责适配旧 API，不拥有持久化责任，也不允许修改状态。
         AgentState state = stateSupplier.get();
         return state == null ? List.of() : List.copyOf(state.getContext());
     }
@@ -71,7 +73,7 @@ public final class AgentStateMemoryView implements Memory {
 
     @Override
     public void saveTo(AgentStateStore stateStore, String userId, String sessionId) {
-        // No-op: persistence is owned by AgentState + AgentStateStore binding, not by this view.
+        // 不执行操作：持久化由 AgentState 与 AgentStateStore 绑定负责，而非此视图。
     }
 
     @Override

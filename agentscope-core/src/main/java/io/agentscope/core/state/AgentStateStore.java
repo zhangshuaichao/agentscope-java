@@ -20,26 +20,26 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Persistent storage interface for AgentScope agent state.
+ * AgentScope 智能体状态的持久化存储接口。
  *
- * <p>An {@code AgentStateStore} provides save / load / delete / list operations for
- * {@link State} objects keyed by a {@code (userId, sessionId)} pair, allowing agents,
- * memories, toolkits, and other stateful components to be persisted and restored across
- * application runs or user interactions.
+ * <p>{@code AgentStateStore} 为 {@link State} 对象提供保存、加载、删除和列举操作，
+ * 以 {@code (userId, sessionId)} 二元组寻址，使智能体、记忆、工具集等
+ * 有状态组件能够跨应用运行或用户交互保存和恢复。
  *
- * <p>Slot addressing is intentionally simple:
- *
+ * <p>槽位寻址刻意保持简单：
  * <ul>
- *   <li>{@code sessionId} — non-null, non-blank; identifies a conversation / session.
- *   <li>{@code userId} — nullable. {@code null} represents an anonymous / single-tenant
- *       caller (CLI usage, tests). Implementations group all anonymous sessions under a
- *       single namespace.
+ *   <li>{@code sessionId} — 不可为 null 或空白，标识一次对话／会话。
+ *   <li>{@code userId} — 可为空。{@code null} 表示匿名／单租户调用方
+ *       （例如命令行使用和测试）。实现将所有匿名会话归入同一命名空间。
  * </ul>
  *
- * <p>Implementations decide how to combine the pair into a storage key (filesystem path,
- * Redis key prefix, SQL column). Callers MUST NOT concatenate them manually before calling.
+ * <p>实现自行决定如何将二元组组合成存储键（文件路径、Redis 键前缀或 SQL 列）。
+ * 调用方不得在调用前手工拼接二者。
  *
- * <p>Example usage:
+ * <p>【学习提示】用户与会话是两个独立维度：同名 sessionId 在不同用户下应进入不同槽位。
+ * 命名空间用于数据寻址与隔离，不代替应用层的用户身份认证和访问授权。
+ *
+ * <p>用法示例：
  *
  * <pre>{@code
  * AgentStateStore store = new JsonFileAgentStateStore(Path.of("state"));
@@ -61,45 +61,44 @@ import java.util.Set;
 public interface AgentStateStore {
 
     /**
-     * Sentinel version for backends that do not support optimistic concurrency. Also returned by
-     * {@link #saveIfVersion} when a CAS write conflicts (and nothing was written).
+     * 不支持乐观并发的后端所用的哨兵版本。CAS 写入发生冲突、且没有任何写入时，
+     * {@link #saveIfVersion} 也返回此值。
      */
     long UNVERSIONED = -1L;
 
     /**
-     * Save a single state value (full replacement).
+     * 保存单个状态值（完整替换）。
      *
-     * <p>This method saves a single state object, replacing any existing value with the same key.
+     * <p>保存单个状态对象，替换同一键已有的值。
      *
-     * @param userId nullable user identifier; {@code null} = anonymous
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key (e.g., {@code "agent_state"}, {@code "toolkit_activeGroups"})
-     * @param value the state value to save
+     * @param userId 可为空的用户标识符；{@code null} 表示匿名
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键（例如 {@code "agent_state"}、{@code "toolkit_activeGroups"}）
+     * @param value 要保存的状态值
      */
     void save(String userId, String sessionId, String key, State value);
 
     /**
-     * Whether this backend supports optimistic concurrency via {@link #getVersioned} /
-     * {@link #saveIfVersion}.
+     * 此后端是否通过 {@link #getVersioned} 和 {@link #saveIfVersion} 支持乐观并发。
      *
-     * <p>Default {@code false}: {@link #saveIfVersion} degrades to unconditional {@link #save}.
+     * <p>默认为 {@code false}：{@link #saveIfVersion} 退化为无条件 {@link #save}。
      */
     default boolean supportsVersioning() {
         return false;
     }
 
     /**
-     * Load a single state value together with its store version.
+     * 加载单个状态值及其存储版本。
      *
-     * <p>Default implementation wraps {@link #get} and reports {@link #UNVERSIONED}.
+     * <p>默认实现包装 {@link #get}，并报告 {@link #UNVERSIONED}。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key
-     * @param type the expected state type
-     * @param <T> the state type
-     * @return a {@link VersionedState}; {@code value} is {@code null} when absent. On versioning
-     *     backends an absent key reports {@code version == 0}.
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键
+     * @param type 期望的状态类型
+     * @param <T> 状态类型
+     * @return 一个 {@link VersionedState}；不存在时 {@code value} 为 {@code null}。
+     *     支持版本控制的后端在键不存在时报告 {@code version == 0}。
      */
     default <T extends State> VersionedState<T> getVersioned(
             String userId, String sessionId, String key, Class<T> type) {
@@ -107,29 +106,30 @@ public interface AgentStateStore {
     }
 
     /**
-     * Compare-and-swap write of a single state value.
+     * 对单个状态值执行比较并交换（CAS）写入。
+     *
+     * <p>【学习提示】读取时记住版本，写入时提交该版本；若期间有其他写入者更新了状态，
+     * 比较会失败。是否支持这种保护必须检查 supportsVersioning()，不能仅看接口方法存在。
      *
      * <ul>
-     *   <li>{@code expectedVersion == 0} — create-if-absent. If the key already exists but its
-     *       stored version is still {@code 0} (e.g. a row backfilled by a schema migration),
-     *       the CAS is satisfied and the value is written at version {@code 1}. Fails only when
-     *       the key exists at a non-zero version.
-     *   <li>{@code expectedVersion == }{@link #UNVERSIONED} — unconditional overwrite (same as
-     *       {@link #save}).
-     *   <li>otherwise — write only when the stored version equals {@code expectedVersion}.
+     *   <li>{@code expectedVersion == 0} — 不存在时创建。如果键已存在，
+     *       但存储版本仍为 {@code 0}（例如通过模式迁移回填的行），
+     *       CAS 条件仍满足，并将值写入版本 {@code 1}。仅当键存在且版本非零时失败。
+     *   <li>{@code expectedVersion == }{@link #UNVERSIONED} — 无条件覆盖
+     *       （等同于 {@link #save}）。
+     *   <li>其他情况 — 仅在存储版本等于 {@code expectedVersion} 时写入。
      * </ul>
      *
-     * <p>On success returns the new version. On conflict returns {@link #UNVERSIONED} and does not
-     * write. The default implementation always calls {@link #save} and returns {@link
-     * #UNVERSIONED}, preserving legacy last-writer-wins behaviour for non-versioning backends.
+     * <p>成功时返回新版本；冲突时返回 {@link #UNVERSIONED} 且不写入。
+     * 默认实现总是调用 {@link #save} 并返回 {@link
+     * #UNVERSIONED}，为不支持版本控制的后端保留旧版最后写入者获胜的行为。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key
-     * @param value the new state value
-     * @param expectedVersion the version observed by the caller
-     * @return the new version on success, or {@link #UNVERSIONED} on conflict / non-versioning
-     *     backends
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键
+     * @param value 新状态值
+     * @param expectedVersion 调用方观察到的版本
+     * @return 成功时为新版本；冲突或后端不支持版本控制时为 {@link #UNVERSIONED}
      */
     default long saveIfVersion(
             String userId, String sessionId, String key, State value, long expectedVersion) {
@@ -138,94 +138,90 @@ public interface AgentStateStore {
     }
 
     /**
-     * Save a list of state values.
+     * 保存状态值列表。
      *
-     * <p>Different implementations may use different storage strategies:
-     *
+     * <p>不同实现可以采用不同的存储策略：
      * <ul>
-     *   <li>{@link JsonFileAgentStateStore}: incremental append — only new elements are written
-     *   <li>{@link InMemoryAgentStateStore}: full replacement — replaces the entire list
+     *   <li>{@link JsonFileAgentStateStore}：增量追加，只写入新增元素
+     *   <li>{@link InMemoryAgentStateStore}：完整替换，替换整个列表
      * </ul>
      *
-     * <p>Callers should always pass the full list. The implementation decides the storage strategy.
+     * <p>调用方应始终传入完整列表，由实现决定存储策略。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key (e.g., {@code "memory_messages"})
-     * @param values the full list of state values
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键（例如 {@code "memory_messages"}）
+     * @param values 完整的状态值列表
      */
     void save(String userId, String sessionId, String key, List<? extends State> values);
 
     /**
-     * Get a single state value.
+     * 获取单个状态值。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key
-     * @param type the expected state type
-     * @param <T> the state type
-     * @return the state value, or empty if not found
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键
+     * @param type 期望的状态类型
+     * @param <T> 状态类型
+     * @return 状态值；未找到时为空
      */
     <T extends State> Optional<T> get(String userId, String sessionId, String key, Class<T> type);
 
     /**
-     * Get a list of state values.
+     * 获取状态值列表。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key
-     * @param itemType the expected item type
-     * @param <T> the item type
-     * @return the list of state values, or empty list if not found
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 状态键
+     * @param itemType 期望的元素类型
+     * @param <T> 元素类型
+     * @return 状态值列表；未找到时为空列表
      */
     <T extends State> List<T> getList(
             String userId, String sessionId, String key, Class<T> itemType);
 
     /**
-     * Check if a session exists.
+     * 检查会话是否存在。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @return true if the session has any persisted state
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @return 会话存在任何已持久化状态时返回 true
      */
     boolean exists(String userId, String sessionId);
 
     /**
-     * Delete a session and all its data.
+     * 删除会话及其全部数据。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
      */
     void delete(String userId, String sessionId);
 
     /**
-     * Delete a single state entry within a session.
+     * 删除会话内的单个状态条目。
      *
-     * @param userId nullable user identifier
-     * @param sessionId session identifier; must be non-null and non-blank
-     * @param key the state key to delete
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符；不可为 null 或空白
+     * @param key 要删除的状态键
      */
     default void delete(String userId, String sessionId, String key) {
-        // Default no-op; implementations should override if they support per-key deletion
+        // 默认不执行操作；支持按键删除的实现应重写此方法
     }
 
     /**
-     * List session identifiers visible under the given user namespace.
+     * 列出指定用户命名空间下可见的会话标识符。
      *
-     * <p>Use {@code userId == null} to list anonymous sessions. Pass a concrete user to list
-     * only that user's sessions. There is no API to list across users in one call — that is
-     * a separate administrative concern (admin starter handles it by iterating known users).
+     * <p>使用 {@code userId == null} 列出匿名会话；传入具体用户则仅列出该用户的会话。
+     * 本接口不提供一次调用跨用户列举的能力；这属于独立的管理职责
+     * （admin starter 通过遍历已知用户实现）。
      *
-     * @param userId nullable user identifier
-     * @return set of session identifiers stored under {@code userId}
+     * @param userId 可为空的用户标识符
+     * @return 存储在 {@code userId} 下的会话标识符集合
      */
     Set<String> listSessionIds(String userId);
 
-    /**
-     * Clean up any resources used by this store. Implementations should override this if they
-     * need cleanup.
-     */
+    /** 清理此存储使用的资源。需要清理资源的实现应重写此方法。 */
     default void close() {
-        // Default implementation does nothing
+        // 默认实现不执行任何操作
     }
 }

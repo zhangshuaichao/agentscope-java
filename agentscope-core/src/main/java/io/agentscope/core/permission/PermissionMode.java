@@ -20,15 +20,19 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Locale;
 
 /**
- * Permission mode controlling how the engine evaluates tool execution requests.
+ * 控制引擎如何评估工具执行请求的权限模式。
  *
  * <ul>
- *   <li>{@link #DEFAULT}: all operations require explicit allow rules.
- *   <li>{@link #ACCEPT_EDITS}: file edits inside working directories are auto-allowed.
- *   <li>{@link #EXPLORE}: read-only mode; modification tools are denied.
- *   <li>{@link #BYPASS}: all operations allowed without rule evaluation.
- *   <li>{@link #DONT_ASK}: ASK decisions are demoted to DENY (for unattended runs).
+ *   <li>{@link #DEFAULT}：所有操作都需要显式允许规则。
+ *   <li>{@link #ACCEPT_EDITS}：自动允许工作目录内的文件编辑。
+ *   <li>{@link #EXPLORE}：只读模式，拒绝修改类工具。
+ *   <li>{@link #BYPASS}：不经规则评估便允许所有操作。
+ *   <li>{@link #DONT_ASK}：将 ASK 决定降为 DENY（用于无人值守执行）。
  * </ul>
+ *
+ * <p>【学习提示】以上为上游模式概述；具体边界应以 PermissionEngine 的实现为准：
+ * BYPASS 仅是后置回退，不能越过先行的拒绝／询问规则及工具自检；
+ * DEFAULT 也可能由工具自检直接允许。不能仅凭模式名称推断最终权限。
  */
 public enum PermissionMode {
     DEFAULT("default"),
@@ -49,11 +53,11 @@ public enum PermissionMode {
     }
 
     /**
-     * Resolves a string (case-insensitive) to a {@code PermissionMode}.
+     * 将字符串解析为 {@code PermissionMode}，不区分大小写。
      *
-     * @param value JSON / config string representation
-     * @return matching mode
-     * @throws IllegalArgumentException if no enum value matches
+     * @param value JSON／配置中的字符串表示
+     * @return 匹配的模式
+     * @throws IllegalArgumentException 没有匹配的枚举值时抛出
      */
     @JsonCreator
     public static PermissionMode fromString(String value) {

@@ -19,6 +19,8 @@ import io.agentscope.core.message.ToolResultBlock;
 import io.agentscope.core.observation.ActionObservation;
 import io.agentscope.core.state.State;
 
-/** Runtime-owned evidence. Raw results have the same access/retention boundary as session state. */
+/**
+ * 由运行时管理的证据。原始结果与会话状态具有相同的访问和保留边界。
+ */
 public record StoredActionObservation(ActionObservation observation, ToolResultBlock result)
         implements State {}

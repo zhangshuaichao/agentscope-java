@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
 
 /**
- * Factory for creating meta tools that allow agents to dynamically manage tool groups.
+ * 创建元工具的工厂，使智能体能动态管理工具组。
  */
 class MetaToolFactory {
 
@@ -40,9 +40,9 @@ class MetaToolFactory {
     }
 
     /**
-     * Create the reset_equipped_tools meta tool.
+     * 创建 reset_equipped_tools 元工具。
      *
-     * @return AgentTool for reset_equipped_tools
+     * @return 用于 reset_equipped_tools 的 AgentTool
      */
     AgentTool createResetEquippedToolsAgentTool() {
         return new AgentTool() {
@@ -79,7 +79,7 @@ class MetaToolFactory {
                 Map<String, Object> items = new HashMap<>();
                 items.put("type", "string");
 
-                // Only META-scoped groups appear in the enum
+                // 枚举中只包含 META 作用域的工具组
                 List<String> availableGroups = new ArrayList<>(groupManager.getMetaGroupNames());
                 if (!availableGroups.isEmpty()) {
                     items.put("enum", availableGroups);
@@ -120,11 +120,10 @@ class MetaToolFactory {
     }
 
     /**
-     * Resolves the per-call {@link ToolContextState} from the tool call's runtime context, so the
-     * meta tool targets the active session's activation set instead of the shared group manager.
+     * 从工具调用的运行时上下文解析本次调用的 {@link ToolContextState}，使元工具作用于当前会话的激活集合，而非共享工具组管理器。
      *
-     * @param param the tool call parameters
-     * @return the resolved tool context state, or {@code null} when unavailable
+     * @param param 工具调用参数
+     * @return 解析到的工具上下文状态；不可用时为 {@code null}
      */
     private ToolContextState resolveToolContext(ToolCallParam param) {
         RuntimeContext rc = param.getRuntimeContext();
@@ -133,21 +132,17 @@ class MetaToolFactory {
     }
 
     /**
-     * Implementation of reset_equipped_tools logic.
+     * 实现 reset_equipped_tools 逻辑。
      *
-     * <p>Uses <b>replacement semantics</b>: all META-scoped groups not in the input list are
-     * deactivated. EXTERNAL-scoped groups are unaffected. The activation set is always written to
-     * the per-call {@link ToolContextState} (the single source of truth for the session); the
-     * shared group manager is never mutated. When no per-session context is available the tool
-     * fails fast without touching shared state.
+     * <p>采用<b>替换语义</b>：停用输入列表之外的全部 META 作用域工具组，EXTERNAL 作用域组不受影响。激活集合始终写入每次调用的 {@link ToolContextState}（会话的唯一事实来源），从不修改共享工具组管理器。缺少会话上下文时，工具快速失败，不触碰共享状态。
      *
-     * @param toActivate List of tool group names to activate (must all be META scope)
-     * @param tcs the per-call tool context state (must be non-null)
-     * @return Response message describing the resulting state
-     * @throws IllegalArgumentException if any group doesn't exist
+     * @param toActivate 要激活的工具组名称列表（必须均为 META 作用域）
+     * @param tcs 本次调用的工具上下文状态（不能为 null）
+     * @return 描述结果状态的响应消息
+     * @throws IllegalArgumentException 当任意工具组不存在时
      */
     private String resetEquippedToolsImpl(List<String> toActivate, ToolContextState tcs) {
-        // Validate: all groups must exist and be META scope
+        // 验证全部工具组均存在且属于 META 作用域
         for (String groupName : toActivate) {
             groupManager.validateGroupExists(groupName);
             ToolGroup group = groupManager.getToolGroup(groupName);
@@ -157,22 +152,22 @@ class MetaToolFactory {
             }
         }
 
-        // No per-session context: never fall back to mutating the shared group manager. A missing
-        // runtime context is an integration fault, and touching shared state here would be
-        // destructive — fail fast instead.
+        // 缺少会话上下文时，绝不回退到修改共享工具组管理器。缺失
+        // 运行时上下文属于集成故障，此处修改共享状态会造成
+        // 破坏，因此应快速失败。
         if (tcs == null) {
             throw new IllegalStateException(
                     "reset_equipped_tools requires a per-session runtime context");
         }
 
-        // Single source of truth: atomically keep EXTERNAL-scoped groups and replace META-scoped
-        // ones,
-        // so a concurrent additive tool (skill activation) is not lost by this replace.
+        // 唯一事实来源：原子性地保留 EXTERNAL 作用域工具组，并替换 META 作用域
+        // 工具组，
+        // 避免此次替换丢失并发添加的工具（例如技能激活）。
         tcs.replaceActivatedGroups(groupManager.getMetaGroupNames(), toActivate);
 
-        // Build response (aligned with Python format)
+        // 构造响应（与 Python 格式对齐）
         if (toActivate.isEmpty()) {
-            // Only META groups are deactivated here; EXTERNAL-scoped groups are preserved.
+            // 此处仅停用 META 工具组；保留 EXTERNAL 作用域组。
             return "All META tool groups are currently deactivated.";
         }
 
@@ -180,7 +175,7 @@ class MetaToolFactory {
         StringBuilder result = new StringBuilder();
         result.append("The currently activated tool group(s): ").append(groupNames).append(".\n");
 
-        // Collect groups that have descriptions for tool-instructions block
+        // 收集带描述的工具组，用于工具说明块
         List<ToolGroup> activatedGroups = new ArrayList<>();
         for (String groupName : toActivate) {
             ToolGroup group = groupManager.getToolGroup(groupName);

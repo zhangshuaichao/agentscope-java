@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.team;
 
 import java.util.List;
 
-/** Spec for creating a local or CP-backed team. */
+/** 创建本地或控制平面支持的团队所需的配置。 */
 public record TeamCreateSpec(
         String name,
         String namespace,

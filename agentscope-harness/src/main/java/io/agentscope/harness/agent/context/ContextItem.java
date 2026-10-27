@@ -21,7 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Objects;
 
-/** Source material, prior to model rendering. Authority is determined by its provider, not text. */
+/** 模型渲染前的来源材料。其权限级别由提供者决定，而不是由文本内容决定。 */
 public record ContextItem(
         String kind,
         String sourceId,
@@ -53,8 +53,8 @@ public record ContextItem(
     }
 
     /**
-     * Per-call state rendered after the conversation. Required materials remain visible during
-     * history compaction; optional facts may be omitted under budget.
+     * 渲染在对话之后的调用级状态。历史压缩时必需材料仍保持可见；
+     * 预算不足时可以省略可选事实。
      */
     public static ContextItem runtimeState(
             String kind, String sourceId, boolean required, String content) {

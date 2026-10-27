@@ -37,26 +37,17 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Redis-based session implementation using Redisson.
+ * 使用 Redisson 的 Redis 会话状态存储实现。
  *
- * @deprecated Use {@link io.agentscope.extensions.redis.state.RedisAgentStateStore} with redissonClient instead.
- * RedisAgentStateStore provides a unified session implementation that works with multiple Redis clients.
- * For basic usage, simple constructors are available.
- * For advanced configuration, use {@link RedisAgentStateStore#builder()}
+ * @deprecated 请改用 {@link io.agentscope.extensions.redis.state.RedisAgentStateStore} 并设置 redissonClient。
+ * 统一实现支持多种 Redis 客户端；基础用法可使用简单构造器，高级配置使用 {@link RedisAgentStateStore#builder()}。
  *
- * <p>This implementation stores session state in Redis with the following key structure:
+ * <p>状态键结构：
+ * <ul><li>单值状态：{@code {prefix}{sessionId}:{stateKey}}，JSON 字符串。</li>
+ * <li>列表状态：{@code {prefix}{sessionId}:{stateKey}:list}，JSON 项列表。</li>
+ * <li>会话标记：{@code {prefix}{sessionId}:_keys}，跟踪全部状态键的集合。</li></ul>
  *
- * <ul>
- *   <li>Single state: {@code {prefix}{sessionId}:{stateKey}} - Redis String containing JSON
- *   <li>List state: {@code {prefix}{sessionId}:{stateKey}:list} - Redis List containing JSON items
- *   <li>AgentStateStore marker: {@code {prefix}{sessionId}:_keys} - Redis Set tracking all state keys
- * </ul>
- *
- * <ul>
- *   <li>Incremental list storage (only appends new items)
- *   <li>Type-safe state serialization using Jackson
- *   <li>Automatic session key tracking
- * </ul>
+ * <p>支持列表增量追加、Jackson 类型化序列化与会话键自动跟踪。
  */
 @Deprecated
 public class RedissonAgentStateStore implements AgentStateStore {
@@ -80,9 +71,8 @@ public class RedissonAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Creates a new builder for {@link RedissonAgentStateStore}.
-     *
-     * @return a new Builder instance
+     * 创建 {@link RedissonAgentStateStore} 构建器。
+     * @return 新构建器实例
      */
     public static Builder builder() {
         return new Builder();
@@ -124,9 +114,9 @@ public class RedissonAgentStateStore implements AgentStateStore {
     public long saveIfVersion(
             String userId, String sessionId, String key, State value, long expectedVersion) {
         if (expectedVersion == UNVERSIONED) {
-            // evalSave with the UNCONDITIONAL sentinel already returns the new version —
-            // no need to read it back (and reading back via State.class is impossible because
-            // `State` is a marker interface Jackson cannot instantiate).
+            // evalSave 使用 UNCONDITIONAL 哨兵时已直接返回新版本，
+            // 无需回读；也无法用 State.class 读取，
+            // 因为 State 是 Jackson 无法实例化的标记接口。
             return evalSave(userId, sessionId, key, value, RedisStateVersionSupport.UNCONDITIONAL);
         }
         return evalSave(userId, sessionId, key, value, Long.toString(expectedVersion));
@@ -169,10 +159,10 @@ public class RedissonAgentStateStore implements AgentStateStore {
         try {
             RList<String> rList = redissonClient.getList(redisKey, StringCodec.INSTANCE);
 
-            // Get current list length to support incremental append
+            // 读取当前列表长度，以支持增量追加。
             int existingCount = rList.size();
 
-            // Only append new items
+            // 仅追加新增项。
             if (values.size() > existingCount) {
                 List<? extends State> newItems = values.subList(existingCount, values.size());
 
@@ -182,7 +172,7 @@ public class RedissonAgentStateStore implements AgentStateStore {
                 }
             }
 
-            // Track this key in the session's key set
+            // 在会话键集合中跟踪此键。
             RSet<String> keysSet = redissonClient.getSet(keysKey, StringCodec.INSTANCE);
             keysSet.add(key + LIST_SUFFIX);
         } catch (Exception e) {
@@ -321,9 +311,8 @@ public class RedissonAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Clear all sessions stored in Redis (for testing or cleanup).
-     *
-     * @return Mono that completes with the number of deleted session keys
+     * 清除当前键前缀下的全部会话数据，用于测试或清理。
+     * @return 完成时产生已删除匹配键数量的 Mono
      */
     public Mono<Integer> clearAllSessions() {
         return Mono.fromSupplier(
@@ -351,39 +340,36 @@ public class RedissonAgentStateStore implements AgentStateStore {
     }
 
     /**
-     * Get the Redis key for a single state value.
-     *
-     * @param sessionId the session ID
-     * @param key the state key
-     * @return Redis key in format {prefix}{sessionId}:{key}
+     * 获取单值状态的 Redis 键。
+     * @param sessionId 会话 ID
+     * @param key 状态键
+     * @return 格式为 {prefix}{sessionId}:{key} 的 Redis 键
      */
     private String getStateKey(String sessionId, String key) {
         return keyPrefix + sessionId + ":" + key;
     }
 
     /**
-     * Get the Redis key for a list state value.
-     *
-     * @param sessionId the session ID
-     * @param key the state key
-     * @return Redis key in format {prefix}{sessionId}:{key}:list
+     * 获取列表状态的 Redis 键。
+     * @param sessionId 会话 ID
+     * @param key 状态键
+     * @return 格式为 {prefix}{sessionId}:{key}:list 的 Redis 键
      */
     private String getListKey(String sessionId, String key) {
         return keyPrefix + sessionId + ":" + key + LIST_SUFFIX;
     }
 
     /**
-     * Get the Redis key for tracking session keys.
-     *
-     * @param sessionId the session ID
-     * @return Redis key in format {prefix}{sessionId}:_keys
+     * 获取跟踪会话键的 Redis 键。
+     * @param sessionId 会话 ID
+     * @return 格式为 {prefix}{sessionId}:_keys 的 Redis 键
      */
     private String getKeysKey(String sessionId) {
         return keyPrefix + sessionId + KEYS_SUFFIX;
     }
 
     /**
-     * Builder for {@link RedissonAgentStateStore}.
+     * {@link RedissonAgentStateStore} 构建器。
      */
     public static class Builder {
 

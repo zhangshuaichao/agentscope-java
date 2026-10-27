@@ -18,7 +18,7 @@ package io.agentscope.harness.agent.context;
 import java.util.List;
 import reactor.core.publisher.Mono;
 
-/** Read-only dynamic context. Shared instances must be thread-safe and authorize each request. */
+/** 只读动态上下文。共享实例必须是线程安全的，并对每次请求执行授权检查。 */
 @FunctionalInterface
 public interface ContextSource {
     Mono<List<ContextBlock>> load(ContextRequest request);

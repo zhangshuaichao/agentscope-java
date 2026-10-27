@@ -16,13 +16,11 @@
 package io.agentscope.core.tool;
 
 /**
- * Provider interface for resolving ToolExecutionContext from external sources.
+ * 从外部来源解析 ToolExecutionContext 的提供者接口。
  *
- * <p>This interface enables integration with dependency injection frameworks like Spring, allowing
- * tool execution contexts to be resolved from IoC containers, request scopes, thread-local storage,
- * or any other context management mechanism.
+ * <p>支持与 Spring 等依赖注入框架集成，从 IoC 容器、请求作用域、线程局部存储或其他上下文管理机制解析工具执行上下文。
  *
- * <p><b>Spring Integration Example:</b>
+ * <p><b>Spring 集成示例：</b>
  *
  * <pre>{@code
  * // 1. Define your context POJO with Spring scope
@@ -83,7 +81,7 @@ package io.agentscope.core.tool;
  * }
  * }</pre>
  *
- * <p><b>ThreadLocal Example:</b>
+ * <p><b>ThreadLocal 示例：</b>
  *
  * <pre>{@code
  * public class ThreadLocalContextProvider implements ToolExecutionContextProvider {
@@ -112,24 +110,20 @@ package io.agentscope.core.tool;
  * }</pre>
  */
 /**
- * @deprecated Part of the {@link ToolExecutionContext} layer which is superseded by
- *     {@link io.agentscope.core.agent.RuntimeContext}.
+ * @deprecated 属于 {@link ToolExecutionContext} 层，已由 {@link io.agentscope.core.agent.RuntimeContext} 取代。
  */
 @Deprecated
 @FunctionalInterface
 public interface ToolExecutionContextProvider {
 
     /**
-     * Resolves a context instance of the specified type.
+     * 解析指定类型的上下文实例。
      *
-     * <p>This method is called by the framework when a tool method parameter requires context
-     * injection but no explicit context was provided at the call site. The implementation should
-     * attempt to resolve the context from its managed source (Spring container, ThreadLocal, etc.)
-     * and return an instance of the requested type.
+     * <p>工具方法参数需要上下文注入，而调用处未显式提供上下文时，框架调用此方法。实现应尝试从其管理的数据源（Spring 容器、ThreadLocal 等）解析上下文，并返回所需类型的实例。
      *
-     * @param targetType The target type to resolve (ToolExecutionContext or custom POJO)
-     * @param <T> The target type
-     * @return The resolved context instance, or null if not available
+     * @param targetType 要解析的目标类型（ToolExecutionContext 或自定义 POJO）
+     * @param <T> 目标类型
+     * @return 解析后的上下文实例；不可用时为 null
      */
     <T> T resolveContext(Class<T> targetType);
 }

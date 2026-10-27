@@ -46,17 +46,16 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Default {@link Gateway} implementation. Routes inbound turns by {@link MsgContext#canonicalKey()},
- * serializes concurrent turns per session via {@link SessionTurnGate}, and dispatches to the
- * appropriate registered {@link HarnessAgent}.
+ * 默认 {@link Gateway} 实现。按 {@link MsgContext#canonicalKey()} 路由入站轮次，
+ * 通过 {@link SessionTurnGate} 按会话串行化并发轮次，再分发给对应的已注册 {@link HarnessAgent}。
  *
- * <p>This implementation provides:
+ * <p>此实现提供：
  * <ul>
- *   <li>Multi-agent registry with fallback to a main agent
- *   <li>Stable session mapping: same {@link MsgContext#canonicalKey()} always resolves to the same
- *       session id, giving each logical conversation its own memory
- *   <li>Per-session fair mutual exclusion preventing concurrent turns from racing
- *   <li>Outbound address tracking for proactive delivery (e.g. subagent announces)
+ *   <li>多智能体注册表，并回退到主智能体
+ *   <li>稳定会话映射：相同 {@link MsgContext#canonicalKey()} 始终解析到相同会话 ID，
+ *       使每个逻辑对话有自己的记忆
+ *   <li>按会话公平互斥，防止并发轮次竞争
+ *   <li>跟踪出站地址以主动投递消息（例如子智能体公告）
  * </ul>
  */
 public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTarget {
@@ -74,40 +73,43 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     private final ConcurrentHashMap<String, HarnessAgent> agentRegistry = new ConcurrentHashMap<>();
     private volatile String defaultAgentId = null;
 
-    /** Reverse mapping: session id → canonicalKey (for wakeup-driven runs). */
+    /**
+     * 反向映射：会话 ID → canonicalKey（供唤醒驱动的执行使用）。
+     */
     private final ConcurrentHashMap<String, String> sessionToGateKey = new ConcurrentHashMap<>();
 
-    /** Live-agent cache for the fast same-node path: subagentId → exposed subagent session. */
+    /**
+     * 同节点快速路径的活跃智能体缓存：subagentId → 已公开子智能体会话。
+     */
     private final ConcurrentHashMap<String, ExposedSession> exposedSessions =
             new ConcurrentHashMap<>();
 
     /**
-     * Durable registry of exposure recipes. Defaults to {@link InMemorySubagentRegistry} (legacy
-     * single-process behaviour); a {@link StoreBackedSubagentRegistry} is injected when a
-     * distributed store is configured, enabling cross-node / cross-restart resolution.
+     * 公开信息的持久化注册表。默认 {@link InMemorySubagentRegistry}（旧单进程行为）；
+     * 配置分布式存储时注入 {@link StoreBackedSubagentRegistry}，支持跨节点／重启解析。
      */
     private volatile SubagentRegistry subagentRegistry = new InMemorySubagentRegistry();
 
     /**
-     * Rebuilds a subagent {@link Agent} from its type id when the live instance is not present on
-     * this node (cross-node / post-restart). {@code null} disables recovery — only cached live
-     * sessions are addressable.
+     * 本节点没有活跃实例时（跨节点／重启后），按类型 ID 重建子智能体 {@link Agent}。
+     * {@code null} 表示禁用恢复，仅缓存中的活跃会话可寻址。
      */
     private volatile SubagentMaterializer subagentMaterializer;
 
-    /** session id → last outbound address (for proactive push delivery) */
+    /**
+     * 会话 ID → 最近出站地址（用于主动推送投递）
+     */
     private final ConcurrentHashMap<String, OutboundAddress> lastRouteBySession =
             new ConcurrentHashMap<>();
 
     /**
-     * Optional durable store for session→gateKey and session→route mappings. When set, local
-     * caches are written through on update and consulted on cache miss (cross-node recovery).
+     * 可选持久化存储，保存会话到 gateKey 及会话到路由的映射。
+     * 设置后，更新时同步写入本地缓存与持久存储，缓存未命中时查询存储（跨节点恢复）。
      */
     private volatile BaseStore baseStore;
 
     /**
-     * Optional resolver that supplies / replaces the caller {@link RuntimeContext} before gateway
-     * identity fields are applied.
+     * 可选解析器，在应用网关身份字段前提供或替换调用方 {@link RuntimeContext}。
      */
     private volatile ChannelRuntimeContextResolver runtimeContextResolver;
 
@@ -116,41 +118,53 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
         this.messageBus = messageBus;
     }
 
-    /** Creates a gateway with a channel manager for outbound delivery. */
+    /**
+     * 创建带渠道管理器的网关，用于出站投递。
+     */
     public static HarnessGateway create(ChannelManager channelManager) {
         return new HarnessGateway(Objects.requireNonNull(channelManager, "channelManager"), null);
     }
 
-    /** Creates a gateway with a channel manager and message bus. */
+    /**
+     * 创建带渠道管理器和消息总线的网关。
+     */
     public static HarnessGateway create(ChannelManager channelManager, MessageBus messageBus) {
         return new HarnessGateway(
                 Objects.requireNonNull(channelManager, "channelManager"), messageBus);
     }
 
-    /** Creates a gateway without outbound delivery support. */
+    /**
+     * 创建不支持出站投递的网关。
+     */
     public static HarnessGateway create() {
         return new HarnessGateway(null, null);
     }
 
-    /** Returns the message bus, or null if not configured. */
+    /**
+     * 返回消息总线，未配置时为 null。
+     */
     public MessageBus messageBus() {
         return messageBus;
     }
 
-    /** The channel manager for outbound delivery, or null if not configured. */
+    /**
+     * 出站投递的渠道管理器，未配置时为 null。
+     */
     public ChannelManager channelManager() {
         return channelManager;
     }
 
     /**
-     * Sets an optional {@link ChannelRuntimeContextResolver} used when building the per-turn {@link
-     * RuntimeContext}. Passing {@code null} clears any previously configured resolver.
+     * 设置可选的 {@link ChannelRuntimeContextResolver}，用于构建每轮的 {@link
+     * RuntimeContext}。传入 {@code null} 会清除之前配置的解析器。
      */
     public void setRuntimeContextResolver(ChannelRuntimeContextResolver runtimeContextResolver) {
         this.runtimeContextResolver = runtimeContextResolver;
     }
 
-    /** Returns the configured {@link ChannelRuntimeContextResolver}, or {@code null}. */
+    /**
+     * 返回已配置的 {@link ChannelRuntimeContextResolver}，没有则为 {@code null}。
+     */
     public ChannelRuntimeContextResolver getRuntimeContextResolver() {
         return runtimeContextResolver;
     }
@@ -172,8 +186,8 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Returns the agent registered under {@code agentId}, or null if not found. Exposed for
-     * introspection (e.g. enumerate an agent's skill repositories).
+     * 返回以 {@code agentId} 注册的智能体；未找到时为 null。
+     * 供内省使用，例如枚举智能体的技能仓库。
      */
     public HarnessAgent findAgent(String agentId) {
         if (agentId == null) return null;
@@ -277,17 +291,16 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Builds the effective {@link RuntimeContext} for a Gateway turn.
+     * 构建网关轮次实际使用的 {@link RuntimeContext}。
      *
      * <ol>
-     *   <li>Start from {@code callerContext} (may be null)
-     *   <li>If a {@link ChannelRuntimeContextResolver} is configured and returns non-null, that
-     *       value replaces the caller base
-     *   <li>Gateway identity fields ({@code sessionId}, {@code userId}, {@code msgContext}, {@code
-     *       gateKey}, {@code outboundAddress}) are applied and win on conflict
+     *   <li>从 {@code callerContext} 开始（可为 null）
+     *   <li>若已配置 {@link ChannelRuntimeContextResolver} 且返回非 null，则用其结果替换调用方基础上下文
+     *   <li>应用网关身份字段（{@code sessionId}、{@code userId}、{@code msgContext}、{@code
+     *       gateKey}、{@code outboundAddress}），冲突时它们优先
      * </ol>
      *
-     * @param inboundMessage optional inbound envelope (for resolver); may be null
+     * @param inboundMessage 供解析器使用的可选入站信封；可为 null
      */
     RuntimeContext buildRuntimeContext(
             MsgContext ctx,
@@ -312,6 +325,9 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
             }
         }
 
+        // 【学习提示】这里覆盖的是实际提供的网关字段：userId 仅在非空白时写入，
+        // outboundAddress 仅在非 null 时写入；缺失字段不会自动清除 base 中的同名值。
+        // 这些上下文合并操作不负责认证，身份可信性仍由应用／渠道入口保证。
         RuntimeContext.Builder rtcBuilder = RuntimeContext.builder(base).sessionId(sessionId);
         if (ctx != null) {
             rtcBuilder.put("msgContext", ctx);
@@ -329,8 +345,8 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Delivers proactive outbound messages through the channel manager using the session's last
-     * recorded outbound address. Returns false if no route or no channel manager is available.
+     * 使用会话最近记录的出站地址，通过渠道管理器投递主动消息。
+     * 没有路由或渠道管理器时返回 false。
      */
     public boolean deliverToSession(String sessionId, List<Msg> messages) {
         if (channelManager == null || sessionId == null || messages == null || messages.isEmpty()) {
@@ -346,7 +362,7 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     // -----------------------------------------------------------------
-    //  Exposed subagent routing
+    // 已公开子智能体的路由
     // -----------------------------------------------------------------
 
     private record ExposedSession(
@@ -357,14 +373,13 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
             OutboundAddress replyTo) {}
 
     /**
-     * Exposes a spawned subagent as a user-addressable entry point. Returns the assigned
-     * subagentId.
+     * 将已创建的子智能体公开为用户可寻址入口，返回分配的 subagentId。
      *
-     * @param agentId the subagent type identifier
-     * @param sessionId the session id assigned to the subagent
-     * @param agent the agent instance
-     * @param replyTo the outbound address for delivering replies; may be null
-     * @return the subagentId handle for direct addressing
+     * @param agentId 子智能体类型标识
+     * @param sessionId 分配给子智能体的会话 ID
+     * @param agent 智能体实例
+     * @param replyTo 回复投递的出站地址；可为 null
+     * @return 用于直接寻址的 subagentId 句柄
      */
     public String exposeSubagent(
             String agentId, String sessionId, Agent agent, OutboundAddress replyTo) {
@@ -388,7 +403,9 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
         return subagentId;
     }
 
-    /** Revokes a previously exposed subagent, removing it from the live cache and the registry. */
+    /**
+     * 撤销先前公开的子智能体，从活跃缓存和注册表中移除。
+     */
     public void revokeSubagent(String subagentId) {
         if (subagentId != null) {
             exposedSessions.remove(subagentId);
@@ -401,8 +418,7 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Installs the durable {@link SubagentRegistry}. Called during gateway wiring; defaults to an
-     * in-memory registry when not set.
+     * 安装持久化 {@link SubagentRegistry}。在网关装配期间调用；未设置时默认使用内存注册表。
      */
     public void setSubagentRegistry(SubagentRegistry registry) {
         if (registry != null) {
@@ -411,26 +427,26 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Installs the {@link SubagentMaterializer} used to rebuild subagents that are not present in
-     * the local live cache (cross-node / post-restart recovery).
+     * 安装 {@link SubagentMaterializer}，用于重建本地活跃缓存中不存在的子智能体
+     * （跨节点／重启后恢复）。
      */
     public void setSubagentMaterializer(SubagentMaterializer materializer) {
         this.subagentMaterializer = materializer;
     }
 
     /**
-     * Installs the {@link BaseStore} used to persist session routing metadata across nodes.
-     * Called during gateway wiring when a distributed store is configured.
+     * 安装用于跨节点持久化会话路由元数据的 {@link BaseStore}。
+     * 配置分布式存储时，在网关装配期间调用。
      */
     public void setBaseStore(BaseStore store) {
         this.baseStore = store;
     }
 
     /**
-     * Installs the {@link SessionTurnGate} used to serialize concurrent turns per session. Defaults
-     * to {@link LocalSessionTurnGate} when not set.
+     * 安装按会话串行化并发轮次的 {@link SessionTurnGate}。
+     * 未设置时默认使用 {@link LocalSessionTurnGate}。
      *
-     * @param gate turn gate implementation; ignored when {@code null}
+     * @param gate 轮次门控实现；为 {@code null} 时忽略
      */
     public void setSessionTurnGate(SessionTurnGate gate) {
         if (gate != null) {
@@ -439,10 +455,9 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Resolves an exposed subagent to a runnable session: returns the cached live session when
-     * present, otherwise rebuilds it from the durable registry via the configured
-     * {@link SubagentMaterializer}. Returns {@code null} when the handle is unknown / expired or
-     * cannot be re-materialized.
+     * 将已公开子智能体解析为可运行会话：缓存中存在活跃会话时直接返回，
+     * 否则通过配置的 {@link SubagentMaterializer} 根据持久化注册表重建。
+     * 句柄未知、已过期或无法重建时返回 {@code null}。
      */
     private ExposedSession resolveExposed(String subagentId) {
         ExposedSession live = exposedSessions.get(subagentId);
@@ -513,7 +528,7 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     // -----------------------------------------------------------------
-    //  Internal
+    // 内部实现
     // -----------------------------------------------------------------
 
     private HarnessAgent resolveAgent(String agentId) {
@@ -565,7 +580,7 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     // ------------------------------------------------------------------
-    //  Session helpers
+    // 会话辅助方法
     // ------------------------------------------------------------------
 
     private String resolveSessionId(String gateKey) {
@@ -578,12 +593,11 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Adopts a control-plane-allocated session id so {@link #runWakeup(String, String)} can resolve
-     * it. Used by BYO {@code team_join}; Managed sessions already use product ids that the managed
-     * turn path accepts without this mapping.
+     * 接纳控制面分配的会话 ID，使 {@link #runWakeup(String, String)} 能解析它。
+     * 由自带基础设施的 {@code team_join} 使用；受管会话已使用受管轮次路径直接接受的产品 ID，无需此映射。
      *
-     * @param sessionId external session id assigned by the control plane
-     * @param gateKey stable gate key (e.g. {@code team:{teamName}:{role}})
+     * @param sessionId 控制面分配的外部会话 ID
+     * @param gateKey 稳定门控键（例如 {@code team:{teamName}:{role}}）
      */
     public void registerExternalSession(String sessionId, String gateKey) {
         if (sessionId == null || sessionId.isBlank()) {
@@ -597,9 +611,8 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Returns {@code true} when the given session is currently inside a gated turn (a run is in
-     * progress). Used by {@link WakeupDispatcher} to skip sessions that will naturally drain their
-     * inbox on the current reasoning step.
+     * 指定会话当前处于受门控轮次中（正在运行）时返回 {@code true}。
+     * {@link WakeupDispatcher} 用它跳过正在本轮推理步骤中自然排空收件箱的会话。
      */
     public boolean isSessionRunning(String sessionId) {
         String gateKey = resolveSessionGateKey(sessionId);
@@ -609,11 +622,10 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     /**
      * {@inheritDoc}
      *
-     * <p>Delegates to {@link #runWakeup(String, String)} with a {@code null} user id.
+     * <p>以 {@code null} 用户 ID 委托给 {@link #runWakeup(String, String)}。
      *
-     * @deprecated use {@link #runWakeup(String, String)} so the wakeup-driven round loads agent
-     *     state from the correct {@code (userId, sessionId)} slot. This overload preserves legacy
-     *     anonymous-wakeup behavior.
+     * @deprecated 请使用 {@link #runWakeup(String, String)}，使唤醒轮次从正确的
+     *     {@code (userId, sessionId)} 槽位加载智能体状态。此重载保留旧的匿名唤醒行为。
      */
     @Deprecated
     @Override
@@ -622,20 +634,18 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     /**
-     * Triggers a wakeup-driven run for an idle session, propagating the owning user id when
-     * present. Called by {@link WakeupDispatcher} when a background task completes or a team
-     * message arrives. The agent starts a reasoning round with no user input; {@link
-     * io.agentscope.harness.agent.middleware.InboxMiddleware} drains the inbox and injects the
-     * pending results as context.
+     * 为闲置会话触发唤醒执行，并在存在所属用户 ID 时向下传递。
+     * 后台任务完成或团队消息到达时由 {@link WakeupDispatcher} 调用。
+     * 智能体在没有用户输入的情况下开始推理轮次；{@link
+     * io.agentscope.harness.agent.middleware.InboxMiddleware} 排空收件箱并将待处理结果注入上下文。
      *
-     * <p>When {@code userId} is non-blank it is set on the {@link RuntimeContext}, so the agent
-     * loads state from the same {@code (userId, sessionId)} slot as the original user-driven run
-     * — matching {@code runStream}. A blank or null user id preserves the legacy anonymous
-     * behavior.
+     * <p>{@code userId} 非空白时写入 {@link RuntimeContext}，使智能体从与原用户调用相同的
+     * {@code (userId, sessionId)} 槽位加载状态，与 {@code runStream} 一致。
+     * 用户 ID 为空白或 null 时保留旧匿名行为。
      *
-     * @param userId the owning user id carried by the wakeup entry; may be {@code null} or blank
-     * @param sessionId the session to wake up
-     * @return the agent's response, or {@link Mono#empty()} if the session is unknown
+     * @param userId 唤醒条目携带的所属用户 ID；可为 {@code null} 或空白
+     * @param sessionId 要唤醒的会话
+     * @return 智能体响应；未知会话时为 {@link Mono#empty()}
      */
     @Override
     public Mono<Msg> runWakeup(String userId, String sessionId) {
@@ -688,9 +698,12 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     // ------------------------------------------------------------------
-    //  Turn serialization
+    // 轮次串行化
     // ------------------------------------------------------------------
 
+    // 【学习提示】acquire 可能阻塞，因此订阅安排到 boundedElastic；defer 决定获取时机，
+    // doFinally 覆盖终止清理。注意 leaseRef 在 defer 外创建，同一个返回值被重复／并发订阅
+    // 时会共享它；不能由“使用 defer”推断所有租约状态都按订阅隔离。
     private Mono<Msg> withGatedTurn(String gateKey, Supplier<Mono<Msg>> turn) {
         AtomicReference<TurnLease> leaseRef = new AtomicReference<>();
         return Mono.defer(
@@ -748,7 +761,7 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     }
 
     // ------------------------------------------------------------------
-    //  Route persistence (local cache + optional BaseStore)
+    // 路由持久化（本地缓存及可选 BaseStore）
     // ------------------------------------------------------------------
 
     private String resolveSessionGateKey(String sessionId) {

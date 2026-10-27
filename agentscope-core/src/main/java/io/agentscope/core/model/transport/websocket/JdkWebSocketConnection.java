@@ -29,11 +29,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
- * WebSocket connection implementation based on JDK WebSocket.
+ * 基于 JDK WebSocket 的连接实现。
  *
- * <p>Supports both text (String) and binary (byte[]) message types through generic type parameter.
+ * <p>通过泛型参数同时支持文本（String）和二进制（byte[]）消息。
  *
- * @param <T> Message type: String for text protocol, byte[] for binary protocol
+ * <p>【学习提示】网络回调可能收到一条消息的多个分片，必须先累积到完整消息再发给下游；
+ * 接收端使用单播汇，不能把同一个接收流误当作支持任意多个独立订阅者的广播总线。
+ *
+ * @param <T> 消息类型：文本协议为 String，二进制协议为 byte[]
  */
 public class JdkWebSocketConnection<T> implements WebSocketConnection<T> {
 
@@ -45,17 +48,17 @@ public class JdkWebSocketConnection<T> implements WebSocketConnection<T> {
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private volatile CloseInfo closeInfo;
 
-    // Message receive sink (unicast - single subscriber only)
+    // 消息接收汇（单播，仅允许一个订阅者）
     private final Sinks.Many<T> messageSink = Sinks.many().unicast().onBackpressureBuffer();
 
-    // Buffer for accumulating fragmented messages
+    // 用于累积消息分片的缓冲区
     private final StringBuilder textBuffer = new StringBuilder();
     private ByteBuffer binaryBuffer;
 
-    // Send lock (JDK WebSocket is not thread-safe for sending)
+    // 发送锁（JDK WebSocket 的发送操作不是线程安全的）
     private final ReentrantLock sendLock = new ReentrantLock();
 
-    // JDK WebSocket.Listener implementation
+    // JDK WebSocket.Listener 实现
     private final WebSocket.Listener listener =
             new WebSocket.Listener() {
                 @Override
@@ -84,7 +87,7 @@ public class JdkWebSocketConnection<T> implements WebSocketConnection<T> {
                     if (binaryBuffer == null) {
                         binaryBuffer = ByteBuffer.allocate(data.remaining());
                     }
-                    // Expand buffer if needed
+                    // 按需扩展缓冲区
                     if (binaryBuffer.remaining() < data.remaining()) {
                         ByteBuffer newBuffer =
                                 ByteBuffer.allocate(binaryBuffer.position() + data.remaining());
@@ -127,10 +130,10 @@ public class JdkWebSocketConnection<T> implements WebSocketConnection<T> {
             };
 
     /**
-     * Create a new JdkWebSocketConnection.
+     * 创建新的 JdkWebSocketConnection。
      *
      * @param url WebSocket URL
-     * @param messageType Message type class (String.class or byte[].class)
+     * @param messageType 消息类型类（String.class 或 byte[].class）
      */
     JdkWebSocketConnection(String url, Class<T> messageType) {
         this.url = url;
@@ -138,18 +141,18 @@ public class JdkWebSocketConnection<T> implements WebSocketConnection<T> {
     }
 
     /**
-     * Get the JDK WebSocket.Listener (internal use).
+     * 获取 JDK WebSocket.Listener（内部使用）。
      *
-     * @return WebSocket.Listener instance
+     * @return WebSocket.Listener 实例
      */
     WebSocket.Listener getListener() {
         return listener;
     }
 
     /**
-     * Set the WebSocket instance (internal use).
+     * 设置 WebSocket 实例（内部使用）。
      *
-     * @param webSocket WebSocket instance
+     * @param webSocket WebSocket 实例
      */
     void setWebSocket(WebSocket webSocket) {
         this.webSocket = webSocket;

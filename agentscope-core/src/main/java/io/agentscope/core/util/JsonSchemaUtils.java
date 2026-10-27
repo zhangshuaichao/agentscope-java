@@ -31,31 +31,30 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- * Utility class for JSON Schema operations.
+ * JSON Schema 操作工具类。
  *
- * <p>This class provides utility methods for:
+ * <p>提供以下辅助方法：
  * <ul>
- *   <li>Generating JSON schemas from Java classes (for structured output)</li>
- *   <li>Converting between Maps and typed objects</li>
- *   <li>Mapping Java types to JSON Schema types</li>
+ * <li>从 Java 类生成 JSON schema（用于结构化输出）</li>
+ * <li>Map 与类型化对象之间转换</li>
+ * <li>将 Java 类型映射到 JSON Schema 类型</li>
  * </ul>
  *
- * <p>Supports AgentScope annotations:
+ * <p>支持 AgentScope 注解：
  * <ul>
- *   <li>{@code @ToolParam(description = ...)} - add property description</li>
- *   <li>{@code @ToolParam(required = ...)} - mark property as required</li>
+ * <li>{@code @ToolParam(description = ...)}：添加属性描述</li>
+ * <li>{@code @ToolParam(required = ...)}：标记必填属性</li>
  * </ul>
  *
- * <p>Supports Jackson annotations:
+ * <p>支持 Jackson 注解：
  * <ul>
- *   <li>{@code @JsonProperty(required = ...)} - mark property as required</li>
- *   <li>{@code @JsonPropertyDescription(...)} - add property description</li>
- *   <li>{@code @JsonClassDescription(...)} - add class description</li>
+ * <li>{@code @JsonProperty(required = ...)}：标记必填属性</li>
+ * <li>{@code @JsonPropertyDescription(...)}：添加属性描述</li>
+ * <li>{@code @JsonClassDescription(...)}：添加类描述</li>
  * </ul>
  *
- * <p>All public methods are thread-safe. Schema generation through the shared victools
- * {@code SchemaGenerator} is serialized by an internal lock, because the generator itself
- * is not designed for concurrent use.</p>
+ * <p>所有公共方法均线程安全。共享 victools {@code SchemaGenerator} 本身不支持并发使用，
+ * 因此通过内部锁将 schema 生成串行化。</p>
  *
  * @hidden
  */
@@ -66,14 +65,13 @@ public class JsonSchemaUtils {
     private static final SchemaGenerator schemaGenerator;
 
     /**
-     * Guards the shared victools {@link SchemaGenerator}, which is not thread-safe: its
-     * JacksonModule keeps an unsynchronized introspection cache, so concurrent schema
-     * generation must be serialized.
+     * 保护非线程安全的共享 victools {@link SchemaGenerator}：
+     * 其 JacksonModule 持有未同步的内省缓存，因此必须串行化并发 schema 生成。
      */
     private static final Object SCHEMA_LOCK = new Object();
 
     static {
-        // JacksonModule to support @JsonProperty, @JsonPropertyDescription annotations
+        // 使用 JacksonModule 支持 @JsonProperty、@JsonPropertyDescription 注解
         JacksonModule jacksonModule =
                 new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED);
 
@@ -95,14 +93,12 @@ public class JsonSchemaUtils {
     }
 
     /**
-     * Generate JSON Schema from a Java class.
-     * This method is suitable for structured output scenarios where complex nested
-     * objects need to be converted to JSON Schema format.
+     * 从 Java 类生成 JSON Schema。
+     * 适用于需要将复杂嵌套对象转换为 JSON Schema 的结构化输出场景。
      *
-     * @param clazz The class to generate schema for
-     * @return JSON Schema as a Map
-     * @throws RuntimeException if schema generation fails due to reflection errors,
-     *                          configuration issues, or other processing errors
+     * @param clazz 要生成 schema 的类
+     * @return Map 形式的 JSON Schema
+     * @throws RuntimeException 反射错误、配置问题或其他处理错误导致 schema 生成失败时抛出
      */
     public static Map<String, Object> generateSchemaFromClass(Class<?> clazz) {
         try {
@@ -118,14 +114,12 @@ public class JsonSchemaUtils {
     }
 
     /**
-     * Generate JSON Schema from a com.fasterxml.jackson.databind.JsonNode instance.
-     * This method is suitable for structured output scenarios where complex nested
-     * objects need to be converted to JSON Schema format.
+     * 从 com.fasterxml.jackson.databind.JsonNode 实例生成 JSON Schema。
+     * 适用于需要将复杂嵌套对象转换为 JSON Schema 的结构化输出场景。
      *
-     * @param schema The com.fasterxml.jackson.databind.JsonNode instance to generate schema for
-     * @return JSON Schema as a Map
-     * @throws RuntimeException if schema generation fails due to reflection errors,
-     *                          configuration issues, or other processing errors
+     * @param schema 要生成 schema 的 com.fasterxml.jackson.databind.JsonNode 实例
+     * @return Map 形式的 JSON Schema
+     * @throws RuntimeException 反射错误、配置问题或其他处理错误导致 schema 生成失败时抛出
      */
     public static Map<String, Object> generateSchemaFromJsonNode(JsonNode schema) {
         try {
@@ -137,10 +131,10 @@ public class JsonSchemaUtils {
     }
 
     /**
-     * Generate JSON Schema from a Java Type (supports Generics).
+     * 从 Java Type 生成 JSON Schema（支持泛型）。
      *
-     * @param type The type to generate schema for
-     * @return JSON Schema as a Map
+     * @param type 要生成 schema 的类型
+     * @return Map 形式的 JSON Schema
      */
     public static Map<String, Object> generateSchemaFromType(Type type) {
         try {
@@ -157,16 +151,14 @@ public class JsonSchemaUtils {
     }
 
     /**
-     * Convert Map to typed object.
+     * 将 Map 转换为类型化对象。
      *
-     * @param data        The data map
-     * @param targetClass The target class
-     * @param <T>         The type
-     * @return Converted object
-     * @throws IllegalStateException if the input data is null
-     * @throws RuntimeException      if the conversion fails due to type mismatch,
-     *                               JSON parsing errors, or incompatible data
-     *                               structure
+     * @param data 数据映射
+     * @param targetClass 目标类
+     * @param <T> 类型
+     * @return 转换后的对象
+     * @throws IllegalStateException 输入数据为 null 时抛出
+     * @throws RuntimeException 类型不匹配、JSON 解析错误或不兼容数据结构导致转换失败时抛出
      */
     public static <T> T convertToObject(Object data, Class<T> targetClass) {
         if (data == null) {

@@ -21,38 +21,39 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Interface for knowledge bases.
+ * 知识库接口。
  *
- * <p>This interface provides a unified API for storing and retrieving documents
- * in a knowledge base. Knowledge bases are used in RAG (Retrieval-Augmented Generation)
- * systems to provide context to language models.
+ * <p>【学习提示】这是已弃用的兼容接口，可用于理解检索抽象；当前版本的新应用
+ * 应在应用层集成检索，不应据此认为 core.rag 是推荐的新扩展入口。
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * <p>此接口提供在知识库中存储和检索文档的统一 API。
+ * 知识库用于 RAG（Retrieval-Augmented Generation，检索增强生成）系统，
+ * 为语言模型提供上下文。
+ *
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public interface Knowledge {
 
     /**
-     * Adds documents to the knowledge base.
+     * 向知识库添加文档。
      *
-     * <p>Documents are embedded and stored in the vector database for later retrieval.
+     * <p>将文档转换为嵌入向量并存入向量数据库，以供后续检索。
      *
-     * @param documents the list of documents to add
-     * @return a Mono that completes when all documents have been added
+     * @param documents 要添加的文档列表
+     * @return 所有文档添加完成后结束的 Mono
      */
     Mono<Void> addDocuments(List<Document> documents);
 
     /**
-     * Retrieves relevant documents based on a query.
+     * 根据查询检索相关文档。
      *
-     * <p>The query is embedded and used to search for similar documents in the
-     * knowledge base. Results are filtered by the score threshold and limited
-     * by the configured limit.
+     * <p>将查询转换为嵌入向量，用于搜索知识库中的相似文档。
+     * 根据分数阈值过滤结果，并按配置的数量上限截取。
      *
-     * @param query the search query text
-     * @param config the retrieval configuration (limit, score threshold, etc.)
-     * @return a Mono that emits a list of relevant Document objects, sorted by relevance
+     * @param query 检索查询文本
+     * @param config 检索配置（数量上限、分数阈值等）
+     * @return 发出相关 Document 对象列表的 Mono，列表按相关性排序
      */
     Mono<List<Document>> retrieve(String query, RetrieveConfig config);
 }

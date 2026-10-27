@@ -23,28 +23,28 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Event fired before LLM reasoning.
+ * LLM 推理之前触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setInputMessages(List)}
+ * <p><b>可修改：</b>是，通过 {@link #setInputMessages(List)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getModelName()} - The model name (e.g., "qwen-plus")</li>
- *   <li>{@link #getGenerateOptions()} - The generation options (temperature, etc.)</li>
- *   <li>{@link #getInputMessages()} - Messages to send to LLM (modifiable)</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getModelName()}：模型名称（例如 "qwen-plus"）</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项（temperature 等）</li>
+ *   <li>{@link #getInputMessages()}：要发送给 LLM 的消息（可修改）</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Inject hints or additional context into the prompt</li>
- *   <li>Filter or modify existing messages</li>
- *   <li>Add system instructions dynamically</li>
- *   <li>Log reasoning input</li>
+ *   <li>向提示词注入提示或额外上下文</li>
+ *   <li>过滤或修改已有消息</li>
+ *   <li>动态添加系统指令</li>
+ *   <li>记录推理输入</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PreReasoningEvent extends ReasoningEvent {
@@ -53,13 +53,13 @@ public final class PreReasoningEvent extends ReasoningEvent {
     private GenerateOptions overriddenGenerateOptions;
 
     /**
-     * Constructor for PreReasoningEvent.
+     * PreReasoningEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null)
-     * @param inputMessages The messages to send to LLM (must not be null)
-     * @throws NullPointerException if agent, modelName, or inputMessages is null
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（可为 null）
+     * @param inputMessages 要发送给 LLM 的消息（不可为 null）
+     * @throws NullPointerException 当 agent、modelName 或 inputMessages 为 null 时抛出
      */
     public PreReasoningEvent(
             Agent agent,
@@ -73,31 +73,31 @@ public final class PreReasoningEvent extends ReasoningEvent {
     }
 
     /**
-     * Get the messages that will be sent to LLM for reasoning.
+     * 获取将发送给 LLM 进行推理的消息。
      *
-     * @return The input messages
+     * @return 输入消息
      */
     public List<Msg> getInputMessages() {
         return inputMessages;
     }
 
     /**
-     * Modify the messages to send to LLM.
+     * 修改要发送给 LLM 的消息。
      *
-     * @param inputMessages The new message list (must not be null)
-     * @throws NullPointerException if inputMessages is null
+     * @param inputMessages 新消息列表（不可为 null）
+     * @throws NullPointerException 当 inputMessages 为 null 时抛出
      */
     public void setInputMessages(List<Msg> inputMessages) {
         this.inputMessages = Objects.requireNonNull(inputMessages, "inputMessages cannot be null");
     }
 
     /**
-     * Get the effective generation options.
+     * 获取实际生效的生成选项。
      *
-     * <p>Returns the overridden options if set via {@link #setGenerateOptions(GenerateOptions)},
-     * otherwise returns the original options from the parent class.
+     * <p>如果通过 {@link #setGenerateOptions(GenerateOptions)} 设置过覆盖选项，则返回该选项；
+     * 否则返回父类的原始选项。
      *
-     * @return The effective generation options
+     * @return 实际生效的生成选项
      */
     public GenerateOptions getEffectiveGenerateOptions() {
         return overriddenGenerateOptions != null
@@ -106,12 +106,12 @@ public final class PreReasoningEvent extends ReasoningEvent {
     }
 
     /**
-     * Set custom generation options for this reasoning call.
+     * 为本次推理调用设置自定义生成选项。
      *
-     * <p>This allows hooks to override the default generation options, for example to set
-     * a specific tool_choice for structured output.
+     * <p>这允许钩子覆盖默认生成选项，例如设置
+     * 用于结构化输出的特定 tool_choice。
      *
-     * @param generateOptions The custom generation options
+     * @param generateOptions 自定义生成选项
      */
     public void setGenerateOptions(GenerateOptions generateOptions) {
         this.overriddenGenerateOptions = generateOptions;

@@ -28,33 +28,21 @@ import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 
 /**
- * Redis-backed {@link SandboxExecutionGuard} that serialises concurrent access to a sandbox
- * isolation slot using a Redis {@code SET NX PX} lease.
+ * 基于 Redis 的 {@link SandboxExecutionGuard}，通过 {@code SET NX PX} 租约串行化沙箱隔离槽的并发访问。
  *
- * <h2>Mechanism</h2>
+ * <h2>机制</h2>
+ * <ol><li>{@link #tryEnter} 使用 {@code SET NX PX <ttlMs>} 写入唯一令牌。
+ * 键已被占用时，每隔 {@code retryInterval} 重试，直到槽空闲或线程中断。</li>
+ * <li>返回的 {@link SandboxLease#close()} 执行 Lua CAS，仅当键值等于自己的令牌时删除，
+ * 防止误释放其他持有者的锁。</li></ol>
  *
- * <ol>
- *   <li>{@link #tryEnter} writes a unique token to a Redis key with {@code SET NX PX <ttlMs>}.
- *       If the key is already held by another caller, it retries at {@code retryInterval} intervals
- *       until the slot becomes free or the thread is interrupted.
- *   <li>The returned {@link SandboxLease#close()} executes a Lua CAS script that deletes the key
- *       only when the stored value equals the caller's token, preventing another holder's lock from
- *       being released by mistake.
- * </ol>
- *
- * <h2>Key format</h2>
- *
+ * <h2>键格式</h2>
  * <pre>{@code <keyPrefix><scope_lower>:<value>}</pre>
+ * <p>默认前缀为 {@code agentscope:sandbox:lock:}，示例：
+ * <ul><li>{@code agentscope:sandbox:lock:agent:code-agent}</li>
+ * <li>{@code agentscope:sandbox:lock:global:__global__}</li></ul>
  *
- * <p>Examples (with default prefix {@code agentscope:sandbox:lock:}):
- *
- * <ul>
- *   <li>{@code agentscope:sandbox:lock:agent:code-agent}
- *   <li>{@code agentscope:sandbox:lock:global:__global__}
- * </ul>
- *
- * <h2>Usage</h2>
- *
+ * <h2>用法</h2>
  * <pre>{@code
  * UnifiedJedis jedis = new JedisPooled("localhost", 6379);
  *
@@ -71,34 +59,27 @@ import redis.clients.jedis.params.SetParams;
  *     .build();
  * }</pre>
  *
- * <h2>TTL guidance</h2>
+ * <h2>TTL 选择</h2>
+ * <p>{@code leaseTtl} 应明显长于最坏智能体调用时长，包括重试与模型延迟。
+ * 调用超出 TTL 后键过期，其他调用者可以进入；这是防止永久死锁的兜底，
+ * 不是两个调用者可安全共享状态的保证。应监测调用耗时，据此配置 TTL。
  *
- * <p>Set {@code leaseTtl} to comfortably exceed the worst-case agent call duration (including
- * retries and LLM latency). If a call outlasts the TTL, Redis will evict the key and a concurrent
- * caller may enter — this is a safety valve to prevent permanent deadlock, not an indication that
- * two callers will safely share state. Monitor call durations and size the TTL accordingly.
+ * <p>【学习提示】此处没有自动续租或 fencing token 校验。令牌比较保护“释放谁的锁”，
+ * 不能阻止已经过期的旧执行者继续访问沙箱，因此租约超时不等于旧任务已停止。
  *
- * <h2>Extending this guard</h2>
- *
- * <p>This class serves as the canonical reference implementation for {@link SandboxExecutionGuard}.
- * Alternative stores (ZooKeeper, etcd, database advisory locks, …) should follow the same
- * contract:
- *
- * <ul>
- *   <li>{@link #tryEnter} blocks until the slot is acquired or the thread is interrupted.
- *   <li>The returned {@link SandboxLease} releases the slot idempotently on {@link
- *       SandboxLease#close()}.
- *   <li>Release failures must be logged and swallowed — never thrown — so the harness post-call
- *       path always completes.
- * </ul>
+ * <h2>扩展实现</h2>
+ * <p>本类作为 {@link SandboxExecutionGuard} 的参考实现，ZooKeeper、etcd、数据库咨询锁等后端应遵循相同契约：
+ * <ul><li>{@link #tryEnter} 阻塞到获得槽或线程中断。</li>
+ * <li>返回的 {@link SandboxLease} 在 {@link SandboxLease#close()} 时幂等释放槽。</li>
+ * <li>释放失败须记录并吞掉异常，不向外抛出，保证 Harness 调用后处理路径能完成。</li></ul>
  */
 public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
 
     private static final Logger log = LoggerFactory.getLogger(RedisSandboxExecutionGuard.class);
 
     /**
-     * Lua script: atomically delete {@code KEYS[1]} only when its value equals {@code ARGV[1]}.
-     * Returns 1 on success, 0 if the key was already gone or held by a different token.
+     * Lua 脚本：仅当 {@code KEYS[1]} 的值等于 {@code ARGV[1]} 时原子删除。
+     * 成功返回 1；键已不存在或属于其他令牌时返回 0。
      */
     private static final String RELEASE_SCRIPT =
             "if redis.call('get', KEYS[1]) == ARGV[1] then "
@@ -120,20 +101,16 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
     }
 
     /**
-     * Creates a builder for this guard.
-     *
-     * @param jedis initialized Jedis client; the same instance used for
-     *              {@link io.agentscope.extensions.redis.snapshot.RedisSnapshotSpec} is fine
+     * 创建此守卫的构建器。
+     * @param jedis 已初始化客户端，可与 {@link io.agentscope.extensions.redis.snapshot.RedisSnapshotSpec} 使用同一实例
      */
     public static Builder builder(UnifiedJedis jedis) {
         return new Builder(jedis);
     }
 
     /**
-     * Acquires the Redis-backed lease for {@code key}, spinning at {@code retryInterval} until
-     * the slot is free.
-     *
-     * @throws InterruptedException if the calling thread is interrupted while waiting
+     * 为 {@code key} 获取 Redis 租约，每隔 {@code retryInterval} 重试直到槽空闲。
+     * @throws InterruptedException 等待时调用线程被中断则抛出
      */
     @Override
     public SandboxLease tryEnter(SandboxIsolationKey key) throws InterruptedException {
@@ -183,10 +160,12 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
     }
 
     // -------------------------------------------------------------------------
-    // Builder
+    // 构建器
     // -------------------------------------------------------------------------
 
-    /** Builder for {@link RedisSandboxExecutionGuard}. */
+    /**
+     * {@link RedisSandboxExecutionGuard} 构建器。
+     */
     public static final class Builder {
 
         private static final Duration DEFAULT_LEASE_TTL = Duration.ofMinutes(30);
@@ -203,12 +182,9 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
         }
 
         /**
-         * Sets the Redis key prefix used for lock keys.
-         *
-         * <p>Default: {@code "agentscope:sandbox:lock:"}. Useful when multiple environments or
-         * tenants share the same Redis instance and need namespace separation.
-         *
-         * @param keyPrefix the key prefix; must not be null or blank
+         * 设置锁键前缀。
+         * <p>默认为 {@code "agentscope:sandbox:lock:"}；多个环境或租户共享 Redis 时可分离命名空间。
+         * @param keyPrefix 键前缀，不得为 null 或空白
          */
         public Builder keyPrefix(String keyPrefix) {
             if (keyPrefix == null || keyPrefix.isBlank()) {
@@ -219,14 +195,10 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
         }
 
         /**
-         * Sets the TTL for each Redis lock key.
-         *
-         * <p>Default: {@code 30 minutes}. Must exceed the worst-case agent call duration
-         * (including LLM latency, retries, and snapshot operations). When a call outlasts the TTL
-         * the key is evicted and the next waiter may enter — this is a safety valve, not a
-         * correctness guarantee.
-         *
-         * @param ttl the lease TTL; must be positive
+         * 设置各 Redis 锁键的 TTL。
+         * <p>默认为 {@code 30 minutes}，必须超过最坏智能体调用时长，包括模型延迟、重试与快照操作。
+         * 调用超时后键过期，下一个等待者可进入；这是兜底，不是正确性保证。
+         * @param ttl 租约 TTL，必须为正数
          */
         public Builder leaseTtl(Duration ttl) {
             Objects.requireNonNull(ttl, "leaseTtl must not be null");
@@ -238,12 +210,9 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
         }
 
         /**
-         * Sets the polling interval between lock acquisition attempts.
-         *
-         * <p>Default: {@code 500 ms}. Lower values reduce latency at the cost of more Redis
-         * round-trips; higher values reduce load at the cost of increased queuing delay.
-         *
-         * @param interval the retry interval; must be positive
+         * 设置两次获取锁尝试之间的轮询间隔。
+         * <p>默认为 {@code 500 ms}；较小值降低延迟但增加 Redis 往返，较大值减轻负载但增加排队延迟。
+         * @param interval 重试间隔，必须为正数
          */
         public Builder retryInterval(Duration interval) {
             Objects.requireNonNull(interval, "retryInterval must not be null");
@@ -254,7 +223,9 @@ public final class RedisSandboxExecutionGuard implements SandboxExecutionGuard {
             return this;
         }
 
-        /** Builds the {@link RedisSandboxExecutionGuard}. */
+        /**
+         * 构建 {@link RedisSandboxExecutionGuard}。
+         */
         public RedisSandboxExecutionGuard build() {
             return new RedisSandboxExecutionGuard(this);
         }

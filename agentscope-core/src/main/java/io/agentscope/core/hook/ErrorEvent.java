@@ -19,26 +19,26 @@ import io.agentscope.core.agent.Agent;
 import java.util.Objects;
 
 /**
- * Event fired when an error occurs during agent execution.
+ * 智能体执行过程中出错时触发的事件。
  *
- * <p><b>Modifiable:</b> No (notification-only)
+ * <p><b>可修改：</b>否（仅通知）
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getError()} - The error that occurred</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getError()}：发生的错误</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Log errors with context</li>
- *   <li>Send error notifications</li>
- *   <li>Collect error metrics</li>
- *   <li>Implement custom error handling</li>
+ *   <li>结合上下文记录错误</li>
+ *   <li>发送错误通知</li>
+ *   <li>收集错误指标</li>
+ *   <li>实现自定义错误处理</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class ErrorEvent extends HookEvent {
@@ -46,11 +46,11 @@ public final class ErrorEvent extends HookEvent {
     private final Throwable error;
 
     /**
-     * Constructor for ErrorEvent.
+     * ErrorEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param error The error that occurred (must not be null)
-     * @throws NullPointerException if agent or error is null
+     * @param agent 智能体实例（不可为 null）
+     * @param error 发生的错误（不可为 null）
+     * @throws NullPointerException 当 agent 或 error 为 null 时抛出
      */
     public ErrorEvent(Agent agent, Throwable error) {
         super(HookEventType.ERROR, agent);
@@ -58,9 +58,9 @@ public final class ErrorEvent extends HookEvent {
     }
 
     /**
-     * Get the error that occurred.
+     * 获取发生的错误。
      *
-     * @return The error
+     * @return 错误
      */
     public Throwable getError() {
         return error;

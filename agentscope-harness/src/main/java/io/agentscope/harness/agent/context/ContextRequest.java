@@ -17,7 +17,7 @@ package io.agentscope.harness.agent.context;
 
 import io.agentscope.core.middleware.ModelRequestPreparer;
 
-/** Immutable invocation identity; does not expose mutable agent state. */
+/** 不可变的调用身份信息；不暴露可变的智能体状态。 */
 public record ContextRequest(
         String agentId,
         String userId,

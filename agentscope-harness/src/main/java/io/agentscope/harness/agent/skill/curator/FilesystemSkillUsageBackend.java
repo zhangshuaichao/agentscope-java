@@ -34,7 +34,9 @@ import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Filesystem-backed {@link SkillUsageBackend} storing all records in a single JSON sidecar. */
+/**
+ * 基于文件系统的 {@link SkillUsageBackend}，将全部记录存入单个 JSON 旁挂文件。
+ */
 final class FilesystemSkillUsageBackend implements SkillUsageBackend {
 
     private static final Logger log = LoggerFactory.getLogger(FilesystemSkillUsageBackend.class);
@@ -115,7 +117,7 @@ final class FilesystemSkillUsageBackend implements SkillUsageBackend {
             }
             SkillUsageRecord updated = mutator.apply(current);
             if (updated == current) {
-                return; // explicit no-op
+                return; // 显式空操作。
             }
             if (updated == null) {
                 if (!existed) {

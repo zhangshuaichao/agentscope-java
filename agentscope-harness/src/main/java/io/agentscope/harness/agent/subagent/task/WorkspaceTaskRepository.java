@@ -42,38 +42,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Workspace-backed {@link TaskRepository} that uses {@link WorkspaceManager} as the authoritative
- * truth source for task state, while maintaining in-memory {@link BackgroundTask} handles as a
- * local performance overlay for tasks running on the current node.
+ * 基于工作区的 {@link TaskRepository}，使用 {@link WorkspaceManager} 作为
+ * 任务状态的权威事实来源，同时维护内存 {@link BackgroundTask} 句柄，
+ * 为当前节点上运行的任务提供本地性能优化层。
  *
- * <p>Storage layout: {@code agents/<parentAgentId>/tasks/<sessionId>.json} — a JSON map of
- * {@code taskId → TaskRecord}, consistent with how sessions are stored. In distributed deployments
- * using {@code RemoteFilesystemSpec}, this path is automatically routed to shared storage, making
- * task state visible to any node. In sandbox mode the injected filesystem is a per-call proxy with
- * no live sandbox between calls, so task records are persisted on the host workspace instead of
- * inside the sandbox — see the task-record routing in {@code WorkspaceManager}.
+ * <p>存储布局：{@code agents/<parentAgentId>/tasks/<sessionId>.json}，
+ * 内容为 {@code taskId → TaskRecord} 的 JSON 映射，与会话存储方式一致。
+ * 使用 {@code RemoteFilesystemSpec} 的分布式部署会自动将此路径路由到共享存储，
+ * 使任意节点都能查看任务状态。沙箱模式下注入的文件系统是单次调用代理，
+ * 调用之间没有活动沙箱，因此任务记录持久化到宿主工作区，而不是沙箱内部；
+ * 参见 {@code WorkspaceManager} 中的任务记录路由。
  *
- * <p>The in-memory {@code localTasks} map is keyed by {@code "<sessionId>:<taskId>"} to preserve
- * session isolation when multiple sessions coexist in the same process.
+ * <p>内存 {@code localTasks} 映射以 {@code "<sessionId>:<taskId>"} 为键，
+ * 使同一进程中共存的多个会话保持隔离。
  *
- * <p>Distributed semantics:
- *
+ * <p>分布式语义：
  * <ul>
- *   <li>Task execution is sticky to the originating node (the node that called {@link #putTask}).
- *   <li>Any node can read task status via {@link #getTask} or {@link #listTasks} by falling back
- *       to workspace records when no local future exists.
- *   <li>{@code block=true} on a non-originating node degrades gracefully to reading the latest
- *       persisted terminal state without hanging.
- *   <li>Cancellation sets a {@link TaskRecord#isCancelRequested()} flag in workspace storage;
- *       the originating node checks this flag before invoking the subagent for best-effort cancel.
- *   <li>Remote {@link TaskRunSpec.RemoteTaskRunSpec} tasks use a {@link RemoteSubagentTransport}
- *       (Agent Protocol by default) and persist {@link TaskRecord#getRemoteBaseUrl()} for
- *       cross-node resume.
- *   <li>Orphan sweeping is throttled via {@link PeriodicGate}: use {@link
- *       io.agentscope.harness.agent.coordination.StoreBackedPeriodicGate} for cross-replica
- *       deduplication, or {@link LocalPeriodicGate} (the default) for single-process deployments.
- *       Prefer a control-plane hosted {@link TaskRepository} when available — that path runs a
- *       leader-only sweep and does not use this workspace repository at all.
+ *   <li>任务执行固定在发起节点（调用 {@link #putTask} 的节点）。
+ *   <li>任意节点可通过 {@link #getTask} 或 {@link #listTasks} 读取任务状态；
+ *       没有本地 future 时回退到工作区记录。
+ *   <li>非发起节点上的 {@code block=true} 平稳降级为读取最新持久化终态，不会挂起等待。
+ *   <li>取消操作在工作区存储中设置 {@link TaskRecord#isCancelRequested()} 标志；
+ *       发起节点在调用子智能体前检查此标志，进行尽力而为的取消。
+ *   <li>远程 {@link TaskRunSpec.RemoteTaskRunSpec} 任务使用
+ *       {@link RemoteSubagentTransport}（默认 Agent Protocol），并持久化
+ *       {@link TaskRecord#getRemoteBaseUrl()} 以支持跨节点恢复。
+ *   <li>孤立任务清理由 {@link PeriodicGate} 限频：跨副本去重使用
+ *       {@link io.agentscope.harness.agent.coordination.StoreBackedPeriodicGate}，
+ *       单进程部署使用 {@link LocalPeriodicGate}（默认）。
+ *       若可用，优先选择控制平面托管的 {@link TaskRepository}：该路径只由 leader
+ *       执行清理，完全不使用此工作区仓库。
  * </ul>
  */
 public class WorkspaceTaskRepository implements TaskRepository {
@@ -82,25 +80,29 @@ public class WorkspaceTaskRepository implements TaskRepository {
 
     private static final String TRANSPORT_AGENT_PROTOCOL = AgentProtocolTransport.TYPE;
 
-    /** Short, fixed poll interval used while a remote task is awaiting user confirmation. */
+    /**
+     * 远程任务等待用户确认时使用的较短固定轮询间隔。
+     */
     private static final long AWAITING_CONFIRM_POLL_MS = 750L;
 
     private volatile long awaitingConfirmPollMs = AWAITING_CONFIRM_POLL_MS;
 
     /**
-     * How often (in seconds) the heartbeat refreshes {@code lastUpdatedAt} for live local tasks.
-     * Must be well below {@link #ORPHAN_TIMEOUT_MINUTES} to avoid false orphan detection.
+     * 心跳为活动本地任务刷新 {@code lastUpdatedAt} 的间隔（秒）。
+     * 必须显著小于 {@link #ORPHAN_TIMEOUT_MINUTES}，避免误判为孤立任务。
      */
     static final int HEARTBEAT_INTERVAL_SECONDS = 30;
 
     /**
-     * How long (in minutes) a non-terminal local task may remain un-heartbeated before the sweeper
-     * marks it {@link TaskStatus#FAILED}. Should be several multiples of
-     * {@link #HEARTBEAT_INTERVAL_SECONDS} to tolerate transient delays.
+     * 非终态本地任务允许缺少心跳的时长（分钟）；超过后清理器将其标记为
+     * {@link TaskStatus#FAILED}。应为 {@link #HEARTBEAT_INTERVAL_SECONDS}
+     * 的数倍，以容忍短暂延迟。
      */
     static final int ORPHAN_TIMEOUT_MINUTES = 10;
 
-    /** How often (in minutes) the orphan sweeper scans all workspace task records. */
+    /**
+     * 孤立任务清理器扫描全部工作区任务记录的间隔（分钟）。
+     */
     static final int SWEEP_INTERVAL_MINUTES = 5;
 
     private final WorkspaceManager workspaceManager;
@@ -109,21 +111,20 @@ public class WorkspaceTaskRepository implements TaskRepository {
     private volatile RemoteSubagentTransport transport;
 
     /**
-     * In-memory local task handles. Keyed by {@code "<sessionId>:<taskId>"} to provide session
-     * isolation when multiple parent sessions are active in the same JVM process.
+     * 内存本地任务句柄。以 {@code "<sessionId>:<taskId>"} 为键，
+     * 使同一 JVM 进程中活动的多个父会话保持隔离。
      */
     private final Map<String, BackgroundTask> localTasks = new ConcurrentHashMap<>();
 
     /**
-     * Maps {@code localKey} → {@code sessionId} so the heartbeat can iterate running tasks without
-     * needing to parse the composite key string.
+     * 将 {@code localKey} 映射到 {@code sessionId}，使心跳无需解析组合键字符串
+     * 即可遍历正在运行的任务。
      */
     private final Map<String, String> localTaskSessionIds = new ConcurrentHashMap<>();
 
     /**
-     * Maps {@code localKey} → {@link RuntimeContext} captured at {@code putTask} time so the
-     * background future and the heartbeat thread can persist task state under the originating
-     * user's namespace.
+     * 将 {@code localKey} 映射到 {@code putTask} 时捕获的 {@link RuntimeContext}，
+     * 使后台 future 和心跳线程能在发起用户的命名空间下持久化任务状态。
      */
     private final Map<String, RuntimeContext> localTaskContexts = new ConcurrentHashMap<>();
 
@@ -138,10 +139,11 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Creates a repository with an explicit {@link PeriodicGate} for orphan-sweep throttling.
+     * 使用显式 {@link PeriodicGate} 创建仓库，对孤立任务清理进行限频。
      *
-     * <p>Pass a {@link io.agentscope.harness.agent.coordination.StoreBackedPeriodicGate} when a
-     * shared {@code BaseStore} is available so only one replica sweeps per interval.
+     * <p>存在共享 {@code BaseStore} 时，传入
+     * {@link io.agentscope.harness.agent.coordination.StoreBackedPeriodicGate}，
+     * 使每个间隔只有一个副本执行清理。
      */
     public WorkspaceTaskRepository(
             WorkspaceManager workspaceManager, String parentAgentId, PeriodicGate periodicGate) {
@@ -166,10 +168,10 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Test-only factory without background heartbeat or orphan sweeper threads.
+     * 仅用于测试的工厂，不启动后台心跳或孤立任务清理线程。
      *
-     * <p>Unit tests invoke {@link #heartbeat()} and {@link #sweepOrphanedTasks} directly; leaving
-     * the maintenance scheduler enabled causes flaky races on slow CI hosts (notably Windows).
+     * <p>单元测试直接调用 {@link #heartbeat()} 和 {@link #sweepOrphanedTasks}；
+     * 启用维护调度器会在较慢 CI 主机（尤其 Windows）上产生偶发竞争。
      */
     public static WorkspaceTaskRepository forTests(
             WorkspaceManager workspaceManager, String parentAgentId) {
@@ -180,7 +182,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
                             t.setDaemon(true);
                             return t;
                         });
-        // Test helper creates its own executor, so repository must own and shut it down.
+        // 测试辅助方法自行创建执行器，因此仓库必须拥有并负责关闭它。
         return new WorkspaceTaskRepository(
                 workspaceManager,
                 parentAgentId,
@@ -191,7 +193,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Test-only factory with a caller-supplied {@link PeriodicGate} and no maintenance threads.
+     * 仅用于测试的工厂，使用调用方提供的 {@link PeriodicGate}，不启动维护线程。
      */
     public static WorkspaceTaskRepository forTests(
             WorkspaceManager workspaceManager, String parentAgentId, PeriodicGate periodicGate) {
@@ -206,7 +208,9 @@ public class WorkspaceTaskRepository implements TaskRepository {
                 workspaceManager, parentAgentId, testExecutor, true, false, periodicGate);
     }
 
-    /** Test-only factory with a caller-supplied executor and no maintenance threads. */
+    /**
+     * 仅用于测试的工厂，使用调用方提供的执行器，不启动维护线程。
+     */
     public static WorkspaceTaskRepository forTests(
             WorkspaceManager workspaceManager, String parentAgentId, ExecutorService executor) {
         return new WorkspaceTaskRepository(
@@ -240,8 +244,8 @@ public class WorkspaceTaskRepository implements TaskRepository {
                     HEARTBEAT_INTERVAL_SECONDS,
                     HEARTBEAT_INTERVAL_SECONDS,
                     TimeUnit.SECONDS);
-            // Jitter the first sweep in [0, SWEEP_INTERVAL_MINUTES) to spread load when multiple
-            // nodes start simultaneously.
+            // 将首次清理时间随机分散到 [0, SWEEP_INTERVAL_MINUTES)，
+            // 分散多个节点同时启动时的负载。
             long sweepJitterSeconds =
                     ThreadLocalRandom.current().nextLong(SWEEP_INTERVAL_MINUTES * 60L);
             scheduler.scheduleAtFixedRate(
@@ -261,17 +265,16 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Test-only hook to inject a fake {@link RemoteSubagentTransport}, bypassing real HTTP calls
-     * for remote task tests.
+     * 仅用于测试的钩子，注入假的 {@link RemoteSubagentTransport}，
+     * 使远程任务测试绕过真实 HTTP 调用。
      */
     void setTransport(RemoteSubagentTransport transport) {
         this.transport = Objects.requireNonNull(transport, "transport");
     }
 
     /**
-     * Test-only hook to shrink the awaiting-confirm poll interval so tests exercising several
-     * confirming polls do not pay the production 750ms granularity. Call before {@link #putTask}
-     * starts the polling loop.
+     * 仅用于测试的钩子，缩短等待确认时的轮询间隔，避免多轮确认轮询测试
+     * 承担生产环境 750ms 的时间粒度。应在 {@link #putTask} 启动轮询循环前调用。
      */
     void setAwaitingConfirmPollMs(long pollMs) {
         this.awaitingConfirmPollMs = Math.max(1L, pollMs);
@@ -301,8 +304,10 @@ public class WorkspaceTaskRepository implements TaskRepository {
         CompletableFuture<String> future;
 
         if (spec instanceof TaskRunSpec.AdoptedTaskRunSpec adopted) {
-            // The future is already running (promoted from a timed-out sync execution).
-            // Skip executor submission; just wire up status-tracking callbacks.
+            // 【学习提示】接管的是已有执行，而不是重新执行任务；若再次提交 supplier，
+            // 同步转异步的超时边界可能导致工具副作用重复发生。
+            // future 已经在运行（由超时的同步执行提升而来）。
+            // 跳过向执行器提交；只连接状态跟踪回调。
             future = adopted.future();
             updateStatus(capturedRc, sessionId, taskId, TaskStatus.RUNNING, null, null);
             final String sid = sessionId;
@@ -470,7 +475,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
                 markCancelled(rc, sessionId, taskId);
                 return null;
             }
-            // pending, running, empty: keep polling with exponential backoff
+            // pending、running、空状态：使用指数退避继续轮询
             long sleepMs = Math.min(5_000L, 200L * (1L << Math.min(attempt++, 4)));
             Thread.sleep(sleepMs);
         }
@@ -480,11 +485,11 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Persists {@link TaskRecord#isAwaitingConfirm()} and {@link TaskRecord#getPendingConfirms()}
-     * without touching {@link TaskRecord#getStatus()} — the task remains {@code RUNNING} while
-     * paused for user confirmation. No-op once the record has reached a terminal state, and no-op
-     * when the awaiting flag and pending list are unchanged (avoids rewriting workspace JSON on
-     * every poll while blocked on confirmation).
+     * 持久化 {@link TaskRecord#isAwaitingConfirm()} 与
+     * {@link TaskRecord#getPendingConfirms()}，不改动 {@link TaskRecord#getStatus()}；
+     * 暂停等待用户确认时，任务保持 {@code RUNNING}。记录已达终态时不执行操作；
+     * 等待标志和待确认列表未变化时也不执行操作（避免在等待确认期间每次轮询
+     * 都重写工作区 JSON）。
      */
     private void updateAwaitingConfirm(
             RuntimeContext rc,
@@ -528,7 +533,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
         if (local != null) {
             return local;
         }
-        // Fall back to workspace record — construct a synthetic completed/failed BackgroundTask
+        // 回退到工作区记录，构造合成的已完成／失败 BackgroundTask
         Optional<TaskRecord> record =
                 workspaceManager.readTaskRecord(
                         rc != null ? rc : RuntimeContext.empty(), parentAgentId, sessionId, taskId);
@@ -547,9 +552,9 @@ public class WorkspaceTaskRepository implements TaskRepository {
         for (TaskRecord wsRecord : records) {
             String key = localKey(sessionId, wsRecord.getTaskId());
             BackgroundTask local = localTasks.get(key);
-            // Use local handle if available (live status); otherwise fall back to workspace record.
-            // Never override a terminal workspace status with a local RUNNING state from an old
-            // handle.
+            // 有本地句柄时使用它（实时状态）；否则回退到工作区记录。
+            // 绝不使用旧本地句柄的 RUNNING 状态覆盖工作区中的终态
+            // 记录。
             BackgroundTask effective;
             if (local != null && !wsRecord.getStatus().isTerminal()) {
                 effective = local;
@@ -573,14 +578,14 @@ public class WorkspaceTaskRepository implements TaskRepository {
             found = true;
         }
 
-        // Always write cancelRequested flag to workspace for cross-node coordination
+        // 始终将 cancelRequested 标志写入工作区，以进行跨节点协调
         Optional<TaskRecord> existing = persistCancellation(effRc, sessionId, taskId);
         if (existing.isPresent()) {
             TaskRecord snapshot = existing.get();
             boolean agentProtocol =
                     snapshot.isAgentProtocolTransport() && snapshot.getRemoteBaseUrl() != null;
 
-            // Completion listeners must observe durable cancellation, never a still-running record.
+            // 完成监听器必须观察到已持久化的取消状态，而不是仍在运行的记录。
             if (local != null) local.cancel(true);
 
             if (agentProtocol) {
@@ -600,7 +605,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
         return found;
     }
 
-    // ---- Phase B-3 push delivery -----------------------------------------------------------
+    // ---- 阶段 B-3 推送投递 -----------------------------------------------------------
 
     @Override
     public List<TaskDelivery> findPendingDeliveries(RuntimeContext rc, String sessionId) {
@@ -632,11 +637,10 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Stamps {@code deliveredAt} on the persisted record. Idempotent — the first non-null write
-     * wins; subsequent calls bail out without touching workspace storage. Uses an independent
-     * read-modify-write path rather than going through {@link #updateStatus} so the heartbeat /
-     * orphan-sweeper cannot accidentally clobber the field via their RUNNING/FAILED writes
-     * (those paths reconstruct the record around status-only fields).
+     * 在持久化记录上写入 {@code deliveredAt}。此操作幂等：第一次非 null 写入生效；
+     * 后续调用直接退出，不访问工作区存储。使用独立的读取－修改－写入路径，
+     * 而不是经过 {@link #updateStatus}，避免心跳／孤立任务清理器通过
+     * RUNNING／FAILED 写入意外覆盖此字段（这些路径围绕状态相关字段重建记录）。
      */
     @Override
     public void markDelivered(RuntimeContext rc, String sessionId, String taskId) {
@@ -645,7 +649,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
                 workspaceManager.readTaskRecord(effRc, parentAgentId, sessionId, taskId);
         if (existing.isEmpty()) return;
         TaskRecord r = existing.get();
-        if (r.getDeliveredAt() != null) return; // already delivered
+        if (r.getDeliveredAt() != null) return; // 已经投递
         r.setDeliveredAt(Instant.now());
         persistRecord(effRc, sessionId, r);
     }
@@ -686,11 +690,10 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Refreshes {@code lastUpdatedAt} in the workspace for every live local task that is still
-     * running. Called on a fixed schedule so the orphan sweeper can distinguish a genuinely
-     * running task from one whose originating node has disappeared.
+     * 为仍在运行的每个活动本地任务刷新工作区中的 {@code lastUpdatedAt}。
+     * 按固定计划调用，使孤立任务清理器能够区分真正运行的任务与发起节点已消失的任务。
      *
-     * <p>Package-private for direct invocation in unit tests.
+     * <p>包可见，便于单元测试直接调用。
      */
     void heartbeat() {
         localTasks.forEach(
@@ -716,58 +719,56 @@ public class WorkspaceTaskRepository implements TaskRepository {
                 });
     }
 
-    /** Package-private entry point for unit tests that need to invoke the default sweep path. */
+    /**
+     * 包可见入口，供需要调用默认清理路径的单元测试使用。
+     */
     void sweepOrphanedTasksDefault_forTest() {
         sweepOrphanedTasksDefault();
     }
 
     private void sweepOrphanedTasksDefault() {
         Duration sweepInterval = Duration.ofSeconds(SWEEP_INTERVAL_MINUTES * 60L);
-        // Throttle via PeriodicGate: LocalPeriodicGate for single-process, StoreBacked for
-        // cross-replica deduplication. Sweep itself is idempotent, so a lost claim is harmless.
+        // 通过 PeriodicGate 限频：单进程使用 LocalPeriodicGate，
+        // 跨副本去重使用 StoreBacked。清理本身幂等，因此丢失执行资格不会造成危害。
         if (!periodicGate.tryClaim("task-sweep:" + parentAgentId, sweepInterval)) {
             log.debug("Skipping orphan sweep for {} — periodic gate denied claim", parentAgentId);
             return;
         }
 
-        // recentWindow = 2× orphan timeout + 1 sweep cycle.
-        // The 2× factor ensures we never miss a task right at the orphan threshold
-        // (the file could have been written exactly orphanTimeout ago).
-        // The +1 cycle buffer handles clock skew and sweep scheduling jitter.
+        // recentWindow = 2 × 孤立超时 + 1 个清理周期。
+        // 2 倍系数确保不会漏掉刚好位于孤立阈值的任务
+        // （文件可能恰好写于 orphanTimeout 之前）。
+        // 额外 1 个周期的缓冲用于处理时钟偏差和清理调度抖动。
         Duration orphanTimeout = Duration.ofMinutes(ORPHAN_TIMEOUT_MINUTES);
         Duration recentWindow = orphanTimeout.multipliedBy(2).plus(sweepInterval);
         sweepOrphanedTasks(orphanTimeout, recentWindow);
     }
 
     /**
-     * Scans all persisted task records for this agent and marks non-terminal, non-remote tasks as
-     * {@link TaskStatus#FAILED} when their {@code lastUpdatedAt} is older than
-     * {@code orphanTimeout}.
+     * 扫描此智能体的全部持久化任务记录；非终态、非远程任务的
+     * {@code lastUpdatedAt} 早于 {@code orphanTimeout} 时，将其标记为
+     * {@link TaskStatus#FAILED}。
      *
-     * <p>A task is considered <em>orphaned</em> when the node that originated it has failed before
-     * writing a terminal status and the {@link #heartbeat()} has therefore stopped. Remote
-     * ({@code agent-protocol}) tasks are excluded because their liveness is governed by the remote
-     * endpoint, not by this node's heartbeat.
+     * <p>任务的发起节点在写入终态前故障，导致 {@link #heartbeat()} 停止时，
+     * 认为任务已经<em>孤立</em>。排除远程（{@code agent-protocol}）任务，
+     * 因为它们的活性由远程端点决定，而不是由此节点的心跳决定。
      *
-     * <p>Remote stores with CAS support recheck persisted liveness on conflicts, so a heartbeat
-     * racing the scan is not overwritten by an outdated orphan decision.
+     * <p>支持 CAS 的远程存储会在冲突时重新检查已持久化的活性信息，
+     * 避免与扫描并发的心跳被过时的孤立判定覆盖。
      *
-     * <p>Package-private for direct invocation in unit tests.
+     * <p>包可见，便于单元测试直接调用。
      *
-     * @param orphanTimeout how long a non-terminal local task may remain un-heartbeated before it
-     *     is considered orphaned
-     * @param recentWindow retained for compatibility; maintenance includes old files because
-     *     downtime may exceed the recent-file window
+     * @param orphanTimeout 非终态本地任务在被视为孤立之前允许缺少心跳的时长
+     * @param recentWindow 为兼容性保留；维护包含旧文件，因为停机时长可能超过近期文件窗口
      */
     void sweepOrphanedTasks(Duration orphanTimeout, Duration recentWindow) {
         sweepOrphanedTasks(orphanTimeout, recentWindow, Instant.now());
     }
 
     /**
-     * Sweeps orphaned tasks using the supplied sweep time.
+     * 使用指定清理时间清理孤立任务。
      *
-     * <p>Package-private so tests can verify the timeout boundary without depending on the
-     * platform clock resolution.
+     * <p>包可见，使测试无需依赖平台时钟分辨率即可验证超时边界。
      */
     void sweepOrphanedTasks(Duration orphanTimeout, Duration recentWindow, Instant sweepTime) {
         try {
@@ -780,19 +781,19 @@ public class WorkspaceTaskRepository implements TaskRepository {
                     continue;
                 }
                 if (record.isAgentProtocolTransport()) {
-                    // Remote tasks handle their own liveness via polling
+                    // 远程任务通过轮询自行处理活性。
                     continue;
                 }
                 Instant lastUpdated = record.getLastUpdatedAt();
-                // A task is stale as soon as it reaches the timeout boundary. Besides matching
-                // the timeout contract, this avoids leaving a zero-timeout task RUNNING when the
-                // system clock returns the same instant for its last update and this sweep.
+                // 任务一到达超时边界就视为过期。除符合超时契约外，
+                // 这还避免系统时钟为最后更新时间和本次清理返回相同时间点时，
+                // 零超时任务仍保持 RUNNING。
                 if (lastUpdated == null || lastUpdated.isAfter(threshold)) {
                     continue;
                 }
                 String sid = record.getParentSessionId();
                 String tid = record.getTaskId();
-                // Skip if this node still has an active local future — heartbeat is live.
+                // 此节点仍持有活动本地 future 时跳过：心跳仍然有效。
                 String key = localKey(sid, tid);
                 BackgroundTask local = localTasks.get(key);
                 if (local != null && !local.isCompleted()) {
@@ -818,7 +819,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
         }
     }
 
-    // ---- private helpers ----
+    // ---- 私有辅助方法 ----
 
     private static String localKey(String sessionId, String taskId) {
         String s = sessionId != null ? sessionId : "_";
@@ -837,8 +838,8 @@ public class WorkspaceTaskRepository implements TaskRepository {
         }
     }
 
-    // Serialize local status changes with cancellation. Otherwise a worker starting between
-    // cancellation's read and write can restore RUNNING before completion listeners run.
+    // 将本地状态变更与取消操作串行化。否则，工作线程若在取消操作的
+    // 读写之间启动，可能在完成监听器运行前恢复 RUNNING。
     private synchronized Optional<TaskRecord> persistCancellation(
             RuntimeContext rc, String sessionId, String taskId) {
         Optional<TaskRecord> existing =
@@ -859,20 +860,22 @@ public class WorkspaceTaskRepository implements TaskRepository {
             TaskStatus status,
             String result,
             String error) {
+        // 【学习提示】这里的 synchronized 只串行化同一仓库实例内的更新，
+        // 不等价于跨进程锁；学习分布式一致性时还需沿 WorkspaceManager 检查存储层语义。
         Optional<TaskRecord> existing =
                 workspaceManager.readTaskRecord(rc, parentAgentId, sessionId, taskId);
-        // Guard 1: terminal states are immutable — never overwrite COMPLETED, FAILED, or CANCELLED
-        // with any other status. This prevents a late COMPLETED/FAILED write from a still-running
-        // thread from clobbering a CANCELLED status set concurrently by cancelTask().
+        // 保护 1：终态不可变，绝不将 COMPLETED、FAILED 或 CANCELLED
+        // 覆盖为其他状态。这能防止仍在运行的线程迟到的 COMPLETED／FAILED 写入
+        // 覆盖 cancelTask() 并发设置的 CANCELLED 状态。
         if (existing.isPresent()
                 && existing.get().getStatus() != null
                 && existing.get().getStatus().isTerminal()) {
             return;
         }
-        // Guard 2: if cancellation has been requested but the workspace record has not yet reached
-        // a terminal state (e.g. heartbeat races cancelTask()), refuse to persist non-terminal
-        // updates. This stops the heartbeat from writing RUNNING back over a record whose
-        // cancelRequested flag was just set by cancelTask().
+        // 保护 2：若已请求取消，但工作区记录尚未到达终态
+        // （例如心跳与 cancelTask() 竞争），则拒绝持久化非终态更新。
+        // 这会阻止心跳将 RUNNING 写回刚由 cancelTask()
+        // 设置 cancelRequested 标志的记录。
         if (!status.isTerminal() && existing.isPresent() && existing.get().isCancelRequested()) {
             return;
         }
@@ -900,8 +903,8 @@ public class WorkspaceTaskRepository implements TaskRepository {
     }
 
     /**
-     * Creates a synthetic {@link BackgroundTask} from a persisted {@link TaskRecord}. The future
-     * is already-completed (or failed/cancelled) to reflect the stored terminal status.
+     * 从持久化 {@link TaskRecord} 构造合成的 {@link BackgroundTask}。
+     * 其 future 已完成（或失败／取消），以反映存储的终态。
      */
     private BackgroundTask syntheticTask(RuntimeContext rc, TaskRecord record) {
         CompletableFuture<String> future;
@@ -923,8 +926,8 @@ public class WorkspaceTaskRepository implements TaskRepository {
                 if (record.isAgentProtocolTransport()
                         && record.getRemoteBaseUrl() != null
                         && !record.getStatus().isTerminal()) {
-                    // Cache in localTasks so repeated calls to getTask/listTasks don't spawn
-                    // multiple concurrent pollers for the same remote task.
+                    // 缓存在 localTasks 中，避免反复调用 getTask/listTasks
+                    // 为同一个远程任务启动多个并发轮询器。
                     String sid =
                             record.getParentSessionId() != null ? record.getParentSessionId() : "";
                     String lk = localKey(sid, record.getTaskId());
@@ -963,7 +966,7 @@ public class WorkspaceTaskRepository implements TaskRepository {
                     localTaskContexts.putIfAbsent(lk, capturedRc);
                     return cached;
                 } else {
-                    // PENDING or RUNNING but no local future — cross-node local task.
+                    // 状态为 PENDING 或 RUNNING 但没有本地 future：跨节点本地任务。
                     future = new CompletableFuture<>();
                 }
             }

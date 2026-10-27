@@ -47,25 +47,25 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * <h2>Algorithm</h2>
+ * <h2>算法</h2>
  * <ol>
- *   <li><b>Check trigger</b> — token count or message count exceeds threshold</li>
- *   <li><b>Determine cutoff</b> — find the earliest index that keeps the tail within the
- *       "keep" budget; never split an ASSISTANT tool-call from its TOOL result(s)</li>
- *   <li><b>Memory flush</b> (optional) — extract long-term memories from the prefix via
- *       {@link MemoryFlushManager#flushMemories}</li>
- *   <li><b>Summarize</b> — one LLM call to distill the prefix into a structured summary</li>
- *   <li><b>Rebuild</b> — return {@code [summaryUserMsg] + preservedTail}</li>
+ * <li><b>检查触发条件</b>：token 数或消息数达到阈值。</li>
+ * <li><b>确定切分点</b>：寻找使尾部落入保留预算的最早索引；绝不将 ASSISTANT 工具调用与其 TOOL 结果拆开。</li>
+ * <li><b>记忆提取写入</b>（可选）：通过 {@link MemoryFlushManager#flushMemories} 从前缀提取长期记忆。</li>
+ * <li><b>摘要</b>：调用一次 LLM，将前缀提炼为结构化摘要。</li>
+ * <li><b>重建</b>：返回 {@code [summaryUserMsg] + preservedTail}。</li>
  * </ol>
  *
- * <p>The caller is responsible for updating both the agent's working memory and the LLM-facing
- * message list (see {@link CompactionMiddleware}).
+ * <p>调用方负责同步更新智能体的工作记忆与面向 LLM 的消息列表，参见 {@link CompactionMiddleware}。
+ *
+ * <p>【学习提示】压缩有损地缩短模型当前可见历史，不删除原生会话日志。
+ * 旧摘要参与下一轮摘要以延续上下文，但不再次作为长期记忆提取的原始事实。
  */
 public class ConversationCompactor {
 
     private static final Logger log = LoggerFactory.getLogger(ConversationCompactor.class);
 
-    /** Marker stored in message name to identify injected summary messages. */
+    /** 保存在消息名称中、用于识别注入摘要消息的标记。 */
     public static final String SUMMARY_MSG_NAME = "__compaction_summary__";
 
     private final Model model;
@@ -77,23 +77,20 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Public API
+    // 公共 API
     // -------------------------------------------------------------------------
 
     /**
-     * Runs compaction on the supplied conversation messages if a trigger condition is met.
+     * 满足触发条件时，对给定对话消息执行压缩。
      *
-     * <p>Only <em>conversation</em> messages (non-SYSTEM) should be passed. The caller must
-     * separate system messages before invoking this method and re-prepend them after.
+     * <p>只应传入<em>对话</em>消息（非 SYSTEM）。调用方必须在调用前分离系统消息，并在调用后重新放回开头。
      *
-     * @param conversationMessages non-SYSTEM messages (USER / ASSISTANT / TOOL)
-     * @param config               compaction configuration
-     * @param agentId              agent identifier used for the session history reference
-     * @param sessionId            session identifier used for the session history reference
-     * @return {@code Optional.empty()} when the conversation is unchanged; otherwise a
-     *         replacement message list. The replacement contains lightweight reductions when
-     *         summarization is skipped, or {@code [summaryUserMsg] + preservedTail} after
-     *         summarization.
+     * @param conversationMessages 非 SYSTEM 消息（USER / ASSISTANT / TOOL）
+     * @param config 压缩配置
+     * @param agentId 会话历史引用使用的智能体标识
+     * @param sessionId 会话历史引用使用的会话标识
+     * @return 对话未变化时返回 {@code Optional.empty()}，否则返回替换消息列表。
+     *     跳过摘要时，替换列表包含轻量缩减；执行摘要后则为 {@code [summaryUserMsg] + preservedTail}。
      */
     public Mono<Optional<List<Msg>>> compactIfNeeded(
             RuntimeContext rc,
@@ -235,8 +232,8 @@ public class ConversationCompactor {
             CompactionConfig config,
             String agentId,
             String sessionId) {
-        // Step 1a: Lightweight arg truncation (non-LLM).
-        // Step 1b: Aggregate tool-result pruning (non-LLM).
+        // 步骤 1a：轻量参数截断（不调用 LLM）。
+        // 步骤 1b：工具结果汇总裁剪（不调用 LLM）。
         List<Msg> messages =
                 pruneToolResults(
                         truncateArgs(conversationMessages, config.getTruncateArgsConfig()),
@@ -259,8 +256,8 @@ public class ConversationCompactor {
                             : Optional.of(messages));
         }
 
-        // Keep prior summaries in the summarization input so each compaction builds on the
-        // previous one, but exclude them from memory flushing to avoid duplicate extraction.
+        // 将旧摘要保留在摘要输入中，使每次压缩建立在前次摘要之上；
+        // 但从记忆提取输入中排除旧摘要，以免重复提取。
         List<Msg> summaryInput = new ArrayList<>(messages.subList(0, cutoff));
         List<Msg> flushInput = filterSummaryMessages(summaryInput);
         List<Msg> tail = new ArrayList<>(messages.subList(cutoff, messages.size()));
@@ -272,7 +269,7 @@ public class ConversationCompactor {
                 cutoff,
                 tail.size());
 
-        // Step 2: Flush long-term memories only from newly compacted raw messages (best-effort).
+        // 步骤 2：仅从本次新压缩的原始消息中提取并写入长期记忆（尽力执行）。
         Mono<Void> flushStep =
                 config.isFlushBeforeCompact()
                         ? flushManager
@@ -291,8 +288,8 @@ public class ConversationCompactor {
                                         })
                         : Mono.empty();
 
-        // Native logging already preserves all pre-compaction messages. Reference the logical
-        // history API; never write another full transcript or expose private journal paths.
+        // 原生日志已经保留全部压缩前消息。引用逻辑历史 API，
+        // 绝不另写一份完整记录，也不暴露私有日志路径。
         String historyReference =
                 SessionRecorder.from(rc) == null
                         ? null
@@ -302,7 +299,7 @@ public class ConversationCompactor {
                                 + JsonUtils.getJsonCodec().toJson(sessionId)
                                 + ")";
 
-        // Step 4: LLM summarization of prior summaries plus the newly compacted prefix.
+        // 步骤 4：由 LLM 对旧摘要与本次新压缩的前缀一起生成摘要。
         return flushStep
                 .then(summarizePrefix(summaryInput, config))
                 .map(
@@ -333,7 +330,7 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Trigger logic
+    // 触发逻辑
     // -------------------------------------------------------------------------
 
     private static boolean shouldCompact(
@@ -356,13 +353,13 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Cutoff / partition logic
+    // 切分点与分区逻辑
     // -------------------------------------------------------------------------
 
     /**
-     * Determines the cutoff index separating the prefix-to-summarize from the tail-to-keep.
+     * 确定切分索引，将待摘要前缀与待保留尾部分开。
      *
-     * <p>The cutoff is adjusted so that ASSISTANT/TOOL pairs are never split.
+     * <p>调整切分点，确保 ASSISTANT/TOOL 配对不会被拆开。
      */
     private static int determineCutoffIndex(
             List<Msg> messages, int totalTokens, CompactionConfig config) {
@@ -375,12 +372,12 @@ public class ConversationCompactor {
         return findSafeCutoffPoint(messages, rawCutoff);
     }
 
-    /** Returns the earliest index such that {@code messages[index:]} fits within the token budget. */
+    /** 返回最早的索引，使 {@code messages[index:]} 落入 token 预算。 */
     private static int findTokenBasedCutoff(List<Msg> messages, int totalTokens, int keepTokens) {
         if (totalTokens <= keepTokens) {
             return 0;
         }
-        // Binary search for the earliest index where the suffix token count <= keepTokens
+        // 二分查找后缀 token 数不超过 keepTokens 的最早索引。
         int left = 0;
         int right = messages.size();
         int candidate = messages.size();
@@ -395,11 +392,11 @@ public class ConversationCompactor {
                 left = mid + 1;
             }
         }
-        // Clamp so at least 1 message is always kept
+        // 限制边界，确保至少保留 1 条消息。
         return Math.min(candidate, messages.size() - 1);
     }
 
-    /** Returns the cutoff that keeps the last {@code keepMessages} messages verbatim. */
+    /** 返回能够原样保留最后 {@code keepMessages} 条消息的切分点。 */
     private static int findMessageBasedCutoff(List<Msg> messages, int keepMessages) {
         if (messages.size() <= keepMessages) {
             return 0;
@@ -408,12 +405,13 @@ public class ConversationCompactor {
     }
 
     /**
-     * Adjusts the cutoff to avoid splitting ASSISTANT tool-call/TOOL-result pairs.
+     * 调整切分点，避免拆开 ASSISTANT 工具调用与 TOOL 结果的配对。
      *
-     * <p>If the message at {@code cutoffIndex} has role TOOL, we search backward for the
-     * ASSISTANT message whose tool-use blocks correspond to those tool results and move the
-     * cutoff to include that ASSISTANT message in the prefix (i.e., cut before it).
+     * <p>若 {@code cutoffIndex} 处的消息角色为 TOOL，则向前查找工具调用块与这些结果对应的
+     * ASSISTANT 消息，将切分点移到该 ASSISTANT 消息之前，令调用与结果一起保留在尾部。
      *
+     * <p>【学习提示】前缀使用不包含切分索引的子列表；因此切分点回退到调用消息的位置，
+     * 实际是扩大保留尾部，而不是把调用消息送入摘要前缀。
      */
     private static int findSafeCutoffPoint(List<Msg> messages, int cutoffIndex) {
         if (cutoffIndex <= 0 || cutoffIndex >= messages.size()) {
@@ -425,7 +423,7 @@ public class ConversationCompactor {
             return cutoffIndex;
         }
 
-        // Collect tool-call IDs from consecutive TOOL messages at/after the cutoff
+        // 收集切分点及其后连续 TOOL 消息中的工具调用 ID。
         List<String> toolCallIds = new ArrayList<>();
         int idx = cutoffIndex;
         while (idx < messages.size() && messages.get(idx).getRole() == MsgRole.TOOL) {
@@ -438,29 +436,29 @@ public class ConversationCompactor {
         }
 
         if (toolCallIds.isEmpty()) {
-            // No IDs found — advance past all TOOL messages to avoid orphaned results
+            // 未找到 ID：跳过全部 TOOL 消息，避免留下孤立结果。
             return idx;
         }
 
-        // Search backward for the ASSISTANT message that issued those tool calls
+        // 向前查找发起这些工具调用的 ASSISTANT 消息。
         for (int i = cutoffIndex - 1; i >= 0; i--) {
             Msg msg = messages.get(i);
             if (msg.getRole() == MsgRole.ASSISTANT) {
                 for (ContentBlock block : msg.getContent()) {
                     if (block instanceof ToolUseBlock tu && toolCallIds.contains(tu.getId())) {
-                        // Move the cutoff to just before this ASSISTANT message
+                        // 将切分点移到这条 ASSISTANT 消息之前。
                         return i;
                     }
                 }
             }
         }
 
-        // Fallback: advance past all TOOL messages
+        // 回退处理：跳过全部 TOOL 消息。
         return idx;
     }
 
     // -------------------------------------------------------------------------
-    // Summarization
+    // 摘要生成
     // -------------------------------------------------------------------------
 
     private Mono<String> summarizePrefix(List<Msg> prefix, CompactionConfig config) {
@@ -499,10 +497,9 @@ public class ConversationCompactor {
     }
 
     /**
-     * Formats a list of messages as a human-readable text block for the summarization LLM.
+     * 将消息列表格式化为适合摘要 LLM 阅读的文本块。
      *
-     * <p>Tool calls retain their names and argument previews; tool results retain their names,
-     * error state, and head+tail previews. Omitted content is marked explicitly.
+     * <p>工具调用保留名称与参数预览；工具结果保留名称、错误状态和首尾预览。省略的内容会明确标记。
      */
     static String formatMessagesForSummary(List<Msg> messages) {
         return messages.stream()
@@ -548,7 +545,7 @@ public class ConversationCompactor {
         return sb.toString().strip();
     }
 
-    /** Keep every argument name and short value; abbreviate large values individually. */
+    /** 保留每个参数名称及较短的值；对较大的值分别缩略。 */
     private static String renderToolArgsForSummary(ToolUseBlock toolUse) {
         String json = JsonUtils.resolveToolCallArgsJson(toolUse);
         if (json.length() <= SUMMARY_PREVIEW_CHARS) {
@@ -577,21 +574,21 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Summary message construction
+    // 摘要消息构建
     // -------------------------------------------------------------------------
 
     /**
-     * Builds a USER message carrying the summary.
+     * 构建承载摘要的 USER 消息。
      *
-     * <p>When a native session is active, include its logical history lookup. Otherwise use a
-     * summary without claiming that a durable full history exists.
+     * <p>原生会话处于活动状态时，包含逻辑历史查询引用；否则生成不声称存在持久化完整历史的摘要。
      *
-     * <p>Both variants carry the same continuation preamble: the summary is established
-     * background, and the model continues from it directly — no recap, no fresh greeting, no
-     * mention of the summarization step itself.
+     * <p>两种形式都使用相同的延续前导：摘要是既定背景，模型直接在此基础上继续，
+     * 不复述、不重新问候，也不提及摘要步骤本身。
      *
-     * <p>The message name is set to {@link #SUMMARY_MSG_NAME} so hooks can identify generated
-     * summaries, and the stable content-based ID keeps repeated summaries identifiable.
+     * <p>消息名称设为 {@link #SUMMARY_MSG_NAME}，供钩子识别生成的摘要；
+     * 基于内容的稳定 ID 使重复摘要可识别。
+     *
+     * <p>【学习提示】这里的 USER 只是摘要注入的消息角色，不表示用户刚刚发出新指令或提供了新的授权。
      */
     private static Msg buildSummaryMessage(String summary, String historyReference) {
         String historyHint =
@@ -623,14 +620,13 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Summary message filtering (chained summarization support)
+    // 摘要消息过滤（支持链式摘要）
     // -------------------------------------------------------------------------
 
     /**
-     * Removes previously injected summary messages from a list.
+     * 从列表中移除先前注入的摘要消息。
      *
-     * <p>Prior summaries remain part of the next summarization input, but memory flushing must
-     * only process the newly compacted raw messages to avoid duplicate extraction.
+     * <p>旧摘要仍参与下一次摘要输入，但记忆提取写入只能处理新压缩的原始消息，以避免重复提取。
      */
     static List<Msg> filterSummaryMessages(List<Msg> messages) {
         return messages.stream()
@@ -639,21 +635,18 @@ public class ConversationCompactor {
     }
 
     // -------------------------------------------------------------------------
-    // Argument truncation (pre-summarization, non-LLM)
+    // 参数截断（摘要前，不调用 LLM）
     // -------------------------------------------------------------------------
 
     /**
-     * Aggregate tool-result pruning: walks backward through TOOL messages, protects the most
-     * recent {@code protectTokens} worth of tool output, then replaces older oversized tool
-     * results with a head+tail preview when the total prunable amount exceeds
-     * {@code minimumTokens}.
+     * 工具结果汇总裁剪：从后向前遍历 TOOL 消息，保护最近 {@code protectTokens} 对应的工具输出，
+     * 当可裁剪总量超过 {@code minimumTokens} 时，将较旧的过大结果替换为首尾预览。
      *
-     * <p>Non-LLM operation. Returns the original list if no pruning occurred. The pruned block
-     * keeps its metadata and execution state — only the output text is replaced with the
-     * preview — so downstream consumers of markers such as {@code agentscope.tool_result_evicted}
-     * or {@link ToolResultBlock#METADATA_SUSPENDED} keep working. The preserved markers describe
-     * the pre-prune payload, though: consumers must not assume the block text is the full
-     * payload (e.g. an eviction pointer's referenced content is no longer inline after pruning).
+     * <p>此操作不调用 LLM；未发生裁剪时返回原始列表。裁剪块保留元数据和执行状态，
+     * 只将输出文本替换为预览，因此依赖 {@code agentscope.tool_result_evicted} 或
+     * {@link ToolResultBlock#METADATA_SUSPENDED} 等标记的下游消费者仍可工作。
+     * 不过这些保留标记描述的是裁剪前载荷：消费者不能假定块文本仍是完整载荷，
+     * 例如转存指针引用的内容在裁剪后不再完整内联。
      */
     List<Msg> pruneToolResults(List<Msg> messages, CompactionConfig.PruneConfig pruneConfig) {
         if (pruneConfig == null || messages == null || messages.isEmpty()) {
@@ -688,7 +681,7 @@ public class ConversationCompactor {
                 if (text.isBlank()) {
                     continue;
                 }
-                // Charge this result only, not every sibling in a batched tool message.
+                // 仅计入当前结果，不要把同一批工具消息中的其他结果一起计入。
                 int tokens = TokenCounterUtil.calculateToken(List.of(msg.withContent(List.of(tr))));
                 if (protectedTokens < protectBudget) {
                     protectedTokens += tokens;
@@ -753,13 +746,12 @@ public class ConversationCompactor {
     }
 
     /**
-     * Truncates large {@code ToolUseBlock} argument values in old messages.
+     * 截断旧消息中过大的 {@code ToolUseBlock} 参数值。
      *
-     * <p>This is a lightweight, non-LLM pass that fires at a separate (lower) threshold
-     * than full summarization. Only messages before the keep window are modified; recent
-     * messages are left intact.
+     * <p>这是轻量且不调用 LLM 的步骤，使用独立于完整摘要且更低的触发阈值。
+     * 只修改保留窗口之前的消息，近期消息不变。
      *
-     * <p>When {@code truncateConfig} is {@code null}, the original list is returned unchanged.
+     * <p>{@code truncateConfig} 为 {@code null} 时原样返回原始列表。
      */
     List<Msg> truncateArgs(List<Msg> messages, TruncateArgsConfig truncateConfig) {
         if (truncateConfig == null || messages == null || messages.isEmpty()) {
@@ -773,7 +765,7 @@ public class ConversationCompactor {
 
         int cutoff = determineTruncateCutoff(messages, truncateConfig);
         if (cutoff >= messages.size()) {
-            return messages; // Nothing in the truncation window
+            return messages; // 截断窗口内没有消息。
         }
 
         boolean anyModified = false;
@@ -807,7 +799,7 @@ public class ConversationCompactor {
 
     private static int determineTruncateCutoff(List<Msg> messages, TruncateArgsConfig cfg) {
         if (cfg.getKeepTokens() > 0) {
-            // Token-budget-based keep window: scan from the end
+            // 按 token 预算确定保留窗口：从末尾扫描。
             int tokensKept = 0;
             for (int i = messages.size() - 1; i >= 0; i--) {
                 int msgTokens = TokenCounterUtil.calculateToken(List.of(messages.get(i)));
@@ -818,14 +810,14 @@ public class ConversationCompactor {
             }
             return 0;
         }
-        // Message-count keep window
+        // 按消息数量确定保留窗口。
         int keep = cfg.getKeepMessages();
         return Math.max(0, messages.size() - keep);
     }
 
     /**
-     * Returns a copy of the message with large {@code ToolUseBlock} argument values shortened.
-     * If no argument exceeds the limit, the original message reference is returned unchanged.
+     * 返回消息副本，其中过大的 {@code ToolUseBlock} 参数值已缩短。
+     * 没有参数超限时，原样返回原始消息引用。
      */
     private static Msg truncateToolUseArgs(Msg msg, TruncateArgsConfig cfg) {
         List<ContentBlock> blocks = msg.getContent();
@@ -854,11 +846,11 @@ public class ConversationCompactor {
     }
 
     /**
-     * Returns a copy of the {@code ToolUseBlock} with large string arg values truncated,
-     * or the original if no truncation was needed.
+     * 返回 {@code ToolUseBlock} 的副本，其中过大的字符串参数值已截断；
+     * 无需截断时返回原始对象。
      */
     private static ToolUseBlock truncateToolUseBlock(ToolUseBlock tu, TruncateArgsConfig cfg) {
-        // Provider replay metadata is authoritative for server tool calls.
+        // 对于服务端工具调用，以提供商的重放元数据为准。
         if (tu.isServerTool()) {
             return tu;
         }
@@ -880,7 +872,7 @@ public class ConversationCompactor {
         if (!anyModified) {
             return tu;
         }
-        // Drop raw content so request formatters serialize the truncated input.
+        // 移除原始内容，使请求格式化器序列化截断后的输入。
         return ToolUseBlock.builder()
                 .id(tu.getId())
                 .name(tu.getName())

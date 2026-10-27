@@ -32,12 +32,12 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
 /**
- * Builds a deterministic archive payload for workspace projection entries.
+ * 为工作区投影条目构建确定性的归档载荷。
  *
- * <p>The payload contains:
+ * <p>载荷包括：
  * <ul>
- *   <li>projected files as a tar archive (for sandbox hydration)</li>
- *   <li>a content hash used to skip unchanged projections across calls</li>
+ *   <li>投影文件的 tar 归档（供沙箱恢复）</li>
+ *   <li>内容哈希，用于跨调用跳过未变化的投影</li>
  * </ul>
  */
 public final class WorkspaceProjectionApplier {
@@ -45,7 +45,7 @@ public final class WorkspaceProjectionApplier {
     private WorkspaceProjectionApplier() {}
 
     /**
-     * Builds projection payload from all {@link WorkspaceProjectionEntry} items in the spec.
+     * 从规范中的所有 {@link WorkspaceProjectionEntry} 条目构建投影载荷。
      */
     public static ProjectionPayload build(WorkspaceSpec spec) throws Exception {
         if (spec == null || spec.getEntries().isEmpty()) {
@@ -146,11 +146,11 @@ public final class WorkspaceProjectionApplier {
     }
 
     /**
-     * Projection result used at sandbox start.
+     * 沙箱启动时使用的投影结果。
      *
-     * @param hash deterministic hash over projected file paths and bytes
-     * @param tarBytes tar archive containing projected files
-     * @param fileCount number of projected files
+     * @param hash 基于投影文件路径与字节的确定性哈希
+     * @param tarBytes 包含投影文件的 tar 归档
+     * @param fileCount 投影文件数量
      */
     public record ProjectionPayload(String hash, byte[] tarBytes, int fileCount) {}
 }

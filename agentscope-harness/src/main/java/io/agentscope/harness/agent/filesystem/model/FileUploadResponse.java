@@ -16,10 +16,10 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result of a single file upload operation.
+ * 单个文件上传操作的结果。
  *
- * @param path the file path that was requested
- * @param error error description on failure, {@code null} on success
+ * @param path 请求的文件路径
+ * @param error 失败时的错误说明；成功时为 {@code null}
  */
 public record FileUploadResponse(String path, String error) {
 

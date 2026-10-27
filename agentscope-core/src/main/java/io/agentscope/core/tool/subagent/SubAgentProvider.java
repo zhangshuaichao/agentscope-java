@@ -18,13 +18,11 @@ package io.agentscope.core.tool.subagent;
 import io.agentscope.core.agent.Agent;
 
 /**
- * Factory interface for creating agent instances.
+ * 创建智能体实例的工厂接口。
  *
- * <p>Since ReActAgent is not thread-safe, this provider pattern ensures that each tool call gets a
- * fresh agent instance. This is similar to Spring's ObjectProvider pattern.
+ * <p>由于 ReActAgent 不是线程安全的，此提供者模式确保每次工具调用获得新的智能体实例，类似于 Spring 的 ObjectProvider 模式。
  *
- * <p>Example usage:
- *
+ * <p>用法示例：
  * <pre>{@code
  * SubAgentProvider<ReActAgent> provider = () -> ReActAgent.builder()
  *     .name("ResearchAgent")
@@ -37,18 +35,17 @@ import io.agentscope.core.agent.Agent;
  *     .apply();
  * }</pre>
  *
- * @param <T> The type of agent this provider creates
+ * @param <T> 此提供者创建的智能体类型
  */
 @FunctionalInterface
 public interface SubAgentProvider<T extends Agent> {
 
     /**
-     * Provides a new agent instance.
+     * 提供新的智能体实例。
      *
-     * <p>This method is called for each tool invocation to ensure thread safety. Implementations
-     * should create a new agent instance each time this method is called.
+     * <p>每次工具调用都会调用此方法，以确保线程安全。实现应在每次调用时创建新的智能体实例。
      *
-     * @return A new agent instance
+     * @return 新的智能体实例
      */
     T provide();
 }

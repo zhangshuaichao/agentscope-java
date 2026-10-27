@@ -35,21 +35,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tool that blocks until async results arrive, either for a specific task barrier or (legacy)
- * until any message appears in the session inbox.
+ * 阻塞等待异步结果的工具，可等待特定任务集合的完成屏障，
+ * 或按旧版行为等待会话收件箱出现任意消息。
  *
- * <p>Prefer barrier mode ({@code task_ids} or {@code wait_all=true}): when the wait set reaches
- * terminal state, this tool embeds each task's status and result in the tool return so the model
- * can continue reasoning immediately without waiting for push-back delivery.
+ * <p>优先使用屏障模式（{@code task_ids} 或 {@code wait_all=true}）：
+ * 等待集合全部到达终态时，此工具在返回值中嵌入每个任务的状态和结果，
+ * 使模型无需等待结果回推即可立即继续推理。
  *
- * <p>Without {@code task_ids} / {@code wait_all}, this keeps the legacy inbox-any behavior: the
- * tool returns as soon as <em>any</em> inbox message is present — it is not a wait-all barrier.
+ * <p>未提供 {@code task_ids} / {@code wait_all} 时，保留旧版“任意收件箱消息”行为：
+ * 只要出现<em>任意</em>收件箱消息就返回，并非等待全部完成的屏障。
  *
- * <p>Guardrails prevent unbounded blocking:
+ * <p>通过以下保护避免无界阻塞：
  * <ul>
- *   <li>Timeout is clamped to {@value #MAX_TIMEOUT_SECONDS}s regardless of the LLM-supplied value.
- *   <li>After {@value #MAX_CONSECUTIVE_EMPTY_WAITS} consecutive timeouts with no results, the tool
- *       refuses further blocking waits and directs the LLM to use non-blocking alternatives.
+ *   <li>无论 LLM 提供何值，超时均限制在 {@value #MAX_TIMEOUT_SECONDS} 秒以内。
+ *   <li>连续 {@value #MAX_CONSECUTIVE_EMPTY_WAITS} 次超时且无结果后，
+ *       拒绝进一步阻塞等待，并引导 LLM 使用非阻塞替代方案。
  * </ul>
  */
 public class WaitAsyncResultsTool {
@@ -83,16 +83,18 @@ public class WaitAsyncResultsTool {
     }
 
     /**
-     * Same as {@link #WaitAsyncResultsTool(MessageBus, TaskRepository)}, with a custom polling
-     * granularity for tests: mid-budget task completion is noticed after one test interval instead
-     * of one production interval.
+     * 与 {@link #WaitAsyncResultsTool(MessageBus, TaskRepository)} 相同，
+     * 但可为测试自定义轮询粒度：在预算中途完成的任务会在一个测试间隔后被发现，
+     * 而不是等待一个生产间隔。
      */
     WaitAsyncResultsTool(
             MessageBus messageBus, TaskRepository taskRepository, long pollIntervalMs) {
         this(messageBus, taskRepository, System::currentTimeMillis, Thread::sleep, pollIntervalMs);
     }
 
-    /** Allows timeout tests to advance elapsed time without waiting for the real deadline. */
+    /**
+     * 允许超时测试推进已逝时间，无需等待真实截止时刻。
+     */
     WaitAsyncResultsTool(
             MessageBus messageBus,
             TaskRepository taskRepository,
@@ -102,8 +104,8 @@ public class WaitAsyncResultsTool {
     }
 
     /**
-     * Allows timeout tests to advance elapsed time without waiting for the real deadline, and to
-     * shrink the polling granularity so waits complete promptly.
+     * 允许超时测试推进已逝时间而无需等待真实截止时刻，
+     * 并缩短轮询粒度，使等待及时结束。
      */
     WaitAsyncResultsTool(
             MessageBus messageBus,
@@ -124,9 +126,9 @@ public class WaitAsyncResultsTool {
     }
 
     /**
-     * Registers a probe for outstanding work owned outside the subagent task repository (currently
-     * AgentTeams teammates). Without it a lead with no subagent tasks would be told to stop waiting
-     * while its teammates are still running.
+     * 注册探针，用于检查子智能体任务仓库之外管理的未完成工作
+     * （当前为 AgentTeams 队友）。否则，没有子智能体任务的负责人会在队友
+     * 仍运行时被告知停止等待。
      */
     public WaitAsyncResultsTool setExternalWorkProbe(BooleanSupplier probe) {
         this.externalWorkProbe = probe;
@@ -300,7 +302,7 @@ public class WaitAsyncResultsTool {
                                 + " context automatically. Prefer wait_async_results(task_ids=...)"
                                 + " or wait_all=true when you need every task in a group.");
             }
-            // Cap sleep to the remaining budget so the tool never overshoots the caller's timeout.
+            // 将休眠限制在剩余预算内，确保工具不超出调用方的超时限制。
             sleepForPollInterval(remainingMs);
         }
 
@@ -456,8 +458,8 @@ public class WaitAsyncResultsTool {
     }
 
     /**
-     * Embeds each terminal task's status/result in the tool return so the parent can continue
-     * without waiting for inbox push-back. Marks tasks delivered to avoid duplicate reminders.
+     * 将每个终态任务的状态／结果嵌入工具返回值，使父级无需等待收件箱回推
+     * 即可继续。将任务标记为已投递，避免重复提醒。
      */
     private ToolResultBlock formatBarrierResults(
             RuntimeContext runtimeContext, String sessionId, List<BackgroundTask> tasks) {
@@ -470,7 +472,7 @@ public class WaitAsyncResultsTool {
                 try {
                     taskRepository.markDelivered(runtimeContext, sessionId, task.getTaskId());
                 } catch (RuntimeException ignore) {
-                    // Best-effort: failure only risks a redundant push reminder.
+                    // 尽力而为：失败只可能造成重复推送提醒。
                 }
             }
             sb.append("---").append('\n');

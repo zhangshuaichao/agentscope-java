@@ -20,34 +20,33 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Interface for agents that can observe messages without generating replies.
+ * 能够观察消息而不生成回复的智能体接口。
  *
- * <p>This interface enables agents to receive and process messages from other agents
- * or the environment without responding. It's commonly used in multi-agent collaboration
- * scenarios where agents need to be aware of each other's actions.
+ * <p>允许智能体接收并处理来自其他智能体或环境的消息而不响应，
+ * 常用于智能体需要了解彼此行动的多智能体协作场景。
  *
- * <p>Use cases include:
+ * <p>用途包括：
  * <ul>
- *   <li>Passive monitoring of conversation flow</li>
- *   <li>Building shared context in multi-agent systems</li>
- *   <li>Implementing observer patterns in agent pipelines</li>
+ * <li>被动监测对话流程</li>
+ * <li>在多智能体系统中建立共享上下文</li>
+ * <li>在智能体管道中实现观察者模式</li>
  * </ul>
  */
 public interface ObservableAgent {
 
     /**
-     * Observe a single message without generating a reply.
+     * 观察单条消息但不生成回复。
      *
-     * @param msg The message to observe
-     * @return Mono that completes when observation is done
+     * @param msg 要观察的消息
+     * @return 观察完成时结束的 Mono
      */
     Mono<Void> observe(Msg msg);
 
     /**
-     * Observe multiple messages without generating a reply.
+     * 观察多条消息但不生成回复。
      *
-     * @param msgs The messages to observe
-     * @return Mono that completes when all observations are done
+     * @param msgs 要观察的消息列表
+     * @return 全部观察完成时结束的 Mono
      */
     Mono<Void> observe(List<Msg> msgs);
 }

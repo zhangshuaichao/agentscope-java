@@ -18,21 +18,21 @@ package io.agentscope.harness.agent.sandbox;
 import io.agentscope.harness.agent.sandbox.snapshot.SandboxSnapshotSpec;
 
 /**
- * Factory for creating and resuming {@link Sandbox} instances.
+ * 创建和恢复 {@link Sandbox} 实例的工厂。
  *
- * @param <O> the type of client options for this implementation
+ * @param <O> 此实现的客户端选项类型
  */
 public interface SandboxClient<O extends SandboxClientOptions> {
 
     /**
-     * Creates a new sandbox with the given workspace spec and snapshot spec.
+     * 使用给定工作区规范和快照规范创建新沙箱。
      *
-     * <p>Returned in a pre-start state; call {@link Sandbox#start()} before use.
+     * <p>返回时尚未启动；使用前调用 {@link Sandbox#start()}。
      */
     Sandbox create(WorkspaceSpec workspaceSpec, SandboxSnapshotSpec snapshotSpec, O options);
 
     /**
-     * Resumes a sandbox from previously serialized {@link SandboxState}.
+     * 从先前序列化的 {@link SandboxState} 恢复沙箱。
      */
     Sandbox resume(SandboxState state);
 

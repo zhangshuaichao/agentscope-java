@@ -22,151 +22,148 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Interface for agents that can be called to process messages.
+ * 能够被调用以处理消息的智能体接口。
  *
- * <p>This interface defines the core call capability of agents, including:
+ * <p>定义智能体的核心调用能力，包括：
  * <ul>
- *   <li>Basic message processing via {@link #call(List)}</li>
- *   <li>Structured output generation via {@link #call(List, Class)} and {@link #call(List, JsonNode)}</li>
+ * <li>通过 {@link #call(List)} 处理基本消息</li>
+ * <li>通过 {@link #call(List, Class)} 和 {@link #call(List, JsonNode)} 生成结构化输出</li>
  * </ul>
  *
- * <p>Default implementations are provided for convenience methods that delegate
- * to the core {@link #call(List)} method.
+ * <p>便捷方法提供默认实现，并委托给核心 {@link #call(List)} 方法。
  */
 public interface CallableAgent {
 
     /**
-     * Continue generation based on current state without adding new input.
+     * 基于当前状态继续生成，不添加新输入。
      *
-     * @return Response message
+     * @return 回复消息
      */
     default Mono<Msg> call() {
         return call(List.of());
     }
 
     /**
-     * Continue generation with JSON schema based on current state.
+     * 基于当前状态，使用 JSON schema 继续生成。
      *
-     * @param schema JSON schema defining the structure
-     * @return Response message with structured data in metadata
+     * @param schema 定义结构的 JSON schema
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(JsonNode schema) {
         return call(List.of(), schema);
     }
 
     /**
-     * Continue generation with structured model based on current state.
+     * 基于当前状态，使用结构化模型继续生成。
      *
-     * @param structuredModel Class defining the structure
-     * @return Response message with structured data in metadata
+     * @param structuredModel 定义结构的类
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(Class<?> structuredModel) {
         return call(List.of(), structuredModel);
     }
 
     /**
-     * Process a single input message and generate a response.
+     * 处理单条输入消息并生成回复。
      *
-     * @param msg Input message
-     * @return Response message
+     * @param msg 输入消息
+     * @return 回复消息
      */
     default Mono<Msg> call(Msg msg) {
         return call(msg == null ? List.of() : List.of(msg));
     }
 
     /**
-     * Process a single input message with structured model and generate a response.
+     * 使用结构化模型处理单条输入消息并生成回复。
      *
-     * @param msg Input message
-     * @param structuredModel Class defining the structure
-     * @return Response message with structured data in metadata
+     * @param msg 输入消息
+     * @param structuredModel 定义结构的类
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(Msg msg, Class<?> structuredModel) {
         return call(msg == null ? List.of() : List.of(msg), structuredModel);
     }
 
     /**
-     * Process a single input message with JSON schema and generate a response.
+     * 使用 JSON schema 处理单条输入消息并生成回复。
      *
-     * @param msg Input message
-     * @param schema JSON schema defining the structure
-     * @return Response message with structured data in metadata
+     * @param msg 输入消息
+     * @param schema 定义结构的 JSON schema
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(Msg msg, JsonNode schema) {
         return call(msg == null ? List.of() : List.of(msg), schema);
     }
 
     /**
-     * Process a plain text input and generate a response.
+     * 处理纯文本输入并生成回复。
      *
-     * @param text Input text (wrapped into a {@link UserMessage})
-     * @return Response message
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @return 回复消息
      */
     default Mono<Msg> call(String text) {
         return call(new UserMessage(text));
     }
 
     /**
-     * Process a plain text input with structured model and generate a response.
+     * 使用结构化模型处理纯文本输入并生成回复。
      *
-     * @param text Input text (wrapped into a {@link UserMessage})
-     * @param structuredModel Class defining the structure
-     * @return Response message with structured data in metadata
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @param structuredModel 定义结构的类
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(String text, Class<?> structuredModel) {
         return call(new UserMessage(text), structuredModel);
     }
 
     /**
-     * Process a plain text input with JSON schema and generate a response.
+     * 使用 JSON schema 处理纯文本输入并生成回复。
      *
-     * @param text Input text (wrapped into a {@link UserMessage})
-     * @param schema JSON schema defining the structure
-     * @return Response message with structured data in metadata
+     * @param text 输入文本（包装为 {@link UserMessage}）
+     * @param schema 定义结构的 JSON schema
+     * @return 在元数据中携带结构化数据的回复消息
      */
     default Mono<Msg> call(String text, JsonNode schema) {
         return call(new UserMessage(text), schema);
     }
 
     /**
-     * Process multiple input messages (varargs) and generate a response.
+     * 处理多条输入消息（可变参数）并生成回复。
      *
-     * @param msgs Input messages (varargs)
-     * @return Response message
+     * @param msgs 输入消息（可变参数）
+     * @return 回复消息
      */
     default Mono<Msg> call(Msg... msgs) {
         return call(List.of(msgs));
     }
 
     /**
-     * Process a list of input messages and generate a response.
+     * 处理输入消息列表并生成回复。
      *
-     * @param msgs Input messages
-     * @return Response message
+     * @param msgs 输入消息列表
+     * @return 回复消息
      */
     Mono<Msg> call(List<Msg> msgs);
 
     /**
-     * Process multiple input messages with structured model and generate a response.
+     * 使用结构化模型处理多条输入消息并生成回复。
      *
-     * <p>The structured model parameter defines the expected structure of output data.
-     * The structured data will be stored in the returned message's metadata field.
+     * <p>结构化模型参数定义输出数据的预期结构，结构化数据将存入返回消息的元数据字段。
      *
-     * @param msgs Input messages
-     * @param structuredModel Class defining the structure
-     * @return Response message with structured data in metadata
+     * @param msgs 输入消息列表
+     * @param structuredModel 定义结构的类
+     * @return 在元数据中携带结构化数据的回复消息
      */
     Mono<Msg> call(List<Msg> msgs, Class<?> structuredModel);
 
     /**
-     * Process multiple input messages with JSON schema and generate a response.
+     * 使用 JSON schema 处理多条输入消息并生成回复。
      *
-     * <p>The schema parameter defines the expected structure of output data.
-     * The structured data will be stored in the returned message's metadata field.
+     * <p>schema 参数定义输出数据的预期结构，结构化数据将存入返回消息的元数据字段。
      *
-     * @param msgs Input messages
-     * @param schema JSON schema defining the structure
-     * @return Response message with structured data in metadata
+     * @param msgs 输入消息列表
+     * @param schema 定义结构的 JSON schema
+     * @return 在元数据中携带结构化数据的回复消息
      */
     Mono<Msg> call(List<Msg> msgs, JsonNode schema);
 }

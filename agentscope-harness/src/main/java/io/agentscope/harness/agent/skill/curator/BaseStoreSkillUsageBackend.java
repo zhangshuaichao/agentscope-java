@@ -32,8 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Distributed {@link SkillUsageBackend} storing one record per skill under
- * {@code ["skills", "usage"]} with CAS retries via {@link BaseStore#putIfVersion}.
+ * 分布式 {@link SkillUsageBackend}，在 {@code ["skills", "usage"]} 下每个技能保存一条记录，通过 {@link BaseStore#putIfVersion} 执行 CAS 重试。
  */
 final class BaseStoreSkillUsageBackend implements SkillUsageBackend {
 
@@ -114,7 +113,7 @@ final class BaseStoreSkillUsageBackend implements SkillUsageBackend {
             }
             SkillUsageRecord updated = mutator.apply(current);
             if (updated == current) {
-                return; // explicit no-op (e.g. provenance gate denied)
+                return; // 显式空操作（例如被来源门控拒绝）。
             }
             if (updated == null) {
                 if (item == null) {
@@ -148,8 +147,8 @@ final class BaseStoreSkillUsageBackend implements SkillUsageBackend {
 
     @Override
     public void replaceAll(Map<String, SkillUsageRecord> data) {
-        // Multi-key store: upsert the provided keys only. Deleting absent keys would require a
-        // cross-key transaction we do not have; callers that need a true wipe use forget().
+        // 多键存储只插入或更新提供的键。删除缺失键需要这里没有的
+        // 跨键事务；需要真正清空的调用方使用 forget()。
         if (data == null || data.isEmpty()) {
             return;
         }

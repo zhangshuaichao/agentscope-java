@@ -20,13 +20,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * A directory included in a permission context's working scope.
+ * 纳入权限上下文工作范围的目录。
  *
- * <p>Working directories drive the auto-allow behaviour of {@link PermissionMode#ACCEPT_EDITS}
- * for file-touching tools.
+ * <p>工作目录决定 {@link PermissionMode#ACCEPT_EDITS} 模式下，
+ * 涉及文件的工具是否适用自动允许行为。
  *
- * @param path absolute directory path (never {@code null})
- * @param source provenance (e.g. {@code "userSettings"}, {@code "session"})
+ * @param path 目录的绝对路径（绝不为 {@code null}）
+ * @param source 来源（例如 {@code "userSettings"}、{@code "session"}）
  */
 public record AdditionalWorkingDirectory(
         @JsonProperty("path") String path, @JsonProperty("source") String source) {

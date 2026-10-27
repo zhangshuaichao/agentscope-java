@@ -21,12 +21,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Snapshot of a file's contents kept in the tool read cache.
+ * 保存在工具读取缓存中的文件内容快照。
  *
- * @param lines line contents at the time of capture (defensively copied; never {@code null})
- * @param updatedAt file modification timestamp in epoch seconds with millisecond fraction
- * @param bytes approximate size of the cached entry in kilobytes (UTF-8 byte sum / 1024)
- * @param filePath absolute path to the cached file (never {@code null})
+ * @param lines 捕获时的行内容（已防御性复制，绝不为 {@code null}）
+ * @param updatedAt 文件修改时间戳，单位为纪元秒，含毫秒小数部分
+ * @param bytes 缓存条目的近似大小，单位为千字节（UTF-8 字节总和 / 1024）
+ * @param filePath 缓存文件的绝对路径（绝不为 {@code null}）
  */
 public record ReadCacheEntry(
         @JsonProperty("lines") List<String> lines,

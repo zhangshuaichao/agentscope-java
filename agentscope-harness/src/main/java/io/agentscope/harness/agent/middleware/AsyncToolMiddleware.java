@@ -50,19 +50,19 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Middleware that offloads long-running tool calls to background execution.
+ * 将长时间运行的工具调用转移到后台执行的中间件。
  *
- * <p>When the acting phase exceeds the configured timeout:
+ * <p>行动阶段超过配置的超时时间后：
  * <ol>
- *   <li>The underlying tool execution continues in the background (never cancelled)</li>
- *   <li>A placeholder {@link ToolResultBlock} is written to agent context so the LLM can
- *       continue reasoning</li>
- *   <li>When the background execution completes, the real result is pushed to the session's
- *       inbox as a {@code HintBlock} and a wakeup is enqueued</li>
+ *   <li>底层工具继续在后台执行，不会被取消。</li>
+ *   <li>向智能体上下文写入占位 {@link ToolResultBlock}，使 LLM 可以继续推理。</li>
+ *   <li>后台执行完成后，将真实结果作为 {@code HintBlock} 推入会话收件箱，并将唤醒任务入队。</li>
  * </ol>
  *
- * <p>The {@link InboxMiddleware} drains the inbox on the next reasoning step, making the
- * real result available to the LLM.
+ * <p>{@link InboxMiddleware} 在下一次推理时取出收件箱消息，让 LLM 获得真实结果。
+ *
+ * <p>【学习提示】这里的等待超时不是工具失败或执行取消。占位结果与最终结果分两阶段到达，
+ * 因此不能在占位出现后立即重复执行同一工具，尤其是具有外部副作用的工具。
  */
 public class AsyncToolMiddleware implements HarnessRuntimeMiddleware {
 
@@ -91,7 +91,7 @@ public class AsyncToolMiddleware implements HarnessRuntimeMiddleware {
         this.asyncToolRegistry = asyncToolRegistry;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_ACTING);

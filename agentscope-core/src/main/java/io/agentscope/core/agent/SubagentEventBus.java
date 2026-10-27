@@ -19,46 +19,38 @@ import java.util.Optional;
 import reactor.util.context.ContextView;
 
 /**
- * A lightweight channel that allows synchronously-invoked subagents to push their {@link Event}s
- * into the parent agent's {@code Flux<Event>} stream.
+ * 轻量级通道，允许同步调用的子智能体将其 {@link Event} 推送到父智能体的 {@code Flux<Event>} 流中。
  *
- * <p>An instance is created inside {@link AgentBase#createEventStream} and stored in the Reactor
- * Context under {@link #CONTEXT_KEY}. When a tool method (e.g. {@code agent_spawn}) runs inside
- * that stream pipeline, it can retrieve the bus via {@link #fromContext(ContextView)} and forward
- * each child event to the parent sink.
+ * <p>实例在 {@link AgentBase#createEventStream} 内创建，并以 {@link #CONTEXT_KEY} 为键存入 Reactor Context。
+ * 在该流管道中执行的工具方法（例如 {@code agent_spawn}）可以通过 {@link #fromContext(ContextView)}
+ * 获取总线，并将每个子事件转发到父级 sink。
  *
- * <p>Events emitted through the bus <em>must</em> already carry an {@link EventSource} (attached
- * by the caller) so downstream consumers can identify the originating subagent.
+ * <p>通过总线发出的事件<em>必须</em>已携带调用方附加的 {@link EventSource}，以便下游消费者识别来源子智能体。
  *
- * <p>When the parent agent is invoked via {@code call()} (non-streaming), no bus is present in the
- * context and {@link #fromContext} returns {@link Optional#empty()}, allowing callers to fall back
- * gracefully to the blocking path.
+ * <p>父智能体通过非流式的 {@code call()} 调用时，上下文中不存在总线，{@link #fromContext}
+ * 返回 {@link Optional#empty()}，调用方因而可以平稳回退到阻塞执行路径。
  */
 public interface SubagentEventBus {
 
     /**
-     * Reactor Context key under which the bus instance is stored. Internal use only; use
-     * {@link #fromContext(ContextView)} for retrieval.
+     * 在 Reactor Context 中存储总线实例的键。仅供内部使用；请通过 {@link #fromContext(ContextView)} 获取总线。
      */
     String CONTEXT_KEY = "agentscope.subagent.event.bus";
 
     /**
-     * Emits a subagent event into the parent stream. The event should carry a non-null
-     * {@link EventSource} identifying the originating subagent.
+     * 向父级流发出子智能体事件。事件应携带非空的 {@link EventSource}，以标识来源子智能体。
      *
-     * <p>This method is safe to call from any thread; the underlying {@code FluxSink.next} is
-     * thread-safe.
+     * <p>此方法可从任意线程安全调用；底层 {@code FluxSink.next} 是线程安全的。
      *
-     * @param event the event to forward (must have {@link EventSource} set)
+     * @param event 要转发的事件（必须设置 {@link EventSource}）
      */
     void emit(Event event);
 
     /**
-     * Retrieves the {@link SubagentEventBus} from the Reactor Context, if present.
+     * 从 Reactor Context 获取 {@link SubagentEventBus}（如果存在）。
      *
-     * @param ctx the current Reactor subscriber context
-     * @return an {@link Optional} containing the bus, or empty when running outside a streaming
-     *     pipeline
+     * @param ctx 当前 Reactor 订阅者上下文
+     * @return 包含总线的 {@link Optional}；在流式管道之外运行时为空
      */
     static Optional<SubagentEventBus> fromContext(ContextView ctx) {
         if (ctx == null || !ctx.hasKey(CONTEXT_KEY)) {

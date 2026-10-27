@@ -29,12 +29,12 @@ import io.agentscope.harness.agent.workspace.WorkspacePathNormalizer;
 import java.util.List;
 
 /**
- * Agent-callable {@code deliver_artifact} tool: downloads a file from the agent filesystem (e.g. a
- * sandbox workspace) and delegates the transport to a configured {@link ArtifactDeliveryTarget}.
+ * 智能体可调用的 {@code deliver_artifact} 工具：从智能体文件系统
+ * （例如沙箱工作区）下载文件，并将传输委托给已配置的 {@link ArtifactDeliveryTarget}。
  *
- * <p>This is the supported way for a sandboxed agent to hand an artifact it produced (report,
- * document, image, archive) to a destination outside the sandbox. It is only registered when an
- * {@link ArtifactDeliveryTarget} is configured on the builder.
+ * <p>这是沙箱内智能体将其生成的产物（报告、文档、图像、压缩包）交付到
+ * 沙箱外目标位置的受支持方式。只有构建器配置了 {@link ArtifactDeliveryTarget}
+ * 时才会注册此工具。
  */
 public class ArtifactDeliveryTool {
 
@@ -60,15 +60,14 @@ public class ArtifactDeliveryTool {
     }
 
     /**
-     * @param runtimeContext per-call agent runtime injected by the framework (not an LLM argument);
-     *     may be {@code null} when no merged context is available
-     * @param filePath path of the generated file in the workspace, e.g. {@code outputs/report.docx}
-     * @param fileName target file name after delivery; defaults to the basename of {@code filePath}.
-     *     Must be a plain file name: no path separators, {@code .} or {@code ..}
-     * @param description short description of the artifact
-     * @param force if {@code false} (default) and a file with the same name already exists at the
-     *     destination, delivery is rejected and the agent should retry with a new {@code fileName};
-     *     set to {@code true} to overwrite the existing artifact
+     * @param runtimeContext 框架注入的单次调用智能体运行时（不是 LLM 参数）；
+     *     没有合并上下文时可以为 {@code null}
+     * @param filePath 工作区中生成文件的路径，例如 {@code outputs/report.docx}
+     * @param fileName 交付后的目标文件名；默认为 {@code filePath} 的基本文件名。
+     *     必须是纯文件名：不得包含路径分隔符、{@code .} 或 {@code ..}
+     * @param description 产物的简短描述
+     * @param force 为 {@code false}（默认）且目标已存在同名文件时拒绝交付，
+     *     智能体应使用新的 {@code fileName} 重试；设为 {@code true} 可覆盖现有产物
      */
     @Tool(
             name = "deliver_artifact",

@@ -19,10 +19,10 @@ import io.agentscope.harness.agent.subagent.protocol.RemotePendingConfirm;
 import java.util.List;
 
 /**
- * Status snapshot returned by the remote task HTTP API ({@code GET /tasks/{taskId}}).
+ * 远程任务 HTTP API（{@code GET /tasks/{taskId}}）返回的状态快照。
  *
- * <p>Known status values: {@code pending}, {@code running}, {@code success}, {@code error},
- * {@code cancelled}, {@code awaiting_confirm}.
+ * <p>已知状态值：{@code pending}、{@code running}、{@code success}、{@code error}、
+ * {@code cancelled}、{@code awaiting_confirm}。
  */
 public record RemoteTaskStatus(
         String status, String error, List<RemotePendingConfirm> pendingConfirms) {

@@ -38,26 +38,26 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Manages memory flush operations: extracting long-term memories from a conversation
- * window and appending them to today's daily memory ledger.
+ * 管理记忆提取写入：从对话窗口提取长期记忆，并追加到当天的每日记忆账本。
  *
- * <p><b>Two-layer memory model</b> (this class owns only the first layer):
+ * <p><b>两层记忆模型</b>（本类只负责第一层）：
  * <ul>
- *   <li>{@code memory/YYYY-MM-DD.md} — append-only daily ledger. Each compaction's flush
- *       appends a timestamped section here. Written ONLY by this class.</li>
- *   <li>{@code MEMORY.md} — globally curated, deduplicated, size-bounded long-term memory.
- *       Written ONLY by {@link MemoryConsolidator} on a periodic schedule. Treated as
- *       read-only context here.</li>
+ * <li>{@code memory/YYYY-MM-DD.md}：仅追加的每日账本。每次压缩时的提取写入追加一个带时间戳的小节，
+ * 只由本类写入。</li>
+ * <li>{@code MEMORY.md}：经全局整理、去重且有大小限制的长期记忆。
+ * 只由 {@link MemoryConsolidator} 定期写入；本类将其视为只读上下文。</li>
  * </ul>
+ *
+ * <p>【学习提示】这里的“全局整理”是相对于同一工作区作用域内的账本而言，
+ * 不表示跨用户共享；实际隔离仍由工作区和文件系统的命名空间决定。
  */
 public class MemoryFlushManager {
 
     private static final Logger log = LoggerFactory.getLogger(MemoryFlushManager.class);
 
     /**
-     * Default prompt for the memory extraction step. Exposed publicly so callers can extend
-     * (e.g. append project-specific guidelines) when constructing
-     * {@link io.agentscope.harness.agent.memory.MemoryConfig}.
+     * 记忆提取步骤的默认提示词。公开暴露，以便调用方在构建
+     * {@link io.agentscope.harness.agent.memory.MemoryConfig} 时扩展，例如追加项目专用指南。
      */
     public static final String DEFAULT_FLUSH_PROMPT =
             """
@@ -97,8 +97,8 @@ public class MemoryFlushManager {
     }
 
     /**
-     * @param flushPrompt SYSTEM prompt for the extraction LLM call. {@code null} falls back to
-     *     {@link #DEFAULT_FLUSH_PROMPT}.
+     * @param flushPrompt 提取 LLM 调用的 SYSTEM 提示词；{@code null} 时回退到
+     *     {@link #DEFAULT_FLUSH_PROMPT}。
      */
     public MemoryFlushManager(WorkspaceManager workspaceManager, Model model, String flushPrompt) {
         this.workspaceManager = workspaceManager;
@@ -107,10 +107,9 @@ public class MemoryFlushManager {
     }
 
     /**
-     * Extracts long-term memories from messages using the model and writes them to disk.
+     * 使用模型从消息中提取长期记忆并写入存储。
      *
-     * <p>Provides existing MEMORY.md and today's daily file content to the extraction LLM
-     * so it can effectively deduplicate and avoid re-extracting known facts.
+     * <p>向提取 LLM 提供现有 MEMORY.md 和当天每日文件的内容，以便去重，避免重复提取已知事实。
      */
     public Mono<Void> flushMemories(RuntimeContext rc, List<Msg> messages) {
         String conversationText = serializeMessages(messages);
@@ -184,11 +183,10 @@ public class MemoryFlushManager {
     }
 
     /**
-     * Appends the extracted entries to today's daily memory ledger.
+     * 将提取的条目追加到当天的每日记忆账本。
      *
-     * <p>MEMORY.md is intentionally <b>NOT</b> touched here — it is owned by
-     * {@link MemoryConsolidator}, which periodically merges the daily ledgers into a
-     * curated, size-bounded MEMORY.md.
+     * <p>此处有意<b>不修改</b> MEMORY.md；它由 {@link MemoryConsolidator} 管理，
+     * 后者定期将每日账本合并为经过整理且有大小限制的 MEMORY.md。
      */
     private void writeMemoryFiles(RuntimeContext rc, String content) {
         String today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -215,11 +213,9 @@ public class MemoryFlushManager {
     private static final String SESSION_CONTEXT_TAG = "<session_context>";
 
     /**
-     * Serializes all messages into a textual representation for the memory extraction model.
-     * Includes USER, ASSISTANT, and TOOL messages. Assistant tool-call blocks and tool-result
-     * blocks are rendered as concise text so the model can extract memories from tool interactions.
-     * Internal context messages are skipped because they are generated from existing context,
-     * not new user/assistant/tool facts.
+     * 将所有消息序列化为供记忆提取模型使用的文本形式，包含 USER、ASSISTANT 和 TOOL 消息。
+     * 助手工具调用块和工具结果块会渲染为简洁文本，以便模型从工具交互中提取记忆。
+     * 跳过内部上下文消息，因为它们由已有上下文生成，并不是新的用户、助手或工具事实。
      */
     private String serializeMessages(List<Msg> messages) {
         return messages.stream()
@@ -255,8 +251,8 @@ public class MemoryFlushManager {
     }
 
     /**
-     * Renders all content blocks of a message into a single text string.
-     * Returns null if no renderable content is found.
+     * 将一条消息的所有内容块渲染为单个文本字符串。
+     * 找不到可渲染内容时返回 null。
      */
     private String renderContentBlocks(Msg msg) {
         List<ContentBlock> blocks = msg.getContent();

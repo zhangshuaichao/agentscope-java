@@ -15,22 +15,16 @@
  */
 package io.agentscope.core.model.transport;
 
-/**
- * Constants for HTTP transport layer.
- */
+/** HTTP 传输层常量。 */
 public class TransportConstants {
 
-    /**
-     * Header name for specifying stream format.
-     */
+    /** 用于指定流格式的请求头名称。 */
     public static final String STREAM_FORMAT_HEADER = "X-AgentScope-Stream-Format";
 
-    /**
-     * Value for NDJSON stream format.
-     */
+    /** NDJSON 流格式对应的值。 */
     public static final String STREAM_FORMAT_NDJSON = "ndjson";
 
     private TransportConstants() {
-        // Prevent instantiation
+        // 禁止实例化
     }
 }

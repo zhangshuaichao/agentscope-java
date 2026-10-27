@@ -15,10 +15,7 @@
  */
 package io.agentscope.core.state;
 
-/**
- * Thrown when an optimistic-concurrency save fails because another writer changed the same
- * session slot since it was loaded.
- */
+/** 乐观并发保存失败时抛出：自加载后，其他写入方已修改同一会话槽位。 */
 public class ConcurrentSessionModificationException extends RuntimeException {
 
     private final String userId;

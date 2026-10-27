@@ -25,11 +25,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Wrapper for synchronous MCP clients that converts blocking calls to reactive Mono types.
- * This implementation delegates to {@link McpSyncClient} and wraps blocking operations
- * in Reactor's boundedElastic scheduler to avoid blocking the event loop.
+ * 将同步 MCP 客户端的阻塞调用转换为响应式 Mono 的包装器。委托给 {@link McpSyncClient}，将阻塞操作放到 Reactor boundedElastic 调度器，避免阻塞事件循环。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * McpSyncClient client = ... // created via McpClient.sync()
  * McpSyncClientWrapper wrapper = new McpSyncClientWrapper("my-mcp", client);
@@ -45,10 +43,10 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     private final McpSyncClient client;
 
     /**
-     * Constructs a new synchronous MCP client wrapper.
+     * 构造同步 MCP 客户端包装器。
      *
-     * @param name unique identifier for this client
-     * @param client the underlying sync MCP client
+     * @param name 客户端唯一标识符
+     * @param client 底层同步 MCP 客户端
      */
     public McpSyncClientWrapper(String name, McpSyncClient client) {
         super(name);
@@ -56,13 +54,11 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Initializes the sync MCP client connection and caches available tools.
+     * 初始化同步 MCP 连接并缓存可用工具。
      *
-     * <p>This method wraps the blocking synchronous client operations in a reactive Mono that runs
-     * on the boundedElastic scheduler to avoid blocking the event loop. If already initialized,
-     * this method returns immediately without re-initializing.
+     * <p>将阻塞操作包装为在 boundedElastic 上运行的 Mono，避免阻塞事件循环。已初始化时立即返回，不重复初始化。
      *
-     * @return a Mono that completes when initialization is finished
+     * @return 初始化完成时完成的 Mono
      */
     @Override
     public Mono<Void> initialize() {
@@ -74,14 +70,14 @@ public class McpSyncClientWrapper extends McpClientWrapper {
 
         return Mono.fromCallable(
                         () -> {
-                            // Initialize the client (blocking)
+                            // 初始化客户端（阻塞）
                             McpSchema.InitializeResult result = client.initialize();
                             logger.debug(
                                     "MCP client '{}' initialized with server: {}",
                                     name,
                                     result.serverInfo().name());
 
-                            // List and cache tools (blocking)
+                            // 列出并缓存工具（阻塞）
                             McpSchema.ListToolsResult toolsResult = client.listTools();
                             logger.debug(
                                     "MCP client '{}' discovered {} tools",
@@ -99,13 +95,12 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Lists all tools available from the MCP server.
+     * 列出 MCP 服务器全部可用工具。
      *
-     * <p>This method wraps the blocking synchronous listTools call in a reactive Mono. The client
-     * must be initialized before calling this method.
+     * <p>将阻塞的同步 listTools 调用包装为响应式 Mono，调用前必须初始化客户端。
      *
-     * @return a Mono emitting the list of available tools
-     * @throws IllegalStateException if the client is not initialized
+     * @return 发出可用工具列表的 Mono
+     * @throws IllegalStateException 当客户端未初始化时
      */
     @Override
     public Mono<List<McpSchema.Tool>> listTools() {
@@ -119,15 +114,14 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Invokes a tool on the MCP server, wrapping the blocking call in a reactive Mono.
+     * 调用 MCP 服务器工具，将阻塞调用包装为响应式 Mono。
      *
-     * <p>This method wraps the blocking synchronous callTool operation in a Mono that runs on the
-     * boundedElastic scheduler. The client must be initialized before calling this method.
+     * <p>同步 callTool 操作在 boundedElastic 上运行，调用前必须初始化客户端。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @return a Mono emitting the tool call result (may contain error information)
-     * @throws IllegalStateException if the client is not initialized
+     * @param toolName 待调用工具名称
+     * @param arguments 工具参数
+     * @return 发出工具调用结果的 Mono（可包含错误信息）
+     * @throws IllegalStateException 当客户端未初始化时
      */
     @Override
     public Mono<McpSchema.CallToolResult> callTool(String toolName, Map<String, Object> arguments) {
@@ -135,17 +129,16 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Invokes a tool on the MCP server, wrapping the blocking call in a reactive Mono.
+     * 调用 MCP 服务器工具，将阻塞调用包装为响应式 Mono。
      *
-     * <p>This method wraps the blocking synchronous callTool operation in a Mono that runs on the
-     * boundedElastic scheduler. The client must be initialized before calling this method.
+     * <p>同步 callTool 操作在 boundedElastic 上运行，调用前必须初始化客户端。
      *
-     * @param toolName the name of the tool to call
-     * @param arguments the arguments to pass to the tool
-     * @param meta additional metadata to pass to the tool
-     * @return a Mono emitting the tool call result (may contain error information)
-     * @throws IllegalStateException if the client is not initialized
-     * */
+     * @param toolName 待调用工具名称
+     * @param arguments 工具参数
+     * @param meta 附加工具元数据
+     * @return 发出工具调用结果的 Mono（可包含错误信息）
+     * @throws IllegalStateException 当客户端未初始化时
+     */
     @Override
     public Mono<McpSchema.CallToolResult> callTool(
             String toolName, Map<String, Object> arguments, Map<String, Object> meta) {
@@ -183,10 +176,9 @@ public class McpSyncClientWrapper extends McpClientWrapper {
     }
 
     /**
-     * Closes the MCP client connection and releases all resources.
+     * 关闭 MCP 客户端连接并释放所有资源。
      *
-     * <p>This method attempts to close the client gracefully, falling back to forceful closure if
-     * graceful closure fails. This method is idempotent and can be called multiple times safely.
+     * <p>先尝试优雅关闭，失败时强制关闭。方法幂等，可安全地重复调用。
      */
     @Override
     public void close() {

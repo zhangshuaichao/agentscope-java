@@ -24,12 +24,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Configuration for HTTP and SOCKS proxy.
+ * HTTP 与 SOCKS 代理配置。
  *
- * <p>This class provides a unified configuration for both HTTP and SOCKS proxies,
- * supporting optional authentication and bypass rules.
+ * <p>统一配置 HTTP 和 SOCKS 代理，支持可选认证和绕过代理规则。
  *
- * <p>Usage examples:
+ * <p>用法示例：
  *
  * <pre>{@code
  * // Simple HTTP proxy
@@ -74,24 +73,24 @@ public class ProxyConfig {
     }
 
     /**
-     * Create a simple HTTP proxy configuration without authentication.
+     * 创建不含认证的简单 HTTP 代理配置。
      *
-     * @param host proxy server hostname or IP address
-     * @param port proxy server port
-     * @return a new ProxyConfig instance
+     * @param host 代理服务器主机名或 IP 地址
+     * @param port 代理服务器端口
+     * @return 新的 ProxyConfig 实例
      */
     public static ProxyConfig http(String host, int port) {
         return builder().type(ProxyType.HTTP).host(host).port(port).build();
     }
 
     /**
-     * Create an HTTP proxy configuration with authentication.
+     * 创建带认证的 HTTP 代理配置。
      *
-     * @param host proxy server hostname or IP address
-     * @param port proxy server port
-     * @param username authentication username
-     * @param password authentication password
-     * @return a new ProxyConfig instance
+     * @param host 代理服务器主机名或 IP 地址
+     * @param port 代理服务器端口
+     * @param username 认证用户名
+     * @param password 认证密码
+     * @return 新的 ProxyConfig 实例
      */
     public static ProxyConfig http(String host, int port, String username, String password) {
         return builder()
@@ -104,40 +103,40 @@ public class ProxyConfig {
     }
 
     /**
-     * Create a simple SOCKS4 proxy configuration.
+     * 创建简单的 SOCKS4 代理配置。
      *
-     * <p>Note: SOCKS4 does not support authentication.
+     * <p>注意：SOCKS4 不支持认证。
      *
-     * @param host proxy server hostname or IP address
-     * @param port proxy server port
-     * @return a new ProxyConfig instance
+     * @param host 代理服务器主机名或 IP 地址
+     * @param port 代理服务器端口
+     * @return 新的 ProxyConfig 实例
      */
     public static ProxyConfig socks4(String host, int port) {
         return builder().type(ProxyType.SOCKS4).host(host).port(port).build();
     }
 
     /**
-     * Create a simple SOCKS5 proxy configuration without authentication.
+     * 创建不含认证的简单 SOCKS5 代理配置。
      *
-     * @param host proxy server hostname or IP address
-     * @param port proxy server port
-     * @return a new ProxyConfig instance
+     * @param host 代理服务器主机名或 IP 地址
+     * @param port 代理服务器端口
+     * @return 新的 ProxyConfig 实例
      */
     public static ProxyConfig socks5(String host, int port) {
         return builder().type(ProxyType.SOCKS5).host(host).port(port).build();
     }
 
     /**
-     * Create a SOCKS5 proxy configuration with authentication.
+     * 创建带认证的 SOCKS5 代理配置。
      *
-     * <p><b>Note:</b> SOCKS5 authentication is only supported when using OkHttp-based
-     * transport implementations. JDK HttpClient does not support SOCKS5 authentication.
+     * <p><b>注意：</b>仅基于 OkHttp 的传输实现支持 SOCKS5 认证。
+     * JDK HttpClient 不支持 SOCKS5 认证。
      *
-     * @param host proxy server hostname or IP address
-     * @param port proxy server port
-     * @param username authentication username
-     * @param password authentication password
-     * @return a new ProxyConfig instance
+     * @param host 代理服务器主机名或 IP 地址
+     * @param port 代理服务器端口
+     * @param username 认证用户名
+     * @param password 认证密码
+     * @return 新的 ProxyConfig 实例
      */
     public static ProxyConfig socks5(String host, int port, String username, String password) {
         return builder()
@@ -150,85 +149,85 @@ public class ProxyConfig {
     }
 
     /**
-     * Create a new builder for ProxyConfig.
+     * 创建新的 ProxyConfig 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Get the proxy type.
+     * 获取代理类型。
      *
-     * @return the proxy type
+     * @return 代理类型
      */
     public ProxyType getType() {
         return type;
     }
 
     /**
-     * Get the proxy server hostname or IP address.
+     * 获取代理服务器主机名或 IP 地址。
      *
-     * @return the proxy host
+     * @return 代理主机
      */
     public String getHost() {
         return host;
     }
 
     /**
-     * Get the proxy server port.
+     * 获取代理服务器端口。
      *
-     * @return the proxy port
+     * @return 代理端口
      */
     public int getPort() {
         return port;
     }
 
     /**
-     * Get the authentication username.
+     * 获取认证用户名。
      *
-     * @return the username, or null if no authentication is configured
+     * @return 用户名；未配置认证时为 null
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Get the authentication password.
+     * 获取认证密码。
      *
-     * @return the password, or null if no authentication is configured
+     * @return 密码；未配置认证时为 null
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * Get the set of hosts that should bypass the proxy.
+     * 获取应绕过代理的主机集合。
      *
-     * <p>The set may contain exact hostnames (e.g., "localhost") or wildcard patterns
-     * (e.g., "*.internal.com", "192.168.*").
+     * <p>集合可以包含精确主机名（例如 "localhost"）或通配模式
+     * （例如 "*.internal.com"、"192.168.*"）。
      *
-     * @return the set of non-proxy hosts, or null if not configured
+     * @return 不使用代理的主机集合；未配置时为 null
      */
     public Set<String> getNonProxyHosts() {
         return nonProxyHosts;
     }
 
     /**
-     * Check if authentication credentials are configured.
+     * 检查是否配置了认证凭据。
      *
-     * @return true if both username and password are set
+     * @return 用户名和密码均已设置时返回 true
      */
     public boolean hasAuthentication() {
         return username != null && !username.isEmpty() && password != null && !password.isEmpty();
     }
 
     /**
-     * Check if the given hostname should bypass the proxy.
+     * 检查指定主机名是否应绕过代理。
      *
-     * @param hostname the hostname to check
-     * @return true if the hostname should bypass the proxy
+     * @param hostname 要检查的主机名
+     * @return 该主机名应绕过代理时返回 true
      */
     public boolean shouldBypass(String hostname) {
         if (nonProxyHosts == null || nonProxyHosts.isEmpty() || hostname == null) {
@@ -244,9 +243,9 @@ public class ProxyConfig {
     }
 
     /**
-     * Convert this configuration to a {@link java.net.Proxy} instance.
+     * 将配置转换为 {@link java.net.Proxy} 实例。
      *
-     * @return the Java Proxy instance
+     * @return Java Proxy 实例
      */
     public Proxy toJavaProxy() {
         Proxy.Type proxyType;
@@ -265,9 +264,9 @@ public class ProxyConfig {
     }
 
     /**
-     * Get the socket address for this proxy.
+     * 获取此代理的套接字地址。
      *
-     * @return the proxy socket address
+     * @return 代理套接字地址
      */
     public InetSocketAddress getSocketAddress() {
         return new InetSocketAddress(host, port);
@@ -335,7 +334,7 @@ public class ProxyConfig {
         return Objects.hash(type, host, port, username, password, nonProxyHosts);
     }
 
-    /** Builder for ProxyConfig. */
+    /** ProxyConfig 的建造者。 */
     public static class Builder {
         private ProxyType type;
         private String host;
@@ -347,10 +346,10 @@ public class ProxyConfig {
         private Builder() {}
 
         /**
-         * Set the proxy type.
+         * 设置代理类型。
          *
-         * @param type the proxy type
-         * @return this builder
+         * @param type 代理类型
+         * @return 当前建造者
          */
         public Builder type(ProxyType type) {
             this.type = type;
@@ -358,10 +357,10 @@ public class ProxyConfig {
         }
 
         /**
-         * Set the proxy server hostname or IP address.
+         * 设置代理服务器主机名或 IP 地址。
          *
-         * @param host the proxy host
-         * @return this builder
+         * @param host 代理主机
+         * @return 当前建造者
          */
         public Builder host(String host) {
             this.host = host;
@@ -369,10 +368,10 @@ public class ProxyConfig {
         }
 
         /**
-         * Set the proxy server port.
+         * 设置代理服务器端口。
          *
-         * @param port the proxy port
-         * @return this builder
+         * @param port 代理端口
+         * @return 当前建造者
          */
         public Builder port(int port) {
             this.port = port;
@@ -380,10 +379,10 @@ public class ProxyConfig {
         }
 
         /**
-         * Set the authentication username.
+         * 设置认证用户名。
          *
-         * @param username the username
-         * @return this builder
+         * @param username 用户名
+         * @return 当前建造者
          */
         public Builder username(String username) {
             this.username = username;
@@ -391,10 +390,10 @@ public class ProxyConfig {
         }
 
         /**
-         * Set the authentication password.
+         * 设置认证密码。
          *
-         * @param password the password
-         * @return this builder
+         * @param password 密码
+         * @return 当前建造者
          */
         public Builder password(String password) {
             this.password = password;
@@ -402,18 +401,17 @@ public class ProxyConfig {
         }
 
         /**
-         * Set the hosts that should bypass the proxy.
+         * 设置应绕过代理的主机。
          *
-         * <p>Supports exact hostnames and wildcard patterns:
-         *
+         * <p>支持精确主机名和通配模式：
          * <ul>
-         *   <li>{@code localhost} - exact match
-         *   <li>{@code *.internal.com} - suffix match
-         *   <li>{@code 192.168.*} - prefix match
+         *   <li>{@code localhost} — 精确匹配
+         *   <li>{@code *.internal.com} — 后缀匹配
+         *   <li>{@code 192.168.*} — 前缀匹配
          * </ul>
          *
-         * @param nonProxyHosts the set of non-proxy hosts
-         * @return this builder
+         * @param nonProxyHosts 不使用代理的主机集合
+         * @return 当前建造者
          */
         public Builder nonProxyHosts(Set<String> nonProxyHosts) {
             this.nonProxyHosts = nonProxyHosts;
@@ -421,11 +419,11 @@ public class ProxyConfig {
         }
 
         /**
-         * Build the ProxyConfig.
+         * 构建 ProxyConfig。
          *
-         * @return a new ProxyConfig instance
-         * @throws NullPointerException if type or host is null
-         * @throws IllegalArgumentException if port is out of range
+         * @return 新的 ProxyConfig 实例
+         * @throws NullPointerException type 或 host 为 null 时抛出
+         * @throws IllegalArgumentException port 超出范围时抛出
          */
         public ProxyConfig build() {
             Objects.requireNonNull(type, "type is required");

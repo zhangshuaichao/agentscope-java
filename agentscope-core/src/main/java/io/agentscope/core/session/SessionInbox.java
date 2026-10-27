@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
-/** Durable command acceptance. Its short writer lease never takes the execution writer's lease. */
+/** 持久化接收命令。其短期写入者租约绝不占用执行写入者的租约。 */
 public final class SessionInbox {
     public record Command(
             String id, String kind, String turnId, List<Msg> messages, List<String> requestIds) {

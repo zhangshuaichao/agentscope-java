@@ -28,16 +28,14 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Knowledge retrieval tools for Agentic RAG mode.
+ * Agentic RAG 模式的知识检索工具。
  *
- * <p>This class provides tool methods that can be registered with agents to enable
- * autonomous knowledge retrieval. Agents can call these tools to search the knowledge
- * base when they need information.
+ * <p>此类提供可注册到智能体的工具方法，实现自主知识检索。
+ * 智能体需要信息时，可以调用这些工具搜索知识库。
  *
- * <p>This is the Agentic mode implementation - agents decide when and how to retrieve
- * knowledge from the knowledge base.
+ * <p>这是 Agentic 模式的实现：由智能体决定何时以及如何从知识库检索知识。
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * KnowledgeBase knowledgeBase = new SimpleKnowledge(embeddingModel, vectorStore);
  * KnowledgeRetrievalTools tools = new KnowledgeRetrievalTools(knowledgeBase, RetrieveConfig.builder().build());
@@ -52,8 +50,7 @@ import reactor.core.publisher.Mono;
  *     .build();
  * }</pre>
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class KnowledgeRetrievalTools {
@@ -63,27 +60,27 @@ public class KnowledgeRetrievalTools {
     private final RetrieveConfig defaultConfig;
 
     /**
-     * Creates a new KnowledgeRetrievalTools instance with default configuration.
+     * 使用默认配置创建新的 KnowledgeRetrievalTools 实例。
      *
-     * <p>Default configuration:
+     * <p>默认配置：
      * <ul>
-     *   <li>Limit: 5 documents</li>
-     *   <li>Score threshold: 0.5</li>
+     *   <li>数量上限：5 篇文档</li>
+     *   <li>分数阈值：0.5</li>
      * </ul>
      *
-     * @param knowledge the knowledge base to retrieve from
-     * @throws IllegalArgumentException if knowledgeBase is null
+     * @param knowledge 用于检索的知识库
+     * @throws IllegalArgumentException 当 knowledgeBase 为 null 时抛出
      */
     public KnowledgeRetrievalTools(Knowledge knowledge) {
         this(knowledge, RetrieveConfig.builder().build());
     }
 
     /**
-     * Creates a new KnowledgeRetrievalTools instance.
+     * 创建新的 KnowledgeRetrievalTools 实例。
      *
-     * @param knowledge     the knowledge base to retrieve from
-     * @param defaultConfig the default retrieval configuration
-     * @throws IllegalArgumentException if knowledgeBase is null
+     * @param knowledge     用于检索的知识库
+     * @param defaultConfig 默认检索配置
+     * @throws IllegalArgumentException 当 knowledgeBase 为 null 时抛出
      */
     public KnowledgeRetrievalTools(Knowledge knowledge, RetrieveConfig defaultConfig) {
         if (knowledge == null) {
@@ -97,26 +94,25 @@ public class KnowledgeRetrievalTools {
     }
 
     /**
-     * Retrieves relevant documents from the knowledge base.
+     * 从知识库检索相关文档。
      *
-     * <p>This tool method allows agents to search the knowledge base for information
-     * relevant to a query. The agent can specify how many documents to retrieve.
+     * <p>此工具方法允许智能体在知识库中搜索与查询相关的信息。
+     * 智能体可以指定要检索的文档数量。
      *
-     * <p>If the agent has conversation history in memory, that history will be automatically
-     * included in the retrieval configuration. Knowledge bases that support multi-turn
-     * conversation context (like Bailian) can use this history to improve retrieval accuracy.
+     * <p>如果智能体记忆中存在对话历史，会自动将其纳入检索配置。
+     * 支持多轮对话上下文的知识库（例如百炼）可以利用这些历史提高检索准确性。
      *
-     * <p>Use this tool when:
+     * <p>以下情况可使用此工具：
      * <ul>
-     *   <li>The user asks questions about stored knowledge
-     *   <li>You need to find specific information from the knowledge base
-     *   <li>You want to provide context-aware responses based on stored documents
+     *   <li>用户询问已存储知识相关的问题
+     *   <li>需要从知识库查找特定信息
+     *   <li>希望基于存储文档给出结合上下文的回答
      * </ul>
      *
-     * @param query the search query to find relevant documents
-     * @param limit the maximum number of documents to retrieve (default: 5)
-     * @param agent the agent making the call (automatically injected by framework)
-     * @return a formatted string containing the retrieved documents and their scores
+     * @param query 用于查找相关文档的检索查询
+     * @param limit 要检索的最大文档数量（默认：5）
+     * @param agent 发起调用的智能体（由框架自动注入）
+     * @return 格式化字符串，包含检索文档及其分数
      */
     @Tool(
             name = "retrieve_knowledge",
@@ -139,12 +135,14 @@ public class KnowledgeRetrievalTools {
             Agent agent,
             RuntimeContext ctx) {
 
-        // Set default value
+        // 【学习提示】与 GenericRAGHook 的自动检索不同，此路径只有工具被调用才检索。
+        // 工具注解的 description 会发给模型，属于运行时输入，因此学习版保留英文原值。
+        // 设置默认值
         if (limit == null) {
             limit = 5;
         }
 
-        // Extract conversation history from the call-scoped state if available
+        // 若存在调用级状态，则从中提取对话历史
         List<Msg> conversationHistory = null;
         if (agent instanceof ReActAgent) {
             var state = RuntimeContext.resolveAgentState(ctx, agent);
@@ -153,7 +151,7 @@ public class KnowledgeRetrievalTools {
             }
         }
 
-        // Build retrieval config with conversation history
+        // 构建包含对话历史的检索配置
         RetrieveConfig config =
                 this.defaultConfig
                         .mutate()
@@ -173,13 +171,12 @@ public class KnowledgeRetrievalTools {
     }
 
     /**
-     * Formats retrieved documents for tool return format.
+     * 将检索文档格式化为工具返回格式。
      *
-     * <p>Converts the list of documents into a human-readable string format that
-     * can be used by the agent in its reasoning process.
+     * <p>将文档列表转换为便于阅读的字符串格式，供智能体在推理过程中使用。
      *
-     * @param documents the list of retrieved documents
-     * @return a formatted string representation
+     * @param documents 检索到的文档列表
+     * @return 格式化的字符串表示
      */
     private String formatDocumentsForTool(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
@@ -203,18 +200,18 @@ public class KnowledgeRetrievalTools {
     }
 
     /**
-     * Gets the knowledge base used by this tool.
+     * 获取此工具使用的知识库。
      *
-     * @return the knowledge base
+     * @return 知识库
      */
     public Knowledge getKnowledgeBase() {
         return knowledge;
     }
 
     /**
-     * Gets the default retrieval configuration.
+     * 获取默认检索配置。
      *
-     * @return the default config
+     * @return 默认配置
      */
     public RetrieveConfig getDefaultConfig() {
         return defaultConfig;

@@ -20,57 +20,46 @@ import io.agentscope.core.model.ModelRegistry;
 import java.util.Set;
 
 /**
- * Configuration for conversation compaction (summarization).
- *
+ * 对话压缩（摘要）配置。
  * <ul>
- *   <li><b>trigger</b> — when to run compaction (by token count or message count)</li>
- *   <li><b>keep</b> — how many recent messages to preserve verbatim after compaction</li>
+ * <li><b>trigger</b>：何时运行压缩，由 token 数或消息数决定。</li>
+ * <li><b>keep</b>：压缩后原样保留多少条近期消息。</li>
  * </ul>
  *
- * <p>Defaults (dynamic mode):
+ * <p>默认值（动态模式）：
  * <ul>
- *   <li>Trigger dynamically when estimated token count reaches {@code model.contextWindow - reserved(20k)}.
- *       Falls back to {@value #FALLBACK_TRIGGER_TOKENS} tokens when the model does not report its context
- *       window, or at 50 messages (whichever comes first)</li>
- *   <li>Keep tail: dynamically computed as {@code min(8k, max(2k, usable * 0.25))} tokens.
- *       Falls back to 20 messages when the model does not report its context window</li>
- *   <li>Prune: enabled by default — aggregates old tool result outputs and trims them when the
- *       prunable total exceeds 20k tokens (protects the most recent 40k tokens)</li>
- *   <li>Summarization is enabled; memory flush is enabled before summary</li>
+ * <li>预计 token 数达到 {@code model.contextWindow - reserved(20k)} 时动态触发。
+ * 模型未报告上下文窗口时，回退到 {@value #FALLBACK_TRIGGER_TOKENS} tokens，
+ * 或在达到 50 条消息时触发，以先达到者为准。</li>
+ * <li>保留尾部：动态计算为 {@code min(8k, max(2k, usable * 0.25))} tokens；
+ * 模型未报告上下文窗口时回退到 20 条消息。</li>
+ * <li>裁剪：默认开启。汇总旧工具结果输出，当可裁剪总量超过 20k tokens 时裁剪，保护最近的 40k tokens。</li>
+ * <li>启用摘要，并在摘要前启用记忆提取写入。</li>
  * </ul>
  *
- * <h2>Memory prompt landscape</h2>
- *
- * The harness has three LLM-driven memory operations, each with its own prompt; they live
- * in two complementary config classes:
- *
+ * <h2>记忆提示词分工</h2>
+ * Harness 有三种由 LLM 驱动的记忆操作，各有独立提示词，分布在两个互补的配置类中：
  * <ul>
- *   <li><b>Compaction summary</b> — distills the conversation prefix into one summary
- *       message before reasoning. Prompt: {@link #getSummaryPrompt()} on <em>this</em>
- *       class.</li>
- *   <li><b>Flush</b> — extracts long-term memories into today's daily ledger. Prompt:
- *       {@code MemoryConfig.flushPrompt()}.</li>
- *   <li><b>Consolidation</b> — periodically merges daily ledgers into {@code MEMORY.md}.
- *       Prompt: {@code MemoryConfig.consolidationPrompt()}.</li>
+ * <li><b>压缩摘要</b>：推理前将对话前缀提炼为一条摘要消息。提示词由本类的 {@link #getSummaryPrompt()} 提供。</li>
+ * <li><b>提取写入</b>：将长期记忆提取到当天账本。提示词由 {@code MemoryConfig.flushPrompt()} 提供。</li>
+ * <li><b>整合</b>：定期合并每日账本到 {@code MEMORY.md}。
+ * 提示词由 {@code MemoryConfig.consolidationPrompt()} 提供。</li>
  * </ul>
- *
- * Configure the latter two via {@code HarnessAgent.builder().memory(MemoryConfig...)}.
+ * 后两者通过 {@code HarnessAgent.builder().memory(MemoryConfig...)} 配置。
  *
  * @see io.agentscope.harness.agent.memory.MemoryConfig
  */
 public class CompactionConfig {
 
     /**
-     * Fallback trigger threshold (in tokens) when the model does not report its context window
-     * and {@code triggerTokens} is set to dynamic mode (0).
+     * 模型未报告上下文窗口且 {@code triggerTokens} 为动态模式（0）时，
+     * 使用的回退触发阈值（token 数）。
      */
     public static final int FALLBACK_TRIGGER_TOKENS = 160_000;
 
     /**
-     * Default summary prompt with structured format. Extraction disciplines: verbatim
-     * preservation of reusable strings, still-active user constraints and corrections (with
-     * superseded decisions marked), merge rules for chained compaction, and secrecy about the
-     * summarization step itself.
+     * 采用结构化格式的默认摘要提示词。提取原则包括：原样保留可复用字符串、仍有效的用户约束和纠正
+     * （标记已被取代的决策）、链式压缩的合并规则，以及不对用户提及摘要步骤本身。
      */
     public static final String DEFAULT_SUMMARY_PROMPT =
             """
@@ -180,42 +169,41 @@ public class CompactionConfig {
         this.strategy = b.strategy;
     }
 
-    /** Message count above which compaction is triggered (0 = disabled). */
+    /** 触发压缩的消息数量阈值（0 表示禁用）。 */
     public int getTriggerMessages() {
         return triggerMessages;
     }
 
     /**
-     * Estimated token count above which compaction is triggered.
-     * {@code 0} = dynamic mode (compute from model's context window minus {@link #getReserved()}).
+     * 触发压缩的预计 token 数阈值。
+     * {@code 0} 表示动态模式，从模型上下文窗口减去 {@link #getReserved()} 计算。
      */
     public int getTriggerTokens() {
         return triggerTokens;
     }
 
     /**
-     * Token buffer reserved for the compaction process itself (summary prompt + output).
-     * Only used in dynamic mode ({@code triggerTokens == 0}).
+     * 为压缩过程自身（摘要提示词及输出）预留的 token 缓冲。
+     * 仅用于动态模式（{@code triggerTokens == 0}）。
      */
     public int getReserved() {
         return reserved;
     }
 
     /**
-     * Number of recent <em>conversation</em> messages (non-SYSTEM) to preserve verbatim.
-     * Used when {@link #getKeepTokens()} is 0 (static keep mode).
+     * 原样保留的近期<em>对话</em>消息数（非 SYSTEM）。
+     * 当 {@link #getKeepTokens()} 为 0（静态保留模式）时使用。
      */
     public int getKeepMessages() {
         return keepMessages;
     }
 
     /**
-     * Token budget for the preserved tail.
+     * 保留尾部的 token 预算。
      * <ul>
-     *   <li>{@code > 0}: static budget — scan from end until this budget is exhausted</li>
-     *   <li>{@code 0}: use {@link #getKeepMessages()} instead (message-count mode)</li>
-     *   <li>{@code -1}: dynamic — compute as
-     *       {@code min(keepTokensMax, max(keepTokensMin, usable * keepTokensRatio))}</li>
+     * <li>{@code > 0}：静态预算，从末尾扫描直到预算耗尽。</li>
+     * <li>{@code 0}：改用 {@link #getKeepMessages()}（按消息数）。</li>
+     * <li>{@code -1}：动态计算为 {@code min(keepTokensMax, max(keepTokensMin, usable * keepTokensRatio))}。</li>
      * </ul>
      */
     public int getKeepTokens() {
@@ -234,46 +222,42 @@ public class CompactionConfig {
         return keepTokensRatio;
     }
 
-    /**
-     * Prompt template used for the summarization LLM call. Must contain {@code {messages}}.
-     */
+    /** 摘要 LLM 调用的提示词模板，必须包含 {@code {messages}}。 */
     public String getSummaryPrompt() {
         return summaryPrompt;
     }
 
-    /** Whether to flush long-term memories from the prefix before compaction. */
+    /** 是否在压缩前从前缀提取并写入长期记忆。 */
     public boolean isFlushBeforeCompact() {
         return flushBeforeCompact;
     }
 
     /**
-     * Configuration for the lightweight pre-summarization argument truncation pass.
-     * When {@code null}, argument truncation is disabled.
+     * 摘要前轻量参数截断步骤的配置。
+     * 为 {@code null} 时禁用参数截断。
      */
     public TruncateArgsConfig getTruncateArgsConfig() {
         return truncateArgsConfig;
     }
 
-    /**
-     * Configuration for aggregate tool-result pruning. When {@code null}, pruning is disabled.
-     */
+    /** 工具结果汇总裁剪的配置，为 {@code null} 时禁用裁剪。 */
     public PruneConfig getPruneConfig() {
         return pruneConfig;
     }
 
-    /** Optional policy before standard compaction; null preserves the existing behavior. */
+    /** 标准压缩前的可选策略；null 保持既有行为。 */
     public ConversationCompactionStrategy getStrategy() {
         return strategy;
     }
 
-    /** Optional summary model; null uses the agent's primary model. */
+    /** 可选的摘要模型；null 表示使用智能体的主模型。 */
     public Model getModel() {
         return model;
     }
 
     /**
-     * Creates a resolved copy with effective trigger and keep values computed from a model's
-     * context window. Used by {@code CompactionMiddleware} to resolve dynamic defaults.
+     * 创建解析后的配置副本，根据模型上下文窗口计算有效触发值与保留值。
+     * 由 {@code CompactionMiddleware} 用于解析动态默认值。
      */
     public CompactionConfig withEffective(int effectiveTriggerTokens, int effectiveKeepTokens) {
         Builder b = new Builder();
@@ -315,22 +299,21 @@ public class CompactionConfig {
         private Model model = null;
         private ConversationCompactionStrategy strategy;
 
-        /** Uses an optional policy before standard compaction; null preserves existing behavior. */
+        /** 在标准压缩前使用可选策略；null 保持既有行为。 */
         public Builder strategy(ConversationCompactionStrategy strategy) {
             this.strategy = strategy;
             return this;
         }
 
-        /** Trigger compaction when conversation has at least this many messages (0 = disabled). */
+        /** 对话消息数达到此值时触发压缩（0 表示禁用）。 */
         public Builder triggerMessages(int triggerMessages) {
             this.triggerMessages = triggerMessages;
             return this;
         }
 
         /**
-         * Trigger compaction when estimated token count exceeds this value.
-         * {@code 0} (default) = dynamic mode: compute from model's context window minus
-         * {@link #reserved(int)}.
+         * 预计 token 数超过此值时触发压缩。
+         * {@code 0}（默认）表示动态模式，按模型上下文窗口减去 {@link #reserved(int)} 计算。
          */
         public Builder triggerTokens(int triggerTokens) {
             this.triggerTokens = triggerTokens;
@@ -338,23 +321,23 @@ public class CompactionConfig {
         }
 
         /**
-         * Token buffer reserved for the compaction process (default 20 000).
-         * Only used in dynamic mode ({@code triggerTokens == 0}).
+         * 为压缩过程预留的 token 缓冲（默认 20,000）。
+         * 仅用于动态模式（{@code triggerTokens == 0}）。
          */
         public Builder reserved(int reserved) {
             this.reserved = reserved;
             return this;
         }
 
-        /** Number of recent messages to keep verbatim after compaction. */
+        /** 压缩后原样保留的近期消息数。 */
         public Builder keepMessages(int keepMessages) {
             this.keepMessages = keepMessages;
             return this;
         }
 
         /**
-         * Token budget for the preserved tail.
-         * {@code -1} (default) = dynamic mode; {@code 0} = use keepMessages; {@code > 0} = static.
+         * 保留尾部的 token 预算。
+         * {@code -1}（默认）为动态模式；{@code 0} 使用 keepMessages；{@code > 0} 为静态预算。
          */
         public Builder keepTokens(int keepTokens) {
             this.keepTokens = keepTokens;
@@ -376,21 +359,21 @@ public class CompactionConfig {
             return this;
         }
 
-        /** Custom summary prompt. Must contain {@code {messages}} placeholder. */
+        /** 自定义摘要提示词，必须包含 {@code {messages}} 占位符。 */
         public Builder summaryPrompt(String summaryPrompt) {
             this.summaryPrompt = summaryPrompt;
             return this;
         }
 
-        /** Whether to flush long-term memories before compaction (default true). */
+        /** 是否在压缩前提取并写入长期记忆（默认为 true）。 */
         public Builder flushBeforeCompact(boolean flushBeforeCompact) {
             this.flushBeforeCompact = flushBeforeCompact;
             return this;
         }
 
         /**
-         * Enables lightweight pre-summarization argument truncation.
-         * Pass {@code null} to disable.
+         * 启用摘要前的轻量参数截断。
+         * 传入 {@code null} 可禁用。
          */
         public Builder truncateArgs(TruncateArgsConfig config) {
             this.truncateArgsConfig = config;
@@ -398,26 +381,22 @@ public class CompactionConfig {
         }
 
         /**
-         * Configures aggregate tool-result pruning. Defaults to {@link PruneConfig#defaults()}.
-         * Pass {@code null} to disable.
+         * 配置工具结果汇总裁剪，默认使用 {@link PruneConfig#defaults()}。
+         * 传入 {@code null} 可禁用。
          */
         public Builder prune(PruneConfig config) {
             this.pruneConfig = config;
             return this;
         }
 
-        /**
-         * Sets a dedicated model for compaction (summarization), allowing a
-         * lighter/cheaper model than the agent's primary reasoning model.
-         */
+        /** 设置压缩（摘要）专用模型，可选用比智能体主推理模型更轻量、成本更低的模型。 */
         public Builder model(Model model) {
             this.model = model;
             return this;
         }
 
         /**
-         * Sets a dedicated model for compaction by model id string
-         * (e.g. {@code "openai:gpt-4.1-mini"}).
+         * 通过模型 ID 字符串设置压缩专用模型，例如 {@code "openai:gpt-4.1-mini"}。
          *
          * @see ModelRegistry#resolve(String)
          */
@@ -432,23 +411,21 @@ public class CompactionConfig {
     }
 
     // -------------------------------------------------------------------------
-    //  TruncateArgsConfig
+    // TruncateArgsConfig 参数截断配置
     // -------------------------------------------------------------------------
 
     /**
-     * Configuration for the lightweight argument-truncation pass that runs before
-     * summarization.
+     * 摘要前轻量参数截断步骤的配置。
      *
-     * <p>When triggered, large string arguments of {@code ToolUseBlock}s in older messages
-     * (before the keep window) are clipped to {@link #getMaxArgLength()} characters.
-     * This is a cheap, non-LLM operation that prevents context ballooning from verbose
-     * tool invocations (e.g., {@code write_file}, {@code edit_file}).
+     * <p>触发后，将旧消息（保留窗口之前）中 {@code ToolUseBlock} 的过长字符串参数
+     * 截断到 {@link #getMaxArgLength()} 个字符。这是低成本、无需 LLM 的操作，
+     * 用于防止冗长工具调用（如 {@code write_file}、{@code edit_file}）导致上下文膨胀。
      *
-     * <p>Defaults (when enabled via {@link Builder#truncateArgs(TruncateArgsConfig)}):
+     * <p>通过 {@link Builder#truncateArgs(TruncateArgsConfig)} 启用时的默认值：
      * <ul>
-     *   <li>Trigger at 25 messages or 40 000 tokens</li>
-     *   <li>Keep the 20 most recent messages untouched</li>
-     *   <li>Max argument length: 2 000 characters</li>
+     * <li>达到 25 条消息或 40,000 tokens 时触发。</li>
+     * <li>最近 20 条消息保持不变。</li>
+     * <li>参数最大长度为 2,000 个字符。</li>
      * </ul>
      */
     public static class TruncateArgsConfig {
@@ -485,12 +462,12 @@ public class CompactionConfig {
             return keepTokens;
         }
 
-        /** Maximum character length of any single tool argument value (default 2 000). */
+        /** 任一工具参数值允许的最大字符长度（默认 2,000）。 */
         public int getMaxArgLength() {
             return maxArgLength;
         }
 
-        /** Suffix appended after the first 20 characters of a truncated argument. */
+        /** 截断参数在前 20 个字符后附加的后缀。 */
         public String getTruncationText() {
             return truncationText;
         }
@@ -549,19 +526,16 @@ public class CompactionConfig {
     }
 
     // -------------------------------------------------------------------------
-    //  PruneConfig
+    // PruneConfig 裁剪配置
     // -------------------------------------------------------------------------
 
     /**
-     * Configuration for aggregate tool-result pruning.
+     * 工具结果汇总裁剪的配置。
      *
-     * <p>Prune walks backward through tool-result messages, protecting the most recent
-     * {@link #getProtectTokens()} tokens of tool output. Older tool results beyond that
-     * protection window are replaced with a head+tail preview when the total prunable
-     * amount exceeds {@link #getMinimumTokens()}.
+     * <p>从后向前遍历工具结果消息，保护最近 {@link #getProtectTokens()} tokens 的工具输出。
+     * 保护窗口之外的旧结果在可裁剪总量超过 {@link #getMinimumTokens()} 时，替换为首尾预览。
      *
-     * <p>This is a lightweight, non-LLM operation that runs inside
-     * {@link ConversationCompactor#compactIfNeeded} before summarization.
+     * <p>这是轻量、无需 LLM 的操作，在 {@link ConversationCompactor#compactIfNeeded} 中先于摘要执行。
      */
     public static class PruneConfig {
 
@@ -581,22 +555,22 @@ public class CompactionConfig {
             return new PruneBuilder().build();
         }
 
-        /** Token budget for recent tool outputs that are never pruned (default 40 000). */
+        /** 近期工具输出中绝不裁剪的 token 预算（默认 40,000）。 */
         public int getProtectTokens() {
             return protectTokens;
         }
 
-        /** Minimum prunable token total before pruning actually executes (default 20 000). */
+        /** 真正执行裁剪前，可裁剪部分必须达到的最小 token 总量（默认 20,000）。 */
         public int getMinimumTokens() {
             return minimumTokens;
         }
 
-        /** Max characters to keep per pruned tool result as head+tail preview (default 2 000). */
+        /** 每个被裁剪工具结果的首尾预览保留的最大字符数（默认 2,000）。 */
         public int getMaxOutputChars() {
             return maxOutputChars;
         }
 
-        /** Tool names excluded from pruning (e.g. read_file, memory tools). */
+        /** 排除在裁剪之外的工具名称，例如 read_file 和记忆工具。 */
         public Set<String> getExcludedTools() {
             return excludedTools;
         }

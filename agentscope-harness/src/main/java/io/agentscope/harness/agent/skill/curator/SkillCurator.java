@@ -36,24 +36,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Background skill maintenance orchestrator. Mirrors hermes-agent's {@code agent/curator.py}
- * lifecycle:
+ * 后台技能维护编排器。生命周期参照 hermes-agent 的 {@code agent/curator.py}：
  * <ul>
- *   <li>Pure-function {@code applyAutomaticTransitions}: walk every agent-tracked
- *       skill, transition {@code ACTIVE → STALE → ARCHIVED} based on the latest activity
- *       timestamp from the sidecar. Pinned + DRAFT skills are skipped.</li>
- *   <li>LLM umbrella pass: produces a markdown report of consolidation candidates;
- *       in {@code DRY_RUN_ONLY} mode (default) it does not call {@code skill_manage}, just
- *       writes the report. Live consolidation (actually invoking {@code skill_manage}) is not
- *       implemented yet.</li>
+ * <li>{@code applyAutomaticTransitions}：遍历智能体跟踪的技能，根据旁挂文件中最近活动时间执行 {@code ACTIVE → STALE → ARCHIVED} 转换。跳过固定（pinned）技能及 DRAFT 技能。</li>
+ * <li>umbrella 汇总阶段：生成整合候选的 Markdown 报告；在默认 {@code DRY_RUN_ONLY} 模式中不调用 {@code skill_manage}，仅写报告。目前尚未实现实际整合（真正调用 {@code skill_manage}）。</li>
  * </ul>
  *
- * <p>Strict invariants:
+ * <p>【学习提示】这里要区分已实现行为与规划：自动状态转换会实际归档目录，但汇总阶段目前只是按名称前缀生成报告，并未调用 LLM 或执行技能合并。DRY_RUN_ONLY 约束汇总阶段，不代表整个维护运行没有文件系统副作用。
+ *
+ * <p>严格不变量：
  * <ul>
- *   <li>Only touches sidecar entries with {@code createdBy != null} (agent-authored skills).</li>
- *   <li>Pinned skills bypass every auto-transition.</li>
- *   <li>Never deletes — only archives.</li>
- *   <li>{@code DRAFT} state is owned by the promotion gate, not the curator.</li>
+ * <li>仅处理 {@code createdBy != null} 的旁挂记录（智能体编写的技能），自动转换进一步限定为已晋级的技能。</li>
+ * <li>固定技能跳过全部自动转换。</li>
+ * <li>绝不直接删除，仅归档。</li>
+ * <li>{@code DRAFT} 状态归晋级门控管理，而不是 curator。</li>
  * </ul>
  */
 public class SkillCurator {
@@ -102,7 +98,7 @@ public class SkillCurator {
     }
 
     // ---------------------------------------------------------------------
-    //  State sidecar
+    // 状态旁挂文件
     // ---------------------------------------------------------------------
 
     public SkillCuratorState loadState() {
@@ -150,11 +146,7 @@ public class SkillCurator {
     }
 
     /**
-     * Interval + periodic-gate. Returns true iff the curator should fire now: enabled, not
-     * paused, {@code last_run_at} older than {@code intervalHours}, and the injected
-     * {@link PeriodicGate} grants the claim. First-run behaviour seeds {@code last_run_at}
-     * without firing — a fresh deployment doesn't get LLM'd until at least one interval has
-     * elapsed.
+     * 时间间隔与周期门控。仅在启用、未暂停、{@code last_run_at} 早于 {@code intervalHours} 且注入的 {@link PeriodicGate} 成功取得执行权时，返回 true。首次运行只初始化 {@code last_run_at} 而不触发，避免新部署尚未经过一个周期就执行维护。
      */
     public boolean shouldRunNow(Instant now) {
         if (!config.enabled() || isPaused()) {
@@ -165,7 +157,7 @@ public class SkillCurator {
         }
         SkillCuratorState s = loadState();
         if (s.lastRunAt() == null) {
-            // Seed and defer.
+            // 初始化时间戳并延后执行。
             saveState(
                     new SkillCuratorState(
                             now,
@@ -176,8 +168,8 @@ public class SkillCurator {
                             null));
             return false;
         }
-        // Persistent interval check survives JVM restarts; PeriodicGate then deduplicates
-        // across replicas (StoreBacked) or within the process (Local).
+        // 持久化间隔检查跨 JVM 重启仍有效；随后由 PeriodicGate
+        // 在副本间（StoreBacked）或进程内（Local）去重。
         if (Duration.between(s.lastRunAt(), now).toHours() < config.intervalHours()) {
             return false;
         }
@@ -185,7 +177,7 @@ public class SkillCurator {
     }
 
     // ---------------------------------------------------------------------
-    //  Automatic transitions
+    // 自动状态转换
     // ---------------------------------------------------------------------
 
     public record TransitionCounts(int checked, int markedStale, int archived, int reactivated) {}
@@ -208,8 +200,8 @@ public class SkillCurator {
             if (rec == null) {
                 continue;
             }
-            // Only auto-manage promoted (createdBy=="agent") skills. Drafts belong to the
-            // promotion gate.
+            // 仅自动管理已晋级（createdBy=="agent"）的技能，草稿归
+            // 晋级门控负责。
             if (!"agent".equals(rec.createdBy()) || rec.pinned()) {
                 continue;
             }
@@ -222,7 +214,7 @@ public class SkillCurator {
             SkillUsageRecord.State current = rec.state();
 
             if (anchor.isBefore(archiveCutoff) && current != SkillUsageRecord.State.ARCHIVED) {
-                // Move to archive (mainRepo.delete archives non-destructively).
+                // 移动到归档（mainRepo.delete 以非破坏性方式归档）。
                 try {
                     mainRepo.delete(name);
                 } catch (Exception e) {
@@ -242,18 +234,13 @@ public class SkillCurator {
     }
 
     // ---------------------------------------------------------------------
-    //  Umbrella pass (dry-run report only)
+    // umbrella 汇总阶段（仅试运行报告）
     // ---------------------------------------------------------------------
 
     /**
-     * Generate a human-readable markdown report listing every agent-created skill grouped by
-     * common name prefix. This is a stub for the LLM-powered umbrella consolidation pass:
-     * the prompt + LLM call require an auxiliary model and are deferred to a future version.
-     * In {@code DRY_RUN_ONLY} mode this method writes a report to
-     * {@code skills/.curator_reports/&lt;ts&gt;/REPORT.md}; in {@code DISABLED} mode it returns
-     * {@code null} without writing.
+     * 生成可读的 Markdown 报告，按共同名称前缀对全部智能体创建的技能分组。这是 LLM 驱动汇总整合阶段的占位实现；提示与 LLM 调用需要辅助模型，留待未来版本。{@code DRY_RUN_ONLY} 模式下写入 {@code skills/.curator_reports/&lt;ts&gt;/REPORT.md}；{@code DISABLED} 模式下不写入并返回 {@code null}。
      *
-     * @return path of the report relative to the workspace, or {@code null} when disabled
+     * @return 相对于工作区的报告路径；禁用时为 {@code null}
      */
     public String runUmbrellaDryRunReport(Instant now) {
         if (config.umbrellaPassMode() == SkillCuratorConfig.UmbrellaPassMode.DISABLED) {
@@ -268,8 +255,8 @@ public class SkillCurator {
                         .format(now);
         String reportPath = REPORTS_DIR + "/" + ts + "/REPORT.md";
 
-        // Cluster skills by first dash-separated segment (cheap heuristic, matches hermes
-        // umbrella prompt's "PREFIX CLUSTERS" guidance).
+        // 按首个短横线分隔片段聚类技能（简单启发式，对齐 hermes
+        // 汇总提示中的 PREFIX CLUSTERS 指引）。
         Map<String, java.util.List<String>> clusters = new LinkedHashMap<>();
         for (var entry : usageStore.agentCreatedReport()) {
             SkillUsageRecord rec = entry.getValue();
@@ -324,7 +311,7 @@ public class SkillCurator {
     }
 
     // ---------------------------------------------------------------------
-    //  Combined entry point
+    // 组合入口
     // ---------------------------------------------------------------------
 
     public record CuratorRunReport(
@@ -333,7 +320,9 @@ public class SkillCurator {
             Instant ranAt,
             long durationMs) {}
 
-    /** Run a full curator pass: phase-1 transitions + phase-2 (dry-run) report. */
+    /**
+     * 执行完整 curator 阶段：第一阶段状态转换，加第二阶段试运行报告。
+     */
     public CuratorRunReport runOnce(Instant now) {
         long startNanos = System.nanoTime();
         Instant ranAt = now != null ? now : Instant.now();
@@ -341,7 +330,7 @@ public class SkillCurator {
         String reportPath = runUmbrellaDryRunReport(ranAt);
         long durationMs = (System.nanoTime() - startNanos) / 1_000_000L;
 
-        // Persist run state.
+        // 持久化运行状态。
         SkillCuratorState s = loadState();
         String summary =
                 String.format(

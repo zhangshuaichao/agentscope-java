@@ -18,35 +18,22 @@ package io.agentscope.harness.agent.skill;
 import io.agentscope.core.agent.RuntimeContext;
 
 /**
- * Optional marker for {@link io.agentscope.core.skill.repository.AgentSkillRepository}
- * implementations that can supply a {@link SkillResources} accessor in addition to the
- * in-memory {@code AgentSkill.resources} map.
+ * 可选标记接口，供 {@link io.agentscope.core.skill.repository.AgentSkillRepository} 实现在内存 {@code AgentSkill.resources} 映射之外提供 {@link SkillResources} 访问器。
  *
- * <p>Detected via {@code instanceof} by the harness skill runtime: if a repository implements
- * this interface, the runtime will request a {@link SkillResources} per skill and consult it
- * as a fallback when {@code load_skill_through_path} misses the in-memory map. This is what
- * lets {@link WorkspaceSkillRepository} keep skills lazy on disk (or in sandbox) without
- * preloading every byte at registration time.
+ * <p>harness 技能运行时通过 {@code instanceof} 检测此接口；若实现了它，则为每个技能请求一个 {@link SkillResources}，在 {@code load_skill_through_path} 未命中内存映射时回退使用。因此 {@link WorkspaceSkillRepository} 可以将技能保留在磁盘或沙箱中按需读取，而无需注册时预加载全部内容。
  *
- * <p>Repositories that preload all resources into {@code AgentSkill.resources} (e.g. core's
- * {@code FileSystemSkillRepository}, {@code ClasspathSkillRepository}, and most third-party
- * marketplace extensions) do not need to implement this — the in-memory map already covers
- * every path.
+ * <p>已将全部资源预加载到 {@code AgentSkill.resources} 的仓库（例如采用预加载模式的 core {@code FileSystemSkillRepository}、{@code ClasspathSkillRepository} 及多数第三方市场扩展）不需要此接口，因为内存映射已覆盖全部路径。
  */
 public interface LazyResourceCapable {
 
     /**
-     * Returns a lazy resource accessor for the named skill.
+     * 返回指定技能的懒加载资源访问器。
      *
-     * <p>The returned accessor MUST capture or honor the given {@code ctx} so per-user
-     * namespacing remains correct across calls.
+     * <p>返回的访问器必须捕获或遵循给定 {@code ctx}，以保证跨调用的用户命名空间正确。
      *
-     * @param skillName the skill's {@code name} (not {@code skillId})
-     * @param ctx       current runtime context; never {@code null} (callers pass
-     *                  {@link RuntimeContext#empty()} when no context is available)
-     * @return accessor for that skill's resource tree, never {@code null}
-     *         (return {@link SkillResources#empty()} if the skill does not belong to this
-     *         repository)
+     * @param skillName 技能的 {@code name}（不是 {@code skillId}）
+     * @param ctx 当前运行时上下文，不会为 {@code null}（无上下文时调用方传入 {@link RuntimeContext#empty()}）
+     * @return 此技能资源树的访问器，不会为 {@code null}；技能不属于此仓库时返回 {@link SkillResources#empty()}
      */
     SkillResources resourcesFor(String skillName, RuntimeContext ctx);
 }

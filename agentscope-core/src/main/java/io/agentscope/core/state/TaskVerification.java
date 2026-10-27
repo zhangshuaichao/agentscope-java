@@ -17,7 +17,7 @@ package io.agentscope.core.state;
 
 import java.util.Objects;
 
-/** One bounded check result. PASSED is not a verdict on overall task completion. */
+/** 单项有明确范围的检查结果。PASSED 并非对整个任务已完成的判定。 */
 public record TaskVerification(
         String id,
         String requirementId,

@@ -16,16 +16,18 @@
 package io.agentscope.harness.agent.skill.curator;
 
 /**
- * Configuration knobs for {@link SkillCurator}. Defaults match the conservative enterprise
- * profile from the design plan: 7-day cycle, 30/90 day stale/archive cutoffs, dry-run only
- * for the LLM umbrella pass.
+ * {@link SkillCurator} 的配置项。默认采用设计方案中的保守企业配置：7 天周期、30/90 天过期/归档阈值，LLM 汇总阶段仅试运行。
  */
 public final class SkillCuratorConfig {
 
     public enum UmbrellaPassMode {
-        /** Phase-1 only: pure-function active/stale/archive transitions. */
+        /**
+         * 仅第一阶段：执行 active/stale/archive 自动转换。
+         */
         DISABLED,
-        /** Run the LLM umbrella pass but never invoke skill_manage; emit a report only. */
+        /**
+         * 运行汇总阶段但不调用 skill_manage，仅输出报告（当前为无 LLM 的占位实现）。
+         */
         DRY_RUN_ONLY
     }
 
@@ -73,7 +75,7 @@ public final class SkillCuratorConfig {
 
     public static final class Builder {
         private boolean enabled = true;
-        private int intervalHours = 24 * 7; // 7 days
+        private int intervalHours = 24 * 7; // 7 天
         private int staleAfterDays = 30;
         private int archiveAfterDays = 90;
         private UmbrellaPassMode umbrellaPassMode = UmbrellaPassMode.DRY_RUN_ONLY;

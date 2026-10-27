@@ -23,11 +23,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Sandbox state store backed by the generic AgentScope {@link AgentStateStore} abstraction.
+ * 由通用 AgentScope {@link AgentStateStore} 抽象支撑的沙箱状态存储。
  *
- * <p>This store keeps sandbox lifecycle state in the same state backend as ReActAgent runtime
- * state. As a result, providing a distributed {@link AgentStateStore} implementation (for example Redis)
- * automatically enables distributed sandbox resume state.
+ * <p>此存储将沙箱生命周期状态保存在与 ReActAgent 运行时状态相同的后端中。因此提供分布式 {@link AgentStateStore} 实现（例如 Redis）即可支持分布式沙箱恢复状态。
  */
 public final class SessionSandboxStateStore {
 
@@ -66,8 +64,8 @@ public final class SessionSandboxStateStore {
 
     public void delete(SandboxIsolationKey key) throws IOException {
         try {
-            // Not all AgentStateStore implementations support per-key delete; tombstone keeps
-            // behavior consistent across stores.
+            // 并非所有 AgentStateStore 实现都支持按键删除；使用墓碑标记
+            // 保持不同存储间行为一致。
             stateStore.save(
                     null, slotSessionId(key), SANDBOX_STATE_KEY, SandboxStateSlot.tombstone());
         } catch (Exception e) {
@@ -76,10 +74,7 @@ public final class SessionSandboxStateStore {
     }
 
     /**
-     * Pack the sandbox isolation key into a single sessionId string that fits the
-     * {@link AgentStateStore} 2-arg slot model. The userId column is always {@code null} because
-     * sandbox state is conceptually agent-scoped, not user-scoped: USER/AGENT/GLOBAL scopes are
-     * encoded into the sessionId prefix rather than the userId slot.
+     * 将沙箱隔离键打包为单个 sessionId 字符串，适配 {@link AgentStateStore} 的双参数槽位模型。userId 列始终为 {@code null}，因为沙箱状态在概念上以智能体为作用域，而非用户：USER/AGENT/GLOBAL 作用域编码在 sessionId 前缀中，而不是 userId 槽位。
      */
     private String slotSessionId(SandboxIsolationKey key) {
         IsolationScope scope = key.getScope();

@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
- * Global manager for graceful shutdown lifecycle and active request tracking.
+ * 管理优雅关闭生命周期与活跃请求跟踪的全局管理器。
  */
 public final class GracefulShutdownManager {
 
@@ -49,11 +49,10 @@ public final class GracefulShutdownManager {
             new AtomicReference<>(GracefulShutdownConfig.DEFAULT);
 
     /**
-     * Active requests keyed by their unique per-call {@code requestId}, not by agent id: a single
-     * agent instance may serve many concurrent calls (distinct {@code (userId, sessionId)}
-     * sessions), each of which must be tracked, interrupted, and saved independently. Keying by
-     * agent id would collapse concurrent calls to one entry (last-writer-wins) and let one call's
-     * completion unregister another in-flight call.
+     * 活跃请求按每次调用唯一的 {@code requestId} 索引，而不是按智能体 ID 索引：
+     * 单个智能体实例可能服务多个并发调用（不同的 {@code (userId, sessionId)} 会话），
+     * 必须分别跟踪、中断和保存。若使用智能体 ID 作为键，并发调用会合并成一个条目
+     * （后写覆盖先写），并可能使一个调用完成时注销另一个尚在执行的调用。
      */
     private final ConcurrentHashMap<String, ActiveRequestContext> activeRequestsById =
             new ConcurrentHashMap<>();
@@ -96,18 +95,18 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Returns a {@link Mono} that completes when the shutdown timeout is reached.
-     * Tool executors can race their execution against this signal to abort early.
+     * 返回一个在达到关闭超时时完成的 {@link Mono}。
+     * 工具执行器可以让执行过程与此信号竞争，以提前中止。
      */
     public Mono<Void> getShutdownTimeoutSignal() {
         return shutdownTimeoutSignal.get().asMono();
     }
 
     /**
-     * Register a {@link ShutdownStateSaver} for the given agent.
+     * 为指定智能体注册 {@link ShutdownStateSaver}。
      *
-     * <p>The saver is invoked during shutdown to persist the agent's {@link AgentState}
-     * (with {@code shutdownInterrupted} set to {@code true}).
+     * <p>关闭期间调用保存器，持久化智能体的 {@link AgentState}
+     * （{@code shutdownInterrupted} 已设为 {@code true}）。
      */
     public void bindStateSaver(Agent agent, ShutdownStateSaver saver) {
         if (agent == null || saver == null) {
@@ -117,13 +116,12 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Remove the {@link ShutdownStateSaver} previously registered for the given agent.
+     * 移除先前为指定智能体注册的 {@link ShutdownStateSaver}。
      *
-     * <p>Must be called from {@link io.agentscope.core.ReActAgent#close()} (or equivalent
-     * lifecycle hook) so that ephemeral / per-call agent instances do not accumulate
-     * indefinitely in {@link #stateSavers}.
+     * <p>必须由 {@link io.agentscope.core.ReActAgent#close()} 或等效生命周期钩子调用，
+     * 避免临时／调用级智能体实例无限积累在 {@link #stateSavers} 中。
      *
-     * @param agent the agent whose saver should be removed; no-op if {@code null}
+     * @param agent 要移除保存器的智能体；为 {@code null} 时不执行操作
      */
     public void unbindStateSaver(Agent agent) {
         if (agent == null) {
@@ -133,14 +131,13 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Check whether the agent's default state was previously interrupted by shutdown, and clear
-     * the flag.
+     * 检查智能体的默认状态先前是否因关闭而中断，并清除此标记。
      *
-     * <p>This agent-level entry point is retained for agents that do not expose a call-scoped
-     * state. Agents with per-call state should use
-     * {@link #checkAndClearShutdownInterruptedForState(AgentState)} instead.
+     * <p>此智能体级入口保留给不暴露调用级状态的智能体使用。
+     * 具有调用级状态的智能体应改用
+     * {@link #checkAndClearShutdownInterruptedForState(AgentState)}。
      *
-     * @return true if the flag was present and cleared
+     * @return 标记原本存在且已清除时为 true
      */
     public boolean checkAndClearShutdownInterrupted(Agent agent) {
         if (!(agent instanceof AgentBase ab)) {
@@ -150,13 +147,13 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Check whether a call-scoped state was previously interrupted by shutdown, and clear the flag.
+     * 检查调用级状态先前是否因关闭而中断，并清除此标记。
      *
-     * <p>The supplied state must be the state resolved for the current call. This avoids falling
-     * back to an agent's default state when one agent instance serves multiple sessions.
+     * <p>提供的状态必须是为当前调用解析出的状态，避免同一智能体实例服务多个会话时，
+     * 回退到智能体的默认状态。
      *
-     * @param state the resolved state for the current call
-     * @return true if the flag was present and cleared
+     * @param state 为当前调用解析出的状态
+     * @return 标记原本存在且已清除时为 true
      */
     public boolean checkAndClearShutdownInterruptedForState(AgentState state) {
         if (state != null && state.isShutdownInterrupted()) {
@@ -192,11 +189,10 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Bind the per-call {@link AgentState} resolved for the in-flight request identified by
-     * {@code requestId}, so shutdown interruption and state-saving target that exact
-     * {@code (userId, sessionId)} session rather than the agent's no-arg "most-recently-active"
-     * accessors. Invoked by {@code AgentBase} once a call has activated its session slot. No-op when
-     * no request is tracked for the id or the state is {@code null}.
+     * 为 {@code requestId} 标识的在途请求绑定已解析的调用级 {@link AgentState}，
+     * 使关闭中断与状态保存精确针对 {@code (userId, sessionId)} 会话，而不使用
+     * 智能体无参数的“最近活跃”访问器。由 {@code AgentBase} 在调用激活会话槽位后调用。
+     * 未跟踪此 ID 的请求或状态为 {@code null} 时，不执行操作。
      */
     public void bindRequestState(String requestId, AgentState state) {
         if (state == null) {
@@ -231,8 +227,8 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Called from agent's handleInterrupt when a SYSTEM interrupt is observed.
-     * Always saves because memory may have been updated after the previous safe-point/timeout save.
+     * 智能体的 handleInterrupt 观察到 SYSTEM 中断时调用。
+     * 始终保存，因为上次安全点／超时保存之后，记忆可能又发生了更新。
      */
     public void saveOnInterruptObserved(String requestId) {
         getActiveRequest(requestId).ifPresent(ActiveRequestContext::saveState);
@@ -318,10 +314,10 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Block until the shutdown state reaches TERMINATED or the given timeout elapses.
+     * 阻塞等待，直到关闭状态达到 TERMINATED 或指定超时到期。
      *
-     * @param timeout maximum time to wait; {@code null} means wait indefinitely
-     * @return true if TERMINATED was reached, false if timed out
+     * @param timeout 最长等待时间；{@code null} 表示无限等待
+     * @return 达到 TERMINATED 时为 true，超时时为 false
      */
     public boolean awaitTermination(Duration timeout) {
         updateTerminatedIfNoRequests();
@@ -345,7 +341,7 @@ public final class GracefulShutdownManager {
     }
 
     /**
-     * Reset manager state. Intended for testing and demo purposes only.
+     * 重置管理器状态。仅用于测试和演示。
      */
     public void resetForTesting() {
         ScheduledFuture<?> future = monitorFuture.getAndSet(null);

@@ -16,33 +16,32 @@
 package io.agentscope.harness.agent.sandbox;
 
 /**
- * A handle that represents a held execution right on a sandbox isolation slot.
+ * 表示已持有沙箱隔离槽位执行权的句柄。
  *
- * <p>Returned by {@link SandboxExecutionGuard#tryEnter}. The harness closes the lease
- * automatically after {@link SandboxManager#release} completes (whether the call succeeded or
- * failed), so implementations do not need to worry about cleanup ordering.
+ * <p>由 {@link SandboxExecutionGuard#tryEnter} 返回。无论调用成功还是失败，Harness 都在 {@link SandboxManager#release} 完成后自动关闭租约，因此实现无需操心清理顺序。
  *
- * <p>Implementations must be idempotent: calling {@link #close()} more than once must be safe.
+ * <p>实现必须幂等：多次调用 {@link #close()} 必须安全。
  */
 public interface SandboxLease extends AutoCloseable {
 
     /**
-     * Releases the execution right held by this lease.
+     * 释放此租约持有的执行权。
      *
-     * <p>Must not throw. Any release-side error should be logged internally by the implementation.
+     * <p>不得抛出异常。释放侧错误应由实现内部记录日志。
      */
     @Override
     void close();
 
     /**
-     * Returns a no-op lease whose {@link #close()} is a no-op. Used by the default
-     * {@link SandboxExecutionGuard#noop()} implementation.
+     * 返回 {@link #close()} 不执行操作的空操作租约，供默认 {@link SandboxExecutionGuard#noop()} 实现使用。
      */
     static SandboxLease noop() {
         return NoopSandboxLease.INSTANCE;
     }
 
-    /** Singleton no-op implementation. */
+    /**
+ * 单例空操作实现。
+ */
     final class NoopSandboxLease implements SandboxLease {
 
         static final NoopSandboxLease INSTANCE = new NoopSandboxLease();

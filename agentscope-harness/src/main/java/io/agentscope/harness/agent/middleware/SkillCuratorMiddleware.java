@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Schedules {@link SkillCurator} runs after the main {@code call()} completes. Gates on the
- * curator's interval + {@code PeriodicGate}, and runs on a single-thread daemon executor so the
- * agent loop is never blocked.
+ * 安排 {@link SkillCurator} 在主 {@code call()} 完成后执行。
+ * 使用整理器间隔和 {@code PeriodicGate} 门控，在单线程守护执行器中运行，
+ * 不会阻塞智能体循环。
  */
 public class SkillCuratorMiddleware implements HarnessRuntimeMiddleware {
 
@@ -54,7 +54,7 @@ public class SkillCuratorMiddleware implements HarnessRuntimeMiddleware {
                         });
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT);
@@ -70,8 +70,8 @@ public class SkillCuratorMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Called from the {@code onAgent} doOnComplete: if the curator gate accepts, dispatch a run
-     * to the daemon executor.
+     * 从 {@code onAgent} 的 doOnComplete 调用：如果整理器门控允许，
+     * 则将一次运行派发到守护执行器。
      */
     private void maybeRunCurator() {
         if (shutdown) {
@@ -96,13 +96,13 @@ public class SkillCuratorMiddleware implements HarnessRuntimeMiddleware {
                 });
     }
 
-    /** Stop accepting new background work; idempotent. */
+    /** 停止接收新的后台工作；此操作幂等。 */
     public void close() {
         shutdown = true;
         executor.shutdownNow();
     }
 
-    /** Direct access to the underlying curator (for {@code agent.runCuratorOnce}). */
+    /** 直接访问底层整理器（供 {@code agent.runCuratorOnce} 使用）。 */
     public SkillCurator curator() {
         return curator;
     }

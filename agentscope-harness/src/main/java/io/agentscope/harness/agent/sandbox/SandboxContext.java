@@ -19,10 +19,9 @@ import io.agentscope.harness.agent.IsolationScope;
 import io.agentscope.harness.agent.sandbox.snapshot.SandboxSnapshotSpec;
 
 /**
- * Immutable configuration for sandbox behavior.
+ * 沙箱行为的不可变配置。
  *
- * <p>Built with the agent and attached to {@link io.agentscope.core.agent.RuntimeContext} for
- * each call.
+ * <p>随智能体构建，并在每次调用时附加到 {@link io.agentscope.core.agent.RuntimeContext}。
  */
 public final class SandboxContext {
 

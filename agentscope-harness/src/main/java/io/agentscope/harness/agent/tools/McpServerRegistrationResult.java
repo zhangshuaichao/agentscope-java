@@ -19,13 +19,13 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Terminal result of registering one MCP server entry.
+ * 注册单个 MCP 服务器配置项的终态结果。
  *
- * @param serverName configured server name; may be {@code null} for a skipped invalid entry
- * @param transport configured transport; may be {@code null} when absent or unavailable
- * @param status terminal registration status
- * @param completedAt time at which registration reached the terminal status
- * @param cause failure or skip cause; {@code null} for successful registration
+ * @param serverName 配置的服务器名称；跳过无效配置项时可能为 {@code null}
+ * @param transport 配置的传输方式；缺失或不可用时可能为 {@code null}
+ * @param status 注册终态
+ * @param completedAt 注册进入终态的时间
+ * @param cause 失败或跳过的原因；注册成功时为 {@code null}
  */
 public record McpServerRegistrationResult(
         String serverName, String transport, Status status, Instant completedAt, Throwable cause) {
@@ -41,27 +41,27 @@ public record McpServerRegistrationResult(
         }
     }
 
-    /** Terminal status of an MCP server registration attempt. */
+    /** MCP 服务器注册尝试的终态。 */
     public enum Status {
         SUCCESS,
         FAILED,
         SKIPPED
     }
 
-    /** Creates a successful registration result. */
+    /** 创建注册成功结果。 */
     public static McpServerRegistrationResult success(String serverName, String transport) {
         return new McpServerRegistrationResult(
                 serverName, transport, Status.SUCCESS, Instant.now(), null);
     }
 
-    /** Creates a failed registration result. */
+    /** 创建注册失败结果。 */
     public static McpServerRegistrationResult failed(
             String serverName, String transport, Throwable cause) {
         return new McpServerRegistrationResult(
                 serverName, transport, Status.FAILED, Instant.now(), cause);
     }
 
-    /** Creates a skipped registration result. */
+    /** 创建跳过注册的结果。 */
     public static McpServerRegistrationResult skipped(
             String serverName, String transport, Throwable cause) {
         return new McpServerRegistrationResult(

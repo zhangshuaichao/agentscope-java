@@ -38,18 +38,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for handling media files in multimodal content.
- * Provides methods for processing images, audio, and other media types.
+ * 处理多模态内容中媒体文件的工具类。
+ * 提供图像、音频等媒体类型的处理方法。
  */
 public class MediaUtils {
 
     private static final Logger log = LoggerFactory.getLogger(MediaUtils.class);
 
-    // File size limits
-    private static final long WARN_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-    private static final long MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+    // 文件大小限制
+    private static final long WARN_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+    private static final long MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
-    // Supported extensions
+    // 支持的扩展名
     private static final List<String> SUPPORTED_IMAGE_EXTENSIONS =
             List.of("png", "jpg", "jpeg", "gif", "webp", "heic", "heif");
     private static final List<String> SUPPORTED_AUDIO_EXTENSIONS = List.of("wav", "mp3");
@@ -57,16 +57,16 @@ public class MediaUtils {
             List.of("mp4", "mpeg", "mpg", "mov", "avi", "webm", "wmv", "flv", "3gp", "3gpp");
 
     private MediaUtils() {
-        // Utility class, prevent instantiation
+        // 工具类，禁止实例化
     }
 
     /**
-     * Check if a URL is a local file path (not a URL with protocol scheme).
-     * Returns true for paths without http://, https://, ftp://, file:// or oss:// prefixes.
-     * Used to distinguish local files from remote URLs for different processing paths.
+     * 检查 URL 是否为本地文件路径（而不是带协议的 URL）。
+     * 没有 http://、https://、ftp://、file:// 或 oss:// 前缀的路径返回 true。
+     * 用于区分本地文件与远程 URL，以采用不同处理流程。
      *
-     * @param url The URL or file path to check
-     * @return true if it's a local file path, false if it has a protocol scheme
+     * @param url 要检查的 URL 或文件路径
+     * @return 本地路径为 true；带协议的 URL 为 false
      */
     public static boolean isLocalFile(String url) {
         if (url == null || url.isBlank()) {
@@ -80,13 +80,13 @@ public class MediaUtils {
     }
 
     /**
-     * Convert a local file to base64 encoded string.
-     * Validates file size before reading (max 50MB).
-     * Used when APIs require base64-encoded media content.
+     * 将本地文件转换为 Base64 编码字符串。
+     * 读取前检查文件大小（最大 50 MB）。
+     * 适用于 API 要求 Base64 编码媒体内容的情况。
      *
-     * @param path The local file path
-     * @return Base64-encoded string of file contents
-     * @throws IOException If file cannot be read or exceeds size limit
+     * @param path 本地文件路径
+     * @return 文件内容的 Base64 编码字符串
+     * @throws IOException 文件无法读取或超过大小限制时抛出
      */
     public static String fileToBase64(String path) throws IOException {
         Path filePath = Path.of(path);
@@ -102,13 +102,13 @@ public class MediaUtils {
     }
 
     /**
-     * Download a remote URL and convert to base64.
-     * Used for APIs that require base64 encoding instead of direct URLs (e.g., OpenAI audio).
-     * Validates downloaded size (max 50MB) and sets connection timeouts.
+     * 下载远程 URL 并转换为 Base64。
+     * 适用于要求 Base64 编码而非直接 URL 的 API（例如 OpenAI 音频）。
+     * 检查下载内容大小（最大 50 MB），并设置连接超时。
      *
-     * @param url The remote URL to download
-     * @return Base64-encoded string of downloaded content
-     * @throws IOException If download fails, exceeds size limit, or returns non-200 status
+     * @param url 要下载的远程 URL
+     * @return 下载内容的 Base64 编码字符串
+     * @throws IOException 下载失败、超过大小限制或状态码不是 200 时抛出
      */
     public static String downloadUrlToBase64(String url) throws IOException {
         log.debug("Downloading remote URL for base64 encoding: {}", url);
@@ -116,8 +116,8 @@ public class MediaUtils {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         try {
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000); // 10 seconds
-            connection.setReadTimeout(30000); // 30 seconds
+            connection.setConnectTimeout(10000); // 10 秒
+            connection.setReadTimeout(30000); // 30 秒
             connection.connect();
 
             int responseCode = connection.getResponseCode();
@@ -127,9 +127,11 @@ public class MediaUtils {
             }
 
             try (InputStream is = connection.getInputStream()) {
+                // 【学习提示】此实现先完整读取，再检查大小；该上限不是流式读取的内存硬限制。
+                // 理解这一顺序有助于评估大资源风险。本学习分支仅加说明，不改变原行为。
                 byte[] bytes = is.readAllBytes();
 
-                // Check size after download
+                // 下载后检查大小
                 if (bytes.length > MAX_SIZE_BYTES) {
                     throw new IOException(
                             "Downloaded content too large: "
@@ -150,11 +152,11 @@ public class MediaUtils {
     }
 
     /**
-     * Convert a URL to a file:// protocol URL or leave as-is for web URLs.
+     * 将路径转换为 file:// 协议 URL；网页 URL 则保持原样。
      *
-     * @param url URL or file path
-     * @return file:// protocol URL or original URL (e.g., file:///absolute/path/image.png)
-     * @throws IOException If the file does not exist
+     * @param url URL 或文件路径
+     * @return file:// 协议 URL 或原始 URL（例如 file:///absolute/path/image.png）
+     * @throws IOException 文件不存在时抛出
      */
     public static String urlToProtocolUrl(String url) throws IOException {
         if (isFileExists(url)) {
@@ -165,13 +167,13 @@ public class MediaUtils {
     }
 
     /**
-     * Convert a local file path to file:// protocol URL.
-     * Resolves relative paths to absolute and validates file existence.
-     * Used for DashScope vision models which accept file:// protocol for local files.
+     * 将本地文件路径转换为 file:// 协议 URL。
+     * 将相对路径解析为绝对路径，并验证文件存在。
+     * 用于接受 file:// 本地文件协议的 DashScope 视觉模型。
      *
-     * @param path Local file path (relative or absolute)
-     * @return file:// protocol URL with absolute path (e.g., file:///absolute/path/image.png)
-     * @throws IOException If the file does not exist
+     * @param path 本地文件路径（相对或绝对）
+     * @return 含绝对路径的 file:// 协议 URL（例如 file:///absolute/path/image.png）
+     * @throws IOException 文件不存在时抛出
      */
     public static String toFileProtocolUrl(String path) throws IOException {
         Path absolutePath = Path.of(path).toAbsolutePath();
@@ -182,28 +184,28 @@ public class MediaUtils {
     }
 
     /**
-     * Convert a file or web URL to an InputStream.
+     * 将文件路径或网页 URL 转换为 InputStream。
      *
-     * @param url The file or web URL
-     * @return An InputStream for the resource
-     * @throws IOException If the resource read failed
+     * @param url 文件路径或网页 URL
+     * @return 资源对应的 InputStream
+     * @throws IOException 读取资源失败时抛出
      */
     public static InputStream urlToInputStream(String url) throws IOException {
         if (isFileExists(url)) {
-            // Treat as local file
+            // 按本地文件处理
             return Files.newInputStream(Path.of(url));
         } else {
-            // Treat as web URL
+            // 按网页 URL 处理
             return URI.create(url).toURL().openStream();
         }
     }
 
     /**
-     * Convert a file or web URL to an InputStream with RGBA image.
-     * @param url a local file path or web URL
-     * @return an InputStream with RGBA image
-     * @throws IOException if the resource convert failed
-     * @throws IllegalArgumentException if the resource read failed
+     * 将文件路径或网页 URL 转换为包含 RGBA 图像的 InputStream。
+     * @param url 本地文件路径或网页 URL
+     * @return 包含 RGBA 图像的 InputStream
+     * @throws IOException 资源转换失败时抛出
+     * @throws IllegalArgumentException 读取资源失败时抛出
      */
     public static InputStream urlToRgbaImageInputStream(String url) throws IOException {
         BufferedImage img = ImageIO.read(urlToInputStream(url));
@@ -211,7 +213,7 @@ public class MediaUtils {
             throw new IllegalArgumentException("Unable to read image from: " + url);
         }
 
-        // Ensure image has alpha channel (RGBA)
+        // 确保图像具有 alpha 通道（RGBA）
         BufferedImage rgbaImg =
                 new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = rgbaImg.createGraphics();
@@ -226,17 +228,17 @@ public class MediaUtils {
     }
 
     /**
-     * Convert a file or web URL to a data URL with base64 encoding.
-     * @param url a local file path or web url
-     * @return a data URL with base64 encoding, the format is data:{mediaType};base64,{base64Data}
+     * 将文件路径或网页 URL 转换为 Base64 编码的 data URL。
+     * @param url 本地文件路径或网页 URL
+     * @return Base64 编码的 data URL，格式为 data:{mediaType};base64,{base64Data}
      */
     public static String urlToBase64DataUrl(String url) throws IOException {
         String base64;
         if (isFileExists(url)) {
-            // Treat as local file
+            // 按本地文件处理
             base64 = fileToBase64(url);
         } else {
-            // Treat as web URL
+            // 按网页 URL 处理
             base64 = downloadUrlToBase64(url);
         }
 
@@ -245,12 +247,12 @@ public class MediaUtils {
     }
 
     /**
-     * Determine MIME type from file extension.
+     * 根据文件扩展名确定 MIME 类型。
      */
     public static String determineMediaType(String path) {
         String ext = getExtension(path).toLowerCase();
         return switch (ext) {
-            // Image formats
+            // 图像格式
             case "jpg", "jpeg" -> "image/jpeg";
             case "png" -> "image/png";
             case "gif" -> "image/gif";
@@ -258,7 +260,7 @@ public class MediaUtils {
             case "heic" -> "image/heic";
             case "heif" -> "image/heif";
 
-            // Audio formats
+            // 音频格式
             case "mp3" -> "audio/mp3";
             case "wav" -> "audio/wav";
             case "aiff" -> "audio/aiff";
@@ -266,7 +268,7 @@ public class MediaUtils {
             case "ogg" -> "audio/ogg";
             case "flac" -> "audio/flac";
 
-            // Video formats (for future use)
+            // 视频格式（供将来使用）
             case "mp4" -> "video/mp4";
             case "mpeg", "mpg" -> "video/mpeg";
             case "mov" -> "video/quicktime";
@@ -281,18 +283,18 @@ public class MediaUtils {
     }
 
     /**
-     * Resolve the MIME type from a {@link Source}.
+     * 从 {@link Source} 解析 MIME 类型。
      *
-     * <p>Resolution order:
+     * <p>解析顺序：
      * <ol>
-     *   <li>{@link Base64Source#getMediaType()} — always explicit</li>
-     *   <li>{@link URLSource#getMimeType()} — caller-supplied hint for extension-less URLs</li>
-     *   <li>{@link #determineMediaType(String)} — extension-based inference</li>
+     *   <li>{@link Base64Source#getMediaType()}：始终显式给出</li>
+     *   <li>{@link URLSource#getMimeType()}：调用方为无扩展名 URL 提供的提示</li>
+     *   <li>{@link #determineMediaType(String)}：根据扩展名推断</li>
      * </ol>
      *
-     * @param source the source to resolve MIME type from
-     * @return MIME type string (e.g. "image/jpeg")
-     * @throws IllegalArgumentException if the type cannot be determined or source type is unknown
+     * @param source 用于解析 MIME 类型的来源
+     * @return MIME 类型字符串（例如 "image/jpeg"）
+     * @throws IllegalArgumentException 无法确定类型或来源类型未知时抛出
      */
     public static String resolveMimeType(Source source) {
         if (source instanceof Base64Source b64) {
@@ -316,7 +318,7 @@ public class MediaUtils {
     }
 
     /**
-     * Validate that an image file has a supported extension.
+     * 验证图像文件扩展名是否受支持。
      */
     public static void validateImageExtension(String url) {
         String ext = getExtension(url).toLowerCase();
@@ -328,7 +330,7 @@ public class MediaUtils {
     }
 
     /**
-     * Validate that an audio file has a supported extension.
+     * 验证音频文件扩展名是否受支持。
      */
     public static void validateAudioExtension(String url) {
         String ext = getExtension(url).toLowerCase();
@@ -341,7 +343,7 @@ public class MediaUtils {
     }
 
     /**
-     * Validate that a video file has a supported extension.
+     * 验证视频文件扩展名是否受支持。
      */
     public static void validateVideoExtension(String url) {
         String ext = getExtension(url).toLowerCase();
@@ -354,10 +356,10 @@ public class MediaUtils {
     }
 
     /**
-     * Determine audio format string from file extension.
+     * 根据文件扩展名确定音频格式字符串。
      *
-     * @param path The file path
-     * @return Audio format string ("wav" or "mp3")
+     * @param path 文件路径
+     * @return 音频格式字符串（"wav" 或 "mp3"）
      */
     public static String determineAudioFormat(String path) {
         String ext = getExtension(path).toLowerCase();
@@ -365,14 +367,14 @@ public class MediaUtils {
     }
 
     /**
-     * Infer audio format string from MIME type.
+     * 根据 MIME 类型推断音频格式字符串。
      *
-     * @param mediaType The MIME type
-     * @return Audio format string ("wav", "mp3", "opus", "flac", etc.)
+     * @param mediaType MIME 类型
+     * @return 音频格式字符串（"wav"、"mp3"、"opus"、"flac" 等）
      */
     public static String inferAudioFormatFromMediaType(String mediaType) {
         if (mediaType == null) {
-            return "mp3"; // default
+            return "mp3"; // 默认值
         }
         if (mediaType.contains("wav")) {
             return "wav";
@@ -381,11 +383,11 @@ public class MediaUtils {
         } else if (mediaType.contains("flac")) {
             return "flac";
         }
-        return "mp3"; // default
+        return "mp3"; // 默认值
     }
 
     /**
-     * Extract file extension from path or URL.
+     * 从路径或 URL 提取文件扩展名。
      */
     public static String getExtension(String path) {
         if (path == null || path.isBlank()) {
@@ -395,11 +397,11 @@ public class MediaUtils {
         String fileName;
         try {
             if (isLocalFile(path)) {
-                // treat as file
+                // 按文件处理
                 Path fileNamePath = Paths.get(path).normalize().getFileName();
                 fileName = fileNamePath == null ? "" : fileNamePath.toString();
             } else {
-                // URI paths use '/' regardless of the host filesystem (e.g. /C:/ on Windows).
+                // URI 路径始终使用 /，与宿主机文件系统无关（例如 Windows 上的 /C:/）。
                 URI uri = URI.create(path).normalize();
                 String uriPath = uri.getPath();
                 fileName = uriPath.substring(uriPath.lastIndexOf('/') + 1);
@@ -410,7 +412,7 @@ public class MediaUtils {
         }
 
         int dotIndex = fileName.lastIndexOf('.');
-        // Ensure the dot exists and is not the last character
+        // 确保存在点号，且它不是最后一个字符
         if (dotIndex != -1 && dotIndex < fileName.length() - 1) {
             return fileName.substring(dotIndex + 1);
         }
@@ -418,9 +420,9 @@ public class MediaUtils {
     }
 
     /**
-     * Check if a file exists.
-     * @param path a local file path or URL.
-     * @return true: exists, false: not exists or path is invalid
+     * 检查文件是否存在。
+     * @param path 本地文件路径或 URL。
+     * @return true 表示存在；false 表示不存在或路径无效
      */
     public static boolean isFileExists(String path) {
         if (!isLocalFile(path)) {
@@ -434,7 +436,7 @@ public class MediaUtils {
     }
 
     /**
-     * Check file size before reading.
+     * 读取前检查文件大小。
      */
     private static void checkFileSize(String path) throws IOException {
         long size = Files.size(Path.of(path));

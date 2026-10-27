@@ -54,27 +54,27 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 /**
- * Middleware that provides the managed subagent mechanism.
+ * 提供托管子智能体机制的中间件。
  *
- * <p>In <strong>default mode</strong> (standalone harness setup), this middleware creates an
- * {@link AgentSpawnTool} backed by a {@link DefaultAgentManager}. In <strong>session mode</strong>
- * (orchestrated via {@code AgentBootstrap}), an external tool (typically {@code SessionsTool})
- * is injected, replacing the default {@link AgentSpawnTool}.
+ * <p><strong>默认模式</strong>（独立 Harness 配置）下，中间件创建
+ * {@link AgentSpawnTool}，由 {@link DefaultAgentManager} 支撑。
+ * <strong>会话模式</strong>（经 {@code AgentBootstrap} 编排）下，注入外部工具
+ * （通常为 {@code SessionsTool}），替代默认 {@link AgentSpawnTool}。
  *
- * <p>Responsibilities:
- *
+ * <p>职责：
  * <ol>
- *   <li>Exposes the subagent tool and {@link TaskTool} as agent tools (callers query via
- *       {@link #getTools()} and register them on the toolkit at orchestration time).
- *   <li>On every {@link #onAgent}, reloads subagent declarations from the workspace filesystem
- *       (namespace-scoped) to support per-user subagent isolation.
- *   <li>Prepends the stable subagent usage guidance to the leading SYSTEM message of every
- *       {@link ReasoningInput}, and appends the volatile state (available agent catalog, async
- *       task summary) as a synthetic tail message. Because the framework rebuilds the SYSTEM
- *       message from a frozen base each iteration, this is safe — content never accumulates
- *       across iterations, and keeping the volatile parts out of the head keeps the system
- *       bytes stable across steps (prefix-cache friendly).
+ *   <li>暴露子智能体工具与 {@link TaskTool}；调用方通过 {@link #getTools()}
+ *       获取，并在编排阶段注册到工具集。
+ *   <li>每次 {@link #onAgent} 时，从按命名空间隔离的工作区文件系统重新加载子智能体声明，
+ *       支持按用户隔离子智能体。
+ *   <li>将稳定的子智能体使用指导放入每个 {@link ReasoningInput} 的首条 SYSTEM 消息，
+ *       把易变状态（可用智能体目录、异步任务摘要）作为合成尾部消息追加。
+ *       框架每轮从冻结基线重建 SYSTEM 消息，因此内容不会逐轮累积；
+ *       将易变部分移出头部，还能保持系统字节稳定，利于前缀缓存。
  * </ol>
+ *
+ * <p>【学习提示】声明、工厂、实例与后台任务是不同对象：声明描述能力，工厂负责创建，
+ * 实例执行任务，任务记录跟踪结果。不要仅因目录里出现一个名称，就推断它已经在运行。
  */
 public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
 
@@ -86,9 +86,8 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     private static final int MAX_TASK_SUMMARY_ENTRIES = 10;
 
     /**
-     * Cap on individual task results aggregated into a single {@code <system-reminder>} delivery
-     * message. Anything beyond this gets a "... and N more — call task_list()" footer; the LLM
-     * can still fetch each one explicitly.
+     * 聚合到一条 {@code <system-reminder>} 投递消息中的单项任务结果上限。
+     * 超过部分会以“还有 N 项，请调用 task_list()”的尾注提示，LLM 仍可逐项显式获取。
      */
     static final int MAX_DELIVERIES_PER_REMINDER = 10;
 
@@ -189,15 +188,13 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
             List<SubagentEntry> entries, DefaultAgentManager agentManager) {}
 
     /**
-     * Optional {@link AgentGenerateTool} for LLM-driven subagent spec generation. Lazy because
-     * the spec generator needs a {@link io.agentscope.core.model.Model} instance that callers
-     * supply via {@link #enableAgentGenerateTool}; null when not enabled (OOTB default).
+     * 可选的 {@link AgentGenerateTool}，用于让 LLM 生成子智能体规格。
+     * 采用延迟初始化，因为规格生成器需要 {@link io.agentscope.core.model.Model} 实例，
+     * 由调用方通过 {@link #enableAgentGenerateTool} 提供；未启用时为 null（开箱默认）。
      */
     private volatile AgentGenerateTool agentGenerateTool;
 
-    /**
-     * Default mode: creates {@link AgentSpawnTool} + {@link DefaultAgentManager} internally.
-     */
+    /** 默认模式：在内部创建 {@link AgentSpawnTool} 与 {@link DefaultAgentManager}。 */
     public SubagentsMiddleware(
             List<SubagentEntry> entries,
             TaskRepository taskRepository,
@@ -219,9 +216,7 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         this.factoryBuilder = factoryBuilder;
     }
 
-    /**
-     * Default mode without dynamic reload support.
-     */
+    /** 不支持动态重载的默认模式。 */
     public SubagentsMiddleware(
             List<SubagentEntry> entries,
             TaskRepository taskRepository,
@@ -229,9 +224,7 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         this(entries, taskRepository, workspaceManager, null, null, null);
     }
 
-    /**
-     * AgentStateStore mode: uses the externally provided tool (typically {@code SessionsTool}).
-     */
+    /** AgentStateStore 模式：使用外部提供的工具（通常为 {@code SessionsTool}）。 */
     public SubagentsMiddleware(
             List<SubagentEntry> entries,
             Object externalSubagentTool,
@@ -249,23 +242,22 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         this.factoryBuilder = null;
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT, ExtensionPoint.ON_REASONING);
     }
 
     /**
-     * Enables the {@code agent_generate} tool, which lets the LLM author new subagent specs from
-     * a description. Off by default — the generator needs a {@link io.agentscope.core.model.Model}
-     * and writes to the workspace, so callers opt in explicitly.
+     * 启用 {@code agent_generate} 工具，让 LLM 根据描述编写新的子智能体规格。
+     * 默认关闭，因为生成器需要 {@link io.agentscope.core.model.Model} 并会写入工作区，
+     * 必须由调用方显式启用。
      *
-     * <p>Only effective in default (non-session) mode, where this middleware owns a
-     * {@link DefaultAgentManager}. In session mode the manager is external and this call is a
-     * no-op.
+     * <p>仅在此中间件拥有 {@link DefaultAgentManager} 的默认（非会话）模式生效。
+     * 会话模式下管理器来自外部，此调用不执行任何操作。
      *
-     * @param generator a {@link SubagentSpecGenerator} backed by the model that should author specs
-     * @return this middleware for chaining
+     * @param generator 由用于编写规格的模型支撑的 {@link SubagentSpecGenerator}
+     * @return 当前中间件，便于链式调用
      */
     public SubagentsMiddleware enableAgentGenerateTool(SubagentSpecGenerator generator) {
         if (isSessionMode || agentManager == null) {
@@ -276,23 +268,22 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         return this;
     }
 
-    /** Returns the {@link TaskRepository} used by this middleware. */
+    /** 返回此中间件使用的 {@link TaskRepository}。 */
     public TaskRepository getTaskRepository() {
         return taskRepository;
     }
 
     /**
-     * Wires a {@link io.agentscope.harness.agent.bus.MessageBus} so that background task completions are
-     * pushed to the session inbox and a wakeup signal is enqueued. This enables the
-     * {@link io.agentscope.harness.agent.gateway.WakeupDispatcher} to re-trigger idle sessions
-     * when subagent work finishes.
+     * 接入 {@link io.agentscope.harness.agent.bus.MessageBus}，在后台任务完成时
+     * 向会话收件箱推送结果并将唤醒信号入队，使
+     * {@link io.agentscope.harness.agent.gateway.WakeupDispatcher} 能在子智能体工作结束后重新触发空闲会话。
      *
-     * <p>Registers a {@link TaskRepository.TaskCompletionCallback} on the underlying repository.
-     * Safe to call multiple times — each call replaces the previous callback.
+     * <p>向底层仓库注册 {@link TaskRepository.TaskCompletionCallback}。
+     * 可安全重复调用，每次替换之前的回调。
      *
-     * @param messageBus the application message bus
-     * @param agentId the parent agent id (for wakeup routing)
-     * @return this middleware for chaining
+     * @param messageBus 应用消息总线
+     * @param agentId 父智能体 ID（用于唤醒路由）
+     * @return 当前中间件，便于链式调用
      */
     public SubagentsMiddleware wireMessageBus(
             io.agentscope.harness.agent.bus.MessageBus messageBus, String agentId) {
@@ -343,12 +334,12 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Wires a gateway bridge into the internal {@link AgentSpawnTool}, enabling spawned subagents
-     * to be exposed as user-addressable threads. Only effective in default (non-session) mode.
+     * 将网关桥接器接入内部 {@link AgentSpawnTool}，使新建子智能体可暴露为用户可寻址的线程。
+     * 仅在默认（非会话）模式生效。
      *
-     * @param bridge the bridge implementation (typically obtained from
-     *     {@link io.agentscope.harness.agent.gateway.GatewayBootstrap#gatewayBridge()})
-     * @return this middleware for chaining
+     * @param bridge 桥接器实现，通常由
+     *     {@link io.agentscope.harness.agent.gateway.GatewayBootstrap#gatewayBridge()} 获取
+     * @return 当前中间件，便于链式调用
      */
     public SubagentsMiddleware setGatewayBridge(
             io.agentscope.harness.agent.gateway.SubagentGatewayBridge bridge) {
@@ -356,10 +347,10 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
             log.debug("setGatewayBridge ignored in session mode (no internal manager)");
             return this;
         }
-        // Mutate the bridge on the live tool instead of replacing it: the toolkit binds
-        // agent_spawn to the AgentSpawnTool instance returned by getTools() at orchestration
-        // time, so a fresh instance here would never be invoked and exposure would silently
-        // never fire.
+        // 修改活动工具上的桥接器，而不是替换工具：编排时工具集将
+        // agent_spawn 绑定到 getTools() 返回的 AgentSpawnTool 实例，
+        // 因此在此创建的新实例永远不会被调用，线程暴露也就会
+        // 静默失效。
         if (this.subagentTool instanceof AgentSpawnTool ast) {
             ast.setGatewayBridge(bridge);
         } else {
@@ -369,20 +360,19 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Returns the internal {@link DefaultAgentManager} that can re-materialize subagents, or
-     * {@code null} in session mode (external tool). Used to wire a gateway materializer for
-     * cross-node exposed-subagent recovery.
+     * 返回可重新物化子智能体的内部 {@link DefaultAgentManager}；
+     * 会话模式（外部工具）下为 {@code null}。
+     * 用于连接网关物化器，实现跨节点恢复已暴露的子智能体。
      */
     public DefaultAgentManager getAgentManager() {
         return agentManager;
     }
 
     /**
-     * Returns the tool instances this middleware contributes to the agent toolkit. The caller
-     * is responsible for registering them on the toolkit at orchestration time.
+     * 返回此中间件向智能体工具集贡献的工具实例。
+     * 调用方负责在编排阶段将它们注册到工具集。
      *
-     * <p>When {@link #enableAgentGenerateTool} has been called, the returned list additionally
-     * contains an {@link AgentGenerateTool}.
+     * <p>调用过 {@link #enableAgentGenerateTool} 后，返回列表还会包含 {@link AgentGenerateTool}。
      */
     public List<Object> getTools() {
         if (baseEntries.isEmpty()) {
@@ -417,10 +407,10 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         List<SubagentEntry> currentEntries = snapshotFor(rc).entries();
         String sessionId = rc != null ? rc.getSessionId() : null;
 
-        // ---- Phase B-3 push delivery -------------------------------------------------------
-        // Drain newly-terminal tasks first so the SYSTEM summary built afterwards can omit them.
-        // Only persist to AgentState when the agent is a ReActAgent — other Agent kinds keep
-        // the legacy pull-only flow unchanged.
+        // ---- 阶段 B-3 推送投递 -------------------------------------------------------
+        // 先取出刚进入终态的任务，使随后构造的 SYSTEM 摘要可以省略它们。
+        // 仅当智能体为 ReActAgent 时才写入 AgentState；其他 Agent 类型
+        // 保持旧版仅拉取的流程不变。
         List<TaskDelivery> pending = this.taskRepository.findPendingDeliveries(rc, sessionId);
         Msg deliveryMsg = null;
         if (!pending.isEmpty()) {
@@ -447,9 +437,9 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
             rebuilt.add(stateMsg);
         }
         if (deliveryMsg != null) {
-            // Inject for this round (parallel to the AgentState write — keeps the message visible
-            // in the immediate LLM call regardless of when the framework re-derives messages from
-            // the state next round).
+            // 为本轮注入消息，与 AgentState 写入并行；无论框架何时在下一轮
+            // 从状态重新派生消息，都确保当前紧接着的 LLM 调用
+            // 能看到此消息。
             rebuilt = new ArrayList<>(rebuilt);
             rebuilt.add(deliveryMsg);
         }
@@ -457,11 +447,11 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
         Flux<AgentEvent> downstream =
                 next.apply(new ReasoningInput(rebuilt, input.tools(), input.options()));
         if (!pending.isEmpty()) {
-            // Mark delivered ONLY after the inner reasoning completes successfully. Order matters:
-            // if we marked before reasoning, a crash mid-call could persist deliveredAt while the
-            // AgentState write was never flushed, causing permanent message loss. The reverse
-            // (crash AFTER reasoning, BEFORE markDelivered) only causes a redundant re-delivery
-            // on the next round — annoying, but safe.
+            // 仅在内层推理成功完成后标记已投递。顺序非常重要：
+            // 若先标记再推理，调用中途崩溃可能已持久化 deliveredAt，
+            // 但 AgentState 写入尚未落盘，导致永久丢消息。反过来，
+            // 推理完成后、markDelivered 前崩溃，只会导致下一轮
+            // 重复投递，虽有冗余但更安全。
             final TaskRepository repoRef = this.taskRepository;
             final RuntimeContext rcRef = rc;
             final String sidRef = sessionId;
@@ -490,13 +480,12 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds the single aggregated {@code <system-reminder>} message that surfaces newly-terminal
-     * background tasks to the LLM. Caps at {@link #MAX_DELIVERIES_PER_REMINDER} entries; the
-     * remainder is mentioned in a tail line so the LLM knows to call {@code task_list()} if it
-     * wants the full set.
+     * 构建单条聚合 {@code <system-reminder>} 消息，向 LLM 展示刚进入终态的后台任务。
+     * 最多包含 {@link #MAX_DELIVERIES_PER_REMINDER} 项；其余项以尾注提示，
+     * 让 LLM 知道需要完整集合时可调用 {@code task_list()}。
      *
-     * <p>Role / metadata mirror {@code TaskReminderMiddleware} so downstream UI and persistence
-     * layers can recognise this as system-originated synthetic content rather than user input.
+     * <p>角色／元数据与 {@code TaskReminderMiddleware} 一致，
+     * 让下游 UI 和持久化层识别其为系统生成的合成内容，而非用户输入。
      */
     static Msg buildDeliveryReminder(List<TaskDelivery> deliveries) {
         int total = deliveries.size();
@@ -567,8 +556,8 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Appends the given extra content to the leading SYSTEM message of {@code messages}.
-     * If no SYSTEM message is present, a new one is inserted at index 0.
+     * 将指定附加内容追加到 {@code messages} 的首条 SYSTEM 消息。
+     * 不存在 SYSTEM 消息时，在下标 0 插入一条。
      */
     static List<Msg> prependToSystemMessage(List<Msg> messages, String extra) {
         if (extra == null || extra.isEmpty()) {
@@ -650,10 +639,9 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Renders the {@code ## Subagents} system-prompt section for the supplied entries. Shared
-     * with {@link DynamicSubagentsMiddleware}. Contains only per-configuration stable guidance —
-     * the volatile agent catalog and async task summary travel in the tail state message (see
-     * {@link #buildSubagentStateMsg}) so the system head stays byte-stable across steps.
+     * 为给定条目渲染 {@code ## Subagents} 系统提示段落，与 {@link DynamicSubagentsMiddleware} 共用。
+     * 只包含按配置稳定的指导；易变的智能体目录与异步任务摘要放入尾部状态消息
+     * （见 {@link #buildSubagentStateMsg}），保持系统头部在各步骤间字节稳定。
      */
     public static String renderSubagentSection(List<SubagentEntry> entries, boolean isSessionMode) {
         String spawnName = isSessionMode ? "sessions_spawn" : "agent_spawn";
@@ -663,13 +651,13 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Renders the visible agent catalog lines, or an empty string when no entry is visible.
+     * 渲染可见智能体目录行；没有可见条目时返回空字符串。
      *
-     * <p>Filters out entries whose declaration sets {@code hidden=true} or {@code mode=PRIMARY}:
-     * the LLM should not see internal-use subagents (hidden) and cannot spawn primary-only
-     * declarations (the {@link io.agentscope.harness.agent.subagent.DefaultAgentManager} rejects
-     * such spawns anyway, so advertising them would be a footgun). Programmatic registrations
-     * without a declaration ({@code entry.declaration() == null}) are always shown.
+     * <p>过滤声明中设置 {@code hidden=true} 或 {@code mode=PRIMARY} 的条目：
+     * LLM 不应看到仅供内部使用的隐藏子智能体，也不能创建仅限主智能体的声明。
+     * {@link io.agentscope.harness.agent.subagent.DefaultAgentManager} 本来就会拒绝这种创建，
+     * 展示它们只会造成误用。没有声明的程序化注册项
+     * （{@code entry.declaration() == null}）始终可见。
      */
     private static String renderSubagentCatalog(List<SubagentEntry> entries) {
         return entries.stream()
@@ -679,12 +667,12 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds the synthetic tail message carrying the volatile subagent state: the available agent
-     * catalog and the async task summary. Returns {@code null} when both parts are empty.
+     * 构建携带易变子智能体状态的合成尾部消息，包括可用智能体目录与异步任务摘要。
+     * 两部分都为空时返回 {@code null}。
      *
-     * <p>Role and metadata mirror {@link #buildDeliveryReminder}: the harness layout places this
-     * message after the conversation (same zone as {@code runtime_materials} and {@code
-     * plan_state}), and compaction keeps synthetic messages out of the durable summary.
+     * <p>角色和元数据与 {@link #buildDeliveryReminder} 一致：Harness 布局将该消息放在对话之后，
+     * 与 {@code runtime_materials} 和 {@code
+     * plan_state} 同区；压缩时不会把这些合成消息加入持久化摘要。
      */
     static Msg buildSubagentStateMsg(List<SubagentEntry> entries, String taskSummary) {
         String catalog = renderSubagentCatalog(entries);
@@ -714,8 +702,8 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Whether an entry should appear in the LLM-facing list of available subagents.
-     * Programmatic entries with no declaration default to visible.
+     * 条目是否应出现在面向 LLM 的可用子智能体列表中。
+     * 没有声明的程序化条目默认可见。
      */
     private static boolean isVisibleToLlm(SubagentEntry e) {
         SubagentDeclaration decl = e.declaration();
@@ -725,13 +713,12 @@ public class SubagentsMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Builds a concise summary of in-flight tasks for the current session, or {@code null} if
-     * none. Shared with {@link DynamicSubagentsMiddleware}.
+     * 构建当前会话在途任务的简要摘要；没有时为 {@code null}。
+     * 与 {@link DynamicSubagentsMiddleware} 共用。
      *
-     * <p>Phase B-3: already-delivered tasks are filtered out — they live in the conversation
-     * history as {@code <system-reminder>} blocks, so re-mentioning them here would (a) waste
-     * tokens, (b) push genuinely still-running tasks past the {@link #MAX_TASK_SUMMARY_ENTRIES}
-     * cap, and (c) invite the LLM to second-guess the push by re-fetching results.
+     * <p>阶段 B-3：过滤已投递任务，因为它们已作为 {@code <system-reminder>} 块存在于对话历史。
+     * 再次提及会浪费词元，把真正仍在运行的任务挤出 {@link #MAX_TASK_SUMMARY_ENTRIES} 上限，
+     * 还会诱使 LLM 再次获取结果，怀疑已推送的信息。
      */
     public static String buildTaskSummary(TaskRepository repo, RuntimeContext ctx) {
         if (repo == null) {

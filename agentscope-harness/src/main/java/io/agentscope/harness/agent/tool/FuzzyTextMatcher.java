@@ -21,63 +21,66 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Fuzziness ladder for {@code SkillManageTool#patch}. The LLM rarely reproduces whitespace
- * exactly — indentation drift, trailing-space normalisation in editors, CRLF line endings from
- * a Windows-authored file, and the parser's frontmatter-whitespace eat (see
- * {@code MarkdownSkillParser.FRONTMATTER_PATTERN}) all create mismatches that a strict
- * {@code String.indexOf} would reject.
+ * 用于 {@code SkillManageTool#patch} 的模糊匹配阶梯。LLM 很少能完全复现空白：
+ * 缩进偏移、编辑器规范化行尾空格、Windows 文件的 CRLF 行尾，以及解析器吞掉前置元数据空白
+ * （参见 {@code MarkdownSkillParser.FRONTMATTER_PATTERN}），都会造成严格的
+ * {@code String.indexOf} 拒绝的匹配差异。
  *
- * <p>The matcher tries progressively looser comparisons and reports back which level made the
- * match so the caller can surface that to the LLM. Each looser level maintains a per-character
- * map back to the original {@code existing} string so the patch result is applied to the
- * unmodified bytes — we never touch whitespace the LLM didn't ask to change.
+ * <p>匹配器逐级尝试更宽松的比较，并报告命中的级别，供调用方向 LLM 展示。
+ * 每个宽松级别都维护逐字符映射，指回原始 {@code existing} 字符串，
+ * 使补丁应用到未经修改的原始内容；绝不改动 LLM 未要求修改的空白。
  *
  * <ul>
- *   <li>{@link Level#EXACT} — strict {@code String.indexOf}, preserved for byte-for-byte fidelity
- *   <li>{@link Level#TRAILING_WS_STRIPPED} — same after stripping {@code ' '/'\t'} at the end of
- *       every line on both sides, and after treating a CRLF terminator's {@code '\r'} as part of
- *       the line break rather than line content — a Windows-authored file otherwise matches no
- *       LF-only needle at any level. Catches editor-side trailing-whitespace normalisation.
- *   <li>{@link Level#WHITESPACE_COLLAPSED} — same after also stripping leading whitespace per
- *       line and collapsing every internal whitespace run to a single {@code ' '}. Catches
- *       indentation drift (tabs ↔ spaces, 2-space ↔ 4-space) and re-wrapped lines.
+ *   <li>{@link Level#EXACT}：严格的 {@code String.indexOf}，保留逐字节保真性
+ *   <li>{@link Level#TRAILING_WS_STRIPPED}：在两侧逐行去掉末尾的 {@code ' '/'\t'}，
+ *       并将 CRLF 终止符中的 {@code '\r'} 视为换行的一部分而非行内容后比较；
+ *       否则 Windows 文件在任何级别都无法匹配仅含 LF 的查找文本。
+ *       此级别处理编辑器对行尾空白的规范化。
+ *   <li>{@link Level#WHITESPACE_COLLAPSED}：进一步去掉每行前导空白，
+ *       将内部连续空白折叠为单个 {@code ' '} 后比较。
+ *       此级别处理缩进偏移（制表符与空格、2 空格与 4 空格）及重新换行的文本。
  * </ul>
  *
- * <p>CRLF terminators are folded to {@code '\n'} so a Windows-authored file matches an LF-only
- * needle. An emitted {@code '\n'} maps back to the {@code '\r'} that starts a CRLF terminator,
- * and both the leading and the trailing boundary resolve through that same map entry, so at the
- * normalising levels a span edge always lands on a terminator boundary and never splits one.
- * {@link Level#EXACT} carries no such guarantee: it is a raw {@code indexOf}, so a needle that
- * begins with a newline can open on the {@code '\n'} of a CRLF terminator and leave its
- * {@code '\r'} behind, exactly as it does before this change. Either way only the span itself is
- * ever replaced, so nothing outside it is rewritten.
+ * <p>CRLF 终止符折叠为 {@code '\n'}，使 Windows 文件能够匹配仅含 LF 的查找文本。
+ * 输出的 {@code '\n'} 映射回 CRLF 起始的 {@code '\r'}；首尾边界均通过同一映射项解析，
+ * 因此在规范化级别，匹配区间边缘总是落在终止符边界，不会拆开终止符。
+ * {@link Level#EXACT} 不提供此保证：它使用原始 {@code indexOf}，因此以换行开头的
+ * 查找文本可能从 CRLF 的 {@code '\n'} 开始并留下 {@code '\r'}，与本次变更之前相同。
+ * 无论哪种方式，都只替换匹配区间本身，不重写区间之外的内容。
  *
- * <p>Because the replacement is spliced in verbatim, a needle that opens on a line break hands
- * that terminator to the caller's own text — a replacement supplying {@code '\n'} leaves it as
- * {@code '\n'}, so one patch over a CRLF document can leave both styles present. That is the
- * caller's text taking effect rather than whitespace this class rewrote.
+ * <p>替换文本按原样拼接，因此若查找文本从换行开始，该终止符会交由调用方文本决定：
+ * 替换文本提供 {@code '\n'} 就会留下 {@code '\n'}，所以一次补丁可能让 CRLF 文档
+ * 同时包含两种行尾。这是调用方文本生效的结果，而不是本类重写了空白。
  *
- * <p>A lone {@code '\r'} — classic Mac line endings, or a file where only some lines end that way
- * — is still treated as ordinary content and matches nothing; that is out of scope here, but
- * stated because the rest of this class advertises newline tolerance.
+ * <p>单独的 {@code '\r'}（经典 Mac 行尾，或只有部分行如此结束的文件）
+ * 仍被视为普通内容，无法借助换行容差匹配；这超出本类范围，
+ * 但由于本类其余说明强调换行容差，因此在此明确边界。
  */
 final class FuzzyTextMatcher {
 
-    /** Match strictness level. Ordered most-strict-first so callers can compare with {@code <}. */
+    /**
+     * 匹配严格程度，按最严格优先排序，调用方可用 {@code <} 比较。
+     */
     enum Level {
         EXACT,
         TRAILING_WS_STRIPPED,
         WHITESPACE_COLLAPSED
     }
 
-    /** A match in {@code existing}: original-string byte offsets, inclusive-exclusive. */
+    /**
+     * {@code existing} 中的一个匹配：原始字符串的字节偏移，左闭右开。
+     */
+    // 【学习提示】尽管上游说明使用“字节偏移”措辞，实际这里是 Java String 的索引：
+    // 以 UTF-16 代码单元计数，不是编码文件的字节偏移；后续 StringBuilder.replace 使用同一坐标系。
     record MatchRange(int start, int end, Level level) {
         int length() {
             return end - start;
         }
     }
 
-    /** Outcome bundle for the caller. */
+    /**
+     * 供调用方使用的结果组合。
+     */
     record SearchResult(List<MatchRange> matches, Level level) {
         boolean isEmpty() {
             return matches.isEmpty();
@@ -87,25 +90,24 @@ final class FuzzyTextMatcher {
     private FuzzyTextMatcher() {}
 
     /**
-     * Searches {@code existing} for {@code needle} starting at the strictest level and walking
-     * looser ladders until at least one match is found.
+     * 从最严格级别开始，在 {@code existing} 中搜索 {@code needle}，
+     * 逐步尝试更宽松级别，直到找到至少一个匹配。
      *
-     * @return {@link SearchResult} with every match found at the first non-empty level (so the
-     *     caller can apply uniqueness checks against same-level peers); {@code matches} is empty
-     *     when nothing matches at any level.
+     * @return {@link SearchResult} 包含首个非空级别的全部匹配
+     *     （使调用方能对同级匹配执行唯一性检查）；所有级别均未命中时 {@code matches} 为空
      */
     static SearchResult search(String existing, String needle) {
         if (existing == null || needle == null || needle.isEmpty()) {
             return new SearchResult(Collections.emptyList(), Level.EXACT);
         }
 
-        // Level 1: exact. Cheap; common case.
+        // 级别 1：精确匹配。开销小，覆盖常见情况。
         List<MatchRange> exact = findAll(existing, needle, Level.EXACT);
         if (!exact.isEmpty()) {
             return new SearchResult(exact, Level.EXACT);
         }
 
-        // Level 2: trailing-ws stripped per line on both sides.
+        // 级别 2：对两侧逐行去掉行尾空白。
         Normalized existingTws = stripTrailingWhitespace(existing);
         Normalized needleTws = stripTrailingWhitespace(needle);
         List<MatchRange> tws =
@@ -114,8 +116,8 @@ final class FuzzyTextMatcher {
             return new SearchResult(tws, Level.TRAILING_WS_STRIPPED);
         }
 
-        // Level 3: full whitespace collapse (strip leading + trailing per line, collapse internal
-        // runs to single space). Most lenient — surfaced as a warning to the LLM.
+        // 级别 3：完整折叠空白（逐行去掉首尾空白，将内部连续空白
+        // 折叠为单个空格）。最宽松的级别，会向 LLM 显示警告。
         Normalized existingWsc = collapseWhitespace(existing);
         Normalized needleWsc = collapseWhitespace(needle);
         List<MatchRange> wsc =
@@ -128,7 +130,7 @@ final class FuzzyTextMatcher {
     }
 
     // ---------------------------------------------------------------------
-    //  Exact-mode helpers
+    // 精确模式辅助方法
     // ---------------------------------------------------------------------
 
     private static List<MatchRange> findAll(String haystack, String needle, Level level) {
@@ -142,12 +144,12 @@ final class FuzzyTextMatcher {
     }
 
     // ---------------------------------------------------------------------
-    //  Normalised search
+    // 规范化搜索
     // ---------------------------------------------------------------------
 
     /**
-     * Finds every match of {@code needle.text} inside {@code haystack.text}, then maps the
-     * normalised positions back to original-string offsets via {@link Normalized#originalIndex}.
+     * 在 {@code haystack.text} 中查找 {@code needle.text} 的所有匹配，
+     * 再通过 {@link Normalized#originalIndex} 将规范化位置映射回原始字符串偏移。
      */
     private static List<MatchRange> findAllNormalized(
             Normalized haystack, Normalized needle, Level level) {
@@ -172,17 +174,16 @@ final class FuzzyTextMatcher {
     }
 
     /**
-     * A normalised view of a string plus a per-character map back to the original string. For
-     * every {@code i} in {@code [0, text.length())}, {@code originalIndex[i]} is the offset in
-     * the original string of the source character that emitted {@code text.charAt(i)}.
+     * 字符串的规范化视图，以及逐字符映射回原始字符串的索引。
+     * 对于 {@code [0, text.length())} 内每个 {@code i}，{@code originalIndex[i]}
+     * 表示生成 {@code text.charAt(i)} 的源字符在原字符串中的偏移。
      *
-     * <p>A folded terminator maps to the {@code '\r'} that <em>starts</em> it, never to the
-     * {@code '\n'} that ends it. Both span boundaries read this one map, so a match that opens or
-     * closes on a newline lands on a terminator boundary from either side, and no boundary can
-     * leave a stray {@code '\r'} behind. Resolving a leading newline forward to its {@code '\n'}
-     * instead would split the terminator: the replacement is spliced verbatim, so any patch whose
-     * text does not itself begin with a newline would strand the {@code '\r'} in the document and
-     * downgrade that line's terminator to LF.
+     * <p>折叠后的终止符映射到其<em>起始</em> {@code '\r'}，绝不映射到结束的
+     * {@code '\n'}。匹配区间两侧边界读取同一映射，因此在换行处开始或结束的匹配
+     * 从任一侧都会落到终止符边界，不会留下游离的 {@code '\r'}。
+     * 如果将前导换行向前解析到其 {@code '\n'}，就会拆开终止符：替换文本按原样拼接，
+     * 任何本身不以换行开头的补丁都会把 {@code '\r'} 留在文档中，
+     * 并将该行终止符降为 LF。
      */
     private record Normalized(String source, String text, int[] originalIndex) {
         int originalLength() {
@@ -191,11 +192,10 @@ final class FuzzyTextMatcher {
     }
 
     /**
-     * End (exclusive) of the line body within {@code [lineStart, lineEnd)}. A {@code '\r'} that
-     * immediately precedes the line's {@code '\n'} belongs to a CRLF terminator, not to the line
-     * body. Without this a file authored on Windows can never match an LF-only needle at any level
-     * of the ladder; the same offset doubles as the map target for the emitted newline, which is
-     * what keeps a match ending at a line boundary from swallowing the carriage return.
+     * {@code [lineStart, lineEnd)} 内行正文的结束位置（不含）。
+     * 紧邻行末 {@code '\n'} 之前的 {@code '\r'} 属于 CRLF 终止符，而非行正文。
+     * 若不这样处理，Windows 文件在阶梯任何级别都无法匹配仅含 LF 的查找文本；
+     * 同一偏移也作为输出换行的映射目标，防止以行边界结束的匹配吞掉回车。
      */
     private static int lineBodyEnd(String s, int lineStart, int lineEnd) {
         if (lineEnd < s.length() && lineEnd > lineStart && s.charAt(lineEnd - 1) == '\r') {
@@ -205,9 +205,8 @@ final class FuzzyTextMatcher {
     }
 
     /**
-     * Drop trailing {@code ' '} and {@code '\t'} from each line. Newlines and inner-line content
-     * are preserved verbatim. Mapping always points at the source character that produced the
-     * emitted char (including the newline).
+     * 去掉每行末尾的 {@code ' '} 和 {@code '\t'}。原样保留换行与行内内容。
+     * 映射始终指向产生输出字符的源字符（包括换行）。
      */
     private static Normalized stripTrailingWhitespace(String s) {
         int len = s.length();
@@ -221,9 +220,9 @@ final class FuzzyTextMatcher {
             if (lineEnd < 0) {
                 lineEnd = len;
             }
-            // CRLF: the carriage return is part of the terminator, not the line body.
+            // CRLF：回车属于终止符，而不是行正文。
             int bodyEnd = lineBodyEnd(s, lineStart, lineEnd);
-            // Drop ' ' / '\t' from the tail of this line.
+            // 去掉此行末尾的 ' ' / '\t'。
             int trimEnd = bodyEnd;
             while (trimEnd > lineStart
                     && (s.charAt(trimEnd - 1) == ' ' || s.charAt(trimEnd - 1) == '\t')) {
@@ -243,9 +242,9 @@ final class FuzzyTextMatcher {
     }
 
     /**
-     * Aggressive normalisation: per line, strip leading + trailing whitespace, and collapse every
-     * internal run of {@code ' '}/{@code '\t'} into a single {@code ' '}. Newlines are kept so
-     * line structure still constrains the match.
+     * 积极规范化：逐行去掉首尾空白，并将内部每段连续的
+     * {@code ' '}/{@code '\t'} 折叠为单个 {@code ' '}。
+     * 保留换行，使行结构仍能约束匹配。
      */
     private static Normalized collapseWhitespace(String s) {
         int len = s.length();
@@ -259,9 +258,9 @@ final class FuzzyTextMatcher {
             if (lineEnd < 0) {
                 lineEnd = len;
             }
-            // CRLF: the carriage return is part of the terminator, not line content.
+            // CRLF：回车属于终止符，而不是行内容。
             int bodyEnd = lineBodyEnd(s, lineStart, lineEnd);
-            // Skip leading whitespace.
+            // 跳过前导空白。
             int j = lineStart;
             while (j < bodyEnd && (s.charAt(j) == ' ' || s.charAt(j) == '\t')) {
                 j++;
@@ -278,7 +277,7 @@ final class FuzzyTextMatcher {
                     }
                 } else {
                     if (inRun) {
-                        // Emit a single collapsed space mapping back to where the run started.
+                        // 输出单个折叠空格，并将其映射回连续空白的起始位置。
                         out.append(' ');
                         map[mapLen++] = runOrigStart;
                         inRun = false;
@@ -287,10 +286,10 @@ final class FuzzyTextMatcher {
                     map[mapLen++] = j;
                 }
             }
-            // Trailing whitespace on this line is dropped along with `inRun`.
-            // Only emit a newline if we actually had a line terminator AND we wrote some content
-            // (suppressing newlines for fully-blank lines keeps the collapsed view denser and
-            // less sensitive to inserted blank lines on the LLM side).
+            // 此行尾部空白随 `inRun` 一起丢弃。
+            // 仅在实际存在行终止符且已经写出一些内容时输出换行
+            // （省略全空白行的换行可使折叠视图更紧凑，
+            // 也更不易受 LLM 插入空行的影响）。
             if (lineEnd < len && mapLen > contentEmittedAt) {
                 out.append('\n');
                 map[mapLen++] = bodyEnd;

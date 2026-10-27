@@ -19,9 +19,9 @@ import io.agentscope.core.message.ContentBlock;
 import io.agentscope.core.message.TextBlock;
 
 /**
- * Text content accumulator for accumulating streaming text chunks.
+ * 用于累积流式文本片段的文本内容累积器。
  *
- * <p>This accumulator concatenates all text chunks in order to build the complete text content.
+ * <p>按顺序连接所有文本片段，构建完整文本内容。
  * @hidden
  */
 public class TextAccumulator implements ContentAccumulator<TextBlock> {
@@ -66,17 +66,17 @@ public class TextAccumulator implements ContentAccumulator<TextBlock> {
     }
 
     /**
-     * Get the accumulated text content.
+     * 获取已累积的文本内容。
      *
      * @hidden
-     * @return accumulated text as string
+     * @return 以字符串形式返回累积的文本
      */
     public String getAccumulated() {
         return accumulated.toString();
     }
 
     /**
-     * Replace the accumulated text with content reconstructed from the model-call event stream.
+     * 用从模型调用事件流重建的内容替换已累积文本。
      *
      * @hidden
      */

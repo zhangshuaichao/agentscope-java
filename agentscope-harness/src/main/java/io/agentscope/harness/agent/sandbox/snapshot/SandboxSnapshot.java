@@ -21,12 +21,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.io.InputStream;
 
 /**
- * Represents a persisted snapshot of a sandbox workspace.
+ * 表示沙箱工作区的持久化快照。
  *
- * <p>Snapshots allow workspace state to be preserved between session stops and restored on
- * subsequent session starts. Implementations determine where and how the snapshot is stored:
- * local disk ({@link LocalSandboxSnapshot}), remote storage ({@link RemoteSandboxSnapshot}),
- * or not at all ({@link NoopSandboxSnapshot}).
+ * <p>快照可跨会话停止保留工作区状态，并在后续会话启动时恢复。实现决定快照的存储位置和方式：本地磁盘（{@link LocalSandboxSnapshot}）、远程存储（{@link RemoteSandboxSnapshot}），或完全不保存（{@link NoopSandboxSnapshot}）。
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -37,53 +34,51 @@ import java.io.InputStream;
 public interface SandboxSnapshot {
 
     /**
-     * Persists the workspace archive to this snapshot.
+     * 将工作区归档持久保存到此快照。
      *
-     * @param workspaceArchive tar stream of the workspace to persist; caller is responsible
-     *                         for closing the stream after this call
-     * @throws Exception if the persist operation fails
+     * @param workspaceArchive 要持久保存的工作区 tar 流；调用方负责在调用后关闭流
+     * @throws Exception 持久化操作失败时抛出
      */
     void persist(InputStream workspaceArchive) throws Exception;
 
     /**
-     * Restores the workspace archive from this snapshot.
+     * 从此快照恢复工作区归档。
      *
-     * @return tar stream of the workspace; caller is responsible for closing
-     * @throws Exception if the restore operation fails or the snapshot is not restorable
+     * @return 工作区 tar 流，调用方负责关闭
+     * @throws Exception 恢复操作失败或快照不可恢复时抛出
      */
     InputStream restore() throws Exception;
 
     /**
-     * Returns whether this snapshot can currently be restored.
+     * 返回此快照当前是否可恢复。
      *
-     * @return true if {@link #restore()} would succeed
-     * @throws Exception if checking restorability fails
+     * @return {@link #restore()} 能成功时为 true
+     * @throws Exception 检查可恢复性失败时抛出
      */
     @JsonIgnore
     boolean isRestorable() throws Exception;
 
     /**
-     * Returns the unique identifier for this snapshot.
+     * 返回此快照的唯一标识符。
      *
-     * @return snapshot id
+     * @return 快照 ID
      */
     String getId();
 
     /**
-     * Returns the snapshot type discriminator used in JSON serialization.
+     * 返回 JSON 序列化使用的快照类型判别标记。
      *
-     * @return type string (e.g. "noop", "local", "remote")
+     * @return 类型字符串（例如 "noop"、"local"、"remote"）
      */
     @JsonIgnore
     String getType();
 
     /**
-     * Returns whether this snapshot actually persists data.
+     * 返回此快照是否实际持久保存数据。
      *
-     * <p>When {@code false}, {@link io.agentscope.harness.agent.sandbox.AbstractBaseSandbox#stop()} skips the
-     * potentially expensive workspace archive step entirely. Defaults to {@code true}.
+     * <p>为 {@code false} 时，{@link io.agentscope.harness.agent.sandbox.AbstractBaseSandbox#stop()} 完全跳过可能昂贵的工作区归档步骤。默认为 {@code true}。
      *
-     * @return false only for no-op implementations that discard all archive data
+     * @return 仅丢弃全部归档数据的空操作实现返回 false
      */
     @JsonIgnore
     default boolean isPersistenceEnabled() {

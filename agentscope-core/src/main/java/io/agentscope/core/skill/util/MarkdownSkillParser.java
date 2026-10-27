@@ -34,15 +34,15 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.representer.Representer;
 
 /**
- * Utility for parsing and generating Markdown files with YAML frontmatter.
+ * 解析和生成带 YAML 前置信息的 Markdown 文件的工具。
  *
- * <p>This utility can:
+ * <p>此工具可以：
  * <ul>
- *   <li>Extract YAML frontmatter metadata and markdown content from text
- *   <li>Generate markdown files with YAML frontmatter from metadata and content
+ *   <li>从文本提取 YAML 前置元数据和 Markdown 正文
+ *   <li>根据元数据和正文生成带 YAML 前置信息的 Markdown 文件
  * </ul>
  *
- * <p>Frontmatter format:
+ * <p>前置信息格式：
  * <pre>{@code
  * ---
  * name: example-skill
@@ -53,7 +53,7 @@ import org.yaml.snakeyaml.representer.Representer;
  * This is the markdown content.
  * }</pre>
  *
- * <p>Usage example:
+ * <p>使用示例：
  * <pre>{@code
  * // Parse markdown with frontmatter
  * ParsedMarkdown parsed = MarkdownSkillParser.parse(markdownContent);
@@ -63,7 +63,6 @@ import org.yaml.snakeyaml.representer.Representer;
  * // Generate markdown with frontmatter
  * String markdown = MarkdownSkillParser.generate(metadata, content);
  * }</pre>
- *
  */
 public class MarkdownSkillParser {
 
@@ -85,19 +84,18 @@ public class MarkdownSkillParser {
     private static final DumperOptions DUMPER_OPTIONS = createDumperOptions();
 
     /**
-     * Private constructor to prevent instantiation.
+     * 私有构造方法，防止实例化。
      */
     private MarkdownSkillParser() {}
 
     /**
-     * Parse markdown content with YAML frontmatter.
+     * 解析带 YAML 前置信息的 Markdown 内容。
      *
-     * <p>Extracts both the YAML metadata and the markdown content.
-     * An optional leading byte order mark (BOM) is allowed before the opening delimiter.
-     * If no frontmatter is found, returns empty metadata with the entire content.
+     * <p>提取 YAML 元数据与 Markdown 正文。起始分隔符前允许有可选字节顺序标记（BOM）。
+     * 没有前置信息时，返回空元数据，并保留全部正文。
      *
-     * @param markdown Markdown content (may or may not have frontmatter)
-     * @return ParsedMarkdown containing metadata and content
+     * @param markdown Markdown 内容（可以包含或不包含前置信息）
+     * @return 包含元数据和正文的 ParsedMarkdown
      */
     public static ParsedMarkdown parse(String markdown) {
         if (markdown == null || markdown.isEmpty()) {
@@ -121,14 +119,13 @@ public class MarkdownSkillParser {
     }
 
     /**
-     * Generate markdown content with YAML frontmatter.
+     * 生成带 YAML 前置信息的 Markdown 内容。
      *
-     * <p>Creates a markdown file with the metadata serialized as YAML frontmatter
-     * at the beginning, followed by the content.
+     * <p>把元数据序列化为文首 YAML 前置信息，再附加正文。
      *
-     * @param metadata Metadata to serialize as YAML frontmatter (can be null or empty)
-     * @param content Markdown content (can be null or empty)
-     * @return Complete markdown with frontmatter
+     * @param metadata 要序列化为 YAML 前置信息的元数据（可以为 null 或空）
+     * @param content Markdown 正文（可以为 null 或空）
+     * @return 包含前置信息的完整 Markdown
      */
     public static String generate(Map<String, Object> metadata, String content) {
         StringBuilder sb = new StringBuilder();
@@ -211,10 +208,9 @@ public class MarkdownSkillParser {
     }
 
     /**
-     * Fallback line-by-line parser that extracts simple {@code key: value} pairs from YAML content
-     * when the full SnakeYAML parser fails. Gracefully skips lines it cannot handle (lists, nested
-     * objects, block scalars) while still extracting scalar key-value pairs like {@code name} and
-     * {@code description}.
+     * 完整 SnakeYAML 解析失败时，逐行提取简单 {@code key: value} 的回退解析器。
+     * 跳过不能处理的列表、嵌套对象和块标量，同时仍提取 {@code name}
+     * 和 {@code description} 等标量键值。
      */
     private static Map<String, Object> fallbackParseSimpleKeyValues(String yamlContent) {
         LinkedHashMap<String, Object> result = new LinkedHashMap<>();
@@ -225,12 +221,12 @@ public class MarkdownSkillParser {
                 continue;
             }
 
-            // Indented lines belong to a previous block scalar or complex structure — skip them
+            // 缩进行属于前一个块标量或复杂结构，因此跳过
             if (line.startsWith(" ") || line.startsWith("\t")) {
                 continue;
             }
 
-            // Skip list items at the top level
+            // 跳过顶层列表项
             if (line.trim().startsWith("-")) {
                 continue;
             }
@@ -244,13 +240,13 @@ public class MarkdownSkillParser {
             String key = matcher.group(1);
             String rawValue = matcher.group(2).trim();
 
-            // Skip block scalar modifiers — their content spans subsequent indented lines
+            // 跳过块标量修饰符，其内容位于后续缩进行
             if (rawValue.startsWith("|") || rawValue.startsWith(">")) {
                 logger.debug("Fallback parser skipping block scalar key: {}", key);
                 continue;
             }
 
-            // Skip keys whose value is empty (likely followed by nested content)
+            // 跳过值为空的键（后面可能跟随嵌套内容）
             if (rawValue.isEmpty()) {
                 continue;
             }
@@ -283,18 +279,17 @@ public class MarkdownSkillParser {
     }
 
     /**
-     * Normalizes YAML parser output into a stable metadata tree.
+     * 把 YAML 解析结果规范化为稳定的元数据树。
      *
-     * <p>Why: {@link SafeConstructor} keeps parsing safe, but it still returns broad container
-     * types like {@code Map<?, ?>}, arbitrary {@link Collection} implementations, and arrays.
-     * The rest of the skill pipeline needs a predictable shape so nested metadata can be preserved
-     * and later rendered as XML without losing structure.
+     * <p>原因：{@link SafeConstructor} 保证安全解析，但仍可能返回宽泛容器类型，
+     * 例如 {@code Map<?, ?>}、各种 {@link Collection} 实现和数组。
+     * 技能处理流程需要可预测的结构，以保留嵌套元数据，并在后续渲染为 XML 时不丢失结构。
      *
-     * <p>How: this method recursively rewrites nested values into three forms only:
+     * <p>做法：递归把嵌套值规范为三种形式：
      * <ul>
-     *   <li>scalar values are kept as-is</li>
-     *   <li>maps become {@code Map<String, Object>}</li>
-     *   <li>collections and arrays become {@code List<Object>}</li>
+     *   <li>标量原样保留</li>
+     *   <li>映射转换为 {@code Map<String, Object>}</li>
+     *   <li>集合和数组转换为 {@code List<Object>}</li>
      * </ul>
      */
     private static Object normalizeMetadataValue(Object value) {
@@ -333,19 +328,19 @@ public class MarkdownSkillParser {
     }
 
     /**
-     * Result of parsing markdown with frontmatter.
+     * 解析带前置信息 Markdown 的结果。
      *
-     * <p>Contains both the extracted metadata and the markdown content.
+     * <p>包含提取出的元数据和 Markdown 正文。
      */
     public static class ParsedMarkdown {
         private final Map<String, Object> metadata;
         private final String content;
 
         /**
-         * Create a parsed markdown result.
+         * 创建 Markdown 解析结果。
          *
-         * @param metadata YAML metadata (never null, can be empty)
-         * @param content Markdown content (never null, can be empty)
+         * @param metadata YAML 元数据（不可为 null，可以为空）
+         * @param content Markdown 正文（不可为 null，可以为空）
          */
         public ParsedMarkdown(Map<String, Object> metadata, String content) {
             this.metadata =
@@ -356,27 +351,27 @@ public class MarkdownSkillParser {
         }
 
         /**
-         * Get the metadata extracted from YAML frontmatter.
+         * 获取从 YAML 前置信息提取的元数据。
          *
-         * @return Metadata map (never null, can be empty)
+         * @return 元数据映射（不可为 null，可以为空）
          */
         public Map<String, Object> getMetadata() {
             return metadata;
         }
 
         /**
-         * Get the markdown content (without frontmatter).
+         * 获取 Markdown 正文（不含前置信息）。
          *
-         * @return Markdown content (never null, can be empty)
+         * @return Markdown 正文（不可为 null，可以为空）
          */
         public String getContent() {
             return content;
         }
 
         /**
-         * Check if frontmatter exists.
+         * 检查是否存在前置信息。
          *
-         * @return true if metadata is not empty
+         * @return 元数据非空时为 true
          */
         public boolean hasFrontmatter() {
             return !metadata.isEmpty();

@@ -42,37 +42,35 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.context.ContextView;
 
 /**
- * Middleware that performs periodic memory maintenance after each agent call.
+ * 在智能体调用后执行周期性记忆维护的中间件。
  *
- * <p>Fires on the agent stream's completion signal (after {@link MemoryFlushMiddleware}) and is
- * throttled by a configurable minimum gap so it does not run on every single call. The
- * maintenance is <em>fire-and-forget</em>: the agent stream completes immediately while the
- * maintenance runs on a background scheduler. The completing subscription's Reactor context is
- * replayed on that background subscription, so context-scoped instrumentation (token metering,
- * tracing) on the consolidation model call sees the same context as the turn.
+ * <p>在智能体流的完成信号上触发（在 {@link MemoryFlushMiddleware} 之后），
+ * 通过可配置的最小间隔节流，不会每次调用都执行。
+ * 维护采用“发起后不等待”方式：智能体流立即完成，维护任务在后台调度器运行。
+ * 已完成订阅的 Reactor 上下文会重放到后台订阅，让整合模型调用的上下文级计量
+ * （词元计费、追踪）看到与本轮相同的上下文。
  *
- * <p>Maintenance steps executed in order:
+ * <p>维护步骤按顺序执行：
  * <ol>
- *   <li>Expire daily memory files older than {@code dailyFileRetentionDays} by moving
- *       them to {@code memory/archive/}.</li>
- *   <li>Run LLM-based consolidation ({@link MemoryConsolidator#consolidate}) if a
- *       consolidator is configured.</li>
+ *   <li>将超过 {@code dailyFileRetentionDays} 的每日记忆文件移入
+ *       {@code memory/archive/}。</li>
+ *   <li>如果配置了整合器，则执行基于 LLM 的整合
+ *       （{@link MemoryConsolidator#consolidate}）。</li>
  * </ol>
  *
- * <p>The throttle window is tracked per <em>isolation key</em>, which matches the memory data
- * isolation in use:
+ * <p>节流窗口按与记忆数据隔离方式一致的<em>隔离键</em>跟踪：
  * <ul>
- *   <li>{@link IsolationScope#USER} (default) — one window per {@code userId}.</li>
- *   <li>{@link IsolationScope#SESSION} — one window per {@code sessionId}.</li>
- *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} — one shared window for
- *       the whole agent instance (prevents concurrent maintenance races on shared memory files).</li>
+ *   <li>{@link IsolationScope#USER}（默认）—— 每个 {@code userId} 一个窗口。</li>
+ *   <li>{@link IsolationScope#SESSION} —— 每个 {@code sessionId} 一个窗口。</li>
+ *   <li>{@link IsolationScope#AGENT} / {@link IsolationScope#GLOBAL} —— 整个智能体实例
+ *       共用一个窗口，避免共享记忆文件上的并发维护竞争。</li>
  * </ul>
  */
 public class MemoryMaintenanceMiddleware implements HarnessRuntimeMiddleware {
 
     private static final Logger log = LoggerFactory.getLogger(MemoryMaintenanceMiddleware.class);
 
-    /** Default minimum gap between two maintenance runs. */
+    /** 两次维护运行之间的默认最小间隔。 */
     public static final Duration DEFAULT_MIN_GAP = Duration.ofMinutes(30);
 
     private final WorkspaceManager workspaceManager;
@@ -131,7 +129,7 @@ public class MemoryMaintenanceMiddleware implements HarnessRuntimeMiddleware {
         this(workspaceManager, consolidator, 90, DEFAULT_MIN_GAP);
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需扩展点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_AGENT);
@@ -144,10 +142,10 @@ public class MemoryMaintenanceMiddleware implements HarnessRuntimeMiddleware {
             AgentInput input,
             Function<AgentInput, Flux<AgentEvent>> next) {
         final RuntimeContext rc = ctx != null ? ctx : RuntimeContext.empty();
-        // The maintenance body — including the gate claim, which is remote I/O under a
-        // store-backed gate — runs on the background scheduler. Only the in-flight counter is
-        // updated synchronously, so a quiescence check can never observe an empty in-flight
-        // set before the task is counted.
+        // 维护主体，包括存储后端门控所需的远程 I/O 占位操作，
+        // 均在后台调度器执行。只有在途计数器同步更新，
+        // 确保静止状态检查不可能在任务尚未计入时
+        // 观察到空的在途集合。
         return next.apply(input)
                 .doOnEach(
                         signal -> {
@@ -169,31 +167,28 @@ public class MemoryMaintenanceMiddleware implements HarnessRuntimeMiddleware {
 
     private Mono<Void> doMaintenance(RuntimeContext rc) {
         if (!periodicGate.tryClaim(compositeTimerKey(rc), minGap)) {
-            // Throttled out; the in-flight slot acquired at dispatch is released when this
-            // Mono completes.
+            // 被节流跳过时，派发时占用的在途槽位会在此
+            // Mono 完成后释放。
             return Mono.empty();
         }
-        // Run as one reactive chain rather than a blocking body: the consolidator's model call
-        // must stay inside this subscription so it observes the replayed turn context.
+        // 作为一条响应式链运行，而非阻塞主体：整合器的模型调用
+        // 必须留在此订阅内，才能看到重放的本轮上下文。
         return Mono.fromRunnable(() -> expireDailyFiles(rc))
                 .then(Mono.defer(() -> consolidateMemory(rc)));
     }
 
     /**
-     * Builds a composite key from {@link IsolationScope} name and the per-call identity returned
-     * by {@link #timerKeyFor(RuntimeContext)}. The operation prefix keeps maintenance independent
-     * of flush when both use the same {@link PeriodicGate}. The scope prefix keeps different
-     * isolation dimensions from sharing a slot.
+     * 将 {@link IsolationScope} 名称与 {@link #timerKeyFor(RuntimeContext)}
+     * 返回的调用身份组合为键。操作前缀使维护与写入即便使用同一
+     * {@link PeriodicGate} 也彼此独立；范围前缀防止不同隔离维度共享槽位。
      */
     private String compositeTimerKey(RuntimeContext rc) {
         return "memory-maintenance:" + isolationScope.name() + ":" + timerKeyFor(rc);
     }
 
     /**
-     * Derives the per-call identity portion of the composite timer key from the configured
-     * {@link IsolationScope} and the {@link RuntimeContext}, mirroring the memory data
-     * namespace. See {@link MemoryFlushMiddleware#timerKeyFor(RuntimeContext)} for the
-     * identical logic.
+     * 根据配置的 {@link IsolationScope} 和 {@link RuntimeContext} 推导组合计时键中的调用身份，
+     * 与记忆数据命名空间保持一致。相同逻辑见 {@link MemoryFlushMiddleware#timerKeyFor(RuntimeContext)}。
      */
     String timerKeyFor(RuntimeContext rc) {
         return switch (isolationScope) {
@@ -249,7 +244,7 @@ public class MemoryMaintenanceMiddleware implements HarnessRuntimeMiddleware {
                     log.debug("Archived expired daily file: {}", fileName);
                 }
             } catch (Exception e) {
-                // not a date-named file, skip
+                // 不是按日期命名的文件，跳过
             }
         }
     }

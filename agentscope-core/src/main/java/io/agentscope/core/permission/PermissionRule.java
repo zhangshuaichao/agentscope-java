@@ -20,15 +20,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * A single permission rule pinned to a tool name.
+ * 绑定到某个工具名称的单条权限规则。
  *
- * <p>{@code ruleContent} is interpreted by the owning tool's {@code matchRule} method. When it is
- * {@code null}, the rule applies to every invocation of the named tool (tool-name-level rule).
+ * <p>{@code ruleContent} 由所属工具的 {@code matchRule} 方法解释。
+ * 为 {@code null} 时，规则适用于该工具的所有调用（工具名称级规则）。
  *
- * @param toolName the tool this rule targets (never {@code null})
- * @param ruleContent optional tool-specific matcher pattern (nullable)
- * @param behavior the resulting behavior when the rule matches (never {@code null})
- * @param source where the rule originated (e.g. {@code "userSettings"}, {@code "suggested"})
+ * @param toolName 规则针对的工具（绝不为 {@code null}）
+ * @param ruleContent 可选的工具专用匹配模式（可为空）
+ * @param behavior 规则匹配时的结果行为（绝不为 {@code null}）
+ * @param source 规则来源（例如 {@code "userSettings"}、{@code "suggested"}）
  */
 public record PermissionRule(
         @JsonProperty("tool_name") String toolName,

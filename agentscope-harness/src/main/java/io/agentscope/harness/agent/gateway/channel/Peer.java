@@ -18,11 +18,11 @@ package io.agentscope.harness.agent.gateway.channel;
 import java.util.Objects;
 
 /**
- * Identifies the conversation peer: who or what is being messaged (a user DM, a channel, a group,
- * or a thread). Used by {@link ChannelRouter} for binding evaluation and session key construction.
+ * 标识对话对端，即消息发送给谁或什么对象（用户私聊、频道、群组或线程）。
+ * {@link ChannelRouter} 用它评估绑定并构建会话键。
  *
- * @param kind the peer classification
- * @param id provider-assigned peer identifier (user id, channel id, thread id, etc.)
+ * @param kind 对端分类
+ * @param id 服务商分配的对端标识（用户 ID、频道 ID、线程 ID 等）
  */
 public record Peer(PeerKind kind, String id) {
 
@@ -31,27 +31,37 @@ public record Peer(PeerKind kind, String id) {
         Objects.requireNonNull(id, "id");
     }
 
-    /** Returns the composite key {@code "<kind>:<id>"} used in binding matching. */
+    /**
+     * 返回绑定匹配使用的组合键 {@code "<kind>:<id>"}。
+     */
     public String key() {
         return kind.value() + ":" + id;
     }
 
-    /** Creates a direct / DM peer. */
+    /**
+     * 创建直接／私聊对端。
+     */
     public static Peer direct(String id) {
         return new Peer(PeerKind.DIRECT, id);
     }
 
-    /** Creates a channel peer. */
+    /**
+     * 创建频道对端。
+     */
     public static Peer channel(String id) {
         return new Peer(PeerKind.CHANNEL, id);
     }
 
-    /** Creates a group peer. */
+    /**
+     * 创建群组对端。
+     */
     public static Peer group(String id) {
         return new Peer(PeerKind.GROUP, id);
     }
 
-    /** Creates a thread peer. */
+    /**
+     * 创建线程对端。
+     */
     public static Peer thread(String id) {
         return new Peer(PeerKind.THREAD, id);
     }

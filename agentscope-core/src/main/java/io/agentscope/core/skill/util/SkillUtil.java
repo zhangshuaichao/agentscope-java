@@ -35,12 +35,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Utility class for creating AgentSkill instances.
+ * 创建 AgentSkill 实例的工具类。
  *
- * <p>This class provides factory methods to create AgentSkill objects from various sources,
- * particularly from markdown content with YAML frontmatter.
+ * <p>提供从不同来源创建 AgentSkill 的工厂方法，尤其支持带 YAML 前置信息的 Markdown。
  *
- * <p><b>Usage example:</b>
+ * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * // Create skill from markdown with default source
  * String skillMd = "---\nname: my-skill\ndescription: Does something\n---\nContent here";
@@ -50,7 +50,6 @@ import java.util.zip.ZipInputStream;
  * // Create skill from markdown with custom source
  * AgentSkill skill2 = SkillUtil.createFrom(skillMd, resources, "github");
  * }</pre>
- *
  */
 public class SkillUtil {
 
@@ -58,28 +57,26 @@ public class SkillUtil {
     private static final String DEFAULT_SOURCE = "custom";
 
     /**
-     * Maximum length of a skill name, following the Agent Skills ecosystem standard.
+     * 技能名称的最大长度，遵循 Agent Skills 生态标准。
      */
     public static final int MAX_SKILL_NAME_LENGTH = 64;
 
     /**
-     * Pattern a skill name must match: starts with a lowercase letter or digit, then lowercase
-     * letters, digits and dashes only. Underscores are excluded because they collide with the
-     * {@code name_source} skill-id separator.
+     * 技能名称必须匹配的规则：以小写字母或数字开头，后续仅含小写字母、数字和连字符。下划线会与 {@code name_source} 技能 ID 分隔符冲突，因此不允许使用。
      */
     public static final Pattern VALID_SKILL_NAME_PATTERN = Pattern.compile("^[a-z0-9][a-z0-9-]*$");
 
     /**
-     * Private constructor to prevent instantiation.
+     * 私有构造方法，防止实例化。
      */
     private SkillUtil() {}
 
     /**
-     * Checks whether the given skill name is non-null, matches {@link #VALID_SKILL_NAME_PATTERN},
-     * and is at most {@link #MAX_SKILL_NAME_LENGTH} characters long.
+     * 检查技能名称是否非 null、匹配 {@link #VALID_SKILL_NAME_PATTERN}，且长度不超过 {@link #MAX_SKILL_NAME_LENGTH} 个字符。
      *
-     * @param name the skill name to validate (may be {@code null})
-     * @return {@code true} when the name is valid, {@code false} otherwise
+     * @param name 要校验的技能名称（可以为 {@code null}）
+     *
+     * @return 名称合法时为 {@code true}，否则为 {@code false}
      */
     public static boolean isValidSkillName(String name) {
         return name != null
@@ -88,12 +85,12 @@ public class SkillUtil {
     }
 
     /**
-     * Fails fast when the given skill name is invalid. Shared by all write boundaries so the
-     * rule set and rejection message stay identical.
+     * 技能名称无效时立即失败。所有写入边界共享此方法，以保持校验规则和拒绝消息一致。
      *
-     * @param name the skill name to validate
-     * @throws IllegalArgumentException when the name is null, does not match {@link
-     *     #VALID_SKILL_NAME_PATTERN}, or exceeds {@link #MAX_SKILL_NAME_LENGTH}
+     * @param name 要校验的技能名称
+     *
+     * @throws IllegalArgumentException 名称为 null、不匹配 {@link #VALID_SKILL_NAME_PATTERN} 或超过 {@link
+     * #MAX_SKILL_NAME_LENGTH} 时抛出
      */
     public static void requireValidSkillName(String name) {
         if (!isValidSkillName(name)) {
@@ -109,18 +106,16 @@ public class SkillUtil {
     }
 
     /**
-     * Resolves {@code relativeSegment} under {@code baseDir} and returns the normalized result
-     * only when it stays inside {@code baseDir}; an empty result means "refuse to write".
+     * 在 {@code baseDir} 下解析 {@code relativeSegment}，仅当规范化结果仍位于 {@code baseDir} 内时返回；空结果表示“拒绝写入”。
      *
-     * <p>Normalization before the containment check is essential: {@code Path.resolve} replaces
-     * the base entirely for absolute segments, and {@code ..} segments can cancel their way out.
-     * Skill write paths (including the local mirror writer) must reuse this method instead of
-     * re-implementing the check.
+     * <p>必须先规范化再检查包含关系：绝对路径片段会使 {@code Path.resolve} 完全替换基础路径，而 {@code ..}
+     * 也可能使路径逃逸。技能写入路径（包括本地镜像写入器）必须复用此方法，而不是自行实现检查。
      *
-     * @param baseDir the directory the resolved path must stay inside
-     * @param relativeSegment the unresolved segment (skill id or resource relative path)
-     * @return the normalized contained path, or {@code Optional.empty()} when it escapes {@code
-     *     baseDir}
+     * @param baseDir 解析后的路径必须位于其中的目录
+     *
+     * @param relativeSegment 尚未解析的路径片段（技能 ID 或资源相对路径）
+     *
+     * @return 规范化后位于目录内的路径；逃逸出 {@code baseDir} 时返回 {@code Optional.empty()}
      */
     public static Optional<Path> resolveContainedPath(Path baseDir, String relativeSegment) {
         Path resolved = baseDir.resolve(relativeSegment).normalize();
@@ -128,31 +123,36 @@ public class SkillUtil {
     }
 
     /**
-     * Creates an AgentSkill from markdown with YAML frontmatter.
+     * 根据带 YAML 前置信息的 Markdown 创建 AgentSkill。
      *
-     * <p>Parses the markdown to extract metadata (name, description) from YAML frontmatter
-     * and content. Uses "custom" as the default source.
+     * <p>解析 Markdown，提取 YAML 前置信息中的元数据（name、description）和正文。默认来源为 "custom"。
      *
-     * @param skillMd Markdown content with YAML frontmatter containing name and description
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if name or description is missing, or if content is empty
+     * @param skillMd 带 YAML 前置信息的 Markdown，元数据包含 name 和 description
+     *
+     * @param resources 技能引用的支持资源（可以为 null）
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException name 或 description 缺失，或正文为空时抛出
      */
     public static AgentSkill createFrom(String skillMd, Map<String, String> resources) {
         return createFrom(skillMd, resources, DEFAULT_SOURCE);
     }
 
     /**
-     * Creates an AgentSkill from markdown with YAML frontmatter and custom source.
+     * 根据带 YAML 前置信息的 Markdown 和自定义来源创建 AgentSkill。
      *
-     * <p>Parses the markdown to extract metadata (name, description) from YAML frontmatter
-     * and content. The source parameter indicates where the skill originated from.
+     * <p>解析 Markdown，提取 YAML 前置信息中的元数据（name、description）和正文。source 参数表示技能来源。
      *
-     * @param skillMd Markdown content with YAML frontmatter containing name and description
-     * @param resources Supporting resources referenced by the skill (can be null)
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if name or description is missing, or if content is empty
+     * @param skillMd 带 YAML 前置信息的 Markdown，元数据包含 name 和 description
+     *
+     * @param resources 技能引用的支持资源（可以为 null）
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException name 或 description 缺失，或正文为空时抛出
      */
     public static AgentSkill createFrom(
             String skillMd, Map<String, String> resources, String source) {
@@ -180,97 +180,100 @@ public class SkillUtil {
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip.
+     * 从技能 ZIP 包创建 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipBytes Zip content as bytes
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipBytes is null/empty, if no SKILL.md is found, or if
-     *                                  zip entries are invalid
+     * @param zipBytes ZIP 内容的字节数组
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipBytes 为 null 或空、未找到 SKILL.md 或 ZIP 条目无效时抛出
      */
     public static AgentSkill createFromZip(byte[] zipBytes) {
         return createFromZip(zipBytes, DEFAULT_SOURCE, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip file path.
+     * 根据技能 ZIP 包文件路径创建 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipPath Zip file path
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipPath is null
-     * @throws RuntimeException if the zip file cannot be read
+     * @param zipPath ZIP 文件路径
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipPath 为 null 时抛出
+     *
+     * @throws RuntimeException 无法读取 ZIP 文件时抛出
      */
     public static AgentSkill createFromZip(Path zipPath) {
         return createFromZip(zipPath, DEFAULT_SOURCE, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip file path using the given charset.
+     * 根据技能 ZIP 包文件路径，使用指定字符集创建 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipPath Zip file path
-     * @param charset Charset used to decode zip entry names and file contents (null defaults to
-     *                UTF-8). Use this when the zip was created with a non-UTF-8 charset such as
-     *                GBK/GB18030 and the default overload fails during zip entry decoding with
-     *                errors like {@code malformed input}
-     * @return Created AgentSkill instance
+     * @param zipPath ZIP 文件路径
+     *
+     * @param charset 解码 ZIP 条目名称与文件内容的字符集（null 默认使用 UTF-8）。当 ZIP 使用 GBK/GB18030 等非 UTF-8 字符集创建，默认重载解码时报告
+     * {@code malformed input} 等错误，可指定此参数
+     *
+     * @return 创建出的 AgentSkill 实例
      */
     public static AgentSkill createFromZip(Path zipPath, Charset charset) {
         return createFromZip(zipPath, DEFAULT_SOURCE, charset);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip input stream.
+     * 从技能 ZIP 包输入流创建 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipStream Zip content stream
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipStream is null
+     * @param zipStream ZIP 内容流
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipStream 为 null 时抛出
      */
     public static AgentSkill createFromZip(InputStream zipStream) {
         return createFromZip(zipStream, DEFAULT_SOURCE, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip with custom source.
+     * 从技能 ZIP 包创建带自定义来源的 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipBytes Zip content as bytes
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipBytes is null/empty, if no SKILL.md is found, or if
-     *                                  zip entries are invalid
+     * @param zipBytes ZIP 内容的字节数组
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipBytes 为 null 或空、未找到 SKILL.md 或 ZIP 条目无效时抛出
      */
     public static AgentSkill createFromZip(byte[] zipBytes, String source) {
         return createFromZip(zipBytes, source, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip with custom source and charset.
+     * 从技能 ZIP 包创建 AgentSkill，并指定来源与字符集。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipBytes Zip content as bytes
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @param charset Charset used to decode zip entry names and file contents (null defaults to
-     *                UTF-8). Use this when the zip was created with a non-UTF-8 charset such as
-     *                GBK/GB18030 and the default overload fails during zip entry decoding with
-     *                errors like {@code malformed input}
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipBytes is null/empty, if no SKILL.md is found, or if
-     *                                  zip entries are invalid
+     * @param zipBytes ZIP 内容的字节数组
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @param charset 解码 ZIP 条目名称与文件内容的字符集（null 默认使用 UTF-8）。当 ZIP 使用 GBK/GB18030 等非 UTF-8 字符集创建，默认重载解码时报告
+     * {@code malformed input} 等错误，可指定此参数
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipBytes 为 null 或空、未找到 SKILL.md 或 ZIP 条目无效时抛出
      */
     public static AgentSkill createFromZip(byte[] zipBytes, String source, Charset charset) {
         if (zipBytes == null || zipBytes.length == 0) {
@@ -280,36 +283,41 @@ public class SkillUtil {
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip file path with custom source.
+     * 根据技能 ZIP 包路径创建带自定义来源的 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipPath Zip file path
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipPath is null
-     * @throws RuntimeException if the zip file cannot be read
+     * @param zipPath ZIP 文件路径
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipPath 为 null 时抛出
+     *
+     * @throws RuntimeException 无法读取 ZIP 文件时抛出
      */
     public static AgentSkill createFromZip(Path zipPath, String source) {
         return createFromZip(zipPath, source, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip file path with custom source and charset.
+     * 根据技能 ZIP 包路径创建 AgentSkill，并指定来源与字符集。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipPath Zip file path
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @param charset Charset used to decode zip entry names and file contents (null defaults to
-     *                UTF-8). Use this when the zip was created with a non-UTF-8 charset such as
-     *                GBK/GB18030 and the default overload fails during zip entry decoding with
-     *                errors like {@code malformed input}
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipPath is null
-     * @throws RuntimeException if the zip file cannot be read
+     * @param zipPath ZIP 文件路径
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @param charset 解码 ZIP 条目名称与文件内容的字符集（null 默认使用 UTF-8）。当 ZIP 使用 GBK/GB18030 等非 UTF-8 字符集创建，默认重载解码时报告
+     * {@code malformed input} 等错误，可指定此参数
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipPath 为 null 时抛出
+     *
+     * @throws RuntimeException 无法读取 ZIP 文件时抛出
      */
     public static AgentSkill createFromZip(Path zipPath, String source, Charset charset) {
         if (zipPath == null) {
@@ -323,36 +331,41 @@ public class SkillUtil {
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip input stream with custom source.
+     * 从技能 ZIP 包输入流创建带自定义来源的 AgentSkill。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipStream Zip content stream
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipStream is null
-     * @throws RuntimeException if the zip content cannot be read
+     * @param zipStream ZIP 内容流
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipStream 为 null 时抛出
+     *
+     * @throws RuntimeException 无法读取 ZIP 内容时抛出
      */
     public static AgentSkill createFromZip(InputStream zipStream, String source) {
         return createFromZip(zipStream, source, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates an AgentSkill from a skill package zip input stream with custom source and charset.
+     * 从技能 ZIP 包输入流创建 AgentSkill，并指定来源与字符集。
      *
-     * <p>The package must contain a {@value #SKILL_FILE_NAME} entry and any optional resource
-     * files. The .skill and .zip extensions are aliases for the same package format.
+     * <p>包内必须有 {@value #SKILL_FILE_NAME} 条目，并可包含可选资源文件。.skill 与 .zip 扩展名对应同一种包格式。
      *
-     * @param zipStream Zip content stream
-     * @param source Source identifier for the skill (null defaults to "custom")
-     * @param charset Charset used to decode zip entry names and file contents (null defaults to
-     *                UTF-8). Use this when the zip was created with a non-UTF-8 charset such as
-     *                GBK/GB18030 and the default overload fails during zip entry decoding with
-     *                errors like {@code malformed input}
-     * @return Created AgentSkill instance
-     * @throws IllegalArgumentException if zipStream is null
-     * @throws RuntimeException if the zip content cannot be read
+     * @param zipStream ZIP 内容流
+     *
+     * @param source 技能来源标识符（null 默认使用 "custom"）
+     *
+     * @param charset 解码 ZIP 条目名称与文件内容的字符集（null 默认使用 UTF-8）。当 ZIP 使用 GBK/GB18030 等非 UTF-8 字符集创建，默认重载解码时报告
+     * {@code malformed input} 等错误，可指定此参数
+     *
+     * @return 创建出的 AgentSkill 实例
+     *
+     * @throws IllegalArgumentException zipStream 为 null 时抛出
+     *
+     * @throws RuntimeException 无法读取 ZIP 内容时抛出
      */
     public static AgentSkill createFromZip(InputStream zipStream, String source, Charset charset) {
         if (zipStream == null) {

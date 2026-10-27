@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.context;
 
-/** Opt-in task projections and candidate tool. Does not run verifiers or enforce completion. */
+/** 按需启用任务投影和候选工具。不会运行验证器，也不会强制任务完成。 */
 public record TaskContextOptions(
         boolean requirements, boolean verificationResults, boolean requirementProposals) {
     public TaskContextOptions {
@@ -47,7 +47,7 @@ public record TaskContextOptions(
             return this;
         }
 
-        /** Also enables candidate requirement projection so proposals remain visible. */
+        /** 同时启用候选需求投影，使提案保持可见。 */
         public Builder allowRequirementProposals() {
             requirementProposals = true;
             requirements = true;

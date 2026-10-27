@@ -21,7 +21,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-/** Combines literal matchers without changing each tool's existing case-matching semantics. */
+/**
+ * 组合字面量匹配器，不改变各工具已有的大小写匹配语义。
+ */
 final class KeywordMatcher {
     private static final Pattern WHITESPACE =
             Pattern.compile("\\s+", Pattern.UNICODE_CHARACTER_CLASS);
@@ -43,7 +45,7 @@ final class KeywordMatcher {
                         .distinct()
                         .map(literalMatcher)
                         .toList();
-        // Do not let an empty ALL query match every record.
+        // 不要让空的 ALL 查询匹配所有记录。
         if (terms.isEmpty()) {
             throw new IllegalArgumentException("query must contain at least one keyword");
         }

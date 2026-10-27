@@ -20,42 +20,43 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Repository for managing background subagent tasks, scoped by session.
+ * 按会话划分作用域的后台子智能体任务管理仓库。
  *
- * <p>All operations are scoped to a {@code sessionId} so that tasks from different parent sessions
- * are isolated from one another. Implementations may ignore {@code sessionId} (in-memory stores)
- * or use it to partition durable storage (workspace-backed stores).
+ * <p>所有操作均限定在 {@code sessionId} 作用域内，使不同父会话的任务彼此隔离。
+ * 实现可忽略 {@code sessionId}（内存存储），或用它划分持久化存储
+ * （工作区支持的存储）。
  *
- * <p>Every method accepts a {@link RuntimeContext}: implementations that persist task state through
- * a per-user namespaced filesystem must propagate {@code rc} so that writes from concurrent users
- * land in their respective namespaces.
+ * <p>每个方法接收 {@link RuntimeContext}：通过按用户命名空间划分的文件系统
+ * 持久化任务状态的实现必须传播 {@code rc}，使并发用户的写入落到各自命名空间。
  */
 public interface TaskRepository {
 
-    /** RuntimeContext flag for callers that retain execution ownership and collect results themselves. */
+    /**
+     * 供保留执行所有权并自行收集结果的调用方使用的 RuntimeContext 标志。
+     */
     String SUPPRESS_COMPLETION_CALLBACK = "harness.suppressTaskCompletionCallback";
 
     /**
-     * Retrieve a background task by session and task ID, or {@code null} if not found.
+     * 按会话与任务 ID 获取后台任务；未找到时返回 {@code null}。
      *
-     * @param rc the current call's runtime context; may be {@link RuntimeContext#empty()}
-     * @param sessionId the parent session scope
-     * @param taskId unique task identifier
+     * @param rc 当前调用的运行时上下文；可以为 {@link RuntimeContext#empty()}
+     * @param sessionId 父会话作用域
+     * @param taskId 唯一任务标识符
      */
     BackgroundTask getTask(RuntimeContext rc, String sessionId, String taskId);
 
     /**
-     * Submit a new background task according to {@link TaskRunSpec}.
+     * 根据 {@link TaskRunSpec} 提交新的后台任务。
      *
-     * <p>Implementations should capture {@code rc} so that the background execution thread can
-     * persist task state under the originating user's namespace.
+     * <p>实现应捕获 {@code rc}，使后台执行线程能在发起用户的命名空间下
+     * 持久化任务状态。
      *
-     * @param rc the current call's runtime context; may be {@link RuntimeContext#empty()}
-     * @param taskId unique identifier for the task
-     * @param subAgentId the subagent type executing this task
-     * @param sessionId the parent session scope
-     * @param spec local supplier execution or remote HTTP task protocol
-     * @return the created background task
+     * @param rc 当前调用的运行时上下文；可以为 {@link RuntimeContext#empty()}
+     * @param taskId 任务的唯一标识符
+     * @param subAgentId 执行此任务的子智能体类型
+     * @param sessionId 父会话作用域
+     * @param spec 本地 supplier 执行或远程 HTTP 任务协议
+     * @return 已创建的后台任务
      */
     BackgroundTask putTask(
             RuntimeContext rc,
@@ -65,89 +66,90 @@ public interface TaskRepository {
             TaskRunSpec spec);
 
     /**
-     * List all tracked tasks for the given session, optionally filtered by status.
+     * 列出指定会话的全部已跟踪任务，可按状态过滤。
      *
-     * @param rc the current call's runtime context; may be {@link RuntimeContext#empty()}
-     * @param sessionId the parent session scope
-     * @param filter if non-null, only return tasks with this status; null returns all tasks
+     * @param rc 当前调用的运行时上下文；可以为 {@link RuntimeContext#empty()}
+     * @param sessionId 父会话作用域
+     * @param filter 非 null 时仅返回此状态的任务；null 返回全部任务
      */
     Collection<BackgroundTask> listTasks(RuntimeContext rc, String sessionId, TaskStatus filter);
 
     /**
-     * Cancel a running task by session and task ID.
+     * 按会话与任务 ID 取消正在运行的任务。
      *
-     * @param rc the current call's runtime context; may be {@link RuntimeContext#empty()}
-     * @return true if the task was found and cancellation was attempted
+     * @param rc 当前调用的运行时上下文；可以为 {@link RuntimeContext#empty()}
+     * @return 找到任务并尝试取消时返回 true
      */
     boolean cancelTask(RuntimeContext rc, String sessionId, String taskId);
 
     // ------------------------------------------------------------------------
-    // Phase B-3 — push delivery API.
+    // 阶段 B-3：推送投递 API。
     //
-    // Implementations that persist {@link TaskRecord} should override the three methods below to
-    // surface "terminal-but-not-yet-delivered" tasks to the parent agent's reasoning loop. The
-    // default no-op implementations preserve pull-only semantics for in-memory repositories
-    // where the parent process and any task callers share the same JVM and can rely on direct
-    // future completion instead.
+    // 持久化 {@link TaskRecord} 的实现应覆盖下面三个方法，
+    // 将“已达终态但尚未投递”的任务呈现给父级智能体的推理循环。
+    // 默认空实现为内存仓库保留仅拉取语义；
+    // 在这种场景下，父进程和任务调用方共享同一 JVM，
+    // 可以直接依赖 future 完成。
     // ------------------------------------------------------------------------
 
     /**
-     * Returns terminal-state tasks for the given session whose completions have not yet been
-     * pushed back to the parent agent.
+     * 返回指定会话中已达终态、但尚未将完成结果推回父级智能体的任务。
      *
-     * <p>Implementations should order the result deterministically (typically by completion time
-     * ascending) so the parent agent sees deliveries in the order they actually happened.
+     * <p>实现应以确定性顺序返回结果（通常按完成时间升序），
+     * 使父级按实际发生顺序看到投递。
      *
-     * <p>Default returns an empty list — in-memory repositories do not currently support push.
+     * <p>默认返回空列表：内存仓库当前不支持推送。
      */
     default List<TaskDelivery> findPendingDeliveries(RuntimeContext rc, String sessionId) {
         return List.of();
     }
 
     /**
-     * Stamps the given task as delivered so it does not get pushed again. Idempotent: calling
-     * twice has no effect after the first call.
+     * 将指定任务标记为已投递，避免再次推送。此操作幂等：
+     * 首次调用之后再次调用不会产生影响。
      *
-     * <p>Default is a no-op.
+     * <p>默认不执行操作。
      */
     default void markDelivered(RuntimeContext rc, String sessionId, String taskId) {
-        // no-op
+        // 不执行操作
     }
 
     /**
-     * Whether the given task has already been delivered to the parent agent. Used by
-     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware#buildTaskSummary} to omit
-     * already-delivered terminal tasks from the SYSTEM-prompt summary.
+     * 指定任务是否已经投递给父级智能体。
+     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware#buildTaskSummary}
+     * 据此从 SYSTEM 提示摘要中省略已投递的终态任务。
      *
-     * <p>Default returns {@code false}.
+     * <p>默认返回 {@code false}。
      */
     default boolean isDelivered(RuntimeContext rc, String sessionId, String taskId) {
         return false;
     }
 
     /**
-     * Registers a callback invoked when any task reaches a terminal state (COMPLETED or FAILED).
-     * Used by {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware} to push results
-     * to the session inbox and enqueue a wakeup signal. The {@code result} argument is {@code null}
-     * for failed tasks.
+     * 注册任务达到终态（COMPLETED 或 FAILED）时调用的回调。
+     * {@link io.agentscope.harness.agent.middleware.SubagentsMiddleware}
+     * 使用它将结果推送到会话收件箱，并将唤醒信号入队。任务失败时
+     * {@code result} 参数为 {@code null}。
      *
-     * <p>Callers retaining execution ownership can set {@link #SUPPRESS_COMPLETION_CALLBACK}
-     * in their RuntimeContext to suppress inbox/wakeup callbacks while preserving durable results.
-     * Implementations supporting this callback should honor the flag.
-     * <p>Default is a no-op. Implementations that support push delivery should override.
+     * <p>保留执行所有权的调用方可在 RuntimeContext 中设置
+     * {@link #SUPPRESS_COMPLETION_CALLBACK}，抑制收件箱／唤醒回调，
+     * 同时保留持久化结果。支持此回调的实现应遵循该标志。
+     * <p>默认不执行操作；支持推送投递的实现应覆盖它。
      */
     default void setCompletionCallback(TaskCompletionCallback callback) {
-        // no-op
-    }
-
-    /** Shuts down background executors owned by this repository. Default is a no-op. */
-    default void shutdown() {
-        // no-op
+        // 不执行操作
     }
 
     /**
-     * Callback invoked when a background task reaches a terminal state (COMPLETED or FAILED).
-     * {@code result} is {@code null} when the task failed.
+     * 关闭此仓库拥有的后台执行器。默认不执行操作。
+     */
+    default void shutdown() {
+        // 不执行操作
+    }
+
+    /**
+     * 后台任务达到终态（COMPLETED 或 FAILED）时调用的回调。
+     * 任务失败时 {@code result} 为 {@code null}。
      */
     @FunctionalInterface
     interface TaskCompletionCallback {

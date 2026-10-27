@@ -18,23 +18,23 @@ package io.agentscope.harness.agent.tools;
 import java.util.Set;
 
 /**
- * Harness platform / orchestration tool names that {@link ToolFilter} must not strip via an {@code
- * allow} list.
+ * Harness 平台与编排工具的名称，{@link ToolFilter} 不得仅因 {@code
+ * allow} 列表而移除它们。
  *
- * <p>Product agent toolsets (Managed Agents UI / {@code tools.json} allow) may narrow the
- * <em>catalogued</em> surface — filesystem, shell, web, memory, session helpers, etc. They must not
- * disable the coordination runtime itself: subagents, teams, background tasks, plan mode, and skills
- * admin. Explicit {@code deny} still removes a name (operator opt-out).
+ * <p>产品级智能体工具集（Managed Agents UI 或 {@code tools.json} 的 allow）可以缩小
+ * <em>目录内</em>工具的可见范围，如文件系统、Shell、Web、记忆、会话辅助工具等。
+ * 但不能因此禁用协调运行时本身：子智能体、团队、后台任务、计划模式及技能管理。
+ * 显式 {@code deny} 仍会移除对应名称，允许操作者主动禁用。
  */
 public final class HarnessPlatformTools {
 
     /**
-     * Names registered by {@code HarnessAgent} middleware / builder paths that are not part of the
-     * product "agent toolset" catalog.
+     * 由 {@code HarnessAgent} 的中间件或构建器路径注册、
+     * 但不属于产品“智能体工具集”目录的名称。
      */
     public static final Set<String> NAMES =
             Set.of(
-                    // AgentTeams (unified + per-action aliases models often invent)
+                    // AgentTeams：统一工具及模型常自行构造的逐动作别名。
                     "team",
                     "listTasks",
                     "listClaimableTasks",
@@ -54,7 +54,7 @@ public final class HarnessPlatformTools {
                     "approvePlan",
                     "rejectPlan",
                     "completeTeam",
-                    // Subagents (session-mode aliases included)
+                    // 子智能体：包含会话模式别名。
                     "agent_spawn",
                     "agent_send",
                     "agent_list",
@@ -64,22 +64,22 @@ public final class HarnessPlatformTools {
                     "sessions_list",
                     "sessions_history",
                     "sessions_pending_completions",
-                    // Background task lifecycle
+                    // 后台任务生命周期。
                     "task_output",
                     "task_cancel",
                     "task_list",
                     "wait_async_results",
-                    // Plan mode
+                    // 计划模式。
                     "plan_enter",
                     "plan_write",
                     "plan_exit",
-                    // Skills self-learning
+                    // 技能自主学习。
                     "skill_manage",
                     "propose_skill");
 
     private HarnessPlatformTools() {}
 
-    /** {@code true} when {@code toolName} is a harness platform tool. */
+    /** 返回 {@code true} 表示 {@code toolName} 属于 Harness 平台工具。 */
     public static boolean isPlatformTool(String toolName) {
         return toolName != null && NAMES.contains(toolName);
     }

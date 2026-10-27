@@ -38,12 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Unified validator for tool-related operations.
+ * 工具相关操作的统一验证器。
  *
- * <p>This class provides validation capabilities for:
+ * <p>提供以下验证能力：
  * <ul>
- *   <li>Schema validation - Validates tool input parameters against JSON Schema using networknt-schema</li>
- *   <li>HITL validation - Validates ToolResult messages match pending ToolUse blocks</li>
+ * <li>模式验证：使用 networknt-schema 按 JSON Schema 验证工具输入参数</li>
+ * <li>HITL 验证：验证 ToolResult 消息与待处理 ToolUse 块匹配</li>
  * </ul>
  */
 public final class ToolValidator {
@@ -55,22 +55,20 @@ public final class ToolValidator {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private ToolValidator() {
-        // Utility class
+        // 工具类
     }
 
-    // ==================== Schema Validation ====================
+    // ==================== 模式验证 ====================
 
     /**
-     * Validates that a provider response contains a usable tool name.
+     * 验证提供商响应包含可用工具名称。
      *
-     * <p>Provider parsers use this guard before creating a {@link ToolUseBlock}. A blank name
-     * cannot be dispatched to a local toolkit or echoed back to the provider, so the parser
-     * should skip that individual tool call instead of propagating an invalid block.
+     * <p>提供商解析器在创建 {@link ToolUseBlock} 前使用此检查。空白名称既不能分派给本地工具集，也不能回传给提供商，因此解析器应跳过该工具调用，而不是传播无效内容块。
      *
-     * @param provider model provider name used for diagnostics
-     * @param name tool name from the provider response
-     * @param id tool call ID used for diagnostics; may be null or blank
-     * @return true when the name is non-null and non-blank, false otherwise
+     * @param provider 用于诊断的模型提供商名称
+     * @param name 提供商响应中的工具名称
+     * @param id 用于诊断的工具调用 ID，可为 null 或空白
+     * @return 名称非 null 且非空白时为 true，否则为 false
      */
     public static boolean requireNonBlank(String provider, String name, String id) {
         if (name != null && !name.isBlank()) {
@@ -86,45 +84,45 @@ public final class ToolValidator {
     }
 
     /**
-     * Validate tool input parameters against a JSON Schema using networknt-schema.
+     * 使用 networknt-schema 按 JSON Schema 验证工具输入参数。
      *
-     * <p>This method performs comprehensive JSON Schema validation including:
+     * <p>执行完整验证，包括：
      * <ul>
-     *   <li>Required fields check</li>
-     *   <li>Type validation (string, number, integer, boolean, array, object)</li>
-     *   <li>Enum values validation</li>
-     *   <li>Minimum/maximum constraints for numbers</li>
-     *   <li>MinLength/maxLength constraints for strings</li>
-     *   <li>Pattern matching for strings</li>
-     *   <li>Nested object and array validation</li>
+     * <li>必填字段检查</li>
+     * <li>类型验证（string、number、integer、boolean、array、object）</li>
+     * <li>枚举值验证</li>
+     * <li>数值最小值和最大值约束</li>
+     * <li>字符串 MinLength/maxLength 约束</li>
+     * <li>字符串模式匹配</li>
+     * <li>嵌套对象和数组验证</li>
      * </ul>
      *
-     * @param input The input parameters to validate
-     * @param schema The JSON Schema to validate against (from tool.getParameters())
-     * @return null if validation passes, or an error message describing the validation failures
+     * @param input 待验证输入参数
+     * @param schema 用于验证的 JSON Schema（来自 tool.getParameters()）
+     * @return 通过时为 null，否则返回描述验证失败的错误消息
      */
     public static String validateInput(String input, Map<String, Object> schema) {
         if (schema == null || schema.isEmpty()) {
-            return null; // No schema, validation passes
+            return null; // 没有模式，验证通过
         }
 
         try {
-            // Convert schema to JSON string
+            // 将模式转换为 JSON 字符串
             String schemaJson = JsonUtils.getJsonCodec().toJson(schema);
 
-            // Create Schema from the schema string
+            // 根据模式字符串创建 Schema
             Schema jsonSchema = SCHEMA_REGISTRY.getSchema(schemaJson);
 
             String normalizedInput = normalizeOptionalNullFields(input, schemaJson);
 
-            // Validate
+            // 执行验证
             List<Error> errors = jsonSchema.validate(normalizedInput, InputFormat.JSON);
 
             if (errors == null || errors.isEmpty()) {
-                return null; // Validation passed
+                return null; // 验证通过
             }
 
-            // Format error messages, prefixing each with its field path so failures are actionable
+            // 格式化错误消息，为每条错误添加字段路径前缀，便于定位修复
             return errors.stream()
                     .map(e -> e.getInstanceLocation() + ": " + e.getMessage())
                     .collect(Collectors.joining("\n"));
@@ -135,15 +133,13 @@ public final class ToolValidator {
     }
 
     /**
-     * Validates an already-parsed structured-output payload against a JSON Schema.
+     * 按 JSON Schema 验证已解析的结构化输出载荷。
      *
-     * <p>Unlike {@link #validateInput(String, Map)}, this method does not normalize optional
-     * null fields: structured output follows JSON Schema semantics directly, so an explicit
-     * {@code null} is valid only when the schema allows it.
+     * <p>与 {@link #validateInput(String, Map)} 不同，不会规范化可选 null 字段：直接遵循 JSON Schema 语义，只有模式允许时，显式 {@code null} 才有效。
      *
-     * @param output the parsed model output
-     * @param schema the JSON Schema to validate against
-     * @return {@code null} when the output conforms, otherwise a newline-separated error list
+     * @param output 已解析的模型输出
+     * @param schema 用于验证的 JSON Schema
+     * @return 符合模式时为 {@code null}，否则为以换行分隔的错误列表
      */
     public static String validateJsonOutput(JsonNode output, Map<String, Object> schema) {
         if (schema == null || schema.isEmpty()) {
@@ -169,10 +165,9 @@ public final class ToolValidator {
     }
 
     /**
-     * Removes null-valued object properties before schema validation.
+     * 在模式验证前移除值为 null 的对象属性。
      *
-     * <p>This treats explicit nulls the same as omitted optional fields, while still allowing
-     * required-field validation to fail naturally after the null-valued property is removed.
+     * <p>将显式 null 与省略可选字段等同处理，同时让移除 null 属性后的必填检查自然失败。
      */
     private static String normalizeOptionalNullFields(String input, String schemaJson)
             throws Exception {
@@ -266,28 +261,27 @@ public final class ToolValidator {
         return requiredFields;
     }
 
-    // ==================== HITL Validation ====================
+    // ==================== HITL 验证 ====================
 
     /**
-     * Validate that ToolResult messages match pending ToolUse blocks.
+     * 验证 ToolResult 消息与待处理 ToolUse 块匹配。
      *
-     * <p>This validation is used in two scenarios:
+     * <p>用于两种场景：
      * <ul>
-     *   <li>HITL (Human-in-the-Loop) resumption via {@code agent.call()}</li>
-     *   <li>Hook-based flow control via {@code PostReasoningEvent.gotoReasoning()}</li>
+     * <li>通过 {@code agent.call()} 恢复 HITL（人在回路）执行</li>
+     * <li>通过 {@code PostReasoningEvent.gotoReasoning()} 进行基于钩子的流程控制</li>
      * </ul>
      *
-     * <p>Validation rules:
+     * <p>验证规则：
      * <ul>
-     *   <li>If assistantMsg is null or has no ToolUse blocks: validation passes</li>
-     *   <li>If assistantMsg has ToolUse blocks but inputMsgs is null/empty: throws exception</li>
-     *   <li>If inputMsgs is provided: checks that all pending ToolUse IDs have matching
-     *       ToolResult IDs</li>
+     * <li>assistantMsg 为 null 或不含 ToolUse 块时，通过</li>
+     * <li>assistantMsg 含 ToolUse 块但 inputMsgs 为 null 或空时，抛出异常</li>
+     * <li>提供 inputMsgs 时，检查每个待处理 ToolUse ID 都有匹配的 ToolResult ID</li>
      * </ul>
      *
-     * @param assistantMsg The assistant message that may contain pending ToolUse blocks
-     * @param inputMsgs The input messages that should contain ToolResult blocks
-     * @throws IllegalStateException if validation fails
+     * @param assistantMsg 可能包含待处理 ToolUse 块的助手消息
+     * @param inputMsgs 应包含 ToolResult 块的输入消息
+     * @throws IllegalStateException 当验证失败时
      */
     public static void validateToolResultMatch(Msg assistantMsg, List<Msg> inputMsgs) {
         if (assistantMsg == null) {
@@ -296,12 +290,12 @@ public final class ToolValidator {
 
         List<ToolUseBlock> pendingToolUses = assistantMsg.getContentBlocks(ToolUseBlock.class);
         if (pendingToolUses.isEmpty()) {
-            return; // No pending ToolUse, validation passes
+            return; // 没有待处理 ToolUse，验证通过
         }
 
-        // Has pending ToolUse
+        // 存在待处理 ToolUse
         if (inputMsgs == null || inputMsgs.isEmpty()) {
-            // No input messages provided, throw error
+            // 未提供输入消息，抛出错误
             List<String> toolNames = pendingToolUses.stream().map(ToolUseBlock::getName).toList();
             throw new IllegalStateException(
                     "Cannot proceed without ToolResult when there are pending ToolUse. "
@@ -309,7 +303,7 @@ public final class ToolValidator {
                             + toolNames);
         }
 
-        // Has input messages, validate ToolResult matches
+        // 存在输入消息，验证 ToolResult 匹配
         Set<String> providedIds =
                 inputMsgs.stream()
                         .flatMap(m -> m.getContentBlocks(ToolResultBlock.class).stream())

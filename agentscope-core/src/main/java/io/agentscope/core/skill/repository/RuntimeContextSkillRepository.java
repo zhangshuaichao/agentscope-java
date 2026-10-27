@@ -19,13 +19,19 @@ import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.skill.AgentSkill;
 import java.util.List;
 
-/** A skill repository whose visible contents depend on the current request context. */
+/**
+ * 可见内容取决于当前请求上下文的技能仓库。
+ */
 public interface RuntimeContextSkillRepository extends AgentSkillRepository {
 
-    /** Returns the skills visible to exactly the supplied request context. */
+    /**
+     * 只返回所给请求上下文可见的技能。
+     */
     List<AgentSkill> getAllSkills(RuntimeContext context);
 
-    /** Returns the named skill visible to exactly the supplied request context. */
+    /**
+     * 只返回所给请求上下文可见的指定名称技能。
+     */
     default AgentSkill getSkill(String name, RuntimeContext context) {
         if (name == null || name.isBlank()) {
             return null;

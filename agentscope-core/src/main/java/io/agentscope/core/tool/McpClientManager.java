@@ -31,8 +31,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Manages MCP (Model Context Protocol) client registration and lifecycle.
- * Handles MCP client initialization, tool registration, and cleanup.
+ * 管理 MCP（模型上下文协议）客户端的注册和生命周期。处理客户端初始化、工具注册和清理。
  */
 class McpClientManager {
 
@@ -44,7 +43,7 @@ class McpClientManager {
     private final ToolRegistrationCallback registrationCallback;
 
     /**
-     * Callback interface for tool registration.
+     * 工具注册回调接口。
      */
     @FunctionalInterface
     interface ToolRegistrationCallback {
@@ -65,33 +64,33 @@ class McpClientManager {
     }
 
     /**
-     * Registers an MCP client and all its tools.
+     * 注册 MCP 客户端及其全部工具。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(McpClientWrapper mcpClientWrapper) {
         return registerMcpClient(mcpClientWrapper, null, null, null);
     }
 
     /**
-     * Registers an MCP client with tool filtering.
+     * 注册 MCP 客户端并筛选工具。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(McpClientWrapper mcpClientWrapper, List<String> enableTools) {
         return registerMcpClient(mcpClientWrapper, enableTools, null, null);
     }
 
     /**
-     * Registers an MCP client with tool filtering.
+     * 注册 MCP 客户端并筛选工具。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @param disableTools list of tool names to disable (null means disable none)
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @param disableTools 要禁用的工具名称列表（null 表示均不禁用）
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(
             McpClientWrapper mcpClientWrapper,
@@ -101,13 +100,13 @@ class McpClientManager {
     }
 
     /**
-     * Registers an MCP client with tool filtering and group assignment.
+     * 注册 MCP 客户端，筛选工具并分配工具组。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @param disableTools list of tool names to disable (null means disable none)
-     * @param groupName the group name to assign MCP tools to
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @param disableTools 要禁用的工具名称列表（null 表示均不禁用）
+     * @param groupName MCP 工具所属的组名
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(
             McpClientWrapper mcpClientWrapper,
@@ -118,14 +117,14 @@ class McpClientManager {
     }
 
     /**
-     * Registers an MCP client with tool filtering, group assignment, and preset parameters.
+     * 注册 MCP 客户端，筛选工具、分配工具组并设置预设参数。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @param disableTools list of tool names to disable (null means disable none)
-     * @param groupName the group name to assign MCP tools to
-     * @param presetParametersMapping map from tool name to preset parameters for that tool
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @param disableTools 要禁用的工具名称列表（null 表示均不禁用）
+     * @param groupName MCP 工具所属的组名
+     * @param presetParametersMapping 工具名称到该工具预设参数的映射
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(
             McpClientWrapper mcpClientWrapper,
@@ -160,19 +159,16 @@ class McpClientManager {
     }
 
     /**
-     * Registers an MCP client with full control over tool filtering, grouping, preset parameters,
-     * naming and metadata propagation.
+     * 注册 MCP 客户端，全面控制工具筛选、分组、预设参数、命名和元数据传播。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @param disableTools list of tool names to disable (null means disable none)
-     * @param groupName the group name to assign MCP tools to
-     * @param presetParametersMapping map from tool name to preset parameters for that tool
-     * @param toolNamePrefix optional namespace prefix for model-facing tool names
-     * @param propagateMetaOverride registration-level default for metadata propagation on the
-     *     registered tools; {@code null} means {@code true} (the connection-level switch on the
-     *     wrapper is still applied live at call time)
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @param disableTools 要禁用的工具名称列表（null 表示均不禁用）
+     * @param groupName MCP 工具所属的组名
+     * @param presetParametersMapping 工具名称到该工具预设参数的映射
+     * @param toolNamePrefix 面向模型的工具名称的可选命名空间前缀
+     * @param propagateMetaOverride 已注册工具元数据传播的注册级默认值；{@code null} 表示 {@code true}（调用时仍实时应用包装器的连接级开关）
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(
             McpClientWrapper mcpClientWrapper,
@@ -194,30 +190,20 @@ class McpClientManager {
     }
 
     /**
-     * Registers an MCP client with full control over tool filtering, grouping, preset parameters,
-     * naming and per-tool metadata propagation.
+     * 注册 MCP 客户端，全面控制工具筛选、分组、预设参数、命名和逐工具元数据传播。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @param enableTools list of tool names to enable (null means enable all)
-     * @param disableTools list of tool names to disable (null means disable none)
-     * @param groupName the group name to assign MCP tools to
-     * @param presetParametersMapping map from tool name to preset parameters for that tool
-     * @param toolNamePrefix optional namespace prefix for model-facing tool names
-     * @param propagateMetaOverride registration-level default for metadata propagation on the
-     *     registered tools; {@code null} means {@code true}
-     * @param toolPropagateMetaOverrides per-tool metadata propagation overrides keyed by the
-     *     remote MCP tool name (before any {@code toolNamePrefix}); an entry wins over
-     *     {@code propagateMetaOverride}. Keys that do not match a tool that is actually
-     *     registered from this client (unknown name, remote rename, or filtered out by
-     *     {@code enableTools}/{@code disableTools}) fail the registration with an
-     *     {@link IllegalArgumentException} so a silencing override is never lost silently
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @param enableTools 要启用的工具名称列表（null 表示全部启用）
+     * @param disableTools 要禁用的工具名称列表（null 表示均不禁用）
+     * @param groupName MCP 工具所属的组名
+     * @param presetParametersMapping 工具名称到该工具预设参数的映射
+     * @param toolNamePrefix 面向模型的工具名称的可选命名空间前缀
+     * @param propagateMetaOverride 已注册工具元数据传播的注册级默认值；{@code null} 表示 {@code true}
+     * @param toolPropagateMetaOverrides 以远端 MCP 工具名称（添加 {@code toolNamePrefix} 之前）为键的逐工具元数据传播覆盖值，优先于 {@code propagateMetaOverride}。若键不匹配此客户端实际注册的工具（未知名称、远端重命名或被 {@code enableTools}/{@code disableTools} 筛除），注册将抛出 {@link IllegalArgumentException}，避免抑制传播的覆盖配置被静默丢失
      *
-     * <p>On any registration failure (including the unknown-tool check above) the client is
-     * closed best-effort: it was already initialized but is not tracked by this manager, so
-     * nobody else could release the underlying connection (for stdio transports, a spawned
-     * subprocess). The wrapper must not be reused after a failed registration.
+     * <p>任何注册失败（包括上述未知工具检查）都会尽力关闭客户端：它已经初始化，但尚未纳入本管理器，其他代码无法释放底层连接（stdio 传输还拥有启动的子进程）。注册失败后不可复用此包装器。
      *
-     * @return Mono that completes when registration is finished
+     * @return 注册完成时完成的 Mono
      */
     Mono<Void> registerMcpClient(
             McpClientWrapper mcpClientWrapper,
@@ -232,7 +218,7 @@ class McpClientManager {
             return Mono.error(new IllegalArgumentException("MCP client wrapper cannot be null"));
         }
 
-        // Validate group exists if specified
+        // 指定工具组时，验证该组存在
         if (groupName != null) {
             try {
                 groupManager.validateGroupExists(groupName);
@@ -248,11 +234,11 @@ class McpClientManager {
                 .then(Mono.defer(mcpClientWrapper::listTools))
                 .flatMapMany(
                         tools -> {
-                            // Fail loud when a per-tool propagateMeta override does not match
-                            // any tool that is actually registered from this client (unknown
-                            // name, remote rename, or filtered out by enable/disable lists).
-                            // This feature exists to keep metadata off the wire for untrusted
-                            // servers, so a silencing override must never be lost silently.
+                            // 逐工具 propagateMeta 覆盖配置未匹配此客户端实际注册的工具时明确报错
+                            // （可能是未知名称、远端重命名，
+                            // 或被启用/禁用列表筛除）。
+                            // 此功能用于避免向不可信服务器发送元数据，
+                            // 因此抑制传播的覆盖配置绝不能被静默丢失。
                             if (toolPropagateMetaOverrides != null
                                     && !toolPropagateMetaOverrides.isEmpty()) {
                                 Set<String> registeredNames =
@@ -265,8 +251,8 @@ class McpClientManager {
                                                                         enableTools,
                                                                         disableTools))
                                                 .collect(Collectors.toSet());
-                                // TreeSet so the rejected names in the user-facing error
-                                // message are deterministically ordered and pasteable.
+                                // 使用 TreeSet，使面向用户的错误消息中
+                                // 被拒绝的名称顺序确定，且便于复制。
                                 Set<String> unknown =
                                         new TreeSet<>(toolPropagateMetaOverrides.keySet());
                                 unknown.removeAll(registeredNames);
@@ -291,7 +277,7 @@ class McpClientManager {
                                     mcpClientWrapper.getName(),
                                     groupName);
 
-                            // Get preset parameters for this specific tool
+                            // 获取当前工具的预设参数
                             Map<String, Object> toolPresetParams =
                                     presetParametersMapping != null
                                             ? presetParametersMapping.get(mcpTool.name())
@@ -319,17 +305,18 @@ class McpClientManager {
                                                             mcpTool.outputSchema())
                                                     : null,
                                             mcpClientWrapper,
-                                            /* presetArguments handled upstream by
-                                             * RegisteredToolFunction */ null,
+                                            /*
+                                             * presetArguments 已由上游 RegisteredToolFunction 处理
+                                             */ null,
                                             mcpClientWrapper.getName(),
                                             readOnly,
                                             McpTool.resolveDisplayTitle(mcpTool));
 
-                            // Per-tool metadata propagation restriction, resolved at
-                            // registration time: per-tool override > registration default >
-                            // true. The connection-level wrapper switch is NOT captured here;
-                            // McpTool reads it live on every call (logical AND), so disabling a
-                            // connection later still stops metadata immediately.
+                            // 逐工具元数据传播限制在注册时解析，
+                            // 优先级为：逐工具覆盖值 > 注册默认值 >
+                            // true。此处不捕获连接级包装器开关；
+                            // McpTool 每次调用都实时读取该开关（逻辑与），因此之后禁用
+                            // 连接时仍能立即停止元数据传播。
                             Boolean perToolOverride =
                                     toolPropagateMetaOverrides != null
                                             ? toolPropagateMetaOverrides.get(mcpTool.name())
@@ -342,8 +329,8 @@ class McpClientManager {
                                                     : true;
                             agentTool.setPropagateMeta(propagateMeta);
 
-                            // Register with group, MCP client name, and preset parameters via
-                            // callback
+                            // 通过回调注册工具组、MCP 客户端名称和预设参数
+                            // 并完成工具注册
                             registrationCallback.registerAgentToolWithMcpClient(
                                     agentTool,
                                     groupName,
@@ -366,10 +353,10 @@ class McpClientManager {
                                         e))
                 .doOnError(
                         e -> {
-                            // The client was initialized above but is only added to mcpClients
-                            // on success, so on any failure nobody else can reach or close it
-                            // (for stdio transports it owns a spawned subprocess). Best-effort
-                            // cleanup must not mask the original error.
+                            // 客户端已在上方初始化，但仅在成功后才加入 mcpClients，
+                            // 因此失败时其他代码无法访问或关闭它
+                            // （stdio 传输拥有启动的子进程）。尽力执行
+                            // 清理，且不得掩盖原始错误。
                             try {
                                 mcpClientWrapper.close();
                             } catch (RuntimeException cleanupEx) {
@@ -383,10 +370,10 @@ class McpClientManager {
     }
 
     /**
-     * Removes an MCP client and all its tools.
+     * 移除 MCP 客户端及其全部工具。
      *
-     * @param mcpClientName the name of the MCP client to remove
-     * @return Mono that completes when removal is finished
+     * @param mcpClientName 要移除的 MCP 客户端名称
+     * @return 移除完成时完成的 Mono
      */
     Mono<Void> removeMcpClient(String mcpClientName) {
         McpClientWrapper wrapper = mcpClients.remove(mcpClientName);
@@ -397,7 +384,7 @@ class McpClientManager {
 
         logger.info("Removing MCP client: {}", mcpClientName);
 
-        // Remove all tools from this MCP client
+        // 移除此 MCP 客户端的全部工具
         List<String> toolsToRemove =
                 toolRegistry.getAllRegisteredTools().values().stream()
                         .filter(reg -> mcpClientName.equals(reg.getMcpClientName()))
@@ -417,35 +404,35 @@ class McpClientManager {
     }
 
     /**
-     * Gets all registered MCP client names.
+     * 获取全部已注册 MCP 客户端名称。
      *
-     * @return set of MCP client names, never null but may be empty
+     * @return 客户端名称集合，永不为 null，但可以为空
      */
     Set<String> getMcpClientNames() {
         return new HashSet<>(mcpClients.keySet());
     }
 
     /**
-     * Gets an MCP client wrapper by name.
+     * 按名称获取 MCP 客户端包装器。
      *
-     * @param name the MCP client name
-     * @return the MCP client wrapper, or null if not found
+     * @param name MCP 客户端名称
+     * @return 客户端包装器；未找到时为 null
      */
     McpClientWrapper getMcpClient(String name) {
         return mcpClients.get(name);
     }
 
     /**
-     * Determines if a tool should be registered based on enable/disable lists.
+     * 根据启用/禁用列表判断是否注册工具。
      *
-     * @param toolName the tool name
-     * @param enableTools list of tools to enable (null means all), takes precedence over disableTools
-     * @param disableTools list of tools to disable (null means none)
-     * @return true if the tool should be registered
+     * @param toolName 工具名称
+     * @param enableTools 要启用的工具列表（null 表示全部），优先于 disableTools
+     * @param disableTools 要禁用的工具列表（null 表示均不禁用）
+     * @return 应注册该工具时为 true
      */
     private boolean shouldRegisterTool(
             String toolName, List<String> enableTools, List<String> disableTools) {
-        // Default: register all tools
+        // 默认注册全部工具
         boolean result = true;
 
         if (disableTools != null && !disableTools.isEmpty()) {

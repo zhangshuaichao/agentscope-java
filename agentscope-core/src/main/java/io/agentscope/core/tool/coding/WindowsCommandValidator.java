@@ -20,29 +20,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command validator for Windows systems.
+ * Windows 系统的命令验证器。
  *
- * <p><b>Validation Order:</b>
+ * <p><b>验证顺序：</b>
  * <ol>
- *   <li>Extract executable from command (remove quotes, handle paths with spaces, remove path, remove extensions, convert to lowercase)</li>
- *   <li>If no whitelist configured → allow (backward compatible)</li>
- *   <li>Check for multiple command separators → reject if found</li>
- *   <li>Check relative path safety (commands starting with {@code .\} or {@code ./}) → reject if escapes current directory</li>
- *   <li>Check whitelist (case-insensitive) → reject if not in whitelist</li>
+ * <li>提取可执行程序（移除引号、处理带空格路径、移除目录与扩展名、转换为小写）</li>
+ * <li>未配置白名单时允许（向后兼容）</li>
+ * <li>检测到多命令分隔符时拒绝</li>
+ * <li>以 {@code .\} 或 {@code ./} 开头的相对路径逃逸当前目录时拒绝</li>
+ * <li>忽略大小写检查白名单，不匹配时拒绝</li>
  * </ol>
  *
- * <p><b>Multiple Command Detection:</b> Detects Windows-specific separators:
- * {@code &}, {@code &&}, {@code |}, {@code ||}, newline
- * (ignores separators within quotes or after escape {@code ^})
- * <br>Note: Semicolon ({@code ;}) is NOT a separator in Windows cmd.exe
+ * <p><b>多命令检测：</b>检测 Windows 分隔符 {@code &}、{@code &&}、{@code |}、{@code ||} 和换行，
+ * 忽略引号内或转义符 {@code ^} 后的分隔符。
+ * <br>注意：分号 {@code ;} 在 Windows cmd.exe 中不是分隔符。
  *
- * <p><b>Executable Extraction:</b>
+ * <p><b>可执行程序提取：</b>
  * <ul>
- *   <li>Handles quoted commands (double quotes)</li>
- *   <li>Handles paths with spaces (e.g., {@code C:\Program Files\app.exe})</li>
- *   <li>Extracts command name without path (handles both {@code \} and {@code /})</li>
- *   <li>Removes extensions: {@code .exe}, {@code .bat}, {@code .cmd} (case-insensitive)</li>
- *   <li>Converts result to lowercase for consistent matching</li>
+ * <li>处理双引号包围的命令</li>
+ * <li>处理带空格路径，例如 {@code C:\Program Files\app.exe}</li>
+ * <li>提取不含目录的命令名，同时处理 {@code \} 和 {@code /}</li>
+ * <li>忽略大小写移除 {@code .exe}、{@code .bat}、{@code .cmd} 扩展名</li>
+ * <li>将结果转为小写以保持匹配一致</li>
  * </ul>
  */
 public class WindowsCommandValidator implements CommandValidator {
@@ -51,15 +50,15 @@ public class WindowsCommandValidator implements CommandValidator {
 
     @Override
     public ValidationResult validate(String command, Set<String> allowedCommands) {
-        // Extract and check executable (case-insensitive for Windows)
+        // 提取并检查可执行程序（Windows 忽略大小写）
         String executable = extractExecutable(command);
 
-        // If no whitelist is configured, allow all commands (backward compatible)
+        // 未配置白名单时允许全部命令（向后兼容）
         if (allowedCommands == null || allowedCommands.isEmpty()) {
             return ValidationResult.allowed(executable);
         }
 
-        // Check for multiple commands
+        // 检查是否包含多个命令
         if (containsMultipleCommands(command)) {
             logger.debug("Command contains multiple command separators: {}", command);
             return ValidationResult.rejected(
@@ -81,7 +80,7 @@ public class WindowsCommandValidator implements CommandValidator {
             }
         }
 
-        // Check if any whitelist entry matches (case-insensitive)
+        // 检查是否匹配任意白名单条目（忽略大小写）
         boolean inWhitelist =
                 allowedCommands.stream().anyMatch(allowed -> allowed.equalsIgnoreCase(executable));
         if (inWhitelist) {
@@ -104,27 +103,27 @@ public class WindowsCommandValidator implements CommandValidator {
             String trimmed = command.trim();
             String executable;
 
-            // Handle quoted commands: "command" (Windows typically uses double quotes)
+            // 处理带引号命令（Windows 通常使用双引号）
             if (trimmed.startsWith("\"")) {
                 int endQuote = trimmed.indexOf('"', 1);
                 if (endQuote > 0) {
                     executable = trimmed.substring(1, endQuote);
                 } else {
-                    // No closing quote, treat as unquoted
+                    // 没有闭合引号，按无引号处理
                     executable = extractFirstToken(trimmed);
                 }
             } else {
-                // Check if this looks like a path (contains \ or /)
+                // 检查是否像路径，即含反斜杠或正斜杠
                 if (trimmed.contains("\\") || trimmed.contains("/")) {
-                    // This is a path, need to extract the full path before arguments
+                    // 属于路径，需要提取参数前的完整路径
                     executable = extractPathFromCommand(trimmed);
                 } else {
-                    // Simple command without path, extract first token
+                    // 无路径的简单命令，提取首个词元
                     executable = extractFirstToken(trimmed);
                 }
             }
 
-            // Remove .exe, .bat, .cmd extensions if present (case-insensitive)
+            // 忽略大小写移除 .exe、.bat、.cmd 扩展名
             String lowerExecutable = executable.toLowerCase();
             if (lowerExecutable.endsWith(".exe")
                     || lowerExecutable.endsWith(".bat")
@@ -143,7 +142,7 @@ public class WindowsCommandValidator implements CommandValidator {
     }
 
     /**
-     * Extract first token (word before space/tab) from command.
+     * 从命令提取首个词元，即空格或制表符前的单词。
      */
     private String extractFirstToken(String command) {
         int spaceIndex = command.indexOf(' ');
@@ -162,26 +161,25 @@ public class WindowsCommandValidator implements CommandValidator {
     }
 
     /**
-     * Extract path from command that contains path separators.
-     * Handles paths with spaces like "C:\Program Files\app.exe arg1"
+     * 从包含路径分隔符的命令提取路径，支持 "C:\Program Files\app.exe arg1" 等带空格路径。
      */
     private String extractPathFromCommand(String command) {
-        // Look for common executable extensions to find where the path ends
+        // 查找常见可执行扩展名以确定路径结束位置
         String lowerCommand = command.toLowerCase();
         int exePos = lowerCommand.indexOf(".exe");
         int batPos = lowerCommand.indexOf(".bat");
         int cmdPos = lowerCommand.indexOf(".cmd");
 
-        // Find the first occurrence of any extension
+        // 查找任意扩展名首次出现的位置
         int extPos = -1;
         if (exePos >= 0) extPos = exePos;
         if (batPos >= 0 && (extPos < 0 || batPos < extPos)) extPos = batPos;
         if (cmdPos >= 0 && (extPos < 0 || cmdPos < extPos)) extPos = cmdPos;
 
         if (extPos >= 0) {
-            // Found an extension, extract up to the end of the extension
-            int endPos = extPos + 4; // .exe, .bat, .cmd are all 4 characters
-            // Check if there's a space or end of string after the extension
+            // 找到扩展名，提取至扩展名末尾
+            int endPos = extPos + 4; // .exe、.bat、.cmd 均为 4 个字符
+            // 检查扩展名后是否为空格或字符串结尾
             if (endPos >= command.length()
                     || command.charAt(endPos) == ' '
                     || command.charAt(endPos) == '\t') {
@@ -189,19 +187,19 @@ public class WindowsCommandValidator implements CommandValidator {
             }
         }
 
-        // No extension found, or extension not followed by space
-        // Fall back to extracting first token
+        // 未找到扩展名，或扩展名后不是空格
+        // 回退到提取首个词元
         return extractFirstToken(command);
     }
 
     /**
-     * Check if the command contains multiple command separators outside of quotes.
+     * 检查引号外是否存在多命令分隔符。
      *
-     * <p>Detects: &amp;, |, newline (ignores separators within quotes or after escape ^)
-     * <p>Note: Semicolon is NOT a separator in Windows cmd.exe
+     * <p>检测 &amp;、| 和换行，忽略引号内或 ^ 转义后的分隔符。
+     * <p>注意：分号在 Windows cmd.exe 中不是分隔符。
      *
-     * @param command The command to check
-     * @return true if multiple commands are detected, false otherwise
+     * @param command 待检查命令
+     * @return 检测到多命令时为 true，否则为 false
      */
     @Override
     public boolean containsMultipleCommands(String command) {
@@ -215,7 +213,7 @@ public class WindowsCommandValidator implements CommandValidator {
         for (int i = 0; i < command.length(); i++) {
             char c = command.charAt(i);
 
-            // Handle escape sequences (^ is the escape character in cmd.exe)
+            // 处理转义序列（cmd.exe 的转义符是 ^）
             if (escaped) {
                 escaped = false;
                 continue;
@@ -226,16 +224,16 @@ public class WindowsCommandValidator implements CommandValidator {
                 continue;
             }
 
-            // Track quote state (Windows cmd.exe primarily uses double quotes)
+            // 跟踪引号状态（Windows cmd.exe 主要使用双引号）
             if (c == '"') {
                 inDoubleQuote = !inDoubleQuote;
                 continue;
             }
 
-            // Only check for separators outside quotes
+            // 只检查引号外的分隔符
             if (!inDoubleQuote) {
-                // Check for command separators (&, |, newline)
-                // Note: Semicolon is NOT a separator in Windows cmd.exe
+                // 检查命令分隔符（&、|、换行）
+                // 注意：分号在 Windows cmd.exe 中不是分隔符
                 if (c == '&' || c == '|' || c == '\n') {
                     return true;
                 }

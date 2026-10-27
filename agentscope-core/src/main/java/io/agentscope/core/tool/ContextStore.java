@@ -16,26 +16,23 @@
 package io.agentscope.core.tool;
 
 /**
- * Storage layer abstraction for tool execution context.
+ * 工具执行上下文的存储层抽象。
  *
- * <p>This interface defines the storage contract for context objects. It supports two retrieval
- * modes:
+ * <p>定义上下文对象的存储契约，支持两种检索方式：
  * <ol>
- *   <li><b>By type only</b>: {@code get(Class<T>)} - suitable for singleton scenarios</li>
- *   <li><b>By key + type</b>: {@code get(String, Class<T>)} - suitable for multi-instance
- *       scenarios</li>
+ * <li><b>仅按类型</b>：{@code get(Class<T>)}，适用于单例场景</li>
+ * <li><b>按键和类型</b>：{@code get(String, Class<T>)}，适用于多实例场景</li>
  * </ol>
  *
- * <p>This design allows handling both simple cases (one UserContext) and complex cases
- * (multiple UserContext instances for different users).
+ * <p>既能处理单个 UserContext 的简单情况，也能处理不同用户拥有多个 UserContext 的复杂情况。
  *
- * <p>Implementations can be:
+ * <p>实现方式包括：
  * <ul>
- *   <li>Simple in-memory Map storage ({@link DefaultContextStore})</li>
- *   <li>Custom storage stores (Redis, database, etc.)</li>
+ * <li>简单内存 Map 存储（{@link DefaultContextStore}）</li>
+ * <li>自定义存储（Redis、数据库等）</li>
  * </ul>
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * // Single instance per type
  * DatabaseConfig config = store.get(DatabaseConfig.class);
@@ -47,19 +44,17 @@ package io.agentscope.core.tool;
  *
  * @see ToolExecutionContext
  * @see DefaultContextStore
- * @deprecated Part of the {@link ToolExecutionContext} layer which is superseded by
- *     {@link io.agentscope.core.agent.RuntimeContext}.
+ * @deprecated 属于 {@link ToolExecutionContext} 层，已由 {@link io.agentscope.core.agent.RuntimeContext} 取代。
  */
 @Deprecated
 public interface ContextStore {
 
     /**
-     * Retrieves an object by key and type.
+     * 按键和类型检索对象。
      *
-     * <p>This method allows storing multiple instances of the same type with different keys.
-     * Keys can be user IDs, session IDs, or any other identifier that distinguishes instances.
+     * <p>可用不同键存储相同类型的多个实例。键可以是用户 ID、会话 ID 或其他区分实例的标识符。
      *
-     * <p>Example:
+     * <p>示例：
      * <pre>{@code
      * // Store multiple UserContext instances
      * store.register("user123", new UserContext("user123"));
@@ -69,50 +64,49 @@ public interface ContextStore {
      * UserContext user123 = store.get("user123", UserContext.class);
      * }</pre>
      *
-     * @param key The key identifying the specific instance
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param key 标识具体实例的键
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     <T> T get(String key, Class<T> type);
 
     /**
-     * Retrieves an object by type only (without key).
+     * 仅按类型检索对象（无键）。
      *
-     * <p>This is a convenience method for singleton scenarios where only one instance of a type
-     * exists. If multiple instances exist, implementations may:
+     * <p>适用于某类型只有一个实例的单例场景。存在多个实例时，实现可：
      * <ul>
-     *   <li>Return the "default" instance (implementation-defined)</li>
-     *   <li>Return the first registered instance</li>
-     *   <li>Return null and require explicit key</li>
+     * <li>返回默认实例（由实现定义）</li>
+     * <li>返回第一个注册的实例</li>
+     * <li>返回 null，并要求显式指定键</li>
      * </ul>
      *
-     * <p>Example:
+     * <p>示例：
      * <pre>{@code
      * // Single DatabaseConfig instance
      * DatabaseConfig config = store.get(DatabaseConfig.class);
      * }</pre>
      *
-     * @param type The class type to retrieve
-     * @param <T> The object type
-     * @return The object instance, or null if not found
+     * @param type 要检索的类类型
+     * @param <T> 对象类型
+     * @return 对象实例；未找到时为 null
      */
     <T> T get(Class<T> type);
 
     /**
-     * Checks whether an object with the specified key and type exists.
+     * 检查指定键和类型的对象是否存在。
      *
-     * @param key The key identifying the instance
-     * @param type The class type to check
-     * @return true if the object exists, false otherwise
+     * @param key 标识实例的键
+     * @param type 要检查的类类型
+     * @return 存在时为 true，否则为 false
      */
     boolean contains(String key, Class<?> type);
 
     /**
-     * Checks whether any object of the specified type exists (regardless of key).
+     * 检查是否存在指定类型的对象（不论键为何）。
      *
-     * @param type The class type to check
-     * @return true if at least one object of this type exists, false otherwise
+     * @param type 要检查的类类型
+     * @return 至少存在一个该类型对象时为 true，否则为 false
      */
     boolean contains(Class<?> type);
 }

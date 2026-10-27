@@ -23,34 +23,31 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Workspace-level tool configuration loaded from {@code workspace/tools.json}.
+ * 从 {@code workspace/tools.json} 加载的工作区级工具配置。
  *
- * <p>Two responsibilities:
- *
+ * <p>承担两个职责：
  * <ul>
- *   <li>{@link #allow} / {@link #deny} — filter the <em>product catalog</em> tool surface
- *       (filesystem, shell, web, …).
- *   <li>{@link #mcpServers} — declare additional tools served by external MCP servers.
+ * <li>{@link #allow} / {@link #deny}：过滤<em>产品目录</em>中的工具，如文件系统、Shell、Web 等。</li>
+ * <li>{@link #mcpServers}：声明外部 MCP 服务器提供的附加工具。</li>
  * </ul>
  *
- * <p>Filter semantics: when {@code allow} is non-empty, catalogued tools not listed are removed;
- * {@link HarnessPlatformTools} (subagents, teams, tasks, plan, skills, memory helpers, …) always
- * survive {@code allow}. {@code deny} always wins. Empty/absent values mean "no filtering on this
- * side".
+ * <p>过滤语义：{@code allow} 非空时，移除未列出的目录内工具；
+ * {@link HarnessPlatformTools}（子智能体、团队、任务、计划、技能、记忆辅助等）
+ * 始终不受 {@code allow} 排除。{@code deny} 始终优先。值为空或缺失表示“不在这一侧进行过滤”。
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ToolsConfig {
 
-    /** When non-empty, catalogued tools not listed here are hidden (platform tools exempt). */
+    /** 非空时隐藏未列出的目录内工具，平台工具豁免。 */
     @JsonProperty("allow")
     private List<String> allow;
 
-    /** Tools whose name appears here are removed regardless of {@link #allow}. */
+    /** 名称出现在此列表中的工具一律移除，不受 {@link #allow} 影响。 */
     @JsonProperty("deny")
     private List<String> deny;
 
-    /** Map of MCP server identifier to its connection / tool-allowlist configuration. */
+    /** MCP 服务器标识到连接及工具允许列表配置的映射。 */
     @JsonProperty("mcpServers")
     private Map<String, McpServerConfig> mcpServers;
 

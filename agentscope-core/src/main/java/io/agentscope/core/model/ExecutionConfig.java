@@ -23,25 +23,23 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
 /**
- * Unified execution configuration for timeout and retry behavior.
+ * 统一的超时与重试执行配置。
  *
- * <p>This class replaces the previous TimeoutConfig and RetryConfig classes, providing a single
- * unified configuration for controlling execution behavior of both model API calls and tool
- * executions.
+ * <p>此类替代旧的 TimeoutConfig 和 RetryConfig，以单一配置统一控制
+ * 模型 API 调用和工具执行的行为。
  *
- * <p>Use the builder pattern to construct instances. All fields are optional and nullable.
+ * <p>使用建造者模式创建实例。所有字段均为可选项，允许为 null。
  *
- * <h2>Standard Defaults</h2>
- *
+ * <h2>标准默认值</h2>
  * <ul>
- *   <li>{@link #MODEL_DEFAULTS}: 5 minutes timeout, 3 retry attempts with exponential backoff
- *   <li>{@link #TOOL_DEFAULTS}: 5 minutes timeout, no retry (1 attempt only)
+ *   <li>{@link #MODEL_DEFAULTS}：5 分钟超时，最多尝试 3 次，使用指数退避
+ *   <li>{@link #TOOL_DEFAULTS}：5 分钟超时，不重试（仅尝试 1 次）
  * </ul>
  *
- * <h2>Configuration Merging</h2>
+ * <h2>配置合并</h2>
  *
- * <p>Use {@link #mergeConfigs(ExecutionConfig, ExecutionConfig)} to combine configurations with
- * parameter-by-parameter precedence. This allows layering configs from different sources:
+ * <p>通过 {@link #mergeConfigs(ExecutionConfig, ExecutionConfig)} 逐参数按优先级合并配置，
+ * 从而叠加来自不同来源的配置：
  *
  * <pre>{@code
  * // Priority: per-request > agent-level > component-defaults > system-defaults
@@ -50,100 +48,103 @@ import java.util.function.Predicate;
  *     ExecutionConfig.mergeConfigs(agentConfig, ExecutionConfig.MODEL_DEFAULTS)
  * );
  * }</pre>
+ *
+ * <p>【学习提示】尝试次数包含首次执行：最多尝试 3 次就是首次加 2 次重试。
+ * 工具默认不重试，有助于避免重复执行带副作用的操作；自定义重试前仍需评估幂等性。
  */
 public class ExecutionConfig {
-    /** Timeout duration for a single execution (model request or tool call). */
+    /** 单次执行（模型请求或工具调用）的超时时长。 */
     private final Duration timeout;
 
-    /** Maximum number of attempts (including the initial attempt). */
+    /** 最大尝试次数（包含首次尝试）。 */
     private final Integer maxAttempts;
 
-    /** Initial backoff duration for the first retry. */
+    /** 第一次重试前的初始退避时长。 */
     private final Duration initialBackoff;
 
-    /** Maximum backoff duration between retries. */
+    /** 两次重试之间的最大退避时长。 */
     private final Duration maxBackoff;
 
-    /** Multiplier applied to backoff duration after each retry. */
+    /** 每次重试后应用于退避时长的倍数。 */
     private final Double backoffMultiplier;
 
-    /** Predicate to determine if an error should trigger a retry. */
+    /** 判断错误是否应触发重试的谓词。 */
     private final Predicate<Throwable> retryOn;
 
     /**
-     * Predicate that determines if an error should be retried.
+     * 判断错误是否应重试的谓词。
      *
-     * <p>Retryable errors include:
+     * <p>可重试错误包括：
      * <ul>
-     *   <li>HTTP 429 (Rate Limiting)</li>
-     *   <li>HTTP 5xx (Server errors)</li>
-     *   <li>Timeout errors</li>
-     *   <li>Network/IO errors</li>
+     *   <li>HTTP 429（限流）</li>
+     *   <li>HTTP 5xx（服务端错误）</li>
+     *   <li>超时错误</li>
+     *   <li>网络／IO 错误</li>
      * </ul>
      *
-     * <p>Non-retryable errors include:
+     * <p>不可重试错误包括：
      * <ul>
-     *   <li>HTTP 400 (Bad Request) - parameter validation failures</li>
-     *   <li>HTTP 401/403 (Authentication/Authorization errors)</li>
-     *   <li>Other 4xx client errors</li>
+     *   <li>HTTP 400（错误请求）—— 参数验证失败</li>
+     *   <li>HTTP 401/403（认证／授权错误）</li>
+     *   <li>其他 4xx 客户端错误</li>
      * </ul>
      */
     public static final Predicate<Throwable> RETRYABLE_ERRORS = ExecutionConfig::isRetryableError;
 
     /**
-     * Checks if the given error is retryable.
+     * 检查指定错误是否可以重试。
      *
-     * @param error the error to check
-     * @return true if the error should be retried
+     * @param error 要检查的错误
+     * @return 应重试该错误时返回 true
      */
     private static boolean isRetryableError(Throwable error) {
-        // For HttpTransportException, use the built-in isRetryable() method
-        // which returns true for 429 (rate limiting) and 5xx (server errors)
+        // 对于 HttpTransportException，使用内置的 isRetryable() 方法，
+        // 该方法在 429（限流）和 5xx（服务端错误）时返回 true
         if (error instanceof HttpTransportException hte) {
             return hte.isRetryable();
         }
 
-        // Implementations without a status code (e.g. OpenAIException wrapping a
-        // streaming transport failure) must fall through to the transport/IO and cause-chain
-        // checks below instead of being classified as a permanent client error (issue #3057).
+        // 没有状态码的实现（例如包装流式传输失败的 OpenAIException）
+        // 必须继续执行下方的传输／IO 和异常原因链检查，
+        // 而不是直接归类为永久性客户端错误（issue #3057）。
         if (error instanceof ModelHttpException mhe && mhe.getStatusCode() != null) {
             return mhe.isRetryableHttpStatus();
         }
 
-        // Timeout errors are retryable
+        // 超时错误可以重试
         if (error instanceof TimeoutException) {
             return true;
         }
 
-        // Network/IO errors are retryable
+        // 网络／IO 错误可以重试
         if (error instanceof IOException) {
             return true;
         }
 
-        // Check if cause is retryable (for wrapped exceptions)
+        // 检查底层原因是否可重试（用于包装后的异常）
         Throwable cause = error.getCause();
         if (cause != null && cause != error) {
             return isRetryableError(cause);
         }
 
-        // Unknown errors - don't retry by default to avoid hiding issues
+        // 未知错误默认不重试，避免掩盖问题
         return false;
     }
 
     /**
-     * Standard defaults for model API calls.
+     * 模型 API 调用的标准默认配置。
      *
      * <ul>
-     *   <li>Timeout: 5 minutes
-     *   <li>Max attempts: 3 (initial + 2 retries)
-     *   <li>Initial backoff: 2 seconds
-     *   <li>Max backoff: 30 seconds
-     *   <li>Backoff multiplier: 2.0 (exponential)
-     *   <li>Retry on: retryable errors only (429, 5xx, timeout, network errors)
+     *   <li>超时：5 分钟
+     *   <li>最大尝试次数：3（首次 + 2 次重试）
+     *   <li>初始退避：2 秒
+     *   <li>最大退避：30 秒
+     *   <li>退避倍数：2.0（指数增长）
+     *   <li>重试条件：仅可重试错误（429、5xx、超时、网络错误）
      * </ul>
      *
-     * <p>Note: The backoff times are set higher (2s initial, 30s max) to better handle
-     * rate limiting (HTTP 429) from model providers during high-concurrency scenarios.
+     * <p>注意：退避时间设置得较长（初始 2 秒、最长 30 秒），
+     * 以更好地应对高并发场景下模型服务商的 HTTP 429 限流。
      */
     public static final ExecutionConfig MODEL_DEFAULTS =
             builder()
@@ -156,11 +157,11 @@ public class ExecutionConfig {
                     .build();
 
     /**
-     * Standard defaults for tool executions.
+     * 工具执行的标准默认配置。
      *
      * <ul>
-     *   <li>Timeout: 5 minutes
-     *   <li>Max attempts: 1 (no retry)
+     *   <li>超时：5 分钟
+     *   <li>最大尝试次数：1（不重试）
      * </ul>
      */
     public static final ExecutionConfig TOOL_DEFAULTS =
@@ -176,84 +177,82 @@ public class ExecutionConfig {
     }
 
     /**
-     * Gets the timeout duration.
+     * 获取超时时长。
      *
-     * @return the timeout duration, or null if not set
+     * @return 超时时长；未设置时为 null
      */
     public Duration getTimeout() {
         return timeout;
     }
 
     /**
-     * Gets the maximum number of attempts.
+     * 获取最大尝试次数。
      *
-     * @return the max attempts (including initial attempt), or null if not set
+     * @return 最大尝试次数（含首次尝试）；未设置时为 null
      */
     public Integer getMaxAttempts() {
         return maxAttempts;
     }
 
     /**
-     * Gets the initial backoff duration.
+     * 获取初始退避时长。
      *
-     * @return the initial backoff duration, or null if not set
+     * @return 初始退避时长；未设置时为 null
      */
     public Duration getInitialBackoff() {
         return initialBackoff;
     }
 
     /**
-     * Gets the maximum backoff duration.
+     * 获取最大退避时长。
      *
-     * @return the max backoff duration, or null if not set
+     * @return 最大退避时长；未设置时为 null
      */
     public Duration getMaxBackoff() {
         return maxBackoff;
     }
 
     /**
-     * Gets the backoff multiplier.
+     * 获取退避倍数。
      *
-     * @return the backoff multiplier, or null if not set
+     * @return 退避倍数；未设置时为 null
      */
     public Double getBackoffMultiplier() {
         return backoffMultiplier;
     }
 
     /**
-     * Gets the retry predicate.
+     * 获取重试谓词。
      *
-     * @return the predicate to determine if an error should be retried, or null if not set
+     * @return 判断错误是否应重试的谓词；未设置时为 null
      */
     public Predicate<Throwable> getRetryOn() {
         return retryOn;
     }
 
     /**
-     * Creates a new builder for ExecutionConfig.
+     * 创建新的 ExecutionConfig 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Merges two ExecutionConfig instances, with primary config taking precedence.
+     * 合并两个 ExecutionConfig 实例，优先使用主配置。
      *
-     * <p>This method performs parameter-by-parameter merging: for each parameter, if the primary
-     * value is non-null, it is used; otherwise, the fallback value is used. This allows proper
-     * layering of configs from different sources.
+     * <p>按参数逐一合并：主配置中该参数非 null 时使用主配置值，否则使用回退值。
+     * 由此正确叠加不同来源的配置。
      *
-     * <p><b>Merge Behavior:</b>
-     *
+     * <p><b>合并行为：</b>
      * <ul>
-     *   <li>Each field: primary != null ? primary : fallback
-     *   <li>If primary is null, returns fallback directly
-     *   <li>If fallback is null, returns primary directly
+     *   <li>每个字段：primary != null ? primary : fallback
+     *   <li>primary 为 null 时，直接返回 fallback
+     *   <li>fallback 为 null 时，直接返回 primary
      * </ul>
      *
-     * <p><b>Example:</b>
+     * <p><b>示例：</b>
      *
      * <pre>{@code
      * ExecutionConfig defaults = ExecutionConfig.MODEL_DEFAULTS;
@@ -265,9 +264,9 @@ public class ExecutionConfig {
      * ExecutionConfig merged = ExecutionConfig.mergeConfigs(agentLevel, defaults);
      * }</pre>
      *
-     * @param primary the primary config (higher priority)
-     * @param fallback the fallback config (lower priority)
-     * @return merged config, or null if both are null
+     * @param primary 主配置（较高优先级）
+     * @param fallback 回退配置（较低优先级）
+     * @return 合并后的配置；两者都为 null 时返回 null
      */
     public static ExecutionConfig mergeConfigs(ExecutionConfig primary, ExecutionConfig fallback) {
         if (primary == null) {
@@ -293,7 +292,7 @@ public class ExecutionConfig {
         return builder.build();
     }
 
-    /** Builder for ExecutionConfig. */
+    /** ExecutionConfig 的建造者。 */
     public static class Builder {
         private Duration timeout;
         private Integer maxAttempts;
@@ -303,10 +302,10 @@ public class ExecutionConfig {
         private Predicate<Throwable> retryOn;
 
         /**
-         * Sets the timeout duration for a single execution.
+         * 设置单次执行的超时时长。
          *
-         * @param timeout the timeout duration, or null for no timeout
-         * @return this builder instance
+         * @param timeout 超时时长；null 表示不设置超时
+         * @return 当前建造者实例
          */
         public Builder timeout(Duration timeout) {
             this.timeout = timeout;
@@ -314,12 +313,12 @@ public class ExecutionConfig {
         }
 
         /**
-         * Sets the maximum number of attempts (including the initial attempt).
+         * 设置最大尝试次数（包含首次尝试）。
          *
-         * <p>For example, maxAttempts=3 means: 1 initial attempt + 2 retries.
+         * <p>例如 maxAttempts=3 表示首次尝试 1 次，加上重试 2 次。
          *
-         * @param maxAttempts the max attempts (must be >= 1), or null
-         * @return this builder instance
+         * @param maxAttempts 最大尝试次数（必须 >= 1），或 null
+         * @return 当前建造者实例
          */
         public Builder maxAttempts(Integer maxAttempts) {
             if (maxAttempts != null && maxAttempts < 1) {
@@ -330,10 +329,10 @@ public class ExecutionConfig {
         }
 
         /**
-         * Sets the initial backoff duration for the first retry.
+         * 设置第一次重试前的初始退避时长。
          *
-         * @param initialBackoff the initial backoff duration, or null
-         * @return this builder instance
+         * @param initialBackoff 初始退避时长，或 null
+         * @return 当前建造者实例
          */
         public Builder initialBackoff(Duration initialBackoff) {
             this.initialBackoff = initialBackoff;
@@ -341,10 +340,10 @@ public class ExecutionConfig {
         }
 
         /**
-         * Sets the maximum backoff duration between retries.
+         * 设置两次重试之间的最大退避时长。
          *
-         * @param maxBackoff the max backoff duration, or null
-         * @return this builder instance
+         * @param maxBackoff 最大退避时长，或 null
+         * @return 当前建造者实例
          */
         public Builder maxBackoff(Duration maxBackoff) {
             this.maxBackoff = maxBackoff;
@@ -352,13 +351,13 @@ public class ExecutionConfig {
         }
 
         /**
-         * Sets the backoff multiplier applied after each retry.
+         * 设置每次重试后应用的退避倍数。
          *
-         * <p>For example, with initialBackoff=1s, maxBackoff=10s, and backoffMultiplier=2.0, the
-         * retry delays will be: 1s, 2s, 4s, 8s, 10s (capped), 10s, ...
+         * <p>例如 initialBackoff=1s、maxBackoff=10s、backoffMultiplier=2.0 时，
+         * 重试延迟依次为 1s、2s、4s、8s、10s（达到上限）、10s……
          *
-         * @param backoffMultiplier the backoff multiplier (must be >= 1.0), or null
-         * @return this builder instance
+         * @param backoffMultiplier 退避倍数（必须 >= 1.0），或 null
+         * @return 当前建造者实例
          */
         public Builder backoffMultiplier(Double backoffMultiplier) {
             if (backoffMultiplier != null && backoffMultiplier < 1.0) {
@@ -369,10 +368,10 @@ public class ExecutionConfig {
         }
 
         /**
-         * Sets the predicate to determine if an error should trigger a retry.
+         * 设置判断错误是否应触发重试的谓词。
          *
-         * @param retryOn the retry predicate (returns true to retry), or null
-         * @return this builder instance
+         * @param retryOn 重试谓词（返回 true 表示重试），或 null
+         * @return 当前建造者实例
          */
         public Builder retryOn(Predicate<Throwable> retryOn) {
             this.retryOn = retryOn;
@@ -380,9 +379,9 @@ public class ExecutionConfig {
         }
 
         /**
-         * Builds a new ExecutionConfig instance.
+         * 构建新的 ExecutionConfig 实例。
          *
-         * @return a new ExecutionConfig instance
+         * @return 新的 ExecutionConfig 实例
          */
         public ExecutionConfig build() {
             return new ExecutionConfig(this);

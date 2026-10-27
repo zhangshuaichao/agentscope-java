@@ -16,16 +16,15 @@
 package io.agentscope.harness.agent.gateway.channel;
 
 /**
- * Controls how DM ({@link PeerKind#DIRECT}) session keys are scoped.
+ * 控制私聊（{@link PeerKind#DIRECT}）会话键的作用域。
  *
  * <ul>
- *   <li>{@link #MAIN} — all DMs for a given agent share a single session. Suitable for single-user
- *       or shared assistant scenarios.
- *   <li>{@link #PER_PEER} — one session per peer id. Most common for multi-user deployments.
- *   <li>{@link #PER_CHANNEL_PEER} — like {@code PER_PEER} but the channel name is included in the
- *       key, disambiguating the same peer across channels.
- *   <li>{@link #PER_ACCOUNT_CHANNEL_PEER} — extends {@code PER_CHANNEL_PEER} with the account id,
- *       useful for multi-account (multi-bot) deployments on the same channel platform.
+ *   <li>{@link #MAIN} — 指定智能体的全部私聊共享单个会话，适合单用户或共享助手场景。
+ *   <li>{@link #PER_PEER} — 每个对端 ID 一个会话，多用户部署最常用。
+ *   <li>{@link #PER_CHANNEL_PEER} — 类似 {@code PER_PEER}，但键中包含渠道名，
+ *       区分同一对端在不同渠道的对话。
+ *   <li>{@link #PER_ACCOUNT_CHANNEL_PEER} — 在 {@code PER_CHANNEL_PEER} 基础上加入账户 ID，
+ *       适合同一渠道平台中的多账户（多机器人）部署。
  * </ul>
  */
 public enum DmScope {
@@ -34,7 +33,9 @@ public enum DmScope {
     PER_CHANNEL_PEER,
     PER_ACCOUNT_CHANNEL_PEER;
 
-    /** Default scope used when none is configured. */
+    /**
+     * 未配置时使用的默认作用域。
+     */
     public static DmScope defaultScope() {
         return MAIN;
     }

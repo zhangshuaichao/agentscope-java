@@ -20,30 +20,30 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
- * Abstract base class for long-term memory implementations.
+ * 长期记忆实现的抽象基类。
  *
- * <p>This class provides a time-series memory management system that persists information
- * beyond individual conversation sessions. Long-term memory enables agents to:
+ * <p>此类提供时序记忆管理系统，在单次对话会话之外
+ * 持久化信息。长期记忆使智能体能够：
  * <ul>
- *   <li>Remember user preferences, habits, and personal information across sessions
- *   <li>Learn from past interactions and improve over time
- *   <li>Maintain context for long-running tasks or projects
- *   <li>Build personalized experiences based on historical data
+ *   <li>跨会话记住用户偏好、习惯和个人信息
+ *   <li>从过去交互中学习并逐步改善
+ *   <li>为长期任务或项目保留上下文
+ *   <li>基于历史数据构建个性化体验
  * </ul>
  *
- * <p>This class defines the core memory API for framework-level integration:
+ * <p>此类定义供框架级集成使用的核心记忆 API：
  * <ul>
- *   <li>{@link #record(List)} - Record messages to memory (called by framework)
- *   <li>{@link #retrieve(Msg)} - Retrieve relevant memories (called by framework)
+ *   <li>{@link #record(List)}：记录消息到记忆（由框架调用）
+ *   <li>{@link #retrieve(Msg)}：检索相关记忆（由框架调用）
  * </ul>
  *
- * <p>For agent-controlled memory operations (AGENT_CONTROL mode), use {@link LongTermMemoryTools}
- * which provides tool functions that adapt these core methods for agent use.
+ * <p>智能体控制的记忆操作（AGENT_CONTROL 模式）使用 {@link LongTermMemoryTools}，
+ * 它提供将核心方法适配为智能体工具的函数。
  *
- * <p>All methods are asynchronous and return Reactor {@link Mono} types for non-blocking
- * integration with the agent framework.
+ * <p>所有方法都是异步的，返回 Reactor {@link Mono} 类型，
+ * 以非阻塞方式与智能体框架集成。
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * // Create long-term memory instance
  * LongTermMemoryBase longTermMemory = Mem0LongTermMemory.builder()
@@ -63,49 +63,49 @@ import reactor.core.publisher.Mono;
  *
  * @see LongTermMemoryMode
  * @see io.agentscope.core.ReActAgent
- * @deprecated since 2.0.0. Long-term memory is removed; conversation context now lives on
- *     {@link io.agentscope.core.state.AgentState#getContext()}. Integrate any cross-session
- *     persistence at the application layer.
+ * @deprecated 自 2.0.0 起弃用。旧长期记忆功能已移除；对话上下文现位于
+ *     {@link io.agentscope.core.state.AgentState#getContext()}。跨会话持久化
+ *     请在应用层集成。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public interface LongTermMemory {
 
     /**
-     * Records messages to long-term memory.
+     * 将消息记录到长期记忆。
      *
-     * <p>This is a developer-facing method designed to be called by the framework
-     * (e.g., automatically at the end of each agent reply). Implementations should
-     * extract meaningful information from the messages and persist it to the underlying
-     * memory store.
+     * <p>这是面向开发者、设计为由框架调用的方法
+     * （例如在每次智能体回复结束时自动调用）。实现应
+     * 从消息中提取有意义的信息，并将其持久化到底层
+     * 记忆存储。
      *
-     * <p>The method filters out null messages before processing. Empty lists are handled
-     * gracefully without error.
+     * <p>处理前会过滤 null 消息。空列表会被平稳处理，
+     * 不会报错。
      *
-     * <p><b>Framework Integration:</b> When {@link LongTermMemoryMode#STATIC_CONTROL} or
-     * {@link LongTermMemoryMode#BOTH} is configured, this method is called automatically
-     * after each agent reply to record the conversation.
+     * <p><b>框架集成：</b>配置 {@link LongTermMemoryMode#STATIC_CONTROL} 或
+     * {@link LongTermMemoryMode#BOTH} 时，会自动调用此方法，
+     * 在每次智能体回复后记录对话。
      *
-     * @param msgs List of messages to record (null entries are filtered out)
-     * @return A Mono that completes when recording is finished
+     * @param msgs 要记录的消息列表（过滤 null 条目）
+     * @return 记录完成时结束的 Mono
      */
     Mono<Void> record(List<Msg> msgs);
 
     /**
-     * Retrieves relevant information from long-term memory based on the input message.
+     * 根据输入消息，从长期记忆检索相关信息。
      *
-     * <p>This is a developer-facing method designed to be called by the framework
-     * (e.g., automatically at the beginning of each agent reply). Implementations should
-     * use the message content to search for relevant memories and return them as text.
+     * <p>这是面向开发者、设计为由框架调用的方法
+     * （例如在每次智能体回复开始时自动调用）。实现应
+     * 使用消息内容搜索相关记忆，并以文本形式返回。
      *
-     * <p>The returned text is typically added to the agent's system prompt to provide
-     * context from previous interactions.
+     * <p>返回文本通常加入智能体系统提示词，
+     * 提供此前交互的上下文。
      *
-     * <p><b>Framework Integration:</b> When {@link LongTermMemoryMode#STATIC_CONTROL} or
-     * {@link LongTermMemoryMode#BOTH} is configured, this method is called automatically
-     * before each agent reasoning step to inject relevant context.
+     * <p><b>框架集成：</b>配置 {@link LongTermMemoryMode#STATIC_CONTROL} 或
+     * {@link LongTermMemoryMode#BOTH} 时，会自动调用此方法，
+     * 在每次智能体推理之前注入相关上下文。
      *
-     * @param msg The message to use as a query for memory retrieval
-     * @return A Mono emitting the retrieved memory text (may be empty)
+     * @param msg 用作记忆检索查询的消息
+     * @return 发出检索记忆文本的 Mono（可能为空）
      */
     Mono<String> retrieve(Msg msg);
 }

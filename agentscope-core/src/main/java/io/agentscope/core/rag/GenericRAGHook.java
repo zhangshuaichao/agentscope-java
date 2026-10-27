@@ -32,21 +32,21 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Generic RAG Hook for automatic knowledge retrieval before reasoning.
+ * 在推理前自动检索知识的通用 RAG 钩子。
  *
- * <p>This hook implements the Generic RAG mode, where knowledge is automatically retrieved
- * and injected into the prompt before each reasoning step. Unlike Agentic mode (where agents
- * decide when to retrieve), Generic mode always retrieves relevant knowledge for user queries.
+ * <p>此钩子实现 Generic RAG 模式：每一步推理之前自动检索知识并注入提示词。
+ * 与由智能体决定检索时机的 Agentic 模式不同，Generic 模式始终针对用户查询
+ * 检索相关知识。
  *
- * <p>This hook intercepts {@link PreReasoningEvent} and:
+ * <p>此钩子拦截 {@link PreReasoningEvent}，执行以下步骤：
  * <ol>
- *   <li>Extracts the query from user messages</li>
- *   <li>Retrieves relevant documents from the knowledge base</li>
- *   <li>Injects the retrieved knowledge as a user message</li>
- *   <li>Modifies the input messages to include the knowledge context</li>
+ *   <li>从用户消息提取查询</li>
+ *   <li>从知识库检索相关文档</li>
+ *   <li>将检索到的知识作为用户消息注入</li>
+ *   <li>修改输入消息，将知识上下文包含在内</li>
  * </ol>
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * KnowledgeBase knowledgeBase = new SimpleKnowledge(embeddingModel, vectorStore);
  * GenericRAGHook ragHook = new GenericRAGHook(knowledgeBase);
@@ -58,13 +58,12 @@ import reactor.core.publisher.Mono;
  *     .build();
  * }</pre>
  *
- * <p>Configuration options:
+ * <p>配置选项：
  * <ul>
- *   <li>{@code defaultConfig} - Retrieval configuration (limit, score threshold)</li>
+ *   <li>{@code defaultConfig} - 检索配置（数量上限、分数阈值）</li>
  * </ul>
  *
- * @deprecated since 2.0.0. The rag package is removed; integrate retrieval at the application
- *     layer.
+ * @deprecated 自 2.0.0 起弃用。rag 包已移除；请在应用层集成检索。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class GenericRAGHook implements Hook {
@@ -75,27 +74,27 @@ public class GenericRAGHook implements Hook {
     private final RetrieveConfig defaultConfig;
 
     /**
-     * Creates a GenericRAGHook with default configuration.
+     * 使用默认配置创建 GenericRAGHook。
      *
-     * <p>Default configuration:
+     * <p>默认配置：
      * <ul>
-     *   <li>Limit: 5 documents</li>
-     *   <li>Score threshold: 0.5</li>
+     *   <li>数量上限：5 篇文档</li>
+     *   <li>分数阈值：0.5</li>
      * </ul>
      *
-     * @param knowledge the knowledge base to retrieve from
-     * @throws IllegalArgumentException if knowledgeBase is null
+     * @param knowledge 用于检索的知识库
+     * @throws IllegalArgumentException 当 knowledgeBase 为 null 时抛出
      */
     public GenericRAGHook(Knowledge knowledge) {
         this(knowledge, RetrieveConfig.builder().build());
     }
 
     /**
-     * Creates a GenericRAGHook with custom configuration.
+     * 使用自定义配置创建 GenericRAGHook。
      *
-     * @param knowledge the knowledge base to retrieve from
-     * @param defaultConfig the default retrieval configuration
-     * @throws IllegalArgumentException if knowledgeBase is null
+     * @param knowledge 用于检索的知识库
+     * @param defaultConfig 默认检索配置
+     * @throws IllegalArgumentException 当 knowledgeBase 为 null 时抛出
      */
     public GenericRAGHook(Knowledge knowledge, RetrieveConfig defaultConfig) {
         if (knowledge == null) {
@@ -108,6 +107,8 @@ public class GenericRAGHook implements Hook {
         this.defaultConfig = defaultConfig;
     }
 
+    // 【学习提示】此兼容实现实际拦截 PreCallEvent，而非类注释中沿用的
+    // PreReasoningEvent。阅读旧接口时，以 instanceof 分支和方法参数类型为准。
     @Override
     public <T extends HookEvent> Mono<T> onEvent(T event) {
         if (event instanceof PreCallEvent preCallEvent) {
@@ -120,15 +121,15 @@ public class GenericRAGHook implements Hook {
 
     @Override
     public int priority() {
-        // High priority to execute early in the hook chain
+        // 使用较高优先级，以便在钩子链中尽早执行
         return 50;
     }
 
     /**
-     * Handles PreCallEvent by retrieving knowledge and enhancing messages.
+     * 通过检索知识并增强消息来处理 PreCallEvent。
      *
-     * @param event the PreReasoningEvent
-     * @return Mono containing the potentially modified event
+     * @param event PreCallEvent 事件
+     * @return 包含可能已修改事件的 Mono
      */
     private Mono<PreCallEvent> handlePreCall(PreCallEvent event) {
         List<Msg> inputMessages = event.getInputMessages();
@@ -136,13 +137,15 @@ public class GenericRAGHook implements Hook {
             return Mono.just(event);
         }
 
-        // Extract query text from messages (finds the last user message from back to front)
+        // 从消息中提取查询文本（从后向前查找最后一条用户消息）
         String query = extractQueryFromMessages(inputMessages);
         if (query == null || query.trim().isEmpty()) {
             return Mono.just(event);
         }
 
-        // Retrieve relevant documents
+        // 【学习提示】检索只是取得外部知识，并不训练或修改模型参数。
+        // 这里把检索结果追加为输入消息，后续模型调用才能使用这些内容。
+        // 检索相关文档
         return knowledge
                 .retrieve(query, defaultConfig)
                 .flatMap(
@@ -151,7 +154,7 @@ public class GenericRAGHook implements Hook {
                                 return Mono.just(event);
                             }
                             List<Msg> enhancedMessages = new ArrayList<>();
-                            // Build enhanced messages with knowledge context
+                            // 构建包含知识上下文的增强消息
                             Msg enhancedMessage = createEnhancedMessages(retrievedDocs);
                             enhancedMessages.addAll(inputMessages);
                             enhancedMessages.add(enhancedMessage);
@@ -160,28 +163,28 @@ public class GenericRAGHook implements Hook {
                         })
                 .onErrorResume(
                         error -> {
-                            // Log error but don't interrupt the flow
+                            // 记录错误，但不中断流程
                             log.warn("Generic RAG retrieval failed: {}", error.getMessage(), error);
                             return Mono.just(event);
                         });
     }
 
     /**
-     * Extracts query text from message list.
+     * 从消息列表中提取查询文本。
      *
-     * <p>Finds the last user message as the query source (not just the last message, which could be
-     * ASSISTANT or TOOL in ReAct loops).
+     * <p>以最后一条用户消息作为查询来源，而不是简单使用最后一条消息，
+     * 因为 ReAct 循环中的最后一条可能属于 ASSISTANT 或 TOOL。
      *
-     * @param messages the message list
-     * @return the extracted query text, or empty string if no user message found
+     * @param messages 消息列表
+     * @return 提取的查询文本；未找到用户消息时为空字符串
      */
     private String extractQueryFromMessages(List<Msg> messages) {
         if (messages == null || messages.isEmpty()) {
             return "";
         }
 
-        // Find the last user message (not just the last message, which could be
-        // ASSISTANT or TOOL in ReAct loops)
+        // 查找最后一条用户消息（不是简单使用最后一条消息，因为后者可能是
+        // ReAct 循环中的 ASSISTANT 或 TOOL）
         for (int i = messages.size() - 1; i >= 0; i--) {
             Msg msg = messages.get(i);
             if (msg.getRole() == MsgRole.USER) {
@@ -191,7 +194,7 @@ public class GenericRAGHook implements Hook {
         return "";
     }
 
-    /** Creates a user message that preserves retrieved text and multimodal content. */
+    /** 创建保留检索文本和多模态内容的用户消息。 */
     private Msg createEnhancedMessages(List<Document> retrievedDocs) {
         List<ContentBlock> content = new ArrayList<>();
         content.add(
@@ -217,18 +220,18 @@ public class GenericRAGHook implements Hook {
     }
 
     /**
-     * Gets the knowledge base used by this hook.
+     * 获取此钩子使用的知识库。
      *
-     * @return the knowledge base
+     * @return 知识库
      */
     public Knowledge getKnowledgeBase() {
         return knowledge;
     }
 
     /**
-     * Gets the default retrieval configuration.
+     * 获取默认检索配置。
      *
-     * @return the default config
+     * @return 默认配置
      */
     public RetrieveConfig getDefaultConfig() {
         return defaultConfig;

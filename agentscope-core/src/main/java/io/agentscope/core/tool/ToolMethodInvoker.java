@@ -32,8 +32,12 @@ import java.util.concurrent.CompletableFuture;
 import reactor.core.publisher.Mono;
 
 /**
- * Invokes tool methods with type conversion and error handling.
- * This class handles reflection-based method invocation and parameter conversion.
+ * 调用工具方法并处理类型转换和错误，负责基于反射的方法调用及参数转换。
+ *
+ * <p>【学习提示】Mono.fromCallable 延迟到订阅时才调用同步方法，但它本身不切换线程。
+ * 真正的调度、超时和重试由 ToolExecutor 的基础设施路径负责。区分“返回 Mono”和
+ * “已经异步执行”，可避免在响应式线程上误跑阻塞任务。参数注入则是另一条边界：
+ * 模型输入从 input 映射转换，运行时上下文由框架提供，不应让模型伪造身份上下文。
  */
 class ToolMethodInvoker {
 
@@ -44,20 +48,20 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Invoke tool method asynchronously with custom converter support.
+     * 异步调用工具方法，支持自定义转换器。
      *
-     * @param toolObject the object containing the method
-     * @param method the method to invoke
-     * @param param the tool call parameters containing input, toolUseBlock, agent, and context
-     * @param customConverter custom converter for this invocation (null to use default)
-     * @return Mono containing ToolResultBlock
+     * @param toolObject 包含方法的对象
+     * @param method 要调用的方法
+     * @param param 包含 input、toolUseBlock、agent 和 context 的工具调用参数
+     * @param customConverter 本次调用的自定义转换器（null 表示使用默认值）
+     * @return 包含 ToolResultBlock 的 Mono
      */
     Mono<ToolResultBlock> invokeAsync(
             Object toolObject,
             Method method,
             ToolCallParam param,
             ToolResultConverter customConverter) {
-        // Use custom converter if provided, otherwise use default
+        // 提供了自定义转换器则使用它，否则使用默认转换器
         final ToolResultConverter converter =
                 customConverter != null ? customConverter : defaultConverter;
 
@@ -69,7 +73,7 @@ class ToolMethodInvoker {
         Class<?> returnType = method.getReturnType();
 
         if (returnType == CompletableFuture.class) {
-            // Async method returning CompletableFuture: invoke and convert to Mono
+            // 返回 CompletableFuture 的异步方法：调用并转换为 Mono
             return Mono.fromCallable(
                             () -> {
                                 method.setAccessible(true);
@@ -92,7 +96,7 @@ class ToolMethodInvoker {
                     .onErrorResume(this::handleError);
 
         } else if (returnType == Mono.class) {
-            // Async method returning Mono: invoke and flatMap
+            // 返回 Mono 的异步方法：调用并使用 flatMap
             return Mono.fromCallable(
                             () -> {
                                 method.setAccessible(true);
@@ -110,7 +114,7 @@ class ToolMethodInvoker {
                     .onErrorResume(this::handleError);
 
         } else {
-            // Sync method: wrap in Mono.fromCallable
+            // 同步方法：包装在 Mono.fromCallable 中
             return Mono.fromCallable(
                             () -> {
                                 method.setAccessible(true);
@@ -125,26 +129,25 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Convert input parameters to method arguments with automatic injection support.
+     * 将输入参数转换为方法实参，支持自动注入。
      *
-     * <p>This method handles automatic injection of framework-managed objects:
+     * <p>自动注入框架管理的对象：
      * <ul>
-     *   <li>{@link ToolEmitter} - Streaming output emitter</li>
-     *   <li>{@link Agent} - Current agent instance</li>
-     *   <li>{@link RuntimeContext} - Per-call runtime context</li>
-     *   <li>{@link ToolExecutionContext} - Business context (deprecated)</li>
-     *   <li>Custom POJO types - Retrieved from RuntimeContext by type</li>
+     * <li>{@link ToolEmitter}：流式输出发射器</li>
+     * <li>{@link Agent}：当前智能体实例</li>
+     * <li>{@link RuntimeContext}：逐调用运行时上下文</li>
+     * <li>{@link ToolExecutionContext}：业务上下文（已弃用）</li>
+     * <li>自定义 POJO：从 RuntimeContext 按类型获取</li>
      * </ul>
      *
-     * <p>Parameters without {@link ToolParam} annotation are treated as auto-injected types.
-     * Parameters with {@link ToolParam} are converted from the input map.
+     * <p>未带 {@link ToolParam} 注解的参数视为自动注入类型；带 {@link ToolParam} 的参数从输入映射转换。
      *
-     * @param method the method
-     * @param input the input map
-     * @param agent the agent for Agent injection (may be null)
-     * @param runtimeContext the runtime context for injection (may be null)
-     * @param emitter the tool emitter for ToolEmitter injection (may be null)
-     * @return array of converted arguments
+     * @param method 方法
+     * @param input 输入映射
+     * @param agent 用于 Agent 注入的智能体（可为 null）
+     * @param runtimeContext 用于注入的运行时上下文（可为 null）
+     * @param emitter 用于 ToolEmitter 注入的发射器（可为 null）
+     * @return 转换后的实参数组
      */
     private Object[] convertParameters(
             Method method,
@@ -162,31 +165,31 @@ class ToolMethodInvoker {
         for (int i = 0; i < parameters.length; i++) {
             Parameter param = parameters[i];
 
-            // Special handling: inject ToolEmitter automatically
+            // 特殊处理：自动注入 ToolEmitter
             if (param.getType() == ToolEmitter.class) {
                 args[i] = emitter;
             }
-            // Special handling: inject Agent automatically
+            // 特殊处理：自动注入 Agent
             else if (param.getType() == Agent.class) {
                 args[i] = agent;
             }
-            // Special handling: inject AgentState (matches @Tool(stateInjected=true)). Prefer the
-            // call-scoped state carried on the RuntimeContext (concurrency-safe) and fall back to
-            // the agent's current state only when the context does not carry one.
+            // 特殊处理：注入 AgentState（匹配 @Tool(stateInjected=true)）。优先使用
+            // RuntimeContext 携带的调用级状态（并发安全），仅当上下文
+            // 未携带状态时回退到智能体当前状态。
             else if (param.getType() == AgentState.class) {
                 AgentState rcState = runtimeContext != null ? runtimeContext.getAgentState() : null;
                 args[i] =
                         rcState != null ? rcState : (agent != null ? agent.getAgentState() : null);
             }
-            // Inject RuntimeContext directly
+            // 直接注入 RuntimeContext
             else if (param.getType() == RuntimeContext.class) {
                 args[i] = runtimeContext;
             }
-            // Deprecated: inject ToolExecutionContext (bridge from RuntimeContext)
+            // 已弃用：注入 ToolExecutionContext（从 RuntimeContext 桥接）
             else if (param.getType() == ToolExecutionContext.class) {
                 args[i] = runtimeContext != null ? runtimeContext.asToolExecutionContext() : null;
             }
-            // User-defined POJO: try to resolve from RuntimeContext
+            // 用户定义 POJO：尝试从 RuntimeContext 解析
             else if (isUserContextPojo(param)) {
                 args[i] = resolveContextParameter(param, runtimeContext);
             } else {
@@ -198,63 +201,61 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Check if a parameter is a user-defined context POJO that should be resolved from
-     * ToolExecutionContext.
+     * 检查参数是否为应从 ToolExecutionContext 解析的用户定义上下文 POJO。
      *
-     * <p>Note: This method assumes ToolEmitter, Agent, RuntimeContext, and ToolExecutionContext have
-     * already been filtered at the call site.
+     * <p>注意：假定 ToolEmitter、Agent、RuntimeContext 和 ToolExecutionContext 已在调用处过滤。
      *
-     * <p>A parameter is considered a user context POJO if:
+     * <p>满足以下条件时视为用户上下文 POJO：
      * <ul>
-     *   <li>It does NOT have @ToolParam annotation (not a tool input from LLM)</li>
-     *   <li>It is NOT a primitive type (primitives must be tool inputs)</li>
-     *   <li>It is NOT a framework message type (ContentBlock subclasses, Msg, etc.)</li>
-     *   <li>It is NOT a common Java library type (String, List, Map, etc.)</li>
+     * <li>没有 @ToolParam 注解（不是来自模型的工具输入）</li>
+     * <li>不是基本类型（基本类型必须为工具输入）</li>
+     * <li>不是框架消息类型（ContentBlock 子类、Msg 等）</li>
+     * <li>不是常见 Java 库类型（String、List、Map 等）</li>
      * </ul>
      *
-     * @param param The parameter to check
-     * @return true if the parameter should be resolved from context as user POJO
+     * @param param 待检查参数
+     * @return 应作为用户 POJO 从上下文解析时为 true
      */
     private boolean isUserContextPojo(Parameter param) {
-        // 1. Explicitly annotated with @ToolParam → tool input from LLM
+        // 1. 显式标记 @ToolParam：来自模型的工具输入
         if (param.getAnnotation(ToolParam.class) != null) {
             return false;
         }
 
         Class<?> type = param.getType();
 
-        // 2. Primitive types → must be tool inputs
+        // 2. 基本类型：必须为工具输入
         if (type.isPrimitive()) {
             return false;
         }
 
-        // 3. Framework message types (ContentBlock, Msg, etc.) → not user POJOs
-        // Check by class hierarchy rather than package to avoid excluding test classes
+        // 3. 框架消息类型（ContentBlock、Msg 等）：不是用户 POJO
+        // 按类继承层次而非包名检查，避免排除测试类
         try {
             if (ContentBlock.class.isAssignableFrom(type) || type == Msg.class) {
                 return false;
             }
         } catch (Exception e) {
-            // If class loading fails, continue
+            // 类加载失败时继续
         }
 
         String packageName = type.getPackage() != null ? type.getPackage().getName() : "";
 
-        // 4. Java standard library types → typically tool inputs
+        // 4. Java 标准库类型：通常为工具输入
         if (packageName.startsWith("java.") || packageName.startsWith("javax.")) {
             return false;
         }
 
-        // 5. Everything else → user-defined context POJO
+        // 5. 其他类型：用户定义上下文 POJO
         return true;
     }
 
     /**
-     * Resolve a context parameter from RuntimeContext.
+     * 从 RuntimeContext 解析上下文参数。
      *
-     * @param param The parameter to resolve
-     * @param runtimeContext The runtime context (may be null)
-     * @return Resolved parameter value, or null if resolution fails
+     * @param param 待解析参数
+     * @param runtimeContext 运行时上下文（可为 null）
+     * @return 解析后的参数值；失败时为 null
      */
     private Object resolveContextParameter(Parameter param, RuntimeContext runtimeContext) {
         Class<?> targetType = param.getType();
@@ -274,15 +275,15 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Convert a single parameter from input map.
+     * 从输入映射转换单个参数。
      *
-     * @param parameter the parameter to convert
-     * @param input the input map
-     * @return converted parameter value
+     * @param parameter 待转换参数
+     * @param input 输入映射
+     * @return 转换后的参数值
      */
     private Object convertSingleParameter(Parameter parameter, Map<String, Object> input) {
-        // First check for @ToolParam annotation to get explicit parameter name
-        String paramName = parameter.getName(); // fallback to reflection name
+        // 先检查 @ToolParam 注解，获取显式参数名
+        String paramName = parameter.getName(); // 回退到反射参数名
         ToolParam toolParamAnnotation = parameter.getAnnotation(ToolParam.class);
         if (toolParamAnnotation != null && !toolParamAnnotation.name().isEmpty()) {
             paramName = toolParamAnnotation.name();
@@ -297,29 +298,29 @@ class ToolMethodInvoker {
         Class<?> rawType = parameter.getType();
         Type paramType = parameter.getParameterizedType();
 
-        // Direct assignment only if:
-        // 1. Raw types match, AND
-        // 2. The parameter is not a parameterized type (no generic info to preserve)
+        // 只有满足以下条件才能直接赋值：
+        // 1. 原始类型匹配，并且
+        // 2. 参数不是参数化类型（无需保留泛型信息）
         if (rawType.isAssignableFrom(value.getClass())
                 && !(paramType instanceof ParameterizedType)) {
             return value;
         }
 
-        // Use JsonCodec conversion with full type information to preserve generics.
+        // 使用携带完整类型信息的 JsonCodec 转换，以保留泛型。
         try {
             return JsonUtils.getJsonCodec().convertValue(value, paramType);
         } catch (Exception e) {
-            // Fallback to string-based conversion for primitives
+            // 基本类型回退到基于字符串的转换
             return convertFromString(value.toString(), rawType);
         }
     }
 
     /**
-     * Convert string value to target type (fallback for primitives).
+     * 将字符串值转换为目标类型（基本类型的回退方案）。
      *
-     * @param stringValue the string value
-     * @param targetType the target type
-     * @return converted value
+     * @param stringValue 字符串值
+     * @param targetType 目标类型
+     * @return 转换后的值
      */
     private Object convertFromString(String stringValue, Class<?> targetType) {
         if (targetType == Integer.class || targetType == int.class) {
@@ -337,37 +338,35 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Reactive error handler for use with {@code onErrorResume}.
+     * 供 {@code onErrorResume} 使用的响应式错误处理器。
      *
-     * <p>Delegates to {@link #handleInvocationError(Throwable)} and wraps the
-     * result in {@code Mono.just(...)}.
+     * <p>委托给 {@link #handleInvocationError(Throwable)}，并将结果包装为 {@code Mono.just(...)}。
      *
-     * @param e the error from the reactive chain
-     * @return Mono containing ToolResultBlock with error info
-     * @throws ToolSuspendException if found in the exception chain
+     * @param e 响应式链中的错误
+     * @return 包含错误信息 ToolResultBlock 的 Mono
+     * @throws ToolSuspendException 当异常链中存在此异常时
      */
     private Mono<ToolResultBlock> handleError(Throwable e) {
         return Mono.just(handleInvocationError(e));
     }
 
     /**
-     * Handle invocation errors with informative messages.
+     * 使用有用的错误消息处理调用错误。
      *
-     * <p>Special handling for {@link ToolSuspendException}: if found in the exception chain,
-     * it will be re-thrown to allow proper suspension handling by {@link ToolExecutor}.
+     * <p>特殊处理 {@link ToolSuspendException}：若异常链中存在，则重新抛出，以便 {@link ToolExecutor} 正确处理挂起。
      *
-     * @param e the throwable
-     * @return ToolResultBlock with error message
-     * @throws ToolSuspendException if found in the exception chain
+     * @param e 异常
+     * @return 包含错误消息的 ToolResultBlock
+     * @throws ToolSuspendException 当异常链中存在此异常时
      */
     private ToolResultBlock handleInvocationError(Throwable e) {
-        // Check if the exception itself is ToolSuspendException
+        // 检查异常本身是否为 ToolSuspendException
         if (e instanceof ToolSuspendException) {
             throw (ToolSuspendException) e;
         }
 
         Throwable cause = e.getCause();
-        // Check for ToolSuspendException in the exception chain
+        // 在异常链中查找 ToolSuspendException
         if (cause instanceof ToolSuspendException) {
             throw (ToolSuspendException) cause;
         }
@@ -380,10 +379,10 @@ class ToolMethodInvoker {
     }
 
     /**
-     * Extract generic type from method return type (for CompletableFuture<T> or Mono<T>).
+     * 从方法返回类型提取泛型类型（用于 CompletableFuture<T> 或 Mono<T>）。
      *
-     * @param method the method
-     * @return the generic type, or null if not found
+     * @param method 方法
+     * @return 泛型类型；未找到时为 null
      */
     private Type extractGenericType(Method method) {
         Type genericReturnType = method.getGenericReturnType();

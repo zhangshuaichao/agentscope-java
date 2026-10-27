@@ -29,32 +29,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Middleware that manages the sandbox session lifecycle around each agent call.
+ * 围绕每次智能体调用管理沙箱会话生命周期的中间件。
  *
- * <h2>Pre-{@code next.apply}</h2>
+ * <h2>{@code next.apply} 之前</h2>
  * <ol>
- *   <li>Read {@link SandboxContext} from the current {@link RuntimeContext}</li>
- *   <li>Acquire a session via {@link SandboxManager}</li>
- *   <li>Start the session (4-branch workspace init)</li>
- *   <li>Bind the live session on the per-call {@link RuntimeContext} for the
- *       {@link SandboxBackedFilesystem} proxy to resolve</li>
+ *   <li>读取 {@link SandboxContext}，来源为当前 {@link RuntimeContext}</li>
+ *   <li>通过 {@link SandboxManager} 获取会话</li>
+ *   <li>启动会话（工作区初始化分为四种情况）</li>
+ *   <li>将活动会话绑定到每次调用的 {@link RuntimeContext}，
+ *       供 {@link SandboxBackedFilesystem} 代理解析</li>
  * </ol>
  *
  * <h2>doFinally</h2>
  * <ol>
- *   <li>Release the session via {@link SandboxManager} (stop + optional shutdown)</li>
- *   <li>Persist sandbox session state via {@link SandboxManager} and
- *       {@link io.agentscope.harness.agent.sandbox.SessionSandboxStateStore}</li>
- *   <li>Invalidate this call's session binding across {@link RuntimeContext} copies</li>
+ *   <li>通过 {@link SandboxManager} 释放会话（停止，以及可选的关闭）</li>
+ *   <li>通过 {@link SandboxManager} 与
+ *       {@link io.agentscope.harness.agent.sandbox.SessionSandboxStateStore} 持久化沙箱会话状态</li>
+ *   <li>使本次调用在各个 {@link RuntimeContext} 副本中的会话绑定失效</li>
  * </ol>
  *
- * <p>Post-call failures (persist, release) are logged but do not propagate — this ensures
- * the agent call result is always returned to the caller even if sandbox cleanup fails.
+ * <p>调用后持久化、释放等失败只记录日志而不传播，
+ * 确保即使沙箱清理失败，调用方仍能收到智能体结果。
  *
- * <p>The sandbox is bound <em>per call</em> on the invocation's {@link RuntimeContext} rather than
- * on a shared agent-level slot: distinct {@code (userId, sessionId)} sessions run in parallel on
- * the same agent bean, so a shared slot would let concurrent calls corrupt each other's binding
- * (issue #2490).
+ * <p>沙箱按<em>调用</em>绑定在该次 {@link RuntimeContext} 上，而非共享智能体级槽位。
+ * 不同 {@code (userId, sessionId)} 会话可在同一个智能体 bean 上并行运行；
+ * 共享槽位会让并发调用破坏彼此的绑定（issue #2490）。
+ *
+ * <p>【学习提示】沙箱资源的拥有者是当前调用。释放时必须取回同一次调用建立的绑定，
+ * 不能简单清空某个共享字段，否则可能关闭另一个仍在执行的会话。
+ * 当前实现通过 acquireForCall/releaseForCall 显式接入生命周期；activePoints() 为空，
+ * 不应误以为它自动靠普通 onAgent 拦截点完成这些操作。
  */
 public class SandboxLifecycleMiddleware implements HarnessRuntimeMiddleware {
 
@@ -71,8 +75,8 @@ public class SandboxLifecycleMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Session lifecycle is driven explicitly by HarnessAgent; participates at no point.
-     * Subclasses overriding hooks must re-declare.
+     * 会话生命周期由 HarnessAgent 显式驱动，不参与任何扩展点。
+     * 子类若重写钩子，必须重新声明参与点。
      */
     @Override
     public Set<ExtensionPoint> activePoints() {
@@ -80,23 +84,21 @@ public class SandboxLifecycleMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Registers a callback that runs after the sandbox session is acquired but before
-     * {@link io.agentscope.harness.agent.sandbox.Sandbox#start()} applies workspace projection.
-     * This allows callers to materialise resources on the host workspace (e.g.
-     * {@code .skills-cache/}) so that projection picks them up in the same call.
+     * 注册在沙箱会话已获取、但 {@link io.agentscope.harness.agent.sandbox.Sandbox#start()}
+     * 应用工作区投影之前执行的回调。调用方可以先在宿主机工作区物化资源
+     * （例如 {@code .skills-cache/}），让本次调用的投影一并包含它们。
      *
-     * @param callback receives the per-call {@link RuntimeContext}; may be {@code null} to clear
+     * @param callback 接收每次调用的 {@link RuntimeContext}；可为 {@code null} 以清除
      */
     public void setBeforeStartCallback(Consumer<RuntimeContext> callback) {
         this.beforeStartCallback = callback;
     }
 
     /**
-     * Acquires the sandbox for the current call. Called from
-     * {@code ReActAgent.beforeAgentExecution()} to ensure the sandbox is available
-     * for both the {@code call()} and {@code streamEvents()} paths.
+     * 为当前调用获取沙箱。由 {@code ReActAgent.beforeAgentExecution()} 调用，
+     * 确保 {@code call()} 和 {@code streamEvents()} 两条路径都能使用沙箱。
      *
-     * @param ctx the per-call RuntimeContext (must not be null)
+     * @param ctx 每次调用的 RuntimeContext（不可为 null）
      */
     public void acquireForCall(RuntimeContext ctx) {
         if (ctx == null) {
@@ -124,12 +126,12 @@ public class SandboxLifecycleMiddleware implements HarnessRuntimeMiddleware {
             PinnedSandboxFilesystem.markSandboxAcquired(sandbox);
             try {
                 sandbox.start();
-                // Bind the acquired sandbox per-call on this invocation's RuntimeContext rather
-                // than only on a shared agent-level slot. Distinct (userId, sessionId) sessions
-                // run in parallel on the same agent bean, so a shared slot lets concurrent calls
-                // corrupt each other's binding (issue #2490). The filesystem proxy resolves the
-                // sandbox from this context first; the field below is a best-effort fallback for
-                // context-free callers (e.g. WorkspaceMessageBus) that do not thread a per-call.
+                // 将获取的沙箱按调用绑定到本次 RuntimeContext，
+                // 而不是只放入共享智能体级槽位。不同 (userId, sessionId) 会话
+                // 可在同一智能体 bean 上并行运行，共享槽位会让并发调用
+                // 破坏彼此的绑定（issue #2490）。文件系统代理优先从
+                // 当前上下文解析沙箱；下方字段仅作为无调用上下文的调用方
+                // （例如 WorkspaceMessageBus）的尽力回退。
                 ctx.put(SandboxAcquireResult.class, result);
                 filesystemProxy.setSandbox(sandbox);
                 log.debug(
@@ -157,31 +159,31 @@ public class SandboxLifecycleMiddleware implements HarnessRuntimeMiddleware {
     }
 
     /**
-     * Releases the sandbox after the current call. Called from
-     * {@code ReActAgent.afterAgentExecution()} to ensure cleanup for both paths.
+     * 在当前调用后释放沙箱。由 {@code ReActAgent.afterAgentExecution()} 调用，
+     * 确保两条路径都执行清理。
      *
-     * @param ctx the per-call RuntimeContext (captured at acquire time)
+     * @param ctx 每次调用的 RuntimeContext（在获取时捕获）
      */
     public void releaseForCall(RuntimeContext ctx) {
         if (ctx == null) {
             return;
         }
-        // Read back the binding this same call established in acquireForCall, so a call only ever
-        // tears down its own sandbox — never a concurrent session's (issue #2490).
+        // 读取本次调用在 acquireForCall 中建立的同一个绑定，使调用只会
+        // 清理自己的沙箱，而不会清理其他并发会话的沙箱（issue #2490）。
         SandboxAcquireResult result = ctx.get(SandboxAcquireResult.class);
         if (result == null) {
             return;
         }
-        // Retain an invalidated binding so this context cannot fall back to a sibling call.
+        // 保留已失效的绑定，防止此上下文回退到兄弟调用。
         if (!result.beginRelease()) {
             return;
         }
-        // Compare-and-clear the fallback field so a releasing call never nulls a concurrent
-        // sibling's binding (issue #2490); it only clears the field when it still points here.
+        // 比较后再清除回退字段，避免释放中的调用把并发兄弟调用的绑定
+        // 置空（issue #2490）；仅当字段仍指向当前绑定时才清除。
         filesystemProxy.clearSandboxIfCurrent(result.getSandbox());
         SandboxContext sandboxContext = ctx.get(SandboxContext.class);
-        // Release (stop/persist workspace) first so state mutations made during stop — e.g.
-        // workspaceRootReady or per-session snapshot records — are captured by the persist below.
+        // 先执行释放（停止／持久化工作区），使停止期间产生的状态变化，
+        // 例如 workspaceRootReady 或会话快照记录，可被下方持久化捕获。
         try {
             markMirrorSandboxReleased(result);
             sandboxManager.release(result);

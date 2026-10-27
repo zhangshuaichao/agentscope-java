@@ -19,11 +19,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents token usage information for chat completion responses.
+ * 表示聊天补全响应的词元用量信息。
  *
- * <p>This immutable data class tracks the number of tokens used during a chat completion,
- * including input tokens (prompt), output tokens (generated response), input/output token
- * breakdowns, and execution time.
+ * <p>此不可变数据类记录聊天补全使用的词元数量，包括输入词元（提示）、
+ * 输出词元（生成响应）、输入／输出词元细分以及执行耗时。
+ *
+ * <p>【学习提示】细分指标是总量的子集，不应再次加到总词元数上；
+ * 服务商未报告某细分时的零值，也不能证明实际没有发生该类用量。
  */
 public class ChatUsage {
 
@@ -36,27 +38,26 @@ public class ChatUsage {
     private final double time;
 
     /**
-     * Creates a new ChatUsage instance without token breakdowns.
+     * 创建不带词元细分信息的 ChatUsage 实例。
      *
-     * <p>This constructor is retained for backward compatibility. All token breakdowns default to
-     * {@code 0}.
+     * <p>保留此构造方法以保持向后兼容。所有词元细分指标默认为 {@code 0}。
      *
-     * @param inputTokens the number of tokens used for the input/prompt
-     * @param outputTokens the number of tokens used for the output/generated response
-     * @param time the execution time in seconds
+     * @param inputTokens 输入／提示使用的词元数量
+     * @param outputTokens 输出／生成响应使用的词元数量
+     * @param time 执行时间，单位为秒
      */
     public ChatUsage(int inputTokens, int outputTokens, double time) {
         this(inputTokens, outputTokens, 0, time);
     }
 
     /**
-     * Creates a new ChatUsage instance.
+     * 创建新的 ChatUsage 实例。
      *
-     * @param inputTokens the number of tokens used for the input/prompt
-     * @param outputTokens the number of tokens used for the output/generated response
-     * @param cachedTokens the number of input tokens served from the prompt cache (a subset of
-     *     {@code inputTokens}); {@code 0} when the provider does not report cache information
-     * @param time the execution time in seconds
+     * @param inputTokens 输入／提示使用的词元数量
+     * @param outputTokens 输出／生成响应使用的词元数量
+     * @param cachedTokens 从提示缓存读取的输入词元数量（属于 {@code inputTokens} 的子集）；
+     *     服务商不报告缓存信息时为 {@code 0}
+     * @param time 执行时间，单位为秒
      */
     public ChatUsage(
             @JsonProperty("inputTokens") int inputTokens,
@@ -67,24 +68,22 @@ public class ChatUsage {
     }
 
     /**
-     * Creates a new ChatUsage instance with all token breakdowns.
+     * 创建包含全部词元细分信息的 ChatUsage 实例。
      *
-     * <p>This constructor is also used by Jackson to deserialize a {@code ChatUsage} object. When
-     * a breakdown property is omitted from JSON, its primitive value defaults to {@code 0}.
+     * <p>Jackson 也使用此构造方法反序列化 {@code ChatUsage} 对象。
+     * JSON 省略某细分属性时，该基本类型值默认为 {@code 0}。
      *
-     * @param inputTokens the number of tokens used for the input/prompt
-     * @param outputTokens the number of tokens used for the output/generated response
-     * @param cachedTokens the number of input tokens served from the prompt cache (a subset of
-     *     {@code inputTokens}); {@code 0} when the provider does not report cache information
-     * @param cacheCreationTokens the number of input tokens used to create a prompt cache entry
-     *     (a subset of {@code inputTokens}); {@code 0} when the provider does not report this
-     *     information
-     * @param reasoningTokens the number of output tokens used for model reasoning (a subset of
-     *     {@code outputTokens}); {@code 0} when the provider does not report this information
-     * @param toolUsePromptTokens the number of input tokens representing tool results returned to
-     *     the model (a subset of {@code inputTokens}); {@code 0} when the provider does not report
-     *     this information
-     * @param time the execution time in seconds
+     * @param inputTokens 输入／提示使用的词元数量
+     * @param outputTokens 输出／生成响应使用的词元数量
+     * @param cachedTokens 从提示缓存读取的输入词元数量（属于 {@code inputTokens} 的子集）；
+     *     服务商不报告缓存信息时为 {@code 0}
+     * @param cacheCreationTokens 用于创建提示缓存条目的输入词元数量（属于 {@code inputTokens} 的子集）；
+     *     服务商不报告此信息时为 {@code 0}
+     * @param reasoningTokens 用于模型推理的输出词元数量（属于 {@code outputTokens} 的子集）；
+     *     服务商不报告此信息时为 {@code 0}
+     * @param toolUsePromptTokens 表示返回给模型的工具结果的输入词元数量（属于 {@code inputTokens} 的子集）；
+     *     服务商不报告此信息时为 {@code 0}
+     * @param time 执行时间，单位为秒
      */
     @JsonCreator
     public ChatUsage(
@@ -105,103 +104,100 @@ public class ChatUsage {
     }
 
     /**
-     * Gets the number of input tokens used.
+     * 获取已使用的输入词元数量。
      *
-     * @return the number of tokens used for the input/prompt
+     * @return 输入／提示使用的词元数量
      */
     public int getInputTokens() {
         return inputTokens;
     }
 
     /**
-     * Gets the number of output tokens used.
+     * 获取已使用的输出词元数量。
      *
-     * @return the number of tokens used for the output/generated response
+     * @return 输出／生成响应使用的词元数量
      */
     public int getOutputTokens() {
         return outputTokens;
     }
 
     /**
-     * Gets the number of input tokens served from the prompt cache.
+     * 获取从提示缓存读取的输入词元数量。
      *
-     * <p>Cached tokens are a subset of {@link #getInputTokens()} (i.e. {@code inputTokens =
-     * non-cached prompt tokens + cachedTokens}), not an additional amount, and are typically billed
-     * at a reduced rate. Returns {@code 0} when the provider does not report cache information.
+     * <p>缓存词元是 {@link #getInputTokens()} 的子集（即 {@code inputTokens =
+     * non-cached prompt tokens + cachedTokens}），不是额外数量，通常按较低费率计费。
+     * 服务商不报告缓存信息时返回 {@code 0}。
      *
-     * @return the number of cached input tokens
+     * @return 缓存输入词元数量
      */
     public int getCachedTokens() {
         return cachedTokens;
     }
 
     /**
-     * Gets the number of input tokens used to create a prompt cache entry.
+     * 获取用于创建提示缓存条目的输入词元数量。
      *
-     * <p>Cache creation tokens are a subset of {@link #getInputTokens()}, not an additional
-     * amount, and may be billed separately from a cache hit. Returns {@code 0} when the provider
-     * does not report this metric.
+     * <p>缓存创建词元是 {@link #getInputTokens()} 的子集，不是额外数量，
+     * 其计费方式可能与缓存命中不同。服务商不报告此指标时返回 {@code 0}。
      *
-     * @return the number of cache-creation input tokens
+     * @return 缓存创建输入词元数量
      */
     public int getCacheCreationTokens() {
         return cacheCreationTokens;
     }
 
     /**
-     * Gets the number of output tokens used for model reasoning.
+     * 获取用于模型推理的输出词元数量。
      *
-     * <p>Reasoning tokens are a subset of {@link #getOutputTokens()}, not an additional amount.
-     * Returns {@code 0} when the provider does not report this metric.
+     * <p>推理词元是 {@link #getOutputTokens()} 的子集，不是额外数量。
+     * 服务商不报告此指标时返回 {@code 0}。
      *
-     * @return the number of reasoning output tokens
+     * @return 推理输出词元数量
      */
     public int getReasoningTokens() {
         return reasoningTokens;
     }
 
     /**
-     * Gets the number of input tokens representing tool results returned to the model.
+     * 获取表示返回给模型的工具结果的输入词元数量。
      *
-     * <p>Tool-use prompt tokens are a subset of {@link #getInputTokens()}, not an additional
-     * amount. Returns {@code 0} when the provider does not report this metric.
+     * <p>工具使用提示词元是 {@link #getInputTokens()} 的子集，不是额外数量。
+     * 服务商不报告此指标时返回 {@code 0}。
      *
-     * @return the number of tool-result input tokens
+     * @return 工具结果输入词元数量
      */
     public int getToolUsePromptTokens() {
         return toolUsePromptTokens;
     }
 
     /**
-     * Gets the total number of tokens used.
+     * 获取使用的总词元数。
      *
-     * @return the sum of input and output tokens
+     * @return 输入词元与输出词元之和
      */
     public int getTotalTokens() {
         return inputTokens + outputTokens;
     }
 
     /**
-     * Gets the execution time.
+     * 获取执行时间。
      *
-     * @return the execution time in seconds
+     * @return 以秒为单位的执行时间
      */
     public double getTime() {
         return time;
     }
 
     /**
-     * Creates a new builder for ChatUsage.
+     * 创建新的 ChatUsage 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for creating ChatUsage instances.
-     */
+    /** 创建 ChatUsage 实例的建造者。 */
     public static class Builder {
         private int inputTokens;
         private int outputTokens;
@@ -212,10 +208,10 @@ public class ChatUsage {
         private double time;
 
         /**
-         * Sets the number of input tokens.
+         * 设置输入词元数量。
          *
-         * @param inputTokens the number of tokens used for the input/prompt
-         * @return this builder instance
+         * @param inputTokens 输入／提示使用的词元数量
+         * @return 当前建造者实例
          */
         public Builder inputTokens(int inputTokens) {
             this.inputTokens = inputTokens;
@@ -223,10 +219,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the number of output tokens.
+         * 设置输出词元数量。
          *
-         * @param outputTokens the number of tokens used for the output/generated response
-         * @return this builder instance
+         * @param outputTokens 输出／生成响应使用的词元数量
+         * @return 当前建造者实例
          */
         public Builder outputTokens(int outputTokens) {
             this.outputTokens = outputTokens;
@@ -234,11 +230,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the number of cached input tokens.
+         * 设置缓存输入词元数量。
          *
-         * @param cachedTokens the number of input tokens served from the prompt cache (a subset of
-         *     {@code inputTokens})
-         * @return this builder instance
+         * @param cachedTokens 从提示缓存读取的输入词元数量（属于 {@code inputTokens} 的子集）
+         * @return 当前建造者实例
          */
         public Builder cachedTokens(int cachedTokens) {
             this.cachedTokens = cachedTokens;
@@ -246,11 +241,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the number of input tokens used to create a prompt cache entry.
+         * 设置用于创建提示缓存条目的输入词元数量。
          *
-         * @param cacheCreationTokens the number of cache-creation input tokens (a subset of
-         *     {@code inputTokens})
-         * @return this builder instance
+         * @param cacheCreationTokens 缓存创建输入词元数量（属于 {@code inputTokens} 的子集）
+         * @return 当前建造者实例
          */
         public Builder cacheCreationTokens(int cacheCreationTokens) {
             this.cacheCreationTokens = cacheCreationTokens;
@@ -258,11 +252,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the number of output tokens used for model reasoning.
+         * 设置用于模型推理的输出词元数量。
          *
-         * @param reasoningTokens the number of output tokens used for reasoning (a subset of
-         *     {@code outputTokens})
-         * @return this builder instance
+         * @param reasoningTokens 用于推理的输出词元数量（属于 {@code outputTokens} 的子集）
+         * @return 当前建造者实例
          */
         public Builder reasoningTokens(int reasoningTokens) {
             this.reasoningTokens = reasoningTokens;
@@ -270,11 +263,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the number of input tokens representing tool results returned to the model.
+         * 设置表示返回给模型的工具结果的输入词元数量。
          *
-         * @param toolUsePromptTokens the number of tool-result input tokens (a subset of
-         *     {@code inputTokens})
-         * @return this builder instance
+         * @param toolUsePromptTokens 工具结果输入词元数量（属于 {@code inputTokens} 的子集）
+         * @return 当前建造者实例
          */
         public Builder toolUsePromptTokens(int toolUsePromptTokens) {
             this.toolUsePromptTokens = toolUsePromptTokens;
@@ -282,10 +274,10 @@ public class ChatUsage {
         }
 
         /**
-         * Sets the execution time.
+         * 设置执行时间。
          *
-         * @param time the execution time in seconds
-         * @return this builder instance
+         * @param time 执行时间，单位为秒
+         * @return 当前建造者实例
          */
         public Builder time(double time) {
             this.time = time;
@@ -293,9 +285,9 @@ public class ChatUsage {
         }
 
         /**
-         * Builds a new ChatUsage instance with the set values.
+         * 使用已设置的值构建新的 ChatUsage 实例。
          *
-         * @return a new ChatUsage instance
+         * @return 新的 ChatUsage 实例
          */
         public ChatUsage build() {
             return new ChatUsage(

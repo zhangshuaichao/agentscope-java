@@ -20,16 +20,15 @@ import io.agentscope.harness.agent.sandbox.snapshot.SandboxSnapshotSpec;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * Convenience {@link SandboxSnapshotSpec} for Redis-backed snapshot storage.
+ * Redis 快照存储的便捷 {@link SandboxSnapshotSpec}。
  */
 public class RedisSnapshotSpec extends RemoteSnapshotSpec {
 
     /**
-     * Creates a Redis snapshot spec.
-     *
-     * @param jedis initialized jedis client
-     * @param keyPrefix redis key prefix (optional)
-     * @param ttlSeconds optional TTL in seconds (null or negative means no TTL)
+     * 创建 Redis 快照配置。
+     * @param jedis 已初始化的 Jedis 客户端
+     * @param keyPrefix 可选 Redis 键前缀
+     * @param ttlSeconds 可选 TTL 秒数，null 或非正数表示不设 TTL
      */
     public RedisSnapshotSpec(UnifiedJedis jedis, String keyPrefix, Integer ttlSeconds) {
         super(new RedisRemoteSnapshotClient(jedis, keyPrefix, ttlSeconds));

@@ -18,21 +18,18 @@ package io.agentscope.core.tool;
 import java.util.List;
 
 /**
- * Defaults for the dangerous-path and dangerous-command lists consulted by tool self-checks.
+ * 工具自检使用的危险路径和危险命令列表默认值。
  *
- * <p>These lists guard sensitive configuration files (shell rc files, SSH config, credentials)
- * and disruptive shell commands. Tools that override the fields on {@link ToolBase} replace the
- * defaults entirely rather than appending to them.
+ * <p>保护敏感配置文件（Shell rc 文件、SSH 配置、凭据）并防范破坏性 Shell 命令。工具覆写 {@link ToolBase} 字段时会整体替换默认值，而不是追加。
  */
 public final class ToolDangerousPathConstants {
 
     private ToolDangerousPathConstants() {}
 
     /**
-     * Sensitive files that should never be auto-edited.
+     * 绝不应自动编辑的敏感文件。
      *
-     * <p>Includes shell rc files, SSH config, credential stores, and {@code .env}
-     * variants that commonly hold secrets. Aligned with Python {@code tool/_constants.py}.
+     * <p>包括 Shell rc 文件、SSH 配置、凭据存储和常存密钥的 {@code .env} 变体，与 Python {@code tool/_constants.py} 对齐。
      */
     public static final List<String> DEFAULT_DANGEROUS_FILES =
             List.of(
@@ -59,11 +56,15 @@ public final class ToolDangerousPathConstants {
                     ".env.production",
                     ".env.production.local");
 
-    /** Directory names whose presence anywhere in a path marks it sensitive. */
+    /**
+     * 路径任意位置出现即标记为敏感的目录名。
+     */
     public static final List<String> DEFAULT_DANGEROUS_DIRECTORIES =
             List.of(".git", ".vscode", ".idea", ".ssh");
 
-    /** Shell command fragments that always require explicit user approval. */
+    /**
+     * 始终需要用户明确批准的 Shell 命令片段。
+     */
     public static final List<String> DANGEROUS_COMMANDS =
             List.of(
                     "rm -rf",

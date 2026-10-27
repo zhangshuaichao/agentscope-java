@@ -20,7 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
-/** Per-agent context policy. Zero limits use the actual model's window; no fixed layer quotas. */
+/** 智能体级上下文策略。限制值为零时使用实际模型的窗口；不设固定的分层配额。 */
 public record ContextPolicy(
         int maxInputTokens,
         int reservedOutputTokens,
@@ -39,7 +39,7 @@ public record ContextPolicy(
         return new ContextPolicy(0, 0, 0, ContextTokenEstimator.approximate(), manifest -> {});
     }
 
-    /** Serializable numeric configuration; executable estimators/observers remain application-owned. */
+    /** 可序列化的数值配置；可执行的估算器和观察者仍由应用持有。 */
     public static ContextPolicy fromMap(Map<?, ?> values) {
         for (Object key : values.keySet()) {
             if (!Set.of("maxInputTokens", "reservedOutputTokens", "safetyMarginTokens")

@@ -45,18 +45,17 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * WebSocket client implementation based on OkHttp.
+ * 基于 OkHttp 的 WebSocket 客户端实现。
  *
- * <p>Features:
- *
+ * <p>特点：
  * <ul>
- *   <li>Mature and stable HTTP client library
- *   <li>Built-in ping/pong heartbeat (pingInterval)
- *   <li>Better connection pool management
- *   <li>Client instance is reusable
+ *   <li>使用成熟稳定的 HTTP 客户端库
+ *   <li>内置 ping/pong 心跳（pingInterval）
+ *   <li>完善的连接池管理
+ *   <li>客户端实例可重复使用
  * </ul>
  *
- * <p>Usage example:
+ * <p>用法示例：
  *
  * <pre>{@code
  * WebSocketTransport client = OkHttpWebSocketTransport.create();
@@ -84,37 +83,37 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
     }
 
     /**
-     * Create a client with default configuration.
+     * 使用默认配置创建客户端。
      *
-     * @return OkHttpWebSocketTransport instance
+     * @return OkHttpWebSocketTransport 实例
      */
     public static OkHttpWebSocketTransport create() {
         return new OkHttpWebSocketTransport(
                 new OkHttpClient.Builder()
                         .connectTimeout(30, TimeUnit.SECONDS)
-                        .readTimeout(0, TimeUnit.SECONDS) // No read timeout for WebSocket
+                        .readTimeout(0, TimeUnit.SECONDS) // WebSocket 不设置读取超时
                         .writeTimeout(30, TimeUnit.SECONDS)
-                        .pingInterval(30, TimeUnit.SECONDS) // Heartbeat interval
+                        .pingInterval(30, TimeUnit.SECONDS) // 心跳间隔
                         .build());
     }
 
     /**
-     * Create a client with custom OkHttpClient.
+     * 使用自定义 OkHttpClient 创建客户端。
      *
-     * @param client Custom OkHttpClient instance
-     * @return OkHttpWebSocketTransport instance
+     * @param client 自定义 OkHttpClient 实例
+     * @return OkHttpWebSocketTransport 实例
      */
     public static OkHttpWebSocketTransport create(OkHttpClient client) {
         return new OkHttpWebSocketTransport(client);
     }
 
     /**
-     * Create a client with custom configuration.
+     * 使用自定义配置创建客户端。
      *
-     * <p>This method supports proxy configuration and other advanced settings.
+     * <p>支持代理配置及其他高级设置。
      *
-     * @param config the WebSocket client configuration
-     * @return OkHttpWebSocketTransport instance
+     * @param config WebSocket 客户端配置
+     * @return OkHttpWebSocketTransport 实例
      */
     public static OkHttpWebSocketTransport create(WebSocketTransportConfig config) {
         return new OkHttpWebSocketTransport(buildClient(config));
@@ -129,7 +128,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
                         .writeTimeout(config.getWriteTimeout().toMillis(), TimeUnit.MILLISECONDS)
                         .pingInterval(config.getPingInterval().toMillis(), TimeUnit.MILLISECONDS);
 
-        // Configure SSL (optionally ignore certificate verification)
+        // 配置 SSL（可选地忽略证书验证）
         if (config.isIgnoreSsl()) {
             log.error(
                     "SSL certificate verification has been disabled for this WebSocket client. This"
@@ -147,7 +146,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
             }
         }
 
-        // Configure proxy
+        // 配置代理
         if (config.getProxyConfig() != null) {
             ProxyConfig proxyConfig = config.getProxyConfig();
 
@@ -164,7 +163,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
                 builder.proxyAuthenticator(
                         (route, response) -> {
                             if (response.request().header("Proxy-Authorization") != null) {
-                                return null; // Avoid infinite retry
+                                return null; // 避免无限重试
                             }
                             String credential = Credentials.basic(username, password);
                             return response.request()
@@ -182,12 +181,12 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
         return new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
@@ -206,7 +205,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
 
                     Request.Builder requestBuilder = new Request.Builder().url(request.getUrl());
 
-                    // Add request headers
+                    // 添加请求头
                     request.getHeaders().forEach(requestBuilder::addHeader);
 
                     Request okRequest = requestBuilder.build();
@@ -272,7 +271,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
                                                 Throwable t,
                                                 Response response) {
                                             if (!connection.isInitialized()) {
-                                                // Connection establishment failed
+                                                // 连接建立失败
                                                 log.error(
                                                         "Failed to connect to WebSocket: {}",
                                                         request.getUrl(),
@@ -285,7 +284,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
                                                                 "CONNECTING",
                                                                 request.getHeaders()));
                                             } else {
-                                                // Connection interrupted
+                                                // 连接中断
                                                 log.error(
                                                         "WebSocket error: {}", request.getUrl(), t);
                                                 connection.onError(t);
@@ -302,9 +301,7 @@ public class OkHttpWebSocketTransport implements WebSocketTransport {
         client.connectionPool().evictAll();
     }
 
-    /**
-     * ProxySelector that respects non-proxy hosts configuration.
-     */
+    /** 遵循非代理主机配置的 ProxySelector。 */
     private static class NonProxyHostsSelector extends ProxySelector {
         private final ProxyConfig proxyConfig;
         private final List<Proxy> proxyList;

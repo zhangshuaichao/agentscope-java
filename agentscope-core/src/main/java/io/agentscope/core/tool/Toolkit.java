@@ -39,32 +39,35 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * Toolkit manages the registration, retrieval, and execution of agent tools.
- * This class acts as a facade, delegating specific responsibilities to specialized managers:
+ * Toolkit 管理智能体工具的注册、检索和执行，作为门面将具体职责委托给专门管理器。
  *
- * <p><b>Managers:</b>
+ * <p>【学习提示】按“注册期”和“调用期”分开阅读：注册期把 Java 方法包装为工具并生成参数模式；
+ * 调用期则按名称解析工具、验证参数、执行并转换结果。模型看到的是模式，不是 Java 方法体。
+ * 注册成功只表示工具进入注册表，并不等于模型每轮都能看到它，工具组和请求配置还会筛选可见范围。
+ *
+ * <p><b>管理器：</b>
  * <ul>
- *   <li>ToolRegistry: Tool registration and lookup</li>
- *   <li>ToolGroupManager: Tool group CRUD operations and active group management</li>
- *   <li>ToolSchemaProvider: Tool schema generation with group filtering</li>
- *   <li>McpClientManager: MCP client lifecycle and tool registration</li>
- *   <li>MetaToolFactory: Creates meta tools for dynamic group control</li>
+ * <li>ToolRegistry：工具注册和查找</li>
+ * <li>ToolGroupManager：工具组增删改查及激活组管理</li>
+ * <li>ToolSchemaProvider：结合工具组筛选生成工具模式</li>
+ * <li>McpClientManager：MCP 客户端生命周期和工具注册</li>
+ * <li>MetaToolFactory：创建动态控制工具组的元工具</li>
  * </ul>
  *
- * <p><b>Core Components:</b>
+ * <p><b>核心组件：</b>
  * <ul>
- *   <li>ToolSchemaGenerator: Generates JSON schemas for tool parameters</li>
- *   <li>ToolMethodInvoker: Handles method invocation and parameter conversion</li>
- *   <li>ToolResultConverter: Converts method results to ToolResultBlock</li>
- *   <li>ToolExecutor: Handles parallel/sequential tool execution with validation</li>
+ * <li>ToolSchemaGenerator：生成工具参数 JSON 模式</li>
+ * <li>ToolMethodInvoker：方法调用和参数转换</li>
+ * <li>ToolResultConverter：将方法结果转换为 ToolResultBlock</li>
+ * <li>ToolExecutor：带验证的并行或顺序工具执行</li>
  * </ul>
  *
- * <p><b>Features:</b>
+ * <p><b>特性：</b>
  * <ul>
- *   <li>Tool group management for dynamic tool activation</li>
- *   <li>State management via StateModule interface (activeGroups persistence)</li>
- *   <li>Meta tool for runtime tool group control (reset_equipped_tools)</li>
- *   <li>MCP (Model Context Protocol) client support for external tool providers</li>
+ * <li>通过工具组动态激活工具</li>
+ * <li>通过 StateModule 接口管理状态（持久化 activeGroups）</li>
+ * <li>通过 reset_equipped_tools 元工具在运行时控制工具组</li>
+ * <li>支持外部工具提供方的 MCP（模型上下文协议）客户端</li>
  * </ul>
  */
 public class Toolkit {
@@ -83,16 +86,16 @@ public class Toolkit {
     private final ToolExecutor executor;
 
     /**
-     * Create a Toolkit with default configuration (parallel execution using Reactor).
+     * 使用默认配置创建 Toolkit（基于 Reactor 并行执行）。
      */
     public Toolkit() {
         this(ToolkitConfig.defaultConfig());
     }
 
     /**
-     * Create a Toolkit with custom configuration.
+     * 使用自定义配置创建 Toolkit。
      *
-     * @param config Toolkit configuration (if null, uses defaultConfig())
+     * @param config 工具集配置（为 null 时使用 defaultConfig()）
      */
     public Toolkit(ToolkitConfig config) {
         this.config = config != null ? config : ToolkitConfig.defaultConfig();
@@ -107,7 +110,7 @@ public class Toolkit {
                                 registerAgentTool(
                                         tool, groupName, null, mcpClientName, presetParameters));
 
-        // Create executor based on configuration
+        // 按配置创建执行器
         if (config != null && config.hasCustomExecutor()) {
             this.executor =
                     new ToolExecutor(
@@ -122,9 +125,9 @@ public class Toolkit {
     }
 
     /**
-     * Create a fluent builder for registering tools with optional configuration.
+     * 创建用于注册工具的链式构建器，支持可选配置。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * // Register tool object
      * toolkit.registration()
@@ -146,22 +149,22 @@ public class Toolkit {
      *     .apply();
      * }</pre>
      *
-     * @return A new ToolRegistration builder
+     * @return 新的 ToolRegistration 构建器
      */
     public ToolRegistration registration() {
         return new ToolRegistration(this);
     }
 
     /**
-     * Register a tool object by scanning for methods annotated with @Tool.
-     * @param toolObject the object containing tool methods
+     * 扫描带 @Tool 注解的方法并注册工具对象。
+     * @param toolObject 包含工具方法的对象
      */
     public void registerTool(Object toolObject) {
         registerTool(toolObject, null, null, null);
     }
 
     /**
-     * Internal method: Register a tool object with group, extended model, and preset parameters.
+     * 内部方法：注册工具对象，配置工具组、扩展模型和预设参数。
      */
     private void registerTool(
             Object toolObject,
@@ -172,7 +175,7 @@ public class Toolkit {
             throw new IllegalArgumentException("Tool object cannot be null");
         }
 
-        // Check if the object is an AgentTool instance
+        // 检查对象是否为 AgentTool 实例
         if (toolObject instanceof AgentTool) {
             AgentTool agentTool = (AgentTool) toolObject;
             String toolName = agentTool.getName();
@@ -202,15 +205,15 @@ public class Toolkit {
     }
 
     /**
-     * Register an AgentTool instance directly.
-     * @param tool the AgentTool to register
+     * 直接注册 AgentTool 实例。
+     * @param tool 要注册的 AgentTool
      */
     public void registerAgentTool(AgentTool tool) {
         registerAgentTool(tool, null, null, null, null);
     }
 
     /**
-     * Internal method to register AgentTool with full metadata including preset parameters.
+     * 内部方法：使用包含预设参数的完整元数据注册 AgentTool。
      */
     private void registerAgentTool(
             AgentTool tool,
@@ -224,19 +227,19 @@ public class Toolkit {
 
         String toolName = tool.getName();
 
-        // Validate group exists if specified
+        // 指定工具组时验证组存在
         if (groupName != null) {
             groupManager.validateGroupExists(groupName);
         }
 
-        // Create registered wrapper with preset parameters
+        // 创建带预设参数的注册包装器
         RegisteredToolFunction registered =
                 new RegisteredToolFunction(tool, extendedModel, mcpClientName, presetParameters);
 
-        // Register in toolRegistry
+        // 注册到 toolRegistry
         toolRegistry.registerTool(toolName, tool, registered);
 
-        // Add to group if specified
+        // 指定组时加入该组
         if (groupName != null) {
             groupManager.addToolToGroup(groupName, toolName);
         }
@@ -248,25 +251,21 @@ public class Toolkit {
     }
 
     /**
-     * Retrieves a tool by its name.
+     * 按名称检索工具。
      *
-     * @param name The name of the tool to retrieve
-     * @return The AgentTool instance, or null if not found
+     * @param name 要检索的工具名称
+     * @return AgentTool 实例；未找到时为 null
      */
     public AgentTool getTool(String name) {
         return toolRegistry.getTool(name);
     }
 
     /**
-     * Resolve a tool by name, composing a per-call {@link ToolRequestConfig} with the shared
-     * registry (never mutating either). External tools from the request config take priority over
-     * the backend registry; in {@link ToolMergeMode#EXTERNAL_ONLY} the
-     * backend is hidden entirely.
+     * 按名称解析工具，将逐调用 {@link ToolRequestConfig} 与共享注册表组合，不修改任一对象。请求配置中的外部工具优先于后端注册表；{@link ToolMergeMode#EXTERNAL_ONLY} 模式完全隐藏后端。
      *
-     * @param name tool name
-     * @param requestConfig per-call request config (may be {@code null} → {@link
-     *     ToolRequestConfig#NONE})
-     * @return the resolved tool, or {@code null} when not found or hidden
+     * @param name 工具名称
+     * @param requestConfig 逐调用请求配置（{@code null} 视为 {@link ToolRequestConfig#NONE}）
+     * @return 解析到的工具；未找到或被隐藏时为 {@code null}
      */
     public AgentTool getTool(String name, ToolRequestConfig requestConfig) {
         return (requestConfig != null ? requestConfig : ToolRequestConfig.NONE)
@@ -274,25 +273,22 @@ public class Toolkit {
     }
 
     /**
-     * Gets the names of all registered tools.
+     * 获取全部已注册工具名称。
      *
-     * @return A set of all tool names (never null, may be empty)
+     * @return 全部工具名称集合（永不为 null，可以为空）
      */
     public Set<String> getToolNames() {
         return toolRegistry.getToolNames();
     }
 
-    // ==================== External Tool Support ====================
+    // ==================== 外部工具支持 ====================
 
     /**
-     * Register an external tool using only its schema definition.
+     * 仅使用模式定义注册外部工具。
      *
-     * <p>External tools are tools that will be executed outside the framework. When a model
-     * returns a call to an external tool, the framework will not execute it but instead
-     * return the tool call to the user via a message with
-     * {@link io.agentscope.core.message.GenerateReason#TOOL_SUSPENDED}.
+     * <p>外部工具在框架之外执行。模型返回外部工具调用时，框架不执行它，而通过生成原因为 {@link io.agentscope.core.message.GenerateReason#TOOL_SUSPENDED} 的消息将调用返回给用户。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * ToolSchema schema = ToolSchema.builder()
      *     .name("query_database")
@@ -307,8 +303,8 @@ public class Toolkit {
      * toolkit.registerSchema(schema);
      * }</pre>
      *
-     * @param schema The tool schema containing name, description, and parameters
-     * @throws NullPointerException if schema is null
+     * @param schema 包含名称、描述和参数的工具模式
+     * @throws NullPointerException 当 schema 为 null 时
      * @see SchemaOnlyTool
      * @see #isExternalTool(String)
      */
@@ -317,10 +313,10 @@ public class Toolkit {
     }
 
     /**
-     * Register multiple external tools using their schema definitions.
+     * 使用模式定义注册多个外部工具。
      *
-     * @param schemas List of tool schemas to register
-     * @throws NullPointerException if schemas is null
+     * @param schemas 待注册工具模式列表
+     * @throws NullPointerException 当 schemas 为 null 时
      * @see #registerSchema(ToolSchema)
      */
     public void registerSchemas(List<ToolSchema> schemas) {
@@ -330,15 +326,12 @@ public class Toolkit {
     }
 
     /**
-     * Check if a tool is an external tool (requires execution outside the framework).
+     * 检查工具是否为需要在框架外执行的外部工具。
      *
-     * <p>A tool is considered external when it extends {@link ToolBase} and reports
-     * {@code isExternalTool() == true} — for example {@link SchemaOnlyTool}, or any
-     * {@code @Tool(externalTool=true)} method. When this returns true, the framework will skip
-     * execution and surface the tool call to the user via {@code TOOL_SUSPENDED}.
+     * <p>继承 {@link ToolBase} 且返回 {@code isExternalTool() == true} 的工具视为外部工具，例如 {@link SchemaOnlyTool} 或 {@code @Tool(externalTool=true)} 方法。返回 true 时框架跳过执行，通过 {@code TOOL_SUSPENDED} 向用户暴露调用。
      *
-     * @param toolName The name of the tool to check
-     * @return true if the tool is an external tool, false otherwise
+     * @param toolName 待检查工具名称
+     * @return 外部工具为 true，否则为 false
      */
     public boolean isExternalTool(String toolName) {
         AgentTool tool = getTool(toolName);
@@ -346,15 +339,11 @@ public class Toolkit {
     }
 
     /**
-     * Check whether {@code toolName} resolves to an external tool under a per-call {@link
-     * ToolRequestConfig}. Resolves the tool via {@link #getTool(String, ToolRequestConfig)}, so
-     * externally injected (schema-only) tools from the request config are recognised as external in
-     * addition to backend-registered external tools. A {@code null} request config resolves against
-     * the shared registry only (equivalent to {@link #isExternalTool(String)}).
+     * 检查 {@code toolName} 在逐调用 {@link ToolRequestConfig} 下是否解析为外部工具。通过 {@link #getTool(String, ToolRequestConfig)} 解析，因此除后端注册的外部工具外，还能识别请求配置中注入的仅模式工具。请求配置为 {@code null} 时只查共享注册表，相当于 {@link #isExternalTool(String)}。
      *
-     * @param toolName The name of the tool to check
-     * @param requestConfig per-call request config (may be {@code null} → shared registry only)
-     * @return true if the resolved tool is an external tool, false otherwise
+     * @param toolName 待检查工具名称
+     * @param requestConfig 逐调用配置（{@code null} 表示仅共享注册表）
+     * @return 解析到的工具为外部工具时为 true，否则为 false
      */
     public boolean isExternalTool(String toolName, ToolRequestConfig requestConfig) {
         AgentTool tool = getTool(toolName, requestConfig);
@@ -362,50 +351,40 @@ public class Toolkit {
     }
 
     /**
-     * Get tool schemas as ToolSchema objects.
-     * Updated to respect active tool groups.
+     * 获取 ToolSchema 工具模式对象，遵循激活工具组的筛选规则。
      *
-     * <p><b>Legacy single-session API:</b> resolves against the shared activation flags. Per-call
-     * paths use {@link #getToolSchemas(java.util.Collection, ToolRequestConfig)}.
+     * <p><b>旧单会话 API：</b>依据共享激活标志解析。逐调用路径使用 {@link #getToolSchemas(java.util.Collection, ToolRequestConfig)}。
      *
-     * @return List of ToolSchema objects
+     * @return ToolSchema 对象列表
      */
     public List<ToolSchema> getToolSchemas() {
         return schemaProvider.getToolSchemas();
     }
 
     /**
-     * Get tool schemas filtered by an explicitly supplied set of active group names, independent
-     * of this toolkit's shared per-group activation flags.
+     * 根据显式提供的激活组名称筛选工具模式，不依赖工具集共享的逐组激活标志。
      *
-     * <p>Per-call / stateless variant of {@link #getToolSchemas()}: callers that track activated
-     * groups in their own per-{@code (userId, sessionId)} state (e.g. {@code ReActAgent}) use this
-     * so the model's tool surface is resolved from the call's own slot rather than from the shared,
-     * concurrently-mutated toolkit activation flags.
+     * <p>这是 {@link #getToolSchemas()} 的逐调用、无状态版本。按 {@code (userId, sessionId)} 保存激活组状态的调用方（如 {@code ReActAgent}）使用它从自己的槽位解析模型可见工具，而不是读取并发修改的共享标志。
      *
-     * @param activeGroups the group names to treat as active for this resolution
-     * @return List of ToolSchema objects visible for the supplied groups (plus all ungrouped tools)
+     * @param activeGroups 本次解析视为激活的组名称
+     * @return 对给定组可见的 ToolSchema 列表（包括全部未分组工具）
      */
     public List<ToolSchema> getToolSchemas(Collection<String> activeGroups) {
         return schemaProvider.getToolSchemas(activeGroups);
     }
 
     /**
-     * Stateless compose: the backend registry filtered by {@code activeGroups}, then a per-call
-     * {@link ToolRequestConfig} applied without mutating the shared registry or group manager.
+     * 无状态组合：先按 {@code activeGroups} 筛选后端注册表，再应用逐调用 {@link ToolRequestConfig}，不修改共享注册表或工具组管理器。
      *
      * <ol>
-     *   <li>In {@link ToolMergeMode#EXTERNAL_ONLY} the backend is hidden
-     *       entirely without deleting any registrations.
-     *   <li>Backend schemas whose names collide with an external tool are dropped (external tools
-     *       override the backend).
-     *   <li>External tool schemas are appended.
+     * <li>{@link ToolMergeMode#EXTERNAL_ONLY} 模式完全隐藏后端，不删除注册项。
+     * <li>删除与外部工具重名的后端模式（外部工具覆盖后端）。
+     * <li>追加外部工具模式。
      * </ol>
      *
-     * @param activeGroups the group names treated as active for this resolution
-     * @param requestConfig per-call request config (may be {@code null} → {@link
-     *     ToolRequestConfig#NONE})
-     * @return the composed tool schemas
+     * @param activeGroups 本次解析视为激活的组名称
+     * @param requestConfig 逐调用请求配置（{@code null} 视为 {@link ToolRequestConfig#NONE}）
+     * @return 组合后的工具模式
      */
     public List<ToolSchema> getToolSchemas(
             Collection<String> activeGroups, ToolRequestConfig requestConfig) {
@@ -437,11 +416,9 @@ public class Toolkit {
     }
 
     /**
-     * Register a tool method with group, extended model, and preset parameters.
+     * 注册工具方法，配置工具组、扩展模型和预设参数。
      *
-     * <p>Builds a {@link ReflectiveFunctionTool} (a {@link ToolBase} subclass) so the registered
-     * tool participates in permission evaluation, the {@link ToolExecutor} safe-flag machinery,
-     * and the agent's pending-confirmation flow alongside MCP and built-in tools.
+     * <p>构建 {@link ReflectiveFunctionTool}（{@link ToolBase} 子类），使已注册工具与 MCP 和内置工具一样参与权限评估、{@link ToolExecutor} 安全标志机制及智能体待确认流程。
      */
     private void registerToolMethod(
             Object toolObject,
@@ -458,7 +435,7 @@ public class Toolkit {
                         ? toolAnnotation.description()
                         : "Tool: " + toolName;
 
-        // Parse custom converter from annotation
+        // 从注解解析自定义转换器
         ToolResultConverter customConverter = parseConverterFromAnnotation(toolAnnotation);
 
         Set<String> presetParamNames =
@@ -480,10 +457,10 @@ public class Toolkit {
     }
 
     /**
-     * Parses and instantiates converter from @Tool annotation.
+     * 从 @Tool 注解解析并实例化转换器。
      *
-     * @param toolAnnotation The Tool annotation
-     * @return A ToolResultConverter instance, or null to use default
+     * @param toolAnnotation Tool 注解
+     * @return ToolResultConverter 实例；null 表示使用默认值
      */
     private ToolResultConverter parseConverterFromAnnotation(Tool toolAnnotation) {
         if (toolAnnotation == null) {
@@ -492,7 +469,7 @@ public class Toolkit {
 
         try {
             Class<? extends ToolResultConverter> converterClass = toolAnnotation.converter();
-            // If explicitly set to DefaultToolResultConverter, return null to use the default
+            // 显式设置为 DefaultToolResultConverter 时返回 null，以使用默认实现
             if (converterClass == DefaultToolResultConverter.class) {
                 return null;
             }
@@ -503,15 +480,14 @@ public class Toolkit {
     }
 
     /**
-     * Instantiates a converter class with proper constructor resolution. Tries: 1) no-arg
-     * constructor, 2) constructor with ObjectMapper
+     * 解析合适构造器并实例化转换器类，依次尝试：1）无参构造器；2）接受 ObjectMapper 的构造器。
      *
-     * @param clazz The converter class to instantiate
-     * @return A new converter instance
+     * @param clazz 待实例化的转换器类
+     * @return 新的转换器实例
      */
     private ToolResultConverter instantiateConverter(Class<? extends ToolResultConverter> clazz)
             throws Exception {
-        // Try no-arg constructor first
+        // 先尝试无参构造器
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (NoSuchMethodException e) {
@@ -521,22 +497,20 @@ public class Toolkit {
     }
 
     /**
-     * Set the chunk callback for streaming tool responses.
+     * 设置流式工具响应的数据块回调。
      *
-     * <p>This callback is preserved when the toolkit is deep-copied and will be invoked whenever
-     * tools emit progress updates via ToolEmitter. When the toolkit is used by ReActAgent, the
-     * user callback is invoked in addition to the framework's internal chunk callback.
+     * <p>深复制工具集时保留该回调，工具通过 ToolEmitter 发出进度时调用。ReActAgent 使用工具集时，除了框架内部回调，也会调用用户回调。
      *
-     * @param callback Callback to invoke when tools emit chunks via ToolEmitter
+     * @param callback 工具通过 ToolEmitter 发出数据块时调用的回调
      */
     public void setChunkCallback(BiConsumer<ToolUseBlock, ToolResultBlock> callback) {
         executor.setChunkCallback(callback);
     }
 
     /**
-     * Execute a tool with the given parameters.
+     * 使用给定参数执行工具。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      *
      * <pre>{@code
      * // Simple call
@@ -554,22 +528,21 @@ public class Toolkit {
      * toolkit.callTool(param);
      * }</pre>
      *
-     * @param param Tool call parameters containing execution information
-     * @return Mono containing execution result
+     * @param param 包含执行信息的工具调用参数
+     * @return 包含执行结果的 Mono
      */
     public Mono<ToolResultBlock> callTool(ToolCallParam param) {
         return executor.executeWithInfrastructure(param, resolveToolExecutionConfig(null));
     }
 
     /**
-     * Execute a tool with a per-call execution configuration.
+     * 使用逐调用执行配置执行工具。
      *
-     * <p>The configuration is merged as {@code per-call > toolkit-level > system default}. A
-     * {@code null} configuration is equivalent to {@link #callTool(ToolCallParam)}.
+     * <p>配置按 {@code per-call > toolkit-level > system default} 合并。配置为 {@code null} 时等同于 {@link #callTool(ToolCallParam)}。
      *
-     * @param param Tool call parameters containing execution information
-     * @param perCallConfig per-call execution configuration; may be {@code null}
-     * @return Mono containing execution result
+     * @param param 包含执行信息的工具调用参数
+     * @param perCallConfig 逐调用执行配置，可为 {@code null}
+     * @return 包含执行结果的 Mono
      */
     public Mono<ToolResultBlock> callTool(ToolCallParam param, ExecutionConfig perCallConfig) {
         return executor.executeWithInfrastructure(param, resolveToolExecutionConfig(perCallConfig));
@@ -583,21 +556,17 @@ public class Toolkit {
     }
 
     /**
-     * Execute multiple tools asynchronously with agent-level context (internal use by
-     * ReActAgent).
+     * 使用智能体级上下文异步执行多个工具（供 ReActAgent 内部使用）。
      *
-     * <p><b>Internal API - Not recommended for external use.</b> This method is primarily
-     * intended for use by {@link io.agentscope.core.ReActAgent} and other framework components.
+     * <p><b>内部 API，不建议外部使用。</b>主要供 {@link io.agentscope.core.ReActAgent} 等框架组件使用。
      *
-     * <p>This method handles parallel/sequential execution based on toolkit configuration and
-     * applies execution config (timeout, retry) from multiple levels. The agent context is
-     * merged with toolkit default context during tool execution.
+     * <p>按工具集配置控制并行或顺序执行，应用多层执行配置（超时、重试），并在执行时合并智能体上下文与工具集默认上下文。
      *
-     * @param toolCalls List of tool calls to execute
-     * @param agentExecutionConfig Execution config from agent level (can be null)
-     * @param agent The agent making the calls (may be null)
-     * @param agentRuntimeContext The agent-level runtime context (may be null)
-     * @return Mono containing list of tool responses
+     * @param toolCalls 待执行工具调用列表
+     * @param agentExecutionConfig 智能体级执行配置（可为 null）
+     * @param agent 发起调用的智能体（可为 null）
+     * @param agentRuntimeContext 智能体级运行时上下文（可为 null）
+     * @return 包含工具响应列表的 Mono
      */
     public Mono<List<ToolResultBlock>> callTools(
             List<ToolUseBlock> toolCalls,
@@ -608,9 +577,9 @@ public class Toolkit {
     }
 
     /**
-     * Execute multiple tools with request configuration from the runtime context and a per-call chunk callback.
+     * 使用运行时上下文中的请求配置及逐调用数据块回调执行多个工具。
      *
-     * @param internalChunkCallback per-call internal chunk callback (may be {@code null})
+     * @param internalChunkCallback 逐调用内部数据块回调（可为 {@code null}）
      */
     public Mono<List<ToolResultBlock>> callTools(
             List<ToolUseBlock> toolCalls,
@@ -630,8 +599,7 @@ public class Toolkit {
     }
 
     /**
-     * Execute multiple tools with a per-call {@link ToolRequestConfig} and internal chunk
-     * callback, both threaded down to every single-tool execution.
+     * 使用逐调用 {@link ToolRequestConfig} 和内部数据块回调执行多个工具，并将二者传入每次单工具执行。
      */
     public Mono<List<ToolResultBlock>> callTools(
             List<ToolUseBlock> toolCalls,
@@ -659,11 +627,7 @@ public class Toolkit {
     }
 
     /**
-     * Execute a batch with start, progress, and final-result notifications before ordered
-     * aggregation. The returned list retains declaration order. {@link
-     * ToolExecutionCallback#onStart} fires when the executor begins each invocation (in
-     * sequential batches, when the call's turn arrives) and results may arrive in completion
-     * order.
+     * 执行批次，在按序聚合前通知开始、进度和最终结果。返回列表保留声明顺序。{@link ToolExecutionCallback#onStart} 在执行器开始每次调用时触发（顺序批次中即轮到该调用时），结果通知可按完成顺序到达。
      */
     public Mono<List<ToolResultBlock>> callToolsWithCallback(
             List<ToolUseBlock> toolCalls,
@@ -688,32 +652,33 @@ public class Toolkit {
                 executionCallback);
     }
 
-    // ==================== MCP Client Registration (Delegated) ====================
+    // ==================== MCP 客户端注册（委托） ====================
 
     /**
-     * Registers an MCP client and all its tools.
+     * 注册 MCP 客户端及其全部工具。
      *
-     * <p>For more complex registration scenarios (filtering, groups, preset parameters),
-     * use the builder API: {@code toolkit.registration().mcpClient(...).apply()}
+     * <p>需要筛选、工具组或预设参数等复杂注册配置时，使用构建器 API：{@code toolkit.registration().mcpClient(...).apply()}。
      *
-     * @param mcpClientWrapper the MCP client wrapper
-     * @return Mono that completes when registration is finished
+     * @param mcpClientWrapper MCP 客户端包装器
+     * @return 注册完成时完成的 Mono
      */
     public Mono<Void> registerMcpClient(McpClientWrapper mcpClientWrapper) {
         return mcpClientManager.registerMcpClient(mcpClientWrapper);
     }
 
     /**
-     * Removes an MCP client and all its tools.
+     * 移除 MCP 客户端及其全部工具。
      *
-     * @param mcpClientName the name of the MCP client to remove
-     * @return Mono that completes when removal is finished
+     * @param mcpClientName 待移除的 MCP 客户端名称
+     * @return 移除完成时完成的 Mono
      */
     public Mono<Void> removeMcpClient(String mcpClientName) {
         return mcpClientManager.removeMcpClient(mcpClientName);
     }
 
-    /** Releases clients registered by this toolkit. Copies do not own the source's clients. */
+    /**
+     * 释放此工具集注册的客户端；副本不拥有源工具集的客户端。
+     */
     public void closeMcpClients() {
         for (String name : mcpClientManager.getMcpClientNames()) {
             try {
@@ -725,29 +690,28 @@ public class Toolkit {
         }
     }
 
-    // ==================== Tool Group Management (Delegated) ====================
+    // ==================== 工具组管理（委托） ====================
 
     /**
-     * Create a new tool group with specified activation status and default META scope.
+     * 使用指定激活状态和默认 META 作用域创建工具组。
      *
-     * @param groupName Name of the tool group
-     * @param description Description of the tool group
-     * @param active Whether the group should be active by default
-     * @throws IllegalArgumentException if group already exists
+     * @param groupName 工具组名称
+     * @param description 工具组描述
+     * @param active 是否默认激活
+     * @throws IllegalArgumentException 当组已存在时
      */
     public void createToolGroup(String groupName, String description, boolean active) {
         groupManager.createToolGroup(groupName, description, active);
     }
 
     /**
-     * Create a new tool group with specified activation status and scope.
+     * 使用指定激活状态和作用域创建工具组。
      *
-     * @param groupName Name of the tool group
-     * @param description Description of the tool group
-     * @param active Whether the group should be active by default
-     * @param scope Whether the group is managed by the meta tool ({@link ToolGroupScope#META})
-     *              or by developer code ({@link ToolGroupScope#EXTERNAL})
-     * @throws IllegalArgumentException if group already exists
+     * @param groupName 工具组名称
+     * @param description 工具组描述
+     * @param active 是否默认激活
+     * @param scope 由元工具管理（{@link ToolGroupScope#META}）或开发者代码管理（{@link ToolGroupScope#EXTERNAL}）
+     * @throws IllegalArgumentException 当组已存在时
      */
     public void createToolGroup(
             String groupName, String description, boolean active, ToolGroupScope scope) {
@@ -755,28 +719,26 @@ public class Toolkit {
     }
 
     /**
-     * Create a new tool group (active by default, META scope).
+     * 创建默认激活、META 作用域的工具组。
      *
-     * @param groupName Name of the tool group
-     * @param description Description of the tool group
-     * @throws IllegalArgumentException if group already exists
+     * @param groupName 工具组名称
+     * @param description 工具组描述
+     * @throws IllegalArgumentException 当组已存在时
      */
     public void createToolGroup(String groupName, String description) {
         groupManager.createToolGroup(groupName, description);
     }
 
     /**
-     * Create a {@link SkillToolGroup} bound to a specific skill.
+     * 创建绑定特定技能的 {@link SkillToolGroup}。
      *
-     * <p>The group defaults to {@link ToolGroupScope#META} scope so the agent can manage it
-     * via {@code reset_equipped_tools}. The description shown to the model will include a
-     * reminder that this group must be activated when the bound skill is in use.
+     * <p>默认作用域为 {@link ToolGroupScope#META}，智能体可通过 {@code reset_equipped_tools} 管理。面向模型的描述会提醒：使用绑定技能时必须激活此组。
      *
-     * @param groupName Name of the tool group
-     * @param description Description of the tool group
-     * @param active Whether the group should be active by default
-     * @param activateOnSkill The skill name that this group is bound to
-     * @throws IllegalArgumentException if group already exists
+     * @param groupName 工具组名称
+     * @param description 工具组描述
+     * @param active 是否默认激活
+     * @param activateOnSkill 此组绑定的技能名称
+     * @throws IllegalArgumentException 当组已存在时
      */
     public void createSkillToolGroup(
             String groupName, String description, boolean active, String activateOnSkill) {
@@ -784,38 +746,35 @@ public class Toolkit {
     }
 
     /**
-     * Find all {@link SkillToolGroup} instances whose {@code activateOnSkill} matches the given
-     * skill name.
+     * 查找 {@code activateOnSkill} 匹配给定技能名的全部 {@link SkillToolGroup}。
      *
-     * @param skillName The skill name to match against
-     * @return List of matching group names (never null, may be empty)
+     * @param skillName 待匹配技能名称
+     * @return 匹配的组名列表（永不为 null，可以为空）
      */
     public List<String> findSkillToolGroupsByActivateOnSkill(String skillName) {
         return groupManager.findSkillToolGroupsByActivateOnSkill(skillName);
     }
 
     /**
-     * Register a pre-built {@link ToolGroup} instance (including subclasses).
+     * 注册预先构建的 {@link ToolGroup} 实例（包括子类）。
      *
-     * <p>Use this method when you need full control over the ToolGroup construction,
-     * e.g., for custom subclasses like {@link SkillToolGroup}.
+     * <p>需要完全控制 ToolGroup 构造时使用，例如自定义 {@link SkillToolGroup} 等子类。
      *
-     * @param group The tool group to register
-     * @throws IllegalArgumentException if a group with the same name already exists
+     * @param group 待注册工具组
+     * @throws IllegalArgumentException 当同名组已存在时
      */
     public void registerToolGroup(ToolGroup group) {
         groupManager.registerToolGroup(group);
     }
 
     /**
-     * Add an already-registered tool to an existing tool group.
+     * 将已注册工具加入现有工具组。
      *
-     * <p>A tool may belong to multiple groups. Adding the same tool to the same group more than
-     * once has no additional effect.
+     * <p>一个工具可属于多个组，重复将同一工具加入同一组不会产生额外效果。
      *
-     * @param groupName Name of the existing tool group
-     * @param toolName Name of the registered tool
-     * @throws IllegalArgumentException if the group or tool doesn't exist
+     * @param groupName 现有工具组名称
+     * @param toolName 已注册工具名称
+     * @throws IllegalArgumentException 当组或工具不存在时
      */
     public void addToolToGroup(String groupName, String toolName) {
         groupManager.validateGroupExists(groupName);
@@ -826,17 +785,15 @@ public class Toolkit {
     }
 
     /**
-     * Update the activation status of tool groups.
+     * 更新工具组激活状态。
      *
-     * <p>When {@code allowToolDeletion} is disabled and {@code active} is false, the deactivation
-     * will be ignored and a warning will be logged.
+     * <p>禁用 {@code allowToolDeletion} 且 {@code active} 为 false 时，忽略停用操作并记录警告。
      *
-     * <p><b>Legacy single-session API:</b> mutates the shared activation flags. Per-call paths do
-     * not use this.
+     * <p><b>旧单会话 API：</b>修改共享激活标志，逐调用路径不使用它。
      *
-     * @param groupNames List of tool group names to update
-     * @param active Whether to activate (true) or deactivate (false) the groups
-     * @throws IllegalArgumentException if any group doesn't exist
+     * @param groupNames 要更新的工具组名称列表
+     * @param active true 表示激活，false 表示停用
+     * @throws IllegalArgumentException 当任意组不存在时
      */
     public void updateToolGroups(List<String> groupNames, boolean active) {
         if (!active && !config.isAllowToolDeletion()) {
@@ -849,9 +806,9 @@ public class Toolkit {
     }
 
     /**
-     * Remove a tool by name from the toolkit.
+     * 从工具集按名称移除工具。
      *
-     * @param toolName Name of the tool to remove
+     * @param toolName 待移除工具名称
      */
     public void removeTool(String toolName) {
         if (!config.isAllowToolDeletion()) {
@@ -862,11 +819,11 @@ public class Toolkit {
     }
 
     /**
-     * Atomically remove a tool only if the registered instance is the expected one.
+     * 仅当注册实例与期望实例一致时原子性地移除工具。
      *
-     * @param toolName Name of the tool to remove
-     * @param expected The expected AgentTool instance (identity comparison)
-     * @return true if the tool was removed, false if it was already replaced or absent
+     * @param toolName 待移除工具名称
+     * @param expected 期望 AgentTool 实例（按身份比较）
+     * @return 已移除为 true；已被替换或不存在时为 false
      */
     public boolean removeToolIfSame(String toolName, AgentTool expected) {
         if (!config.isAllowToolDeletion()) {
@@ -877,12 +834,11 @@ public class Toolkit {
     }
 
     /**
-     * Remove tool groups and all tools within them.
+     * 移除工具组及其中全部工具。
      *
-     * <p>When {@code allowToolDeletion} is disabled, the removal will be ignored and a warning
-     * will be logged.
+     * <p>禁用 {@code allowToolDeletion} 时忽略移除操作并记录警告。
      *
-     * @param groupNames List of tool group names to remove
+     * @param groupNames 待移除工具组名称列表
      */
     public void removeToolGroups(List<String> groupNames) {
         if (!config.isAllowToolDeletion()) {
@@ -891,78 +847,71 @@ public class Toolkit {
             return;
         }
         Set<String> toolsToRemove = groupManager.removeToolGroups(groupNames);
-        // Remove tools from registry
+        // 从注册表移除工具
         toolRegistry.removeTools(toolsToRemove);
     }
 
     /**
-     * Get active tool group names.
+     * 获取激活工具组名称。
      *
-     * <p>Returns a list of all currently active tool group names. Only tools belonging to active
-     * groups can be called by agents. This method is useful for debugging tool availability
-     * and verifying group activation state.
+     * <p>返回当前全部激活组名称。智能体只能调用激活组中的工具；此方法可用于调试工具可用性并验证激活状态。
      *
-     * <p><b>Legacy single-session API:</b> reads the shared, build-time activation flags. Per-call
-     * paths resolve activation from {@code AgentState#getToolContext()} instead.
+     * <p><b>旧单会话 API：</b>读取共享的构建期激活标志。逐调用路径改从 {@code AgentState#getToolContext()} 解析激活状态。
      *
-     * @return List of active group names, never null but may be empty
+     * @return 激活组名称列表，永不为 null，可以为空
      */
     public List<String> getActiveGroups() {
         return groupManager.getActiveGroups();
     }
 
     /**
-     * Set the active tool groups.
+     * 设置激活工具组。
      *
-     * <p>This method is typically called by ReActAgent when restoring state from a session.
+     * <p>通常由 ReActAgent 在从会话恢复状态时调用。
      *
-     * <p><b>Legacy single-session API:</b> mutates the shared activation flags. Per-call paths
-     * never call this (activation lives on {@code AgentState#getToolContext()}).
+     * <p><b>旧单会话 API：</b>修改共享激活标志。逐调用路径从不调用它，激活状态位于 {@code AgentState#getToolContext()}。
      *
-     * @param groups List of group names to set as active
+     * @param groups 要设为激活的组名列表
      */
     public void setActiveGroups(List<String> groups) {
         groupManager.setActiveGroups(groups);
     }
 
     /**
-     * Get a tool group by name.
+     * 按名称获取工具组。
      *
-     * @param groupName Name of the tool group
-     * @return ToolGroup or null if not found
+     * @param groupName 工具组名称
+     * @return ToolGroup；未找到时为 null
      */
     public ToolGroup getToolGroup(String groupName) {
         return groupManager.getToolGroup(groupName);
     }
 
-    // ==================== Meta Tool Registration ====================
+    // ==================== 元工具注册 ====================
 
     /**
-     * Register the meta tool that allows agents to dynamically manage tool groups.
+     * 注册允许智能体动态管理工具组的元工具。
      *
-     * This creates a tool that wraps the toolkit's resetEquippedTools method,
-     * allowing the agent to activate tool groups during execution.
+     * 创建包装工具集 resetEquippedTools 方法的工具，使智能体能在执行期间激活工具组。
      */
     public void registerMetaTool() {
         AgentTool metaTool = metaToolFactory.createResetEquippedToolsAgentTool();
         registeredMetaTool = metaTool;
 
-        // Register without group (meta tool is always available)
+        // 不指定组进行注册，元工具始终可用
         registerAgentTool(metaTool, null, null, null, null);
 
         logger.info("Registered meta tool: reset_equipped_tools");
     }
 
     /**
-     * Update preset parameters for a registered tool at runtime.
+     * 在运行时更新已注册工具的预设参数。
      *
-     * <p>This method allows dynamic modification of preset parameters without re-registering the
-     * tool. This is useful for updating session-specific context (like session IDs or timestamps)
-     * or refreshing credentials.
+     * <p>无需重新注册工具即可动态修改预设参数，适合更新会话 ID、时间戳等会话上下文或刷新凭据。
      *
-     * @param toolName The name of the tool to update
-     * @param newPresetParameters The new preset parameters (null will be treated as empty map)
-     * @throws IllegalArgumentException if the tool is not found
+     * @param toolName 要更新的工具名称
+     * @param newPresetParameters 新预设参数（null 视为空映射）
+     * @throws IllegalArgumentException 当工具不存在时
      */
     public void updateToolPresetParameters(
             String toolName, Map<String, Object> newPresetParameters) {
@@ -974,34 +923,27 @@ public class Toolkit {
         logger.debug("Updated preset parameters for tool '{}'", toolName);
     }
 
-    // ==================== Build-time Isolation Copy ====================
+    // ==================== 构建期隔离复制 ====================
 
     /**
-     * Creates a build-time isolation copy of this toolkit.
+     * 创建工具集的构建期隔离副本。
      *
-     * <p><b>Build-time only — do NOT use per-call.</b> User tools are shared by reference and must support concurrent use; the framework meta
-     * tool is rebound to the copied registry. Tool groups and activation flags
-     * are deep-copied so the copy has an isolated group manager. The user chunk callback is
-     * preserved.
+     * <p><b>仅用于构建期，不得逐调用使用。</b>用户工具按引用共享，必须支持并发；框架元工具重新绑定到复制的注册表。深复制工具组及激活标志，提供独立工具组管理器，并保留用户数据块回调。
      *
-     * <p>Per-call tool-surface variation is instead expressed via {@link ToolRequestConfig}
-     * composition ({@link #getTool(String, ToolRequestConfig)} / {@link
-     * #getToolSchemas(java.util.Collection, ToolRequestConfig)}), never by copying a toolkit. This
-     * method exists for agent-construction isolation (e.g. the harness sub-agent factories), where
-     * a fresh registry is needed to register workspace-bound tools without polluting the source.
+     * <p>逐调用工具范围变化应通过 {@link ToolRequestConfig} 组合表达（{@link #getTool(String, ToolRequestConfig)} / {@link #getToolSchemas(java.util.Collection, ToolRequestConfig)}），而非复制工具集。本方法服务于智能体构造隔离（如 Harness 子智能体工厂），用于获得新注册表以注册绑定工作区的工具，而不污染源工具集。
      *
-     * @return A new Toolkit instance whose registry shares the same tool instances
+     * @return 注册表共享相同工具实例的新 Toolkit
      */
     public Toolkit copy() {
         Toolkit copy = new Toolkit(this.config);
 
-        // Share tool instances (stateless/thread-safe); copy registry metadata into the target.
+        // 共享无状态且线程安全的工具实例，将注册元数据复制到目标。
         this.toolRegistry.copyTo(copy.toolRegistry);
 
-        // Deep-copy tool groups and activation flags for isolated group state.
+        // 深复制工具组及激活标志，隔离组状态。
         this.groupManager.copyTo(copy.groupManager);
 
-        // The framework meta tool captures its owner's group manager; bind it to the copy.
+        // 框架元工具捕获所属工具组管理器，需要重新绑定到副本。
         if (registeredMetaTool != null
                 && toolRegistry.getTool(registeredMetaTool.getName()) == registeredMetaTool) {
             copy.registerMetaTool();
@@ -1013,19 +955,18 @@ public class Toolkit {
             }
         }
 
-        // Preserve user-defined chunk callbacks across build-time copies.
+        // 构建期复制时保留用户定义的数据块回调。
         copy.executor.setChunkCallback(this.executor.getChunkCallback());
 
         return copy;
     }
 
-    // ==================== Fluent Registration ====================
+    // ==================== 链式注册 ====================
 
     /**
-     * Fluent builder for registering tools with optional configuration.
+     * 注册工具并提供可选配置的链式构建器。
      *
-     * <p>This builder provides a clear, type-safe way to register tools with various options
-     * without method proliferation.
+     * <p>以清晰且类型安全的方式支持多种注册选项，避免方法数量膨胀。
      */
     public static class ToolRegistration {
         private final Toolkit toolkit;
@@ -1048,10 +989,10 @@ public class Toolkit {
         }
 
         /**
-         * Set the tool object to register (scans for @Tool methods).
+         * 设置待注册的工具对象（扫描 @Tool 方法）。
          *
-         * @param toolObject Object containing @Tool annotated methods
-         * @return This builder for chaining
+         * @param toolObject 包含 @Tool 注解方法的对象
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration tool(Object toolObject) {
             this.toolObject = toolObject;
@@ -1059,10 +1000,10 @@ public class Toolkit {
         }
 
         /**
-         * Set the AgentTool instance to register.
+         * 设置待注册的 AgentTool 实例。
          *
-         * @param agentTool The AgentTool instance
-         * @return This builder for chaining
+         * @param agentTool AgentTool 实例
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration agentTool(AgentTool agentTool) {
             this.agentTool = agentTool;
@@ -1070,10 +1011,10 @@ public class Toolkit {
         }
 
         /**
-         * Set the MCP client to register.
+         * 设置待注册 MCP 客户端。
          *
-         * @param mcpClientWrapper The MCP client wrapper
-         * @return This builder for chaining
+         * @param mcpClientWrapper MCP 客户端包装器
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration mcpClient(McpClientWrapper mcpClientWrapper) {
             this.mcpClientWrapper = mcpClientWrapper;
@@ -1081,12 +1022,11 @@ public class Toolkit {
         }
 
         /**
-         * Register a sub-agent as a tool with default configuration.
+         * 使用默认配置将子智能体注册为工具。
          *
-         * <p>The tool name and description are derived from the agent's properties. Uses a single
-         * "task" string parameter by default.
+         * <p>工具名称和描述从智能体属性派生，默认使用单个 "task" 字符串参数。
          *
-         * <p>Example:
+         * <p>示例：
          *
          * <pre>{@code
          * toolkit.registration()
@@ -1097,21 +1037,19 @@ public class Toolkit {
          *     .apply();
          * }</pre>
          *
-         * @param provider Factory for creating agent instances (called for each invocation)
-         * @return This builder for chaining
+         * @param provider 创建智能体实例的工厂（每次调用时调用）
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration subAgent(SubAgentProvider<?> provider) {
             return subAgent(provider, null);
         }
 
         /**
-         * Register a sub-agent as a tool with custom configuration.
+         * 使用自定义配置将子智能体注册为工具。
          *
-         * <p>Sub-agents support multi-turn conversation with session-based state management. The
-         * tool exposes two parameters: {@code message} (required) and {@code session_id} (optional,
-         * for continuing existing conversations).
+         * <p>子智能体支持基于会话状态管理的多轮对话。工具公开两个参数：必填 {@code message} 和可选 {@code session_id}（用于继续已有对话）。
          *
-         * <p>Example with custom tool name and description:
+         * <p>自定义工具名称和描述示例：
          *
          * <pre>{@code
          * toolkit.registration()
@@ -1124,7 +1062,7 @@ public class Toolkit {
          *     .apply();
          * }</pre>
          *
-         * <p>Example with persistent session for cross-process conversations:
+         * <p>通过持久化会话实现跨进程对话的示例：
          *
          * <pre>{@code
          * toolkit.registration()
@@ -1137,10 +1075,9 @@ public class Toolkit {
          *     .apply();
          * }</pre>
          *
-         * @param provider Factory for creating agent instances (called for each session)
-         * @param config Configuration for the sub-agent tool, or null to use defaults (tool name
-         *     derived from agent name, InMemoryAgentStateStore for state, events forwarded)
-         * @return This builder for chaining
+         * @param provider 创建智能体实例的工厂（每个会话调用）
+         * @param config 子智能体工具配置；null 表示使用默认值（从智能体名称派生工具名、使用 InMemoryAgentStateStore 存储状态、转发事件）
+         * @return 当前构建器，支持链式调用
          * @see SubAgentConfig
          * @see SubAgentConfig#defaults()
          */
@@ -1150,25 +1087,29 @@ public class Toolkit {
             return this;
         }
 
-        /** Optional namespace for model-facing MCP tool names; wire names remain unchanged. */
+        /**
+         * 面向模型的 MCP 工具名称的可选命名空间；传输名称保持不变。
+         */
         public ToolRegistration mcpToolNamePrefix(String prefix) {
             this.mcpToolNamePrefix = java.util.Objects.requireNonNull(prefix);
             return this;
         }
 
-        /** Selects remote tool names; an absent or empty list enables all tools. */
+        /**
+         * 选择远端工具名称；列表缺失或为空时启用全部工具。
+         */
         public ToolRegistration enableTools(List<String> enableTools) {
             this.enableTools = enableTools;
             return this;
         }
 
         /**
-         * Set the list of tools to disable from the MCP client.
+         * 设置 MCP 客户端中要禁用的工具列表。
          *
-         * <p>Only applicable when using mcpClient().
+         * <p>仅使用 mcpClient() 时适用。
          *
-         * @param disableTools List of tool names to disable
-         * @return This builder for chaining
+         * @param disableTools 要禁用的工具名称列表
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration disableTools(List<String> disableTools) {
             this.disableTools = disableTools;
@@ -1176,23 +1117,16 @@ public class Toolkit {
         }
 
         /**
-         * Controls whether request metadata is propagated to the MCP server registered through
-         * this builder.
+         * 控制是否向此构建器注册的 MCP 服务器传播请求元数据。
          *
-         * <p>By default, entries registered under {@link io.agentscope.core.tool.mcp.McpMeta} in
-         * the runtime context plus the framework tool-call id are sent as the {@code meta} field
-         * of every tool call request. For MCP servers that are not fully trusted (e.g. external
-         * third-party services), set this to {@code false} so no metadata leaves the process.
+         * <p>默认将运行时上下文中以 {@link io.agentscope.core.tool.mcp.McpMeta} 注册的条目及框架工具调用 ID 作为每次工具请求的 {@code meta} 字段发送。不完全可信的服务器（如外部第三方服务）应设为 {@code false}，避免元数据离开进程。
          *
-         * <p>When unset, no per-tool restriction is recorded (the tool flag stays {@code true})
-         * and the effective decision falls back to the connection-level switch on the MCP client
-         * wrapper, which is read live on every call.
+         * <p>未设置时不记录逐工具限制（工具标志保持 {@code true}），实际决策回退到每次调用实时读取的客户端包装器连接级开关。
          *
-         * <p>Only applicable when using mcpClient().
+         * <p>仅使用 mcpClient() 时适用。
          *
-         * @param propagateMeta true to propagate metadata, false to omit the {@code meta} field
-         *     entirely from tool call requests
-         * @return This builder for chaining
+         * @param propagateMeta true 表示传播元数据，false 表示从工具调用请求中完全省略 {@code meta} 字段
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration propagateMeta(boolean propagateMeta) {
             this.propagateMeta = propagateMeta;
@@ -1200,30 +1134,18 @@ public class Toolkit {
         }
 
         /**
-         * Controls request metadata propagation for a single MCP tool of this client.
+         * 控制此客户端单个 MCP 工具的请求元数据传播。
          *
-         * <p>Per-tool entries win over the client-wide default set via
-         * {@link #propagateMeta(boolean)}, and both are further ANDed with the connection-level
-         * switch on the MCP client wrapper at call time. This mirrors the
-         * {@code enableTools}/{@code disableTools} shape: use it to keep one trusted tool
-         * receiving its metadata (e.g. a callback URL) while the rest of an untrusted server is
-         * silenced, or vice versa.
+         * <p>逐工具条目优先于 {@link #propagateMeta(boolean)} 设置的客户端默认值，调用时二者还与包装器连接级开关做逻辑与。形式类似 {@code enableTools}/{@code disableTools}：可仅让可信工具接收回调 URL 等元数据，同时禁止不可信服务器其余工具接收，或反向配置。
          *
-         * <p>The tool name is the remote MCP tool name as exposed by the server (before any
-         * {@code mcpToolNamePrefix}). Repeat calls for different tools accumulate; a repeated
-         * call for the same tool overwrites the previous value. An entry whose name does not
-         * match a tool that is actually registered from this client (e.g. a typo or a name
-         * filtered out by {@code enableTools}/{@code disableTools}) fails the registration
-         * with an {@link IllegalArgumentException}, so a silencing override is never lost
-         * silently.
+         * <p>工具名称使用服务器公开的远端 MCP 名称（添加 {@code mcpToolNamePrefix} 之前）。不同工具的重复调用会累积配置，同一工具则覆盖旧值。若名称未匹配实际注册工具（如拼写错误或被 {@code enableTools}/{@code disableTools} 筛除），注册抛出 {@link IllegalArgumentException}，避免抑制传播的覆盖值被静默丢失。
          *
-         * <p>Only applicable when using mcpClient().
+         * <p>仅使用 mcpClient() 时适用。
          *
-         * @param toolName the remote MCP tool name
-         * @param propagateMeta true to allow metadata propagation for this tool, false to omit
-         *     the {@code meta} field from this tool's requests
-         * @return This builder for chaining
-         * @throws IllegalArgumentException if {@code toolName} is {@code null} or blank
+         * @param toolName 远端 MCP 工具名称
+         * @param propagateMeta true 表示允许该工具传播元数据，false 表示从其请求中省略 {@code meta} 字段
+         * @return 当前构建器，支持链式调用
+         * @throws IllegalArgumentException 当 {@code toolName} 为 {@code null} 或空白时
          */
         public ToolRegistration propagateMeta(String toolName, boolean propagateMeta) {
             if (toolName == null || toolName.isBlank()) {
@@ -1234,10 +1156,10 @@ public class Toolkit {
         }
 
         /**
-         * Set the tool group name.
+         * 设置工具组名称。
          *
-         * @param groupName The group name (null for ungrouped)
-         * @return This builder for chaining
+         * @param groupName 组名（null 表示不分组）
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration group(String groupName) {
             this.groupName = groupName;
@@ -1245,11 +1167,11 @@ public class Toolkit {
         }
 
         /**
-         * Set preset parameters that will be automatically injected during tool execution.
+         * 设置工具执行时自动注入的预设参数。
          *
-         * <p>These parameters are not exposed in the JSON schema.
+         * <p>这些参数不暴露在 JSON 模式中。
          *
-         * <p>The map should have tool names as keys and parameter maps as values:
+         * <p>映射以工具名称为键、参数映射为值：
          * <pre>{@code
          * Map.of(
          *     "toolName1", Map.of("param1", "value1", "param2", "value2"),
@@ -1257,8 +1179,8 @@ public class Toolkit {
          * )
          * }</pre>
          *
-         * @param presetParameters Map from tool name to its preset parameters
-         * @return This builder for chaining
+         * @param presetParameters 工具名称到预设参数的映射
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration presetParameters(
                 Map<String, Map<String, Object>> presetParameters) {
@@ -1267,10 +1189,10 @@ public class Toolkit {
         }
 
         /**
-         * Set the extended model for dynamic schema extension.
+         * 设置用于动态模式扩展的扩展模型。
          *
-         * @param extendedModel The extended model
-         * @return This builder for chaining
+         * @param extendedModel 扩展模型
+         * @return 当前构建器，支持链式调用
          */
         public ToolRegistration extendedModel(ExtendedModel extendedModel) {
             this.extendedModel = extendedModel;
@@ -1278,10 +1200,10 @@ public class Toolkit {
         }
 
         /**
-         * Apply the registration with all configured options.
+         * 应用全部配置选项并执行注册。
          *
-         * @throws IllegalStateException if none of tool(), agentTool(), mcpClient() or subAgent() was set
-         * @throws IllegalStateException if set multiple of: tool(), agentTool(), mcpClient(), or subAgent().
+         * @throws IllegalStateException 当 tool()、agentTool()、mcpClient()、subAgent() 均未设置时
+         * @throws IllegalStateException 当 tool()、agentTool()、mcpClient()、subAgent() 中设置了多个时
          */
         public void apply() {
             int toolCount = 0;

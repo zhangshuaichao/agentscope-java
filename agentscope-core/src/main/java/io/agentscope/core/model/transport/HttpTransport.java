@@ -18,45 +18,46 @@ package io.agentscope.core.model.transport;
 import reactor.core.publisher.Flux;
 
 /**
- * HTTP transport layer interface for making HTTP requests.
+ * 发起 HTTP 请求的 HTTP 传输层接口。
  *
- * <p>This interface abstracts the actual HTTP client implementation, allowing for different
- * implementations (OkHttp, JDK HttpClient, etc.) to be used interchangeably.
+ * <p>抽象实际 HTTP 客户端实现，使 OkHttp、JDK HttpClient 等实现可以互换。
  *
- * <p>The transport layer is responsible for:
+ * <p>传输层负责：
  * <ul>
- *   <li>Executing synchronous HTTP requests</li>
- *   <li>Handling streaming (SSE) responses</li>
- *   <li>Managing connection lifecycle</li>
+ *   <li>执行同步 HTTP 请求</li>
+ *   <li>处理流式（SSE）响应</li>
+ *   <li>管理连接生命周期</li>
  * </ul>
+ *
+ * <p>【学习提示】模型适配器负责业务协议，传输层负责 HTTP 与流式数据传递。
+ * 替换客户端不应迫使智能体推理循环理解具体网络库。
  */
 public interface HttpTransport {
 
     /**
-     * Execute a synchronous HTTP request.
+     * 执行同步 HTTP 请求。
      *
-     * @param request the HTTP request to execute
-     * @return the HTTP response
-     * @throws HttpTransportException if the request fails
+     * @param request 要执行的 HTTP 请求
+     * @return HTTP 响应
+     * @throws HttpTransportException 请求失败时抛出
      */
     HttpResponse execute(HttpRequest request) throws HttpTransportException;
 
     /**
-     * Execute a streaming HTTP request (Server-Sent Events).
+     * 执行流式 HTTP 请求（服务器发送事件，SSE）。
      *
-     * <p>This method returns a Flux that emits each SSE data line as a String.
-     * The implementation should handle parsing the SSE format and extracting
-     * the data content from each event.
+     * <p>返回以 String 发出每条 SSE 数据行的 Flux。
+     * 实现应负责解析 SSE 格式并提取每个事件的数据内容。
      *
-     * @param request the HTTP request to execute
-     * @return a Flux emitting SSE data lines as strings
+     * @param request 要执行的 HTTP 请求
+     * @return 以字符串形式发出 SSE 数据行的 Flux
      */
     Flux<String> stream(HttpRequest request);
 
     /**
-     * Close the transport and release any resources.
+     * 关闭传输并释放资源。
      *
-     * <p>After calling this method, the transport should not be used.
+     * <p>调用此方法后，不应继续使用该传输。
      */
     void close();
 }

@@ -24,53 +24,53 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * In-memory implementation of Memory with state persistence support.
+ * 支持状态持久化的内存式 Memory 实现。
  *
- * This implementation stores messages in memory using thread-safe collections
- * and provides state serialization/deserialization for session management.
+ * 此实现使用线程安全集合在内存中存储消息，
+ * 并提供状态序列化／反序列化以管理会话。
  *
- * @deprecated since 2.0.0. Conversation context lives on
- *     {@link io.agentscope.core.state.AgentState#getContext()}; this class is retained for
- *     source compatibility with 1.0.x user code.
+ * @deprecated 自 2.0.0 起弃用。对话上下文位于
+ *     {@link io.agentscope.core.state.AgentState#getContext()}；保留此类是为了
+ *     与 1.0.x 用户代码保持源码兼容。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public class InMemoryMemory implements Memory {
 
     private final List<Msg> messages = new CopyOnWriteArrayList<>();
 
-    /** Key prefix for storage. */
+    /** 存储键前缀。 */
     private static final String KEY_PREFIX = "memory";
 
     /**
-     * Constructor for InMemoryMemory.
+     * InMemoryMemory 的构造器。
      */
     public InMemoryMemory() {}
 
-    // ==================== StateModule Implementation ====================
+    // ==================== StateModule 实现 ====================
 
     /**
-     * Save memory state to the session.
+     * 将记忆状态保存到会话。
      *
-     * <p>Passes the full message list to the session, including the case where the list is empty.
-     * The AgentStateStore implementation is responsible for incremental storage (e.g., JsonFileAgentStateStore appends
-     * only new items based on file line count).
+     * <p>向会话传递完整消息列表，包括列表为空的情况。
+     * 增量存储由 AgentStateStore 实现负责（例如 JsonFileAgentStateStore 根据文件行数
+     * 只追加新条目）。
      *
-     * @param stateStore the state store to save to
-     * @param userId the user identifier
-     * @param sessionId the session identifier
+     * @param stateStore 要保存到的状态存储
+     * @param userId 用户标识符
+     * @param sessionId 会话标识符
      */
     @Override
     public void saveTo(AgentStateStore stateStore, String userId, String sessionId) {
-        // Always save, even when empty, to ensure cleared state is persisted
+        // 始终保存，即使为空也要保存，确保清空后的状态被持久化
         stateStore.save(userId, sessionId, KEY_PREFIX + "_messages", new ArrayList<>(messages));
     }
 
     /**
-     * Load memory state from the store.
+     * 从存储加载记忆状态。
      *
-     * @param stateStore the state store to load from
-     * @param userId nullable user identifier
-     * @param sessionId session identifier
+     * @param stateStore 要从中加载的状态存储
+     * @param userId 可为空的用户标识符
+     * @param sessionId 会话标识符
      */
     @Override
     public void loadFrom(AgentStateStore stateStore, String userId, String sessionId) {
@@ -80,14 +80,14 @@ public class InMemoryMemory implements Memory {
         messages.addAll(loaded);
     }
 
-    // ==================== Memory Interface Implementation ====================
+    // ==================== Memory 接口实现 ====================
 
     /**
-     * Adds a message to the in-memory message list.
+     * 向内存消息列表添加消息。
      *
-     * <p>This method is thread-safe due to the use of CopyOnWriteArrayList.
+     * <p>由于使用 CopyOnWriteArrayList，此方法是线程安全的。
      *
-     * @param message The message to add to memory
+     * @param message 要添加到记忆的消息
      */
     @Override
     public void addMessage(Msg message) {
@@ -95,12 +95,12 @@ public class InMemoryMemory implements Memory {
     }
 
     /**
-     * Retrieves all non-null messages from memory.
+     * 获取记忆中所有非 null 消息。
      *
-     * <p>This method filters out any null entries and returns a new list copy. Thread-safe for
-     * concurrent reads.
+     * <p>此方法过滤 null 条目并返回新的列表副本，支持
+     * 线程安全的并发读取。
      *
-     * @return A new list containing all non-null messages
+     * @return 包含所有非 null 消息的新列表
      */
     @Override
     public List<Msg> getMessages() {
@@ -108,12 +108,12 @@ public class InMemoryMemory implements Memory {
     }
 
     /**
-     * Deletes a message at the specified index.
+     * 删除指定索引处的消息。
      *
-     * <p>This method is thread-safe due to the use of CopyOnWriteArrayList. If the index is out
-     * of bounds, this operation is a no-op (no exception thrown).
+     * <p>由于使用 CopyOnWriteArrayList，此方法是线程安全的。索引
+     * 越界时不执行操作（不抛出异常）。
      *
-     * @param index The index of the message to delete (0-based)
+     * @param index 要删除消息的索引（从 0 开始）
      */
     @Override
     public void deleteMessage(int index) {
@@ -123,9 +123,9 @@ public class InMemoryMemory implements Memory {
     }
 
     /**
-     * Clears all messages from memory.
+     * 清除记忆中的所有消息。
      *
-     * <p>This method is thread-safe due to the use of CopyOnWriteArrayList.
+     * <p>由于使用 CopyOnWriteArrayList，此方法是线程安全的。
      */
     @Override
     public void clear() {

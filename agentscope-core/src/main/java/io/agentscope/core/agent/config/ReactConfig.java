@@ -20,10 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Reasoning-loop configuration. {@link #maxIters()} caps the number of
- * reasoning→acting iterations within a single reply; {@link #stopOnReject()} controls whether
- * a permission rejection of any tool call terminates the loop (instead of feeding the rejection
- * back into the next reasoning round).
+ * 推理循环配置。{@link #maxIters()} 限制单次回复中的推理→行动迭代次数；
+ * {@link #stopOnReject()} 控制任一工具调用遭权限拒绝时是否终止循环，而不是将拒绝反馈到下一轮推理。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ReactConfig(
@@ -39,7 +37,9 @@ public record ReactConfig(
         }
     }
 
-    /** Returns a config initialised to all default values. */
+    /**
+     * 返回全部采用默认值的配置。
+     */
     public static ReactConfig defaults() {
         return new ReactConfig(DEFAULT_MAX_ITERS, DEFAULT_STOP_ON_REJECT);
     }

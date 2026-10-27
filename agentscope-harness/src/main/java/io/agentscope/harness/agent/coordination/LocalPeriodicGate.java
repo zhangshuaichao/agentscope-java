@@ -21,13 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * JVM-local {@link PeriodicGate} backed by a process-wide {@link ConcurrentHashMap} and CAS
- * updates. Suitable for single-process deployments or as the default when no distributed store
- * is configured.
+ * JVM 本地的 {@link PeriodicGate}，基于进程级 {@link ConcurrentHashMap} 和 CAS 更新。
+ * 适用于单进程部署，或作为未配置分布式存储时的默认实现。
  *
- * <p>The map is static so the throttle window survives across {@code HarnessAgent.Builder.build()}
- * calls — each rebuild creates new middleware instances, and an instance-level map would reset
- * to {@link Instant#EPOCH} on every request.
+ * <p>映射使用 static，因此节流窗口在多次 {@code HarnessAgent.Builder.build()} 之间保留。
+ * 每次重建都会创建新中间件实例；如果使用实例级映射，每个请求都会重置为 {@link Instant#EPOCH}。
  */
 public final class LocalPeriodicGate implements PeriodicGate {
 
@@ -52,8 +50,7 @@ public final class LocalPeriodicGate implements PeriodicGate {
     }
 
     /**
-     * Removes entries whose last claim is older than {@code maxAge}. Bounds map size in
-     * long-running services with high key churn.
+     * 移除上次领取时间早于 {@code maxAge} 的条目，限制长期运行且键变化频繁的服务中的映射大小。
      */
     public void cleanupStaleEntries(Duration maxAge) {
         if (maxAge == null) {
@@ -63,19 +60,25 @@ public final class LocalPeriodicGate implements PeriodicGate {
         SHARED_LAST_CLAIM_AT.entrySet().removeIf(e -> e.getValue().get().isBefore(cutoff));
     }
 
-    /** Clears all entries — for unit tests only. */
+    /**
+     * 清空所有条目，仅供单元测试使用。
+     */
     public static void clearForTests() {
         SHARED_LAST_CLAIM_AT.clear();
     }
 
-    /** Seeds a claim timestamp — for unit tests only. */
+    /**
+     * 设置领取时间戳，仅供单元测试使用。
+     */
     public static void seedLastClaimAtForTests(String name, Instant instant) {
         SHARED_LAST_CLAIM_AT
                 .computeIfAbsent(name, k -> new AtomicReference<>(EPOCH))
                 .set(instant != null ? instant : EPOCH);
     }
 
-    /** Returns whether a named slot exists — for unit tests only. */
+    /**
+     * 返回指定名称的槽位是否存在，仅供单元测试使用。
+     */
     public static boolean hasClaimForTests(String name) {
         return SHARED_LAST_CLAIM_AT.containsKey(name);
     }

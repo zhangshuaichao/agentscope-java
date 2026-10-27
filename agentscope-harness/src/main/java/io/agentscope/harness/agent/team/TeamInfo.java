@@ -15,6 +15,6 @@
  */
 package io.agentscope.harness.agent.team;
 
-/** Lightweight team record. */
+/** 轻量团队记录。 */
 public record TeamInfo(
         String name, String namespace, String objective, String phase, String leadRef) {}

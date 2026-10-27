@@ -16,10 +16,10 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result from abstract filesystem read operations.
+ * 抽象文件系统读取操作的结果。
  *
- * @param error error message on failure, {@code null} on success
- * @param fileData file data on success, {@code null} on failure
+ * @param error 失败时的错误消息；成功时为 {@code null}
+ * @param fileData 成功时的文件数据；失败时为 {@code null}
  */
 public record ReadResult(String error, FileData fileData) {
 

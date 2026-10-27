@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-/** Persistence failures must propagate; they must never become successful model/tool results. */
+/** 持久化失败必须传播，绝不能变成成功的模型／工具结果。 */
 public class SessionLogException extends RuntimeException {
     public SessionLogException(String message) {
         super(message);

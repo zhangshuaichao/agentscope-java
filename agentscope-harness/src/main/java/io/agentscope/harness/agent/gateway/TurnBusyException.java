@@ -16,19 +16,19 @@
 package io.agentscope.harness.agent.gateway;
 
 /**
- * Thrown when a session turn gate cannot be acquired because another turn holds the lock.
+ * 另一个轮次持有锁、导致无法获取会话轮次门控时抛出。
  *
- * <p>{@link HarnessGateway} maps this to an empty {@link reactor.core.publisher.Mono} so duplicate
- * wakeup or concurrent inbound requests for the same session are skipped rather than queued.
+ * <p>{@link HarnessGateway} 将它映射为空 {@link reactor.core.publisher.Mono}，
+ * 因此同会话的重复唤醒或并发入站请求被跳过，而不是排队。
  */
 public final class TurnBusyException extends Exception {
 
     private final String gateKey;
 
     /**
-     * Creates an exception for the given gate key.
+     * 为指定门控键创建异常。
      *
-     * @param gateKey the canonical session gate key that is busy
+     * @param gateKey 正处于繁忙状态的规范会话门控键
      */
     public TurnBusyException(String gateKey) {
         super("Session turn gate busy: " + gateKey);
@@ -36,9 +36,9 @@ public final class TurnBusyException extends Exception {
     }
 
     /**
-     * Returns the gate key that could not be acquired.
+     * 返回无法获取的门控键。
      *
-     * @return the busy gate key
+     * @return 繁忙门控键
      */
     public String getGateKey() {
         return gateKey;

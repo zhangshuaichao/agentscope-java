@@ -28,19 +28,19 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Persistent agent task record carried inside {@link TaskContextState}.
+ * 由 {@link TaskContextState} 携带的持久化智能体任务记录。
  *
- * <p>Tasks are user-visible work items. Their {@link #state} progresses {@code pending → in_progress
- * → completed}; dependencies are declared via {@link #blocks} (downstream task ids waiting on this
- * one) and {@link #blockedBy} (upstream task ids whose completion gates this one).
+ * <p>任务是用户可见的工作项。其 {@link #state} 按 {@code pending → in_progress
+ * → completed} 推进；通过 {@link #blocks} 声明等待当前任务的下游任务 ID，
+ * 通过 {@link #blockedBy} 声明必须先完成的上游任务 ID。
  *
- * <p>All fields except {@code subject} and {@code description} have sensible defaults so callers
- * normally invoke {@link Builder#subject(String)} + {@link Builder#description(String)} and let the
- * other fields populate themselves.
+ * <p>除 {@code subject} 和 {@code description} 外，所有字段都有合理的默认值；
+ * 因此调用方通常只需调用 {@link Builder#subject(String)} 和
+ * {@link Builder#description(String)}，其余字段会自行填充。
  */
 public final class Task {
 
-    /** Allowed values for {@link #state}. */
+    /** {@link #state} 允许使用的值。 */
     public enum State {
         PENDING("pending"),
         IN_PROGRESS("in_progress"),

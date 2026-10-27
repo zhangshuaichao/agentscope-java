@@ -18,19 +18,18 @@ package io.agentscope.harness.agent.gateway.channel;
 import java.util.Map;
 
 /**
- * Constructs a {@link Channel} instance from the resolved routing config and provider-specific
- * properties.
+ * 根据已解析的路由配置及服务商专用属性构建 {@link Channel} 实例。
  */
 @FunctionalInterface
 public interface ChannelFactory {
 
     /**
-     * Build the channel.
+     * 构建渠道。
      *
-     * @param channelId the logical channel id
-     * @param routing the parsed routing config (defaultAgentId, dmScope, bindings)
-     * @param properties provider-specific properties; never null but may be empty
-     * @return a fully constructed channel ready for {@code init(Gateway)} + {@code start()}
+     * @param channelId 逻辑渠道 ID
+     * @param routing 已解析的路由配置（defaultAgentId、dmScope、绑定）
+     * @param properties 服务商专用属性；不会为 null，但可为空
+     * @return 已完整构造、可执行 {@code init(Gateway)} 与 {@code start()} 的渠道
      */
     Channel create(String channelId, ChannelConfig routing, Map<String, Object> properties);
 }

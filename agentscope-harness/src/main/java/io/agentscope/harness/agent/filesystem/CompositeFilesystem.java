@@ -38,19 +38,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Routes file operations to different {@link AbstractFilesystem} stores by path prefix.
+ * 按路径前缀把文件操作路由到不同的 {@link AbstractFilesystem} 存储。
  *
- * <p>Paths are matched against route prefixes (longest first). Unmatched paths fall through to the
- * default store.
+ * <p>路径按路由前缀匹配，最长前缀优先；未匹配路径交给默认存储。
  *
- * <p>Composite deliberately implements only {@link AbstractFilesystem} — it is the unified,
- * non-sandbox view that blends a local workspace with remote-store-backed paths. Shell execution
- * is intentionally not supported in this mode: routing shell commands across stores is
- * ambiguous, and the primary use case (distributed memory with per-user/session isolation) does
- * not need it. If you need shell execution, use a sandbox-backed filesystem
- * ({@link AbstractSandboxFilesystem}) or {@link LocalFilesystemWithShell} directly instead.
+ * <p>Composite 有意仅实现 {@link AbstractFilesystem}，作为统一的非沙箱视图，
+ * 将本地工作区和远程存储路径组合在一起。此模式有意不支持 Shell 执行：
+ * 跨存储路由 Shell 命令的含义不明确，而主要使用场景（按用户／会话隔离的分布式记忆）
+ * 也不需要此能力。如需 Shell 执行，请直接使用沙箱文件系统
+ * （{@link AbstractSandboxFilesystem}）或 {@link LocalFilesystemWithShell}。
  *
- * <p>Example:
+ * <p>示例：
  *
  * <pre>{@code
  * CompositeFilesystem fs = new CompositeFilesystem(
@@ -72,11 +70,11 @@ public class CompositeFilesystem implements AbstractFilesystem {
     private final List<RouteEntry> sortedRoutes;
 
     /**
-     * Creates a composite filesystem with a default backend and prefix-based routes.
+     * 创建带默认后端和前缀路由的组合文件系统。
      *
-     * @param defaultBackend backend for paths that don't match any route
-     * @param routes map of path prefixes to stores; prefixes must start with {@code "/"}
-     *     and should end with {@code "/"} (e.g. {@code "/memories/"})
+     * @param defaultBackend 未匹配任何路由时使用的后端
+     * @param routes 路径前缀到存储的映射；前缀必须以 {@code "/"} 开头，
+     *     且应以 {@code "/"} 结尾（例如 {@code "/memories/"}）
      */
     public CompositeFilesystem(
             AbstractFilesystem defaultBackend, Map<String, AbstractFilesystem> routes) {
@@ -95,7 +93,7 @@ public class CompositeFilesystem implements AbstractFilesystem {
         this.sortedRoutes = List.copyOf(entries);
     }
 
-    // ==================== Routing ====================
+    // ==================== 路由 ====================
 
     private record RouteEntry(String prefix, AbstractFilesystem backend) {}
 
@@ -103,19 +101,19 @@ public class CompositeFilesystem implements AbstractFilesystem {
             AbstractFilesystem backend, String backendPath, String routePrefix) {}
 
     /**
-     * Returns the backend filesystem that would serve {@code path}: the longest matching prefix
-     * route, or the default backend when no route matches.
+     * 返回处理 {@code path} 的后端文件系统：最长前缀匹配的路由后端，
+     * 没有匹配路由时使用默认后端。
      */
     public AbstractFilesystem filesystemFor(String path) {
         return routeForPath(path).backend();
     }
 
     private RouteResult routeForPath(String path) {
-        // Canonicalize both sides by stripping any leading slash before matching so callers can
-        // pass either "/skills/foo" (the {@link AbstractFilesystem} contract) or "skills/foo"
-        // (the convention used by {@code WorkspaceManager.writeUtf8WorkspaceRelative}) and route
-        // to the same store. The original {@code entry.prefix()} is preserved in the
-        // {@link RouteResult} so path remapping output stays in the prefix's stored form.
+        // 匹配前去除两侧路径的前导斜杠进行规范化，因此调用方可以传入
+        // "/skills/foo"（{@link AbstractFilesystem} 契约）或 "skills/foo"
+        // （{@code WorkspaceManager.writeUtf8WorkspaceRelative} 使用的约定），并路由到
+        // 同一个存储。原始 {@code entry.prefix()} 保留在
+        // {@link RouteResult} 中，使路径重映射结果保持前缀的存储形式。
         String matchPath = stripLeadingSlash(path);
         for (RouteEntry entry : sortedRoutes) {
             String canonicalPrefix = stripLeadingSlash(entry.prefix());
@@ -152,12 +150,12 @@ public class CompositeFilesystem implements AbstractFilesystem {
         return s.substring(i);
     }
 
-    // ==================== Path remapping helpers ====================
+    // ==================== 路径重映射辅助方法 ====================
 
     private static String prependRoute(String routePrefix, String backendPath) {
-        // Exact-file route: the backend holds one logical key, so the externally visible path
-        // is the route prefix itself — appending the backend's "/<file>" would yield
-        // "AGENTS.md/AGENTS.md".
+        // 精确文件路由：后端只保存一个逻辑键，因此外部可见路径
+        // 就是路由前缀本身；再追加后端的 "/<file>" 会得到
+        // 重复路径 "AGENTS.md/AGENTS.md"。
         if (!routePrefix.endsWith("/")) {
             return routePrefix;
         }
@@ -183,7 +181,7 @@ public class CompositeFilesystem implements AbstractFilesystem {
         return pattern;
     }
 
-    // ==================== AbstractFilesystem ====================
+    // ==================== AbstractFilesystem 实现 ====================
 
     @Override
     public LsResult ls(RuntimeContext runtimeContext, String path) {
@@ -212,7 +210,7 @@ public class CompositeFilesystem implements AbstractFilesystem {
                     results.add(FileInfo.ofDir(entry.prefix(), ""));
                     continue;
                 }
-                // Exact-file route: surface as a file entry iff the backend has it.
+                // 精确文件路由：仅当后端存在该文件时才显示文件条目。
                 String exactPath = "/" + entry.prefix();
                 if (entry.backend().exists(runtimeContext, exactPath)) {
                     results.add(FileInfo.ofFile(entry.prefix(), 0L, ""));
@@ -293,8 +291,8 @@ public class CompositeFilesystem implements AbstractFilesystem {
             }
             for (RouteEntry entry : sortedRoutes) {
                 if (!entry.prefix().endsWith("/")) {
-                    // Exact-file route: scope grep to the single addressable file so we don't
-                    // scan unrelated keys in the same backend namespace.
+                    // 精确文件路由：将 grep 限定到唯一可寻址文件，避免
+                    // 扫描同一后端命名空间中的无关键。
                     String exactPath = "/" + entry.prefix();
                     if (!entry.backend().exists(runtimeContext, exactPath)) {
                         continue;
@@ -343,8 +341,8 @@ public class CompositeFilesystem implements AbstractFilesystem {
             return GlobResult.success(remapped);
         }
 
-        // Non-root path that didn't match any route: delegate to default backend only.
-        // Route scanning only makes sense for root-level recursive globs.
+        // 非根路径未匹配路由时，只委托给默认后端。
+        // 只有根级递归 glob 才需要扫描路由。
         if (path != null && !"/".equals(path) && !".".equals(path)) {
             return defaultBackend.glob(runtimeContext, pattern, path);
         }
@@ -357,12 +355,12 @@ public class CompositeFilesystem implements AbstractFilesystem {
         String effectivePattern = pattern.startsWith("/") ? pattern.substring(1) : pattern;
         PathMatcher fileMatcher =
                 FileSystems.getDefault().getPathMatcher("glob:" + effectivePattern);
-        // Java NIO's PathMatcher requires at least one separator for patterns like `**/*`, so
-        // root-level files (e.g. AGENTS.md, MEMORY.md, tools.json — registered as exact-file
-        // routes with no separator in their prefix) never satisfy the recursive matcher alone.
-        // Mirror what {@link LocalFilesystem#glob} does: build a "direct" matcher by stripping
-        // the leading `**/` so depth-1 entries also match. A pattern that already lacks the
-        // recursive prefix falls through unchanged.
+        // Java NIO 的 PathMatcher 对 `**/*` 等模式要求至少有一个分隔符，因此
+        // 根级文件（如 AGENTS.md、MEMORY.md、tools.json，注册为前缀中
+        // 没有分隔符的精确文件路由）不能仅靠递归匹配器匹配。
+        // 沿用 {@link LocalFilesystem#glob} 的做法：移除
+        // 前导 `**/` 构建“直接”匹配器，使深度为 1 的条目也能匹配。原本没有
+        // 递归前缀的模式保持不变。
         String directExpr;
         if (effectivePattern.startsWith("**/")) {
             directExpr = effectivePattern.substring(3);
@@ -375,8 +373,8 @@ public class CompositeFilesystem implements AbstractFilesystem {
                 FileSystems.getDefault().getPathMatcher("glob:" + directExpr);
         for (RouteEntry entry : sortedRoutes) {
             if (!entry.prefix().endsWith("/")) {
-                // Exact-file route: check existence AND match against the glob pattern so
-                // a glob("*.json", "/") does not surface AGENTS.md or other non-matching files.
+                // 精确文件路由：同时检查存在性和 glob 模式匹配，确保
+                // glob("*.json", "/") 不会返回 AGENTS.md 等不匹配文件。
                 Path entryPath = Path.of(entry.prefix());
                 if (!fileMatcher.matches(entryPath) && !directFileMatcher.matches(entryPath)) {
                     continue;
@@ -493,7 +491,7 @@ public class CompositeFilesystem implements AbstractFilesystem {
             return result;
         }
 
-        // Cross-backend move: read → write → delete
+        // 跨后端移动：读取 → 写入 → 删除；并非跨存储原子事务。
         var readResult = srcRoute.backend().read(runtimeContext, srcRoute.backendPath(), 0, 0);
         if (!readResult.isSuccess() || readResult.fileData() == null) {
             return WriteResult.fail("Cannot read source for cross-backend move: " + fromPath);
@@ -521,7 +519,9 @@ public class CompositeFilesystem implements AbstractFilesystem {
         return route.backend().exists(runtimeContext, route.backendPath());
     }
 
-    /** Returns the default store. */
+    /**
+     * 返回默认存储。
+     */
     public AbstractFilesystem getDefaultBackend() {
         return defaultBackend;
     }

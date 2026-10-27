@@ -19,11 +19,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Description of one candidate chat model under a provider.
+ * 某服务商下一个候选聊天模型的描述。
  *
- * <p>This is a minimal placeholder so {@link CredentialBase#listModels()} has a return type.
- * Capability flags and parameter schemas will be added as the model-discovery infrastructure
- * matures.
+ * <p>这是最小占位类型，用作 {@link CredentialBase#listModels()} 的返回值。
+ * 随着模型发现基础设施完善，将进一步添加能力标记和参数模式。
  */
 public record ModelCard(
         @JsonProperty("model_name") String modelName,

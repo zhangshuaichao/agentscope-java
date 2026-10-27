@@ -23,13 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Thread-safe in-memory implementation of {@link BaseStore}.
+ * 线程安全的 {@link BaseStore} 内存实现。
  *
- * <p>Items are stored in a ConcurrentHashMap keyed by the concatenation of
- * namespace components and the item key, separated by {@code '\0'}.
+ * <p>条目保存在 ConcurrentHashMap 中，键由命名空间各部分与条目键拼接而成，以 {@code '\0'} 分隔。
  *
- * <p>Every successful {@link #put} and {@link #putIfVersion} increments the item's
- * {@link StoreItem#version()} counter, enabling optimistic concurrency control.
+ * <p>每次成功执行 {@link #put} 或 {@link #putIfVersion} 都会递增条目的 {@link StoreItem#version()} 计数器，以支持乐观并发控制。
  */
 public class InMemoryStore implements BaseStore {
 
@@ -52,11 +50,10 @@ public class InMemoryStore implements BaseStore {
     }
 
     /**
-     * Atomic compare-and-swap: updates the item only when the stored version equals
-     * {@code expectedVersion}. An {@code expectedVersion} of {@code 0} succeeds only when the
-     * key does not yet exist.
+     * 原子比较并交换：仅当已存储版本等于 {@code expectedVersion} 时更新条目。
+     * {@code expectedVersion} 为 {@code 0} 时，仅在键尚不存在的情况下成功。
      *
-     * @return {@code true} if the item was written, {@code false} if the version did not match
+     * @return 写入成功时为 {@code true}；版本不匹配时为 {@code false}
      */
     @Override
     public boolean supportsAtomicSessionStorage() {
@@ -73,7 +70,7 @@ public class InMemoryStore implements BaseStore {
                 (k, existing) -> {
                     long currentVersion = (existing != null) ? existing.version() : 0L;
                     if (currentVersion != expectedVersion) {
-                        return existing; // version mismatch — no update
+                        return existing; // 版本不匹配，不更新
                     }
                     written[0] = true;
                     return new StoreItem(key, value, currentVersion + 1);
@@ -102,12 +99,16 @@ public class InMemoryStore implements BaseStore {
         store.remove(compoundKey(namespace, key));
     }
 
-    /** Returns the number of items currently stored. */
+    /**
+     * 返回当前存储的条目数量。
+     */
     public int size() {
         return store.size();
     }
 
-    /** Removes all items from the store. */
+    /**
+     * 移除存储中的全部条目。
+     */
     public void clear() {
         store.clear();
     }

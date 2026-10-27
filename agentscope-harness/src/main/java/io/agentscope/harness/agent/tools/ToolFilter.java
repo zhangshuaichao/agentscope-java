@@ -25,21 +25,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Applies the {@link ToolsConfig#getAllow() allow} / {@link ToolsConfig#getDeny() deny} lists from
- * {@code workspace/tools.json} (or Managed Agents toolset export) against a {@link Toolkit}.
+ * 将 {@link ToolsConfig#getAllow() allow} / {@link ToolsConfig#getDeny() deny} 列表
+ * 从 {@code workspace/tools.json} 或 Managed Agents 工具集导出应用到 {@link Toolkit}。
  *
- * <p>Semantics:
- *
+ * <p>语义：
  * <ul>
- *   <li>When {@code allow} is non-empty, <em>catalogued</em> tools not listed are removed.
- *   <li>{@link HarnessPlatformTools} names always survive {@code allow} (Harness runtime must keep
- *       working). Explicit {@code deny} still removes them.
- *   <li>{@code deny} entries are always removed, regardless of {@code allow}.
- *   <li>When both are empty/absent the toolkit is left untouched.
+ * <li>{@code allow} 非空时，移除未列出的<em>目录内</em>工具。</li>
+ * <li>{@link HarnessPlatformTools} 名称始终不受 {@code allow} 排除，以维持 Harness 运行时工作；
+ * 显式 {@code deny} 仍可移除它们。</li>
+ * <li>{@code deny} 中的名称始终移除，不受 {@code allow} 影响。</li>
+ * <li>两者均为空或缺失时，不修改工具集。</li>
  * </ul>
  *
- * <p>Names that don't correspond to a currently registered tool are logged at WARN and otherwise
- * ignored — typos in the workspace file should not abort the agent.
+ * <p>名称未对应当前已注册工具时记录 WARN，除此之外忽略；工作区文件的拼写错误不应中止智能体。
+ *
+ * <p>【学习提示】allow 不是覆盖所有工具的绝对安全沙箱：平台工具有豁免，MCP 工具有自己的选择规则。
+ * 显式 deny 与工具执行层的授权检查仍需分别考虑。
  */
 public final class ToolFilter {
 
@@ -48,9 +49,9 @@ public final class ToolFilter {
     private ToolFilter() {}
 
     /**
-     * Returns whether a tool with {@code name} survives {@code cfg}'s allow/deny rules.
+     * 判断名称为 {@code name} 的工具能否通过 {@code cfg} 的 allow/deny 规则。
      *
-     * <p>This is useful when prompt construction depends on a tool being available after filtering.
+     * <p>构造提示词需要判断过滤后工具是否可用时，可使用此方法。
      */
     public static boolean isAllowed(String name, ToolsConfig cfg) {
         if (name == null || name.isBlank()) {
@@ -64,7 +65,7 @@ public final class ToolFilter {
             return false;
         }
         List<String> allow = cfg.getAllow();
-        // MCP tools have their own per-server selection, independent of built-in defaults.
+        // MCP 工具有独立的逐服务器选择规则，不依赖内置工具默认值。
         if (!cfg.isStrictAllow()
                 && cfg.getMcpServers() != null
                 && cfg.getMcpServers().entrySet().stream()
@@ -80,8 +81,8 @@ public final class ToolFilter {
     }
 
     /**
-     * Removes tools from {@code toolkit} that are excluded by {@code cfg}'s allow/deny lists. A
-     * {@code null} {@code cfg} or one with no allow/deny entries is a no-op.
+     * 从 {@code toolkit} 中移除被 {@code cfg} 的 allow/deny 列表排除的工具。
+     * 若配置为 {@code null}，或 {@code cfg} 没有 allow/deny 条目，则不操作。
      */
     public static void apply(Toolkit toolkit, ToolsConfig cfg) {
         if (toolkit == null || cfg == null) {

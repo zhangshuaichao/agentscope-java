@@ -19,30 +19,30 @@ import io.agentscope.core.agent.Agent;
 import io.agentscope.core.agent.RuntimeContext;
 
 /**
- * Creates a new subagent instance for a single spawn or session. Registered under an {@code
- * agent_id} in {@link DefaultAgentManager}; each {@link #create(RuntimeContext)} call should
- * return a fresh agent when isolation is required.
+ * 为单次启动或会话创建新的子智能体实例。在 {@link DefaultAgentManager} 中
+ * 以 {@code agent_id} 注册；需要隔离时，每次 {@link #create(RuntimeContext)}
+ * 调用都应返回全新智能体。
  *
- * <p>This type replaces a raw {@link java.util.function.Supplier} for subagent wiring so call sites
- * and maps are self-documenting.
+ * <p>此类型替代子智能体装配中的原始 {@link java.util.function.Supplier}，
+ * 使调用点和映射表本身更能表达意图。
  *
- * <p><b>Phase B-0:</b> Implementations should bake {@code parentRc.getUserId()} and
- * {@code parentRc.getSessionId()} into the child agent's persisted {@code SessionKey} so that
- * {@code AgentState} stays isolated per (user, parent-session) — regardless of which
- * {@link io.agentscope.core.state.AgentStateStore} backend (Workspace / Redis / InMemory / custom) is
- * configured. Both fields are nullable; when absent the child falls back to the legacy single
- * bucket form keyed only by declaration name.
+ * <p><b>阶段 B-0：</b>实现应将 {@code parentRc.getUserId()} 与
+ * {@code parentRc.getSessionId()} 固定到子智能体的持久化 {@code SessionKey} 中，
+ * 使 {@code AgentState} 按（用户、父会话）保持隔离，不论配置的是哪种
+ * {@link io.agentscope.core.state.AgentStateStore} 后端
+ * （Workspace／Redis／InMemory／自定义）。两个字段均可为空；缺失时子级回退到
+ * 仅以声明名称为键的旧版单桶形式。
  */
 @FunctionalInterface
 public interface SubagentFactory {
 
     /**
-     * Builds a new subagent instance for the given parent runtime context. Implementations are
-     * responsible for translating {@code parentRc} into appropriate state-isolation hints (e.g.
-     * a parent-aware {@code SessionKey}); see the type-level javadoc.
+     * 为给定父级运行时上下文构建新的子智能体实例。实现负责将 {@code parentRc}
+     * 转换为适当的状态隔离信息（例如包含父级身份的 {@code SessionKey}）；
+     * 参见类型级 Javadoc。
      *
-     * @param parentRc parent agent's runtime context at spawn time; may be
-     *     {@link RuntimeContext#empty()} when caller has no scope
+     * @param parentRc 启动时父级智能体的运行时上下文；调用方没有作用域时
+     *     可以为 {@link RuntimeContext#empty()}
      */
     Agent create(RuntimeContext parentRc);
 }

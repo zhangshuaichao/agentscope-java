@@ -53,7 +53,7 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-/** Per-execution ordered acceptance and acknowledged checkpoints. Buffer retained on failure. */
+/** 按执行维度有序接收事件并确认检查点。失败时保留缓冲区。 */
 public final class SessionRecorder {
     public static final String CONTEXT_KEY = "agentscope.session.recorder";
     public static final String PARENT_KEY = "agentscope.session.parent";
@@ -155,7 +155,7 @@ public final class SessionRecorder {
                 : null;
     }
 
-    /** Parent completion is accepted only while that parent's writer is still active. */
+    /** 仅当父执行的写入者仍活跃时，才接受其完成状态。 */
     public synchronized void recordIfOpen(String type, Object payload) {
         if (!closed) recordNow(type, payload);
     }
@@ -230,8 +230,8 @@ public final class SessionRecorder {
         return seq;
     }
 
-    // Map<String, Object> erases polymorphic block types in Jackson. Preserve their discriminator
-    // before freezing native payloads, including action results and external tool requests.
+    // Jackson 会在 Map<String, Object> 中丢失内容块的多态类型。应保留其类型判别标记，
+    // 再冻结原生载荷，包括行动结果与外部工具请求。
     private static Object typedPayload(Object value) {
         if (value instanceof ContentBlock block)
             return JsonUtils.getJsonCodec()
@@ -286,13 +286,13 @@ public final class SessionRecorder {
                         });
     }
 
-    /** Explicit acknowledged boundary for existing synchronous domain mutation code. */
+    /** 供现有同步领域变更代码使用的显式确认边界。 */
     public synchronized void recordNow(String type, Object payload) {
         append(type, payload);
         flushNow();
     }
 
-    /** Reads a durable domain fact, never an in-flight buffer. */
+    /** 读取持久化领域事实，绝不读取尚在途的缓冲区。 */
     public Optional<SessionEvent> findLast(String type, Predicate<SessionEvent> predicate) {
         long cursor = 0;
         SessionEvent found = null;
@@ -390,7 +390,7 @@ public final class SessionRecorder {
         return state.getContext().stream().map(m -> JsonUtils.getJsonCodec().toJson(m)).toList();
     }
 
-    /** Acknowledged checkpoint for synchronous callers already inside this execution. */
+    /** 供已处于本次执行中的同步调用方使用的确认式检查点。 */
     public synchronized void checkpointNow(AgentState state, String reason) {
         captureState(state, reason);
         flushNow();
@@ -445,7 +445,7 @@ public final class SessionRecorder {
         }
     }
 
-    /** Logical outcome of a normally returned result, independent of the reactive handle status. */
+    /** 正常返回结果的逻辑结局，独立于响应式句柄状态。 */
     public static String outcome(GenerateReason reason) {
         if (reason == null) return "completed";
         return switch (reason) {
@@ -514,9 +514,9 @@ public final class SessionRecorder {
         }
     }
 
-    /** Capture only runtime facts that are not already captured at the model/tool boundary. */
+    /** 仅捕获尚未在模型／工具边界记录的运行时事实。 */
     public void observe(AgentEvent event) {
-        // A forwarded child's requests belong to its own journal, never the parent's inbox.
+        // 转发的子智能体请求属于子智能体自己的日志，绝不属于父智能体的收件箱。
         if (event.getExecution() != null && !runId.equals(event.getExecution().runId())) return;
         if (event.getSource() != null && !event.getSource().isBlank()) return;
         if (event instanceof RequireUserConfirmEvent confirmation) {

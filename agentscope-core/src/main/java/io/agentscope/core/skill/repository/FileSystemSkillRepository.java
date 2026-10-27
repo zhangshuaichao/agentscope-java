@@ -32,12 +32,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * File system based implementation of AgentSkillRepository.
+ * 基于文件系统的 AgentSkillRepository 实现。
  *
- * <p>This repository stores skills in a local file system directory structure where each skill
- * is stored in its own subdirectory containing a SKILL.md file and optional resource files.
+ * <p>在本地目录结构中存储技能：每个技能有独立子目录，包含 SKILL.md 和可选资源文件。
  *
- * <p>Directory structure:
+ * <p>目录结构：
  * <pre>{@code
  * baseDir/
  * ├── skill-name-1/
@@ -49,13 +48,12 @@ import org.slf4j.LoggerFactory;
  *     └── SKILL.md
  * }</pre>
  *
- * <p>Example usage:
+ * <p>使用示例：
  * <pre>{@code
  * Path baseDir = Paths.get("/path/to/skills");
  * FileSystemSkillRepository repo = new FileSystemSkillRepository(baseDir);
  * AgentSkill skill = repo.getSkill("my-skill");
  * }</pre>
- *
  */
 public class FileSystemSkillRepository implements AgentSkillRepository {
 
@@ -67,16 +65,15 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
     private boolean writeable;
 
     /**
-     * When {@code true}, only SKILL.md is read into memory by {@link #getAllSkills()};
-     * referenced support files are left out and consumers resolve them on demand through the
-     * skill's {@code originDir}. Defaults to {@code false} to preserve historical behaviour
-     * for callers that still inspect {@code skill.getResources()}.
+     * 为 {@code true} 时，{@link #getAllSkills()} 仅将 SKILL.md 读入内存；
+     * 不预加载所引用的支持文件，使用者按需通过技能的 {@code originDir} 解析这些文件。
+     * 默认为 {@code false}，以保留仍读取 {@code skill.getResources()} 的调用方的历史行为。
      */
     private final boolean lazy;
 
     /**
-     * Memoises (skillDirAbsolutePath → snapshot) so that repeated {@link #getAllSkills()} calls
-     * skip the {@code readString} of any SKILL.md whose mtime + size are unchanged.
+     * 缓存技能目录绝对路径到快照的映射，使重复调用 {@link #getAllSkills()} 时，
+     * 跳过 mtime 与大小均未变化的 SKILL.md 的 {@code readString}。
      */
     private final Map<Path, Snapshot> skillCache = new ConcurrentHashMap<>();
 
@@ -85,41 +82,37 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
     }
 
     /**
-     * Creates a FileSystemSkillRepository with the specified base directory.
+     * 使用指定基础目录创建 FileSystemSkillRepository。
      *
-     * @param baseDir The base directory containing skill subdirectories (must not be null)
-     * @param writeable Whether the repository supports write operations
-     * @throws IllegalArgumentException if baseDir is null, doesn't exist, is not a directory,
-     *                                  or is empty
+     * @param baseDir 包含技能子目录的基础目录（不可为 null）
+     * @param writeable 仓库是否支持写操作
+     * @throws IllegalArgumentException baseDir 为 null、不存在或不是目录时抛出
      */
     public FileSystemSkillRepository(Path baseDir, boolean writeable) {
         this(baseDir, writeable, null, false);
     }
 
     /**
-     * Creates a FileSystemSkillRepository with the specified base directory and source.
+     * 使用指定基础目录和来源创建 FileSystemSkillRepository。
      *
-     * @param baseDir The base directory containing skill subdirectories (must not be null)
-     * @param writeable Whether the repository supports write operations
-     * @param source The custom source identifier for skills (null to use default)
-     * @throws IllegalArgumentException if baseDir is null, doesn't exist, is not a directory,
-     *                                  or is empty
+     * @param baseDir 包含技能子目录的基础目录（不可为 null）
+     * @param writeable 仓库是否支持写操作
+     * @param source 技能的自定义来源标识符（null 表示默认值）
+     * @throws IllegalArgumentException baseDir 为 null、不存在或不是目录时抛出
      */
     public FileSystemSkillRepository(Path baseDir, boolean writeable, String source) {
         this(baseDir, writeable, source, false);
     }
 
     /**
-     * Creates a FileSystemSkillRepository with explicit lazy mode.
+     * 创建显式配置惰性模式的 FileSystemSkillRepository。
      *
-     * @param baseDir The base directory containing skill subdirectories (must not be null)
-     * @param writeable Whether the repository supports write operations
-     * @param source The custom source identifier for skills (null to use default)
-     * @param lazy when {@code true}, support files are NOT pre-loaded; consumers must resolve
-     *     them via the skill's {@code originDir}. Use this together with a
-     *     {@code load_skill_through_path} disk-fallback for large skill libraries
-     * @throws IllegalArgumentException if baseDir is null, doesn't exist, is not a directory,
-     *                                  or is empty
+     * @param baseDir 包含技能子目录的基础目录（不可为 null）
+     * @param writeable 仓库是否支持写操作
+     * @param source 技能的自定义来源标识符（null 表示默认值）
+     * @param lazy 为 {@code true} 时不预加载支持文件；使用者必须通过技能的 {@code originDir}
+     *      解析它们。大型技能库可配合 {@code load_skill_through_path} 磁盘回退机制使用
+     * @throws IllegalArgumentException baseDir 为 null、不存在或不是目录时抛出
      */
     public FileSystemSkillRepository(Path baseDir, boolean writeable, String source, boolean lazy) {
         this.writeable = writeable;
@@ -129,15 +122,15 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
             throw new IllegalArgumentException("Base directory cannot be null");
         }
 
-        // Convert to absolute path and normalize
+        // 转换为绝对路径并规范化
         this.baseDir = baseDir.toAbsolutePath().normalize();
 
-        // Validate directory exists
+        // 验证目录存在
         if (!Files.exists(this.baseDir)) {
             throw new IllegalArgumentException("Base directory does not exist: " + this.baseDir);
         }
 
-        // Validate it's a directory
+        // 验证确实为目录
         if (!Files.isDirectory(this.baseDir)) {
             throw new IllegalArgumentException(
                     "Base directory is not a directory: " + this.baseDir);
@@ -147,16 +140,18 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
                 "FileSystemSkillRepository initialized [baseDir={}, lazy={}]", this.baseDir, lazy);
     }
 
-    /** Whether this repository only reads SKILL.md and defers support-file loading. */
+    /**
+     * 此仓库是否仅读取 SKILL.md，并推迟加载支持文件。
+     */
     public boolean isLazy() {
         return lazy;
     }
 
     @Override
     public AgentSkill getSkill(String name) {
-        // Single-skill lookup is rare on the hot path; just go through the same cache by
-        // running getAllSkills(), and pick the matching one. This keeps mtime invalidation
-        // logic in one place.
+        // 单技能查询很少出现在热点路径，因此直接调用相同缓存路径中的
+        // getAllSkills()，再选择匹配项。这让 mtime 失效处理逻辑
+        // 集中在同一处。
         if (name == null || name.isEmpty()) {
             return null;
         }
@@ -165,8 +160,10 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
                 return skill;
             }
         }
-        // Fallback path for cases where a skill was just written and the cache hasn't seen
-        // it: read directly. Honour the lazy flag.
+        // 回退路径：技能刚写入但缓存尚未发现它时，
+        // 直接读取。
+        // 【学习提示】此回退调用三参数 loadSkill，最终走预加载资源的重载，
+        // 与上面的 getAllSkills() 惰性路径不同；不能从旧注释推断它会沿用 lazy。
         return SkillFileSystemHelper.loadSkill(baseDir, name, getSource());
     }
 
@@ -196,6 +193,8 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
                     long mtime = attrs.lastModifiedTime().toMillis();
                     long size = attrs.size();
                     Snapshot cached = skillCache.get(key);
+                    // 【学习提示】缓存用修改时间和大小判断是否复用，并不比较完整文件内容。
+                    // 阅读性能优化时，需区分“低成本变化线索”与“内容相等的严格证明”。
                     if (cached != null && cached.mtime == mtime && cached.size == size) {
                         out.add(cached.skill);
                         continue;
@@ -213,13 +212,15 @@ public class FileSystemSkillRepository implements AgentSkillRepository {
         } catch (IOException e) {
             throw new RuntimeException("Failed to list skill directories", e);
         }
-        // Evict entries whose backing directory disappeared between calls so the cache does
-        // not pin removed skills.
+        // 驱逐两次调用之间底层目录已消失的条目，避免缓存
+        // 继续保留已删除的技能。
         skillCache.keySet().retainAll(seenDirs);
         return out;
     }
 
-    /** Cache entry pairing the SKILL.md mtime/size with the parsed AgentSkill. */
+    /**
+     * 缓存条目，将 SKILL.md 的 mtime／大小与解析后的 AgentSkill 配对。
+     */
     private record Snapshot(long mtime, long size, AgentSkill skill) {}
 
     @Override

@@ -45,34 +45,28 @@ import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;
 
 /**
- * Middleware that adds OpenTelemetry tracing to the agent lifecycle.
+ * 为智能体生命周期添加 OpenTelemetry 追踪的中间件。
  *
- * <p>Produces spans for:
+ * <p>生成以下 span：
  * <ul>
- *   <li>{@code invoke_agent <name>} — wraps the entire reply</li>
- *   <li>{@code chat <model>} — wraps each model API call</li>
- *   <li>{@code execute_tool <name>} — wraps each tool execution</li>
+ * <li>{@code invoke_agent <name>}：覆盖整次回复</li>
+ * <li>{@code chat <model>}：覆盖每次模型 API 调用</li>
+ * <li>{@code execute_tool <name>}：覆盖每次工具执行</li>
  * </ul>
  *
- * <p>Model-call spans report input/output token usage and the available cache, reasoning, and
- * tool-prompt token breakdowns using GenAI semantic-convention attributes. The tool-prompt
- * breakdown uses an AgentScope-specific attribute because it is not yet defined by the GenAI
- * convention.
+ * <p>模型调用 span 使用 GenAI 语义约定属性报告输入／输出 token 用量，以及可用的缓存、推理和工具提示 token 明细。
+ * 工具提示明细使用 AgentScope 专用属性，因为 GenAI 约定尚未定义它。
  *
- * <p>Context propagation across Reactor's asynchronous chain is handled by
- * {@link ContextPropagationOperator}. The first constructor call registers that
- * operator once per JVM; operators assembled after registration are wrapped, while
- * previously assembled chains are not.
+ * <p>Reactor 异步链的上下文传播由 {@link ContextPropagationOperator} 处理。
+ * 首次构造时在每个 JVM 中注册一次；注册后组装的操作符会被包装，先前已组装的链不会。
  *
- * <p>When no OTel SDK is configured (only the default no-op provider is
- * active), every hook short-circuits with near-zero overhead.
+ * <p>未配置 OTel SDK、仅默认空操作提供方活动时，每个钩子都以接近零开销短路。
  *
- * <p>The no-argument constructor reads {@link GlobalOpenTelemetry} lazily when a hook runs.
- * Pass an application-owned SDK to {@link #OtelTracingMiddleware(OpenTelemetry)} when spans must
- * be recorded on that SDK instead. The caller owns that SDK's lifecycle; the global SDK is not
- * replaced.
+ * <p>无参构造方法在钩子运行时惰性读取 {@link GlobalOpenTelemetry}。
+ * 若必须向应用自有 SDK 记录 span，请传给 {@link #OtelTracingMiddleware(OpenTelemetry)}。
+ * 该 SDK 生命周期由调用方管理，不替换全局 SDK。
  *
- * <p>Usage:
+ * <p>用法：
  * <pre>{@code
  * ReActAgent agent = ReActAgent.builder()
  *     .name("assistant")
@@ -80,6 +74,8 @@ import reactor.util.context.ContextView;
  *     .middleware(new OtelTracingMiddleware())
  *     .build();
  * }</pre>
+ *
+
  */
 public class OtelTracingMiddleware implements MiddlewareBase {
 
@@ -103,8 +99,7 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     private final Tracer tracer;
 
     /**
-     * Creates middleware that reads {@link GlobalOpenTelemetry} lazily at hook execution, so the
-     * SDK may be registered after construction.
+     * 创建在钩子执行时惰性读取 {@link GlobalOpenTelemetry} 的中间件，因此 SDK 可以在构造之后注册。
      */
     public OtelTracingMiddleware() {
         this.openTelemetry = null;
@@ -113,14 +108,13 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     }
 
     /**
-     * Creates middleware that records spans on an application-owned OpenTelemetry SDK.
+     * 创建向应用自有 OpenTelemetry SDK 记录 span 的中间件。
      *
-     * <p>The tracer is resolved once and reused. The SDK is not registered as {@link
-     * GlobalOpenTelemetry}, and its lifecycle is owned by the caller. This constructor still
-     * installs the JVM-wide Reactor hook.
+     * <p>tracer 解析一次后复用。SDK 不注册为 {@link GlobalOpenTelemetry}，生命周期归调用方管理。
+     * 此构造方法仍会安装 JVM 级 Reactor 钩子。
      *
-     * @param openTelemetry application-owned OpenTelemetry instance; must not be null
-     * @throws NullPointerException if {@code openTelemetry} is null
+     * @param openTelemetry 应用拥有的 OpenTelemetry 实例，不能为 null
+     * @throws NullPointerException {@code openTelemetry} 为 null 时抛出
      */
     public OtelTracingMiddleware(OpenTelemetry openTelemetry) {
         this.openTelemetry =
@@ -140,7 +134,9 @@ public class OtelTracingMiddleware implements MiddlewareBase {
         }
     }
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /**
+     * 精确声明参与范围：覆盖更多钩子的子类必须扩展此集合。
+     */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(
@@ -155,7 +151,7 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     }
 
     // ------------------------------------------------------------------
-    // onAgent — invoke_agent span
+    // onAgent：invoke_agent 跨度
     // ------------------------------------------------------------------
 
     @Override
@@ -182,6 +178,8 @@ public class OtelTracingMiddleware implements MiddlewareBase {
                                     .startSpan();
 
                     Context otelCtx = span.storeInContext(parentContext);
+                    // 【学习提示】响应式完成、异常与取消走不同回调；共享原子标志确保 span 只结束一次。
+                    // 追踪资源也必须覆盖取消路径，否则客户端中断后会留下未结束的 span。
                     AtomicReference<Boolean> ended = new AtomicReference<>(false);
 
                     return ContextPropagationOperator.runWithContext(
@@ -224,7 +222,7 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     }
 
     // ------------------------------------------------------------------
-    // onModelCall — chat span
+    // onModelCall：chat 跨度
     // ------------------------------------------------------------------
 
     @Override
@@ -293,7 +291,7 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     }
 
     // ------------------------------------------------------------------
-    // onActing — execute_tool span
+    // onActing：execute_tool 跨度
     // ------------------------------------------------------------------
 
     @Override
@@ -370,20 +368,20 @@ public class OtelTracingMiddleware implements MiddlewareBase {
     }
 
     // ------------------------------------------------------------------
-    // helpers
+    // 辅助方法
     // ------------------------------------------------------------------
 
-    // Reads OTel Context from Reactor ContextView first; falls back to ThreadLocal
+    // 优先从 Reactor ContextView 读取 OTel Context；否则回退到线程局部的
     // Context.current()
-    // so spans created inside a reactive pipeline can find their parent even after a thread hop.
+    // 使响应式管道内创建的 span 即使在线程切换后仍能找到父 span。
     private Context resolveOtelContext(ContextView ctxView) {
         return ContextPropagationOperator.getOpenTelemetryContextFromContextView(
                 ctxView, Context.current());
     }
 
-    // Uses the first tool name as the span name; appends "(+N more)" for batches to cap
-    // cardinality.
-    // Full tool name list is still available in the gen_ai.tool.name attribute.
+    // 使用首个工具名作为 span 名；批量时追加 "(+N more)"，限制
+    // 基数。
+    // 完整工具名称列表仍保存在 gen_ai.tool.name 属性中。
     private static String buildToolSpanName(ActingInput input) {
         if (input.toolCalls() == null || input.toolCalls().isEmpty()) {
             return "unknown";

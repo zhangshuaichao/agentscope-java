@@ -21,83 +21,72 @@ import io.agentscope.harness.agent.filesystem.spec.RemoteFilesystemSpec;
 import java.util.List;
 
 /**
- * Controls how agent state is isolated and shared across calls.
+ * 控制智能体状态在多次调用间如何隔离与共享。
  *
- * <p>This enum is the canonical isolation-scope definition used by both the sandbox filesystem
- * backend ({@link io.agentscope.harness.agent.sandbox.SandboxContext}) and the remote filesystem
- * backend ({@link RemoteFilesystemSpec}).
+ * <p>此枚举是沙箱文件系统后端（{@link io.agentscope.harness.agent.sandbox.SandboxContext}）
+ * 与远程文件系统后端（{@link RemoteFilesystemSpec}）共同使用的隔离作用域定义。
  *
- * <p><b>Sandbox semantics</b>: the scope determines which key is used when persisting and loading
- * {@code _sandbox.json} state. Calls that resolve to the <em>same</em> scope key will
- * sequentially reuse the same sandbox (each call resumes the persisted state from the previous
- * one).
+ * <p><b>沙箱语义：</b>作用域决定持久化和加载 {@code _sandbox.json} 状态时使用的键。
+ * 解析到<em>同一</em>作用域键的调用会顺序复用沙箱状态，每次调用恢复前次持久化的状态。
  *
- * <p><b>Store namespace semantics</b>: the scope determines the namespace prefix used by
- * {@link RemoteFilesystem} when routing files to the shared
- * key-value store. Different scopes produce different namespace prefixes, controlling which calls
- * share the same view of stored files.
+ * <p><b>存储命名空间语义：</b>作用域决定 {@link RemoteFilesystem} 向共享键值存储
+ * 路由文件时使用的命名空间前缀。不同作用域生成不同前缀，控制哪些调用共享同一文件视图。
  *
- * <p>Scope selection:
+ * <p>作用域选择：
  * <ul>
- *   <li>{@link #USER} – shared across all sessions of the same user; the default. When
- *       {@code userId} is absent, falls back to {@link #SESSION}.</li>
- *   <li>{@link #SESSION} – isolated per session.</li>
- *   <li>{@link #AGENT} – shared across all users and sessions of the same agent.</li>
- *   <li>{@link #GLOBAL} – globally shared within the same workspace/store instance.</li>
+ *   <li>{@link #USER}：同一用户的所有会话共享；默认值。缺少 {@code userId} 时回退到 {@link #SESSION}。</li>
+ *   <li>{@link #SESSION}：每个会话独立隔离。</li>
+ *   <li>{@link #AGENT}：同一智能体的所有用户和会话共享。</li>
+ *   <li>{@link #GLOBAL}：同一工作区／存储实例内全局共享。</li>
  * </ul>
  *
- * <p><b>Concurrency note:</b> for sandbox mode this is sequential-reuse sharing, not
- * live-instance sharing. Concurrent calls at the same scope each get their own running container;
- * they converge on the last persisted snapshot at the end of the call.
+ * <p><b>并发说明：</b>沙箱模式共享的是可顺序复用的状态，不是正在运行的实例。
+ * 同一作用域的并发调用各自拥有运行容器，调用结束时以最后持久化的快照汇合。
  */
 public enum IsolationScope {
 
     /**
-     * Isolate by session identifier.
+     * 按会话标识符隔离。
      *
-     * <p>Each distinct session gets its own sandbox state / store namespace. If no session key
-     * is present in the {@link io.agentscope.core.agent.RuntimeContext}, state lookup is
-     * skipped and a fresh sandbox is created (or a default store namespace is used).
+     * <p>每个不同会话有独立沙箱状态／存储命名空间。如果
+     * {@link io.agentscope.core.agent.RuntimeContext} 没有会话键，则跳过状态查询，
+     * 创建新沙箱（或使用默认存储命名空间）。
      */
     SESSION,
 
     /**
-     * Share across all sessions belonging to the same
-     * {@link io.agentscope.core.agent.RuntimeContext#getUserId() userId}.
+     * 属于同一 {@link io.agentscope.core.agent.RuntimeContext#getUserId() userId}
+     * 的全部会话共享。
      *
-     * <p>This is the default scope. If {@code userId} is absent, resolution falls back to
-     * {@link #SESSION} using the session identifier instead.
+     * <p>这是默认作用域。缺少 {@code userId} 时回退到 {@link #SESSION}，改用会话标识符。
      */
     USER,
 
     /**
-     * Share across all users and sessions of the same agent (identified by agent name).
+     * 同一智能体（按名称标识）的全部用户和会话共享。
      *
-     * <p>The agent name is fixed at build time and is always available; this scope never
-     * degrades due to a missing context field.
+     * <p>智能体名称在构建时固定且始终可用，因此不会因缺少上下文字段而降级。
      */
     AGENT,
 
     /**
-     * One shared state / namespace globally within the same workspace store instance.
+     * 同一工作区存储实例内全局共享一份状态／命名空间。
      *
-     * <p>Use with care: all agents and users that share the same store will compete to write
-     * the global slot.
+     * <p>谨慎使用：共享同一存储的所有智能体和用户都会竞争写入全局槽位。
      */
     GLOBAL;
 
     /**
-     * Creates a {@link NamespaceFactory} that derives the filesystem namespace prefix from the
-     * {@link io.agentscope.core.agent.RuntimeContext} according to this scope.
+     * 创建 {@link NamespaceFactory}，按本作用域从
+     * {@link io.agentscope.core.agent.RuntimeContext} 推导文件系统命名空间前缀。
      *
      * <ul>
-     *   <li>{@link #USER} — prefix with {@code userId}; falls back to {@code sessionId} when
-     *       {@code userId} is absent.
-     *   <li>{@link #SESSION} — prefix with {@code sessionId}.
-     *   <li>{@link #AGENT} / {@link #GLOBAL} — no prefix (workspace is already per-agent).
+     *   <li>{@link #USER}：使用 {@code userId} 前缀；缺少 {@code userId} 时回退到 {@code sessionId}。
+     *   <li>{@link #SESSION}：使用 {@code sessionId} 前缀。
+     *   <li>{@link #AGENT} / {@link #GLOBAL}：不加前缀（工作区已按智能体划分）。
      * </ul>
      *
-     * @return a namespace factory consistent with this scope
+     * @return 与此作用域一致的命名空间工厂
      */
     public NamespaceFactory toNamespaceFactory() {
         return switch (this) {

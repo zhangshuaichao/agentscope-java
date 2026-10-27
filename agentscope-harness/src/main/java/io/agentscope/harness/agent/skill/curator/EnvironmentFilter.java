@@ -21,15 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Filter that admits a skill only when its sidecar's {@code environments} list contains the
- * configured environment ({@code prod}, {@code staging}, …). Unlike the canary / allow-list
- * filters, this one applies to <em>every</em> skill — including pre-existing ones — so the
- * deployment-environment story is consistent across both agent-authored and hand-crafted
- * skills.
+ * 仅在技能旁挂记录的 {@code environments} 列表包含已配置环境（{@code prod}、{@code staging} 等）时允许该技能。不同于灰度/允许名单过滤器，此过滤器作用于<em>全部</em>技能，包括已有技能，以统一智能体生成与手工技能的部署环境行为。
  *
- * <p>For hand-crafted skills that have no sidecar entry, this filter passes them through
- * unconditionally. The expectation is that authoritative ops will set
- * {@code environments: [prod]} on the sidecar entry by hand once they've been audited.
+ * <p>没有旁挂记录的手工技能无条件通过。预期由有权限的运维人员在审核后手工为旁挂记录设置 {@code environments: [prod]}。
  */
 @SuppressWarnings("deprecation")
 public class EnvironmentFilter implements SkillVisibilityFilter {
@@ -54,7 +48,7 @@ public class EnvironmentFilter implements SkillVisibilityFilter {
             }
             SkillUsageRecord rec = usageStore.get(skill.getName()).orElse(null);
             if (rec == null) {
-                // No sidecar entry → external / pre-existing skill; let through.
+                // 无旁挂记录：外部或已有技能，直接放行。
                 out.add(skill);
                 continue;
             }
@@ -62,7 +56,7 @@ public class EnvironmentFilter implements SkillVisibilityFilter {
             if (envs == null || envs.isEmpty() || envs.contains(env)) {
                 out.add(skill);
             }
-            // else filter out (e.g. environments=[draft] never matches env=prod)
+            // 否则过滤（例如 environments=[draft] 永远不匹配 env=prod）。
         }
         return out;
     }

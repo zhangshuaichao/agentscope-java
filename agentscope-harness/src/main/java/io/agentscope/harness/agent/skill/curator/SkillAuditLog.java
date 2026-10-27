@@ -36,14 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Append-only audit log for the skill self-learning loop. Every {@code skill_manage} write,
- * promotion decision, and curator transition lands as one JSON line in
- * {@code workspace/skills/.audit/YYYY-MM-DD.jsonl}.
+ * 技能自学习循环的仅追加审计日志。每次 {@code skill_manage} 写入、晋级决策和 curator 转换都以一行 JSON 写入 {@code workspace/skills/.audit/YYYY-MM-DD.jsonl}。
  *
- * <p>This is intentionally separate from OTel / trace spans (which other code paths emit
- * concurrently). The on-disk JSONL is the recovery / forensic copy: it survives OTel
- * collector outages and gives operators a queryable record without standing up a metrics
- * stack. {@code agent.queryAudit(predicate)} reads back every entry from the latest day file.
+ * <p>有意与其他代码路径并发发出的 OTel/trace span 分离。磁盘 JSONL 是恢复和取证副本：OTel 收集器不可用时仍可保留，并让运维无需搭建指标栈即可查询记录。{@code agent.queryAudit(predicate)} 读取日文件中的条目。
+ *
  */
 public class SkillAuditLog {
 
@@ -69,7 +65,9 @@ public class SkillAuditLog {
         this.workspaceManager = workspaceManager;
     }
 
-    /** A single audit row. */
+    /**
+     * 单条审计记录。
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Entry(
             Instant ts,
@@ -83,7 +81,9 @@ public class SkillAuditLog {
             Map<String, String> ctx,
             Map<String, Object> extra) {}
 
-    /** Append a new entry. Best-effort: failures are logged but never thrown. */
+    /**
+     * 追加新条目。尽力而为：失败只记录日志，不向外抛出。
+     */
     public void append(Entry entry) {
         if (entry == null) {
             return;
@@ -108,11 +108,11 @@ public class SkillAuditLog {
         try {
             String json = JSON.writeValueAsString(stamped);
             String content = json + "\n";
-            // Use WorkspaceManager's append helper so we stay on the standard write path.
+            // 使用 WorkspaceManager 的追加辅助方法，保持标准写入路径。
             if (workspaceManager != null) {
                 workspaceManager.appendUtf8WorkspaceRelative(RuntimeContext.empty(), path, content);
             } else if (filesystem != null) {
-                // Fallback when no WorkspaceManager — read existing then upload concatenated.
+                // 没有 WorkspaceManager 时回退为读取已有内容，再上传拼接结果。
                 String existing = "";
                 try {
                     var rr = filesystem.read(RuntimeContext.empty(), path, 0, 0);
@@ -138,8 +138,7 @@ public class SkillAuditLog {
     }
 
     /**
-     * Read the audit log for a given day, parse every line into {@link Entry}, then filter via
-     * the predicate. Pass {@code null} for {@code dayUtc} to query "today".
+     * 读取给定日期的审计日志，将每行解析为 {@link Entry}，再按谓词过滤。{@code dayUtc} 为 {@code null} 时查询今天。
      */
     public List<Entry> query(String dayUtc, Predicate<Entry> filter) {
         if (filesystem == null) {
@@ -163,7 +162,7 @@ public class SkillAuditLog {
                         out.add(e);
                     }
                 } catch (Exception parseError) {
-                    // Skip malformed lines but keep going.
+                    // 跳过格式错误的行，继续处理。
                     log.debug("audit line parse error: {}", parseError.getMessage());
                 }
             }
@@ -174,7 +173,9 @@ public class SkillAuditLog {
         }
     }
 
-    /** Convenience builder for the common {@code skill_manage} entry shape. */
+    /**
+     * 常见 {@code skill_manage} 审计条目格式的便捷构建方法。
+     */
     public static Entry manageEntry(
             String actor, String name, String action, String draftOrMain, String verdict) {
         Map<String, String> ctx = new LinkedHashMap<>();
@@ -183,7 +184,9 @@ public class SkillAuditLog {
                 Instant.now(), actor, "manage", name, action, verdict, null, null, ctx, null);
     }
 
-    /** Convenience builder for the {@code promote} audit entry. */
+    /**
+     * {@code promote} 审计条目的便捷构建方法。
+     */
     public static Entry promoteEntry(
             String reviewer,
             String name,

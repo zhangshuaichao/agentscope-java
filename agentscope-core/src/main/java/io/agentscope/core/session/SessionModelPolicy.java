@@ -18,7 +18,7 @@ package io.agentscope.core.session;
 import io.agentscope.core.agent.RuntimeContext;
 import io.agentscope.core.model.ChatUsage;
 
-/** Optional hosted admission/accounting policy, shared with inherited child execution contexts. */
+/** 可选的托管式准入／用量核算策略，与继承的子执行上下文共享。 */
 public interface SessionModelPolicy {
     String CONTEXT_KEY = "agentscope.session.modelPolicy";
 

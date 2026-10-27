@@ -43,17 +43,16 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * WebSocket client implementation based on JDK 11+ HttpClient.
+ * 基于 JDK 11+ HttpClient 的 WebSocket 客户端实现。
  *
- * <p>Features:
- *
+ * <p>特点：
  * <ul>
- *   <li>No additional dependencies, uses JDK built-in API
- *   <li>Client instance is reusable
- *   <li>Thread-safe
+ *   <li>使用 JDK 内置 API，无需额外依赖
+ *   <li>客户端实例可重复使用
+ *   <li>线程安全
  * </ul>
  *
- * <p>Usage example:
+ * <p>用法示例：
  *
  * <pre>{@code
  * WebSocketTransport client = JdkWebSocketTransport.create();
@@ -81,9 +80,9 @@ public class JdkWebSocketTransport implements WebSocketTransport {
     }
 
     /**
-     * Create a client with default configuration.
+     * 使用默认配置创建客户端。
      *
-     * @return JdkWebSocketTransport instance
+     * @return JdkWebSocketTransport 实例
      */
     public static JdkWebSocketTransport create() {
         return new JdkWebSocketTransport(
@@ -91,22 +90,22 @@ public class JdkWebSocketTransport implements WebSocketTransport {
     }
 
     /**
-     * Create a client with custom HttpClient.
+     * 使用自定义 HttpClient 创建客户端。
      *
-     * @param httpClient Custom HttpClient instance
-     * @return JdkWebSocketTransport instance
+     * @param httpClient 自定义 HttpClient 实例
+     * @return JdkWebSocketTransport 实例
      */
     public static JdkWebSocketTransport create(HttpClient httpClient) {
         return new JdkWebSocketTransport(httpClient);
     }
 
     /**
-     * Create a client with custom configuration.
+     * 使用自定义配置创建客户端。
      *
-     * <p>This method supports proxy configuration and other advanced settings.
+     * <p>支持代理配置及其他高级设置。
      *
-     * @param config the WebSocket client configuration
-     * @return JdkWebSocketTransport instance
+     * @param config WebSocket 客户端配置
+     * @return JdkWebSocketTransport 实例
      */
     public static JdkWebSocketTransport create(WebSocketTransportConfig config) {
         return new JdkWebSocketTransport(buildClient(config));
@@ -118,7 +117,7 @@ public class JdkWebSocketTransport implements WebSocketTransport {
                         .version(HttpClient.Version.HTTP_2)
                         .connectTimeout(config.getConnectTimeout());
 
-        // Configure SSL (optionally ignore certificate verification)
+        // 配置 SSL（可选地忽略证书验证）
         if (config.isIgnoreSsl()) {
             log.error(
                     "SSL certificate verification has been disabled for this WebSocket client. This"
@@ -137,7 +136,7 @@ public class JdkWebSocketTransport implements WebSocketTransport {
             }
         }
 
-        // Configure proxy
+        // 配置代理
         if (config.getProxyConfig() != null) {
             ProxyConfig proxyConfig = config.getProxyConfig();
 
@@ -151,8 +150,8 @@ public class JdkWebSocketTransport implements WebSocketTransport {
                                         proxyConfig.getHost(), proxyConfig.getPort())));
             }
 
-            // Note: JDK HttpClient does not support SOCKS5 authentication directly.
-            // For HTTP proxy authentication, use Authenticator.
+            // 注意：JDK HttpClient 不直接支持 SOCKS5 认证。
+            // HTTP 代理认证使用 Authenticator。
             if (proxyConfig.hasAuthentication() && proxyConfig.getType() == ProxyType.HTTP) {
                 final String username = proxyConfig.getUsername();
                 final String password = proxyConfig.getPassword();
@@ -177,12 +176,12 @@ public class JdkWebSocketTransport implements WebSocketTransport {
         return new X509TrustManager() {
             @Override
             public void checkClientTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
             public void checkServerTrusted(X509Certificate[] chain, String authType) {
-                // Trust all certificates
+                // 信任所有证书
             }
 
             @Override
@@ -201,15 +200,15 @@ public class JdkWebSocketTransport implements WebSocketTransport {
 
                     WebSocket.Builder builder = httpClient.newWebSocketBuilder();
 
-                    // Set connection timeout
+                    // 设置连接超时
                     if (request.getConnectTimeout() != null) {
                         builder.connectTimeout(request.getConnectTimeout());
                     }
 
-                    // Add request headers
+                    // 添加请求头
                     request.getHeaders().forEach(builder::header);
 
-                    // Create connection handler
+                    // 创建连接处理器
                     JdkWebSocketConnection<T> connection =
                             new JdkWebSocketConnection<>(request.getUrl(), messageType);
 
@@ -241,14 +240,12 @@ public class JdkWebSocketTransport implements WebSocketTransport {
 
     @Override
     public void shutdown() {
-        // JDK HttpClient does not require explicit shutdown
-        // If a custom ExecutorService is used, it may need to be closed
+        // JDK HttpClient 无需显式关闭
+        // 如果使用自定义 ExecutorService，则可能需要关闭它
         log.debug("JdkWebSocketTransport shutdown called");
     }
 
-    /**
-     * ProxySelector that respects non-proxy hosts configuration.
-     */
+    /** 遵循非代理主机配置的 ProxySelector。 */
     private static class NonProxyHostsSelector extends ProxySelector {
         private final ProxyConfig proxyConfig;
         private final List<Proxy> proxyList;

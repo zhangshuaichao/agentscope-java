@@ -15,7 +15,7 @@
  */
 package io.agentscope.harness.agent.context;
 
-/** Controls loading failures, independently of whether loaded blocks may be evicted for budget. */
+/** 控制加载失败时的处理，与已加载块能否因预算不足而被淘汰相互独立。 */
 public enum SourceFailurePolicy {
     FAIL,
     OMIT

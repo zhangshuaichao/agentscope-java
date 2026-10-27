@@ -18,11 +18,9 @@ package io.agentscope.harness.agent.sandbox;
 import io.agentscope.harness.agent.filesystem.sandbox.SandboxBackedFilesystem;
 
 /**
- * Marks a filesystem that can have its backing {@link Sandbox} injected at runtime.
+ * 标记可以在运行时注入底层 {@link Sandbox} 的文件系统。
  *
- * <p>Implemented by {@link SandboxBackedFilesystem} so {@link
- * io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware} can set the active sandbox for each
- * call and clear it afterward.
+ * <p>由 {@link SandboxBackedFilesystem} 实现，使 {@link io.agentscope.harness.agent.middleware.SandboxLifecycleMiddleware} 能为每次调用设置活动沙箱，并在之后清除。
  */
 public interface SandboxAware {
 

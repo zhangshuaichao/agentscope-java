@@ -16,21 +16,20 @@
 package io.agentscope.core.skill.repository;
 
 /**
- * Metadata about a skill repository.
+ * 技能仓库的元数据。
  *
- * <p>Contains essential information about a skill repository including its type,
- * location, and write capability.
+ * <p>包含技能仓库的基本信息，例如类型、位置和写入能力。
  *
- * <p><b>Repository types:</b>
+ * <p><b>仓库类型：</b>
  * <ul>
- *   <li>filesystem - Local file system storage
- *   <li>github - GitHub repository
- *   <li>mysql - MySQL database
- *   <li>redis - Redis cache
- *   <li>Custom implementations
+ *   <li>filesystem：本地文件系统存储
+ *   <li>github：GitHub 仓库
+ *   <li>mysql：MySQL 数据库
+ *   <li>redis：Redis 缓存
+ *   <li>自定义实现
  * </ul>
  *
- * <p><b>Usage example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * AgentSkillRepositoryInfo info = new AgentSkillRepositoryInfo(
  *     "filesystem",
@@ -38,7 +37,6 @@ package io.agentscope.core.skill.repository;
  *     true
  * );
  * }</pre>
- *
  */
 public class AgentSkillRepositoryInfo {
     private final String type;
@@ -46,11 +44,11 @@ public class AgentSkillRepositoryInfo {
     private final boolean writable;
 
     /**
-     * Creates a new AgentSkillRepositoryInfo instance.
+     * 创建新的 AgentSkillRepositoryInfo 实例。
      *
-     * @param type The repository type (never null)
-     * @param location The repository location (never null)
-     * @param writable Whether the repository supports write operations
+     * @param type 仓库类型（不可为 null）
+     * @param location 仓库位置（不可为 null）
+     * @param writable 仓库是否支持写操作
      */
     public AgentSkillRepositoryInfo(String type, String location, boolean writable) {
         this.type = type;
@@ -59,36 +57,36 @@ public class AgentSkillRepositoryInfo {
     }
 
     /**
-     * Gets the repository type.
+     * 获取仓库类型。
      *
-     * @return The repository type (never null)
+     * @return 仓库类型（不可为 null）
      */
     public String getType() {
         return type;
     }
 
     /**
-     * Gets the repository location.
+     * 获取仓库位置。
      *
-     * @return The repository location (never null)
+     * @return 仓库位置（不可为 null）
      */
     public String getLocation() {
         return location;
     }
 
     /**
-     * Checks if the repository supports write operations.
+     * 检查仓库是否支持写操作。
      *
-     * @return {@code true} if writable, {@code false} otherwise
+     * @return 可写时为 {@code true}，否则为 {@code false}
      */
     public boolean isWritable() {
         return writable;
     }
 
     /**
-     * Returns a string representation of this repository info.
+     * 返回此仓库信息的字符串表示。
      *
-     * @return String in format "AgentSkillRepositoryInfo{type='...', location='...', writable=...}"
+     * @return 格式为 "AgentSkillRepositoryInfo{type='...', location='...', writable=...}" 的字符串
      */
     @Override
     public String toString() {

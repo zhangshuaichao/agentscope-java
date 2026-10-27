@@ -16,10 +16,10 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * A single match from a grep search.
+ * grep 搜索中的单个匹配项。
  *
- * @param path path to the file containing the match
- * @param line 1-indexed line number of the match
- * @param text content of the matching line
+ * @param path 包含匹配项的文件路径
+ * @param line 匹配行号，从 1 开始
+ * @param text 匹配行的内容
  */
 public record GrepMatch(String path, int line, String text) {}

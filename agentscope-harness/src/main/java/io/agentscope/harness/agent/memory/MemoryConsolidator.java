@@ -37,39 +37,34 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 /**
- * LLM-based consolidation of daily memory ledgers into the curated {@code MEMORY.md}.
+ * 使用 LLM 将每日记忆账本整合到经整理的 {@code MEMORY.md}。
  *
- * <p>This component owns the second layer of the two-layer memory model:
+ * <p>此组件负责两层记忆模型的第二层：
  * <ul>
- *   <li><b>Layer 1 — daily ledger</b>: {@code memory/YYYY-MM-DD.md} files written by
- *       {@link MemoryFlushManager}, append-only, one section per compaction flush.</li>
- *   <li><b>Layer 2 — curated MEMORY.md</b>: Owned by this class. Periodically reads the
- *       daily ledgers (those modified since the last consolidation watermark) plus the
- *       current MEMORY.md, asks the LLM to merge / dedupe / trim, and overwrites
- *       MEMORY.md with the result.</li>
+ * <li><b>第一层：每日账本</b>：{@code memory/YYYY-MM-DD.md} 文件由
+ * {@link MemoryFlushManager} 写入，仅追加，每次压缩时的提取写入形成一个小节。</li>
+ * <li><b>第二层：整理后的 MEMORY.md</b>：由本类管理。定期读取上次整合水位之后修改的
+ * 每日账本及现有 MEMORY.md，请 LLM 合并、去重和裁剪，再以结果覆盖 MEMORY.md。</li>
  * </ul>
  *
- * <p>A small state file ({@code memory/.consolidation_state}) records the timestamp of
- * the last successful consolidation. Daily files whose {@code modifiedAt} is at or before
- * that timestamp are skipped — reducing token usage and protecting MEMORY.md from being
- * re-rewritten with stale content.
+ * <p>小型状态文件（{@code memory/.consolidation_state}）记录上次成功整合的时间戳。
+ * 每日文件的 {@code modifiedAt} 若不晚于该时间戳，就会被跳过，以降低 token 用量，
+ * 并避免用过时内容再次改写 MEMORY.md。
  *
- * <p>All file I/O is performed via the {@link AbstractFilesystem} obtained from the
- * {@link WorkspaceManager}, so this class is backend-agnostic (works with Local,
- * Sandbox, and Remote filesystems without any direct {@code java.nio.file.Files} usage).
+ * <p>所有文件 I/O 都经由{@link AbstractFilesystem} 执行，该抽象从 {@link WorkspaceManager} 获取，
+ * 因此本类不依赖具体后端，可用于本地、沙箱与远程文件系统，而不直接使用 {@code java.nio.file.Files}。
  */
 public class MemoryConsolidator {
 
     private static final Logger log = LoggerFactory.getLogger(MemoryConsolidator.class);
 
-    /** Hidden state file inside {@code memory/} tracking the last consolidation Instant. */
+    /** 位于 {@code memory/} 内的隐藏状态文件，用于记录上次整合的时间点。 */
     public static final String STATE_FILE = ".consolidation_state";
 
     /**
-     * Default prompt for the consolidation step. Exposed publicly so callers can extend
-     * (e.g. append project-specific guidelines) when constructing
-     * {@link io.agentscope.harness.agent.memory.MemoryConfig}. The prompt contains exactly
-     * two {@code %d} placeholders (max-tokens, max-chars) that are filled in at call time.
+     * 整合步骤的默认提示词。公开暴露，以便调用方在构建
+     * {@link io.agentscope.harness.agent.memory.MemoryConfig} 时扩展，例如追加项目专用指南。
+     * 提示词恰好包含两个 {@code %d} 占位符（最大 token 数、最大字符数），在调用时填入。
      */
     public static final String DEFAULT_CONSOLIDATION_PROMPT =
             """
@@ -116,9 +111,9 @@ public class MemoryConsolidator {
     }
 
     /**
-     * @param consolidationPrompt prompt template for the consolidation LLM call. Must contain
-     *     exactly two {@code %d} placeholders (max-tokens, max-chars). {@code null} falls back
-     *     to {@link #DEFAULT_CONSOLIDATION_PROMPT}.
+     * @param consolidationPrompt 整合 LLM 调用的提示词模板，必须恰好包含两个 {@code %d}
+     *     占位符（最大 token 数、最大字符数）。{@code null} 时回退到
+     *     {@link #DEFAULT_CONSOLIDATION_PROMPT}。
      */
     public MemoryConsolidator(
             WorkspaceManager workspaceManager,
@@ -129,8 +124,8 @@ public class MemoryConsolidator {
     }
 
     /**
-     * @param baseStore optional distributed store for the consolidation watermark; when set,
-     *     watermark reads prefer the store and writes use CAS with a filesystem fallback
+     * @param baseStore 用于整合水位的可选分布式存储；设置后优先从该存储读取水位，
+     *     写入采用 CAS，并提供文件系统回退路径
      */
     public MemoryConsolidator(
             WorkspaceManager workspaceManager,
@@ -147,11 +142,10 @@ public class MemoryConsolidator {
     }
 
     /**
-     * Runs consolidation: reads daily files modified after the last watermark and the
-     * current MEMORY.md, uses the LLM to merge them, overwrites MEMORY.md, and
-     * advances the watermark on success.
+     * 执行整合：读取上次水位后修改的每日文件及当前 MEMORY.md，使用 LLM 合并，
+     * 覆盖 MEMORY.md，并在成功后推进水位。
      *
-     * <p>If no daily files have been touched since the last run, this is a no-op.
+     * <p>上次运行后若没有每日文件被修改，则不执行任何操作。
      */
     public Mono<Void> consolidate(RuntimeContext rc) {
         Instant watermark = readWatermark(rc);
@@ -220,11 +214,10 @@ public class MemoryConsolidator {
     }
 
     /**
-     * Reads daily memory files modified strictly after the given watermark.
-     * If watermark is {@link Instant#EPOCH}, all daily files are returned (first run).
+     * 读取修改时间严格晚于给定水位的每日记忆文件。
+     * 水位为 {@link Instant#EPOCH} 时返回全部每日文件（首次运行）。
      *
-     * <p>All I/O is done through the {@link AbstractFilesystem} so this works equally well
-     * with Local, Sandbox, and Store stores.
+     * <p>所有 I/O 均通过 {@link AbstractFilesystem}，同样适用于本地、沙箱和 Store 后端。
      */
     private String readDailyEntries(RuntimeContext rc, Instant watermark) {
         AbstractFilesystem fs = workspaceManager.getFilesystem();
@@ -267,16 +260,16 @@ public class MemoryConsolidator {
     private static boolean isModifiedAfter(FileInfo fi, Instant watermark) {
         String modifiedAt = fi.modifiedAt();
         if (modifiedAt == null || modifiedAt.isBlank()) {
-            return true; // be safe — include on unknown mtime
+            return true; // 保守处理：修改时间未知时仍纳入。
         }
         try {
             return Instant.parse(modifiedAt).isAfter(watermark);
         } catch (Exception e) {
-            return true; // be safe on parse error
+            return true; // 解析错误时也保守纳入。
         }
     }
 
-    /** Extracts the file name (last path segment) from a path string. */
+    /** 从路径字符串中提取文件名（最后一个路径段）。 */
     private static String fileName(String path) {
         if (path == null || path.isEmpty()) {
             return "";
@@ -287,9 +280,9 @@ public class MemoryConsolidator {
     }
 
     /**
-     * Converts an absolute filesystem path (e.g. {@code /memory/2025-01-01.md}) to a
-     * workspace-relative path ({@code memory/2025-01-01.md}) for use with
-     * {@link WorkspaceManager#readManagedWorkspaceFileUtf8}.
+     * 将绝对文件系统路径（例如 {@code /memory/2025-01-01.md}）转换为
+     * 工作区相对路径（{@code memory/2025-01-01.md}），供
+     * {@link WorkspaceManager#readManagedWorkspaceFileUtf8} 使用。
      */
     private static String toRelative(String path) {
         if (path == null) {
@@ -304,7 +297,7 @@ public class MemoryConsolidator {
 
     static final String STATE_REL_PATH = "memory/" + STATE_FILE;
 
-    /** Reads the last consolidation Instant, or {@link Instant#EPOCH} if none recorded. */
+    /** 读取上次整合的时间点；没有记录时返回 {@link Instant#EPOCH}。 */
     Instant readWatermark(RuntimeContext rc) {
         BaseStore store = this.baseStore;
         if (store != null) {

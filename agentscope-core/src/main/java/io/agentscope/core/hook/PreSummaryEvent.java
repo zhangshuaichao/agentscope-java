@@ -23,30 +23,30 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Event fired before summary generation when max iterations is reached.
+ * 达到最大迭代次数时，在摘要生成之前触发的事件。
  *
- * <p><b>Modifiable:</b> Yes - {@link #setInputMessages(List)}, {@link #setGenerateOptions(GenerateOptions)}
+ * <p><b>可修改：</b>是，通过 {@link #setInputMessages(List)}、{@link #setGenerateOptions(GenerateOptions)}
  *
- * <p><b>Context:</b>
+ * <p><b>上下文：</b>
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Agent's memory</li>
- *   <li>{@link #getModelName()} - The model name (e.g., "qwen-plus")</li>
- *   <li>{@link #getGenerateOptions()} - The generation options (temperature, etc.)</li>
- *   <li>{@link #getInputMessages()} - Messages to send to LLM for summary (modifiable)</li>
- *   <li>{@link #getMaxIterations()} - The maximum iterations configured for the agent</li>
- *   <li>{@link #getCurrentIteration()} - The current iteration count when summary triggered</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：智能体记忆</li>
+ *   <li>{@link #getModelName()}：模型名称（例如 "qwen-plus"）</li>
+ *   <li>{@link #getGenerateOptions()}：生成选项（temperature 等）</li>
+ *   <li>{@link #getInputMessages()}：发送给 LLM 生成摘要的消息（可修改）</li>
+ *   <li>{@link #getMaxIterations()}：为智能体配置的最大迭代次数</li>
+ *   <li>{@link #getCurrentIteration()}：触发摘要时的当前迭代次数</li>
  * </ul>
  *
- * <p><b>Use Cases:</b>
+ * <p><b>用途：</b>
  * <ul>
- *   <li>Inject additional context into the summary prompt</li>
- *   <li>Modify the summary system instructions</li>
- *   <li>Change generation parameters for summary</li>
- *   <li>Log summary generation input</li>
+ *   <li>向摘要提示词注入额外上下文</li>
+ *   <li>修改摘要系统指令</li>
+ *   <li>修改摘要生成参数</li>
+ *   <li>记录摘要生成输入</li>
  * </ul>
  *
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public final class PreSummaryEvent extends SummaryEvent {
@@ -57,15 +57,15 @@ public final class PreSummaryEvent extends SummaryEvent {
     private final int currentIteration;
 
     /**
-     * Constructor for PreSummaryEvent.
+     * PreSummaryEvent 的构造器。
      *
-     * @param agent The agent instance (must not be null)
-     * @param modelName The model name (must not be null)
-     * @param generateOptions The generation options (may be null)
-     * @param inputMessages The messages to send to LLM for summary (must not be null)
-     * @param maxIterations The maximum iterations configured for the agent
-     * @param currentIteration The current iteration count when summary triggered
-     * @throws NullPointerException if agent, modelName, or inputMessages is null
+     * @param agent 智能体实例（不可为 null）
+     * @param modelName 模型名称（不可为 null）
+     * @param generateOptions 生成选项（可为 null）
+     * @param inputMessages 发送给 LLM 生成摘要的消息（不可为 null）
+     * @param maxIterations 为智能体配置的最大迭代次数
+     * @param currentIteration 触发摘要时的当前迭代次数
+     * @throws NullPointerException 当 agent、modelName 或 inputMessages 为 null 时抛出
      */
     public PreSummaryEvent(
             Agent agent,
@@ -83,49 +83,49 @@ public final class PreSummaryEvent extends SummaryEvent {
     }
 
     /**
-     * Get the messages that will be sent to LLM for summary generation.
+     * 获取将发送给 LLM 生成摘要的消息。
      *
-     * @return The input messages
+     * @return 输入消息
      */
     public List<Msg> getInputMessages() {
         return inputMessages;
     }
 
     /**
-     * Modify the messages to send to LLM for summary.
+     * 修改要发送给 LLM 生成摘要的消息。
      *
-     * @param inputMessages The new message list (must not be null)
-     * @throws NullPointerException if inputMessages is null
+     * @param inputMessages 新消息列表（不可为 null）
+     * @throws NullPointerException 当 inputMessages 为 null 时抛出
      */
     public void setInputMessages(List<Msg> inputMessages) {
         this.inputMessages = Objects.requireNonNull(inputMessages, "inputMessages cannot be null");
     }
 
     /**
-     * Get the maximum iterations configured for the agent.
+     * 获取为智能体配置的最大迭代次数。
      *
-     * @return The maximum iterations
+     * @return 最大迭代次数
      */
     public int getMaxIterations() {
         return maxIterations;
     }
 
     /**
-     * Get the current iteration count when summary was triggered.
+     * 获取触发摘要时的当前迭代次数。
      *
-     * @return The current iteration count
+     * @return 当前迭代次数
      */
     public int getCurrentIteration() {
         return currentIteration;
     }
 
     /**
-     * Get the effective generation options.
+     * 获取实际生效的生成选项。
      *
-     * <p>Returns the overridden options if set via {@link #setGenerateOptions(GenerateOptions)},
-     * otherwise returns the original options from the parent class.
+     * <p>如果通过 {@link #setGenerateOptions(GenerateOptions)} 设置过覆盖选项，则返回该选项；
+     * 否则返回父类的原始选项。
      *
-     * @return The effective generation options
+     * @return 实际生效的生成选项
      */
     public GenerateOptions getEffectiveGenerateOptions() {
         return overriddenGenerateOptions != null
@@ -134,11 +134,11 @@ public final class PreSummaryEvent extends SummaryEvent {
     }
 
     /**
-     * Set custom generation options for this summary call.
+     * 为本次摘要调用设置自定义生成选项。
      *
-     * <p>This allows hooks to override the default generation options.
+     * <p>这允许钩子覆盖默认生成选项。
      *
-     * @param generateOptions The custom generation options
+     * @param generateOptions 自定义生成选项
      */
     public void setGenerateOptions(GenerateOptions generateOptions) {
         this.overriddenGenerateOptions = generateOptions;

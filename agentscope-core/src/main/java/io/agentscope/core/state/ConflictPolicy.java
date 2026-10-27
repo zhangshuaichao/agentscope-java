@@ -16,31 +16,32 @@
 package io.agentscope.core.state;
 
 /**
- * Policy applied when an optimistic-concurrency save of agent session state conflicts with
- * another writer's update.
+ * 智能体会话状态的乐观并发保存与其他写入方的更新冲突时应用的策略。
  *
- * <p>CAS failures occur at the end of a turn — the reply may already have been streamed and tool
- * side effects may already have run — so the policy cannot roll those back. Choose explicitly:
+ * <p>CAS 失败发生在一轮结束时；回复可能已流式输出，工具副作用也可能已经发生，
+ * 因此该策略不能回滚这些操作。请显式选择：
+ *
+ * <p>【学习提示】CAS 保护的是状态写入的版本一致性，不是整个智能体调用的事务回滚。
+ * 不能因保存冲突就盲目重放整轮工具调用，否则可能重复产生外部副作用。
  *
  * <ul>
- *   <li>{@link #OVERWRITE} — unconditional last-writer-wins (default; matches pre-versioning
- *       behaviour).
- *   <li>{@link #FAIL} — throw {@link ConcurrentSessionModificationException} and skip the write.
- *       Recommended when a distributed session turn gate is enabled.
- *   <li>{@link #APPEND_MERGE} — reload the latest baseline, append this turn's new messages, and
- *       retry CAS. Reasonable for ordinary chat turns; unsafe for compaction/summary turns.
+ *   <li>{@link #OVERWRITE} — 无条件最后写入者获胜（默认，与引入版本控制前的行为一致）。
+ *   <li>{@link #FAIL} — 抛出 {@link ConcurrentSessionModificationException} 并跳过写入。
+ *       启用分布式会话轮次门控时建议使用。
+ *   <li>{@link #APPEND_MERGE} — 重新加载最新基线，追加本轮新增消息，再重试 CAS。
+ *       适合普通聊天轮次，不适合上下文压缩／摘要轮次。
  * </ul>
  */
 public enum ConflictPolicy {
-    /** Unconditional overwrite (default; preserves legacy last-writer-wins semantics). */
+    /** 无条件覆盖（默认；保留旧版最后写入者获胜的语义）。 */
     OVERWRITE,
 
-    /** Fail the save and surface {@link ConcurrentSessionModificationException}. */
+    /** 保存失败并抛出 {@link ConcurrentSessionModificationException}。 */
     FAIL,
 
     /**
-     * Reload the latest baseline, append this turn's newly added messages, and retry CAS.
-     * Opt-in only — not safe for compaction / summary turns that rewrite history.
+     * 重新加载最新基线，追加本轮新增消息，再重试 CAS。
+     * 仅在显式选择时启用；会重写历史的上下文压缩／摘要轮次不能安全使用此策略。
      */
     APPEND_MERGE
 }

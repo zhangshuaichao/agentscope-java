@@ -28,50 +28,50 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Base class for all hook events.
+ * 所有钩子事件的基类。
  *
- * <p>This is a sealed class - only the predefined event types are permitted.
- * This enables exhaustive pattern matching in switch expressions.
+ * <p>这是密封类，只允许预定义的事件类型。
+ * 这使 switch 表达式能够进行穷尽式模式匹配。
  *
- * <p>All events provide access to common context:
+ * <p>所有事件都提供公共上下文访问：
  * <ul>
- *   <li>{@link #getAgent()} - The agent instance</li>
- *   <li>{@link #getMemory()} - Convenient access to agent's memory (may be null)</li>
- *   <li>{@link #getType()} - The event type</li>
- *   <li>{@link #getTimestamp()} - When the event occurred</li>
+ *   <li>{@link #getAgent()}：智能体实例</li>
+ *   <li>{@link #getMemory()}：便捷访问智能体记忆（可能为 null）</li>
+ *   <li>{@link #getType()}：事件类型</li>
+ *   <li>{@link #getTimestamp()}：事件发生时间</li>
  * </ul>
  *
- * <p><b>System message lifecycle:</b> Every event carries a unified {@code systemMsg} field
- * that holds the single {@link MsgRole#SYSTEM} message visible to the LLM. {@code ReActAgent}
- * manages this field across the event lifecycle as follows:
+ * <p><b>系统消息生命周期：</b>每个事件携带统一的 {@code systemMsg} 字段，
+ * 保存 LLM 可见的唯一 {@link MsgRole#SYSTEM} 消息。{@code ReActAgent}
+ * 在事件生命周期中按以下方式管理该字段：
  * <ol>
- *   <li>Seeded from {@code sysPrompt} at the start of each {@code call()} before
- *       {@link PreCallEvent} hooks run.</li>
- *   <li>After {@link PreCallEvent} hooks complete, the resulting system message is
- *       <em>frozen</em> as the base for the entire call.</li>
- *   <li>Before each {@link PreReasoningEvent} (and {@link PreSummaryEvent}), the frozen base
- *       is injected fresh into the event — hooks that run on these events always start from
- *       the same clean baseline and may append per-iteration content.</li>
- *   <li>Before {@code model.stream(...)} is called: the event's final system message is
- *       prepended to {@link PreReasoningEvent#getInputMessages()} as the first element.</li>
+ *   <li>每次 {@code call()} 开始时，从 {@code sysPrompt} 初始化，早于
+ *       {@link PreCallEvent} 钩子的运行。</li>
+ *   <li>{@link PreCallEvent} 钩子完成后，得到的系统消息被
+ *       <em>冻结</em>为整个调用的基线。</li>
+ *   <li>每次 {@link PreReasoningEvent}（以及 {@link PreSummaryEvent}）之前，冻结的基线
+ *       会重新注入事件，使这些事件上的钩子始终从同一个干净基线开始，
+ *       并可追加本轮专用内容。</li>
+ *   <li>调用 {@code model.stream(...)} 前，事件最终的系统消息会
+ *       作为首个元素置于 {@link PreReasoningEvent#getInputMessages()} 之前。</li>
  * </ol>
  *
- * <p>Because each {@link PreReasoningEvent} starts from a fresh copy of the frozen base,
- * hooks that fire per-iteration (e.g. subagent guidance) can safely use
- * {@link #appendSystemContent(String)} — content is added to that iteration's copy and never
- * accumulates across iterations.
+ * <p>由于每个 {@link PreReasoningEvent} 都从冻结基线的新副本开始，
+ * 每轮触发的钩子（例如子智能体指导）可以安全使用
+ * {@link #appendSystemContent(String)}：内容只加入本轮副本，
+ * 不会跨轮次累积。
  *
- * <p>Hooks should modify the system message exclusively via {@link #setSystemMessage(Msg)},
- * {@link #appendSystemContent(String)}, or {@link #appendSystemContent(ContentBlock)}.
- * Injecting {@link MsgRole#SYSTEM} messages into {@code inputMessages} directly is forbidden
- * and results in an {@link IllegalStateException} at runtime.
+ * <p>钩子只能通过 {@link #setSystemMessage(Msg)}、
+ * {@link #appendSystemContent(String)} 或 {@link #appendSystemContent(ContentBlock)} 修改系统消息。
+ * 禁止将 {@link MsgRole#SYSTEM} 消息直接注入 {@code inputMessages}，
+ * 否则运行时会抛出 {@link IllegalStateException}。
  *
- * <p><b>Modifiability:</b> Whether an event allows modification is determined by
- * the presence of setter methods in the concrete event class.
+ * <p><b>可修改性：</b>事件是否允许修改，取决于
+ * 具体事件类是否提供 setter 方法。
  *
  * @see Hook
  * @see HookEventType
- * @deprecated since 2.0.0. Use {@link io.agentscope.core.middleware.MiddlewareBase} instead.
+ * @deprecated 自 2.0.0 起弃用。请改用 {@link io.agentscope.core.middleware.MiddlewareBase}。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public abstract sealed class HookEvent
@@ -82,18 +82,18 @@ public abstract sealed class HookEvent
     private final long timestamp;
 
     /**
-     * The unified system message for this event. Hooks read and write this field via the
-     * helper methods below; {@code ReActAgent} propagates it between events and prepends it
-     * to the LLM input before every reasoning call.
+     * 此事件的统一系统消息。钩子通过下方辅助方法读写该字段；
+     * {@code ReActAgent} 在事件之间传播它，并在每次推理调用前
+     * 将它置于 LLM 输入开头。
      */
     private Msg systemMsg;
 
     /**
-     * Constructor for HookEvent.
+     * HookEvent 的构造器。
      *
-     * @param type The event type (must not be null)
-     * @param agent The agent instance (must not be null)
-     * @throws NullPointerException if type or agent is null
+     * @param type 事件类型（不可为 null）
+     * @param agent 智能体实例（不可为 null）
+     * @throws NullPointerException 当 type 或 agent 为 null 时抛出
      */
     protected HookEvent(HookEventType type, Agent agent) {
         this.type = Objects.requireNonNull(type, "type cannot be null");
@@ -102,39 +102,39 @@ public abstract sealed class HookEvent
     }
 
     /**
-     * Get the event type.
+     * 获取事件类型。
      *
-     * @return The event type
+     * @return 事件类型
      */
     public final HookEventType getType() {
         return type;
     }
 
     /**
-     * Get the agent instance.
+     * 获取智能体实例。
      *
-     * @return The agent instance (never null)
+     * @return 智能体实例（绝不为 null）
      */
     public final Agent getAgent() {
         return agent;
     }
 
     /**
-     * Get the timestamp when event was created.
+     * 获取事件创建时间戳。
      *
-     * @return The timestamp (milliseconds since epoch)
+     * @return 时间戳（自纪元起的毫秒数）
      */
     public final long getTimestamp() {
         return timestamp;
     }
 
     /**
-     * Convenient access to the agent's conversation context wrapped as a read-only
-     * {@link Memory} view. Mutations should be performed against
-     * {@link io.agentscope.core.state.AgentState#contextMutable()} on the running agent's state.
+     * 便捷访问智能体对话上下文，以只读
+     * {@link Memory} 视图包装。修改应针对运行中智能体状态上的
+     * {@link io.agentscope.core.state.AgentState#contextMutable()} 进行。
      *
-     * @return a read-only {@link Memory} view, or {@code null} if the event's agent is not a
-     *     {@link ReActAgent}
+     * @return 只读 {@link Memory} 视图；事件的智能体不是
+     *     {@link ReActAgent} 时为 {@code null}
      */
     public final Memory getMemory() {
         if (agent instanceof ReActAgent reactAgent) {
@@ -143,39 +143,39 @@ public abstract sealed class HookEvent
         return null;
     }
 
-    // ==================== System message API ====================
+    // ==================== 系统消息 API ====================
 
     /**
-     * Returns the current unified system message, or {@code null} if none has been set.
+     * 返回当前统一系统消息；尚未设置时为 {@code null}。
      *
-     * <p>On {@link PreCallEvent} and {@link PreReasoningEvent}, modifications made by earlier
-     * hooks in the chain are already reflected here.
+     * <p>在 {@link PreCallEvent} 和 {@link PreReasoningEvent} 上，链中更早钩子的修改
+     * 已经反映在此处。
      *
-     * @return the system message, may be null
+     * @return 系统消息，可能为 null
      */
     public final Msg getSystemMessage() {
         return systemMsg;
     }
 
     /**
-     * Replaces the entire system message with the given one.
+     * 使用给定消息替换整个系统消息。
      *
-     * <p>Prefer {@link #appendSystemContent} when you only need to add a portion of the system
-     * message; use this method only when you need to set a completely custom system message.
+     * <p>只需添加部分系统消息内容时，优先使用 {@link #appendSystemContent}；
+     * 只有需要完全自定义系统消息时，才使用此方法。
      *
-     * @param systemMsg the new system message (may be null to clear)
+     * @param systemMsg 新的系统消息（可为 null，表示清除）
      */
     public final void setSystemMessage(Msg systemMsg) {
         this.systemMsg = systemMsg;
     }
 
     /**
-     * Appends the given text as a new {@link TextBlock} at the end of the system message.
+     * 将给定文本作为新的 {@link TextBlock} 追加到系统消息末尾。
      *
-     * <p>If no system message exists yet, one is created automatically with
-     * {@link MsgRole#SYSTEM} and name {@code "system"}.
+     * <p>尚不存在系统消息时，会自动创建，角色为
+     * {@link MsgRole#SYSTEM}，名称为 {@code "system"}。
      *
-     * @param text the text to append (must not be null)
+     * @param text 要追加的文本（不可为 null）
      */
     public final void appendSystemContent(String text) {
         Objects.requireNonNull(text, "text cannot be null");
@@ -183,12 +183,12 @@ public abstract sealed class HookEvent
     }
 
     /**
-     * Appends a {@link ContentBlock} at the end of the system message.
+     * 在系统消息末尾追加一个 {@link ContentBlock}。
      *
-     * <p>If no system message exists yet, one is created automatically with
-     * {@link MsgRole#SYSTEM} and name {@code "system"}.
+     * <p>尚不存在系统消息时，会自动创建，角色为
+     * {@link MsgRole#SYSTEM}，名称为 {@code "system"}。
      *
-     * @param block the content block to append (must not be null)
+     * @param block 要追加的内容块（不可为 null）
      */
     public final void appendSystemContent(ContentBlock block) {
         Objects.requireNonNull(block, "block cannot be null");

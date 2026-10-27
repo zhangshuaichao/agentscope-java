@@ -20,8 +20,7 @@ import io.agentscope.core.skill.AgentSkill;
 import java.util.List;
 
 /**
- * Chains multiple {@link SkillVisibilityFilter}s with AND semantics: the output is the
- * intersection of every filter's output, applied in order.
+ * 以 AND 语义串联多个 {@link SkillVisibilityFilter}：按顺序应用，结果为各过滤器输出的交集。
  */
 @SuppressWarnings("deprecation")
 public class CompositeFilter implements SkillVisibilityFilter {

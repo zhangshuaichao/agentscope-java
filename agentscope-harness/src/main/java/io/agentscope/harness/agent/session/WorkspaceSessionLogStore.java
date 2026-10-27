@@ -29,7 +29,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-/** Default log storage uses the workspace backend, including its distributed namespace routing. */
+/**
+ * 默认日志存储使用工作区后端，包括其分布式命名空间路由。
+ */
 public final class WorkspaceSessionLogStore implements SessionLogStore {
     private final AbstractFilesystem filesystem;
 
@@ -45,10 +47,10 @@ public final class WorkspaceSessionLogStore implements SessionLogStore {
     }
 
     /**
-     * Discover in the namespace selected by the filesystem and the explicit caller identity.
-     * SESSION isolation (including USER fallback without a user ID) only exposes the current
-     * namespace. Use a shared user-scoped log backend for cross-session discovery. A baked
-     * filesystem still requires the matching user ID here because logical keys are user-scoped.
+     * 在文件系统和显式调用方身份选定的命名空间中发现会话。
+     * SESSION 隔离（包括缺少用户 ID 时 USER 模式的回退）仅暴露当前
+     * 命名空间。跨会话发现应使用共享的用户级日志后端。固定上下文的
+     * 文件系统在此仍要求匹配的用户 ID，因为逻辑键按用户划分。
      */
     @Override
     public List<SessionKey> list(RuntimeContext context) {

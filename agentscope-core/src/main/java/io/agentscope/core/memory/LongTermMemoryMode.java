@@ -16,27 +16,27 @@
 package io.agentscope.core.memory;
 
 /**
- * Defines how long-term memory is integrated with agent behavior.
+ * 定义长期记忆与智能体行为的集成方式。
  *
- * <p>This enum controls whether memory management is handled automatically by the framework,
- * actively by the agent through tool calls, or both. The mode affects:
+ * <p>此枚举控制记忆管理由框架自动处理、
+ * 由智能体通过工具调用主动处理，或两者兼用。模式影响：
  * <ul>
- *   <li>When memory recording and retrieval occur
- *   <li>Whether memory management tools are registered in the agent's toolkit
- *   <li>How much control the agent has over its own memory
+ *   <li>何时记录和检索记忆
+ *   <li>是否在智能体工具集中注册记忆管理工具
+ *   <li>智能体对自身记忆的控制程度
  * </ul>
  *
- * <p><b>Choosing the Right Mode:</b>
+ * <p><b>选择合适模式：</b>
  * <ul>
- *   <li><b>AGENT_CONTROL:</b> Use when you want the agent to have full autonomy over memory
- *       decisions. Good for advanced agents that understand when information is important.</li>
- *   <li><b>STATIC_CONTROL:</b> Use when you want automatic, framework-managed memory without
- *       agent involvement. Good for simpler agents or when memory should be comprehensive.</li>
- *   <li><b>BOTH:</b> Recommended default. Combines automatic background memory with agent
- *       control, providing the best of both approaches.</li>
+ *   <li><b>AGENT_CONTROL：</b>希望智能体自主决定记忆操作时使用，
+ *       适合能判断信息重要性的高级智能体。</li>
+ *   <li><b>STATIC_CONTROL：</b>希望框架自动管理记忆而无须智能体参与时使用，
+ *       适合简单智能体，或要求全面记录记忆的场景。</li>
+ *   <li><b>BOTH：</b>建议的默认模式。结合自动后台记忆与智能体
+ *       控制，兼顾两种方式的优势。</li>
  * </ul>
  *
- * <p><b>Usage Example:</b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
@@ -48,23 +48,23 @@ package io.agentscope.core.memory;
  *
  * @see LongTermMemory
  * @see io.agentscope.core.ReActAgent
- * @deprecated since 2.0.0. Long-term memory is removed.
+ * @deprecated 自 2.0.0 起弃用。旧长期记忆功能已移除。
  */
 @Deprecated(forRemoval = true, since = "2.0.0")
 public enum LongTermMemoryMode {
 
     /**
-     * Agent actively controls memory through tool calls.
+     * 智能体通过工具调用主动控制记忆。
      */
     AGENT_CONTROL,
 
     /**
-     * Framework automatically manages memory without agent involvement.
+     * 框架自动管理记忆，无须智能体参与。
      */
     STATIC_CONTROL,
 
     /**
-     * Combines both agent control and automatic framework management.
+     * 结合智能体控制与框架自动管理。
      */
     BOTH
 }

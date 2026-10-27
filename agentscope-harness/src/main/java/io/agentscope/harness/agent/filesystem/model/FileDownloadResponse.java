@@ -16,11 +16,11 @@
 package io.agentscope.harness.agent.filesystem.model;
 
 /**
- * Result of a single file download operation.
+ * 单个文件下载操作的结果。
  *
- * @param path the file path that was requested
- * @param content file contents as bytes on success, {@code null} on failure
- * @param error error description on failure, {@code null} on success
+ * @param path 请求的文件路径
+ * @param content 成功时的文件字节内容；失败时为 {@code null}
+ * @param error 失败时的错误说明；成功时为 {@code null}
  */
 public record FileDownloadResponse(String path, byte[] content, String error) {
 

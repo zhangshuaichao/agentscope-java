@@ -30,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Host-filesystem journal storage. POSIX hosts use OS locks, forced files, atomic renames and
- * directory fsync. Windows uses SQLite transactions because its Java filesystem provider cannot
- * open directories for fsync. Both backends acknowledge writes only after synchronous commit.
+ * 宿主文件系统上的日志存储。POSIX 主机使用操作系统锁、强制刷盘、原子重命名和
+ * 目录 fsync。Windows 使用 SQLite 事务，因为其 Java 文件系统提供者无法
+ * 打开目录进行 fsync。两种后端都只在同步提交后确认写入。
  */
 public final class LocalSessionStorage implements AtomicSessionStorage {
     private static final ConcurrentHashMap<Path, ReentrantLock> LOCKS = new ConcurrentHashMap<>();

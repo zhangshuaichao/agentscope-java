@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.session;
 
-/** Acknowledged committed-event export. Implementations must deduplicate by native eventId. */
+/** 带确认的已提交事件导出。实现必须按原生 eventId 去重。 */
 public interface SessionExportSink {
     String CONTEXT_KEY = "agentscope.session.exportSink";
 

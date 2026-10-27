@@ -49,7 +49,12 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-/** Single final request compiler. Instance is stateless and safe to share between sessions. */
+/**
+ * 最终请求的统一编译器。实例不保存会话状态，可安全地在会话间共享。
+ *
+ * <p>【学习提示】先收集材料并按预算裁剪可选项，再压缩历史、布局和校验工具调用配对；
+ * 通过最终预算与状态冲突校验后才回写候选历史。不能以静默丢弃必需指令来掩盖超限。
+ */
 public final class HarnessContextBuilder implements ModelRequestPreparer {
     private static final String ORIGINAL_SYSTEM_INPUTS =
             "agentscope.context.original_system_inputs";
@@ -336,9 +341,9 @@ public final class HarnessContextBuilder implements ModelRequestPreparer {
                                     validation);
                     rc.put(ModelRequestPreparer.MANIFEST_ATTRIBUTE_PREFIX + callId, manifest);
                     if (validationError != null) throw validationError;
-                    // Agent calls serialize access to state. Recheck the snapshot after
-                    // asynchronous work;
-                    // never overwrite a history changed by a hook or another owner while preparing.
+                    // 智能体调用对状态访问进行串行化。异步工作完成后
+                    // 重新核对快照；
+                    // 绝不覆盖准备期间被钩子或其他拥有者修改的历史。
                     if (state != null) {
                         if (state.getTasksContext().getRevision() != snapshot.tasks().getRevision()
                                 || state.getPlanModeContext().isPlanActive()
@@ -372,7 +377,7 @@ public final class HarnessContextBuilder implements ModelRequestPreparer {
         try {
             policy.observer().accept(manifest);
         } catch (RuntimeException error) {
-            // Telemetry is not authority to reject an otherwise valid request.
+            // 遥测不具备否决原本有效请求的权限。
             log.warn("Context observer failed: {}", error.getClass().getSimpleName());
         }
     }
@@ -449,7 +454,7 @@ public final class HarnessContextBuilder implements ModelRequestPreparer {
         return layout(copy(input, List.copyOf(messages)));
     }
 
-    /** Stable layout independent of compaction: System, conversation, state, reference material. */
+    /** 独立于压缩过程的稳定布局：系统指令、对话、状态、参考材料。 */
     private static ModelCallInput layout(ModelCallInput input) {
         List<Msg> ordered = new ArrayList<>();
         List<Msg> systems =
@@ -589,7 +594,7 @@ public final class HarnessContextBuilder implements ModelRequestPreparer {
         }
     }
 
-    /** Preserve call/result identities; never manufacture results to repair an invalid history. */
+    /** 保留调用与结果的标识；绝不伪造结果来修复无效历史。 */
     static void validateToolPairs(List<Msg> messages) {
         Set<String> pending = new HashSet<>();
         for (Msg msg : messages) {

@@ -20,10 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * HTTP request encapsulation for the transport layer.
+ * 传输层的 HTTP 请求封装。
  *
- * <p>This class represents an HTTP request with URL, method, headers, and body.
- * Use the builder pattern to construct requests.
+ * <p>表示包含 URL、方法、请求头和请求体的 HTTP 请求。
+ * 使用建造者模式创建请求。
  */
 public class HttpRequest {
 
@@ -40,53 +40,51 @@ public class HttpRequest {
     }
 
     /**
-     * Get the request URL.
+     * 获取请求 URL。
      *
-     * @return the URL
+     * @return URL
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * Get the HTTP method.
+     * 获取 HTTP 方法。
      *
-     * @return the method (GET, POST, etc.)
+     * @return 方法（GET、POST 等）
      */
     public String getMethod() {
         return method;
     }
 
     /**
-     * Get the request headers.
+     * 获取请求头。
      *
-     * @return an unmodifiable map of headers
+     * @return 请求头的不可修改映射
      */
     public Map<String, String> getHeaders() {
         return headers;
     }
 
     /**
-     * Get the request body.
+     * 获取请求体。
      *
-     * @return the body string, or null if no body
+     * @return 请求体字符串；无请求体时为 null
      */
     public String getBody() {
         return body;
     }
 
     /**
-     * Create a new builder for HttpRequest.
+     * 创建新的 HttpRequest 建造者。
      *
-     * @return a new Builder instance
+     * @return 新的 Builder 实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for HttpRequest.
-     */
+    /** HttpRequest 的建造者。 */
     public static class Builder {
         private String url;
         private String method = "GET";
@@ -94,10 +92,10 @@ public class HttpRequest {
         private String body;
 
         /**
-         * Set the request URL.
+         * 设置请求 URL。
          *
-         * @param url the URL
-         * @return this builder
+         * @param url URL
+         * @return 当前建造者
          */
         public Builder url(String url) {
             this.url = url;
@@ -105,10 +103,10 @@ public class HttpRequest {
         }
 
         /**
-         * Set the HTTP method.
+         * 设置 HTTP 方法。
          *
-         * @param method the method (GET, POST, etc.)
-         * @return this builder
+         * @param method 方法（GET、POST 等）
+         * @return 当前建造者
          */
         public Builder method(String method) {
             this.method = method;
@@ -116,11 +114,11 @@ public class HttpRequest {
         }
 
         /**
-         * Add a header to the request.
+         * 向请求添加一个请求头。
          *
-         * @param name the header name
-         * @param value the header value
-         * @return this builder
+         * @param name 请求头名称
+         * @param value 请求头值
+         * @return 当前建造者
          */
         public Builder header(String name, String value) {
             this.headers.put(name, value);
@@ -128,10 +126,10 @@ public class HttpRequest {
         }
 
         /**
-         * Add multiple headers to the request.
+         * 向请求添加多个请求头。
          *
-         * @param headers the headers to add
-         * @return this builder
+         * @param headers 要添加的请求头
+         * @return 当前建造者
          */
         public Builder headers(Map<String, String> headers) {
             this.headers.putAll(headers);
@@ -139,10 +137,10 @@ public class HttpRequest {
         }
 
         /**
-         * Set the request body.
+         * 设置请求体。
          *
-         * @param body the body string
-         * @return this builder
+         * @param body 请求体字符串
+         * @return 当前建造者
          */
         public Builder body(String body) {
             this.body = body;
@@ -150,9 +148,9 @@ public class HttpRequest {
         }
 
         /**
-         * Build the HttpRequest.
+         * 构建 HttpRequest。
          *
-         * @return a new HttpRequest instance
+         * @return 新的 HttpRequest 实例
          */
         public HttpRequest build() {
             if (url == null || url.isEmpty()) {

@@ -18,21 +18,25 @@ package io.agentscope.core.tool.coding;
 import java.util.Set;
 
 /**
- * Interface for validating shell commands before execution.
+ * 执行前验证 Shell 命令的接口。
  *
- * <p><b>Validation Flow:</b>
+ * <p>【学习提示】这是基于命令文本和可执行程序白名单的检查，不是完整 Shell 语法解析器，
+ * 也不是操作系统沙箱。尤其要注意白名单为空的兼容分支会直接放行，不能把“未配置”理解为“全部禁止”。
+ * 执行权限、进程隔离和文件系统访问边界需要由应用及运行环境另行保证。
+ *
+ * <p><b>验证流程：</b>
  * <ol>
- *   <li><b>Extract Executable:</b> Parse command to extract the executable name</li>
- *   <li><b>Whitelist Check:</b> If whitelist is empty/null, allow all (backward compatible)</li>
- *   <li><b>Multi-Command Detection:</b> Reject if command contains multiple command separators</li>
- *   <li><b>Relative Path Safety:</b> For commands starting with {@code ./} or {@code .\}, verify path doesn't escape current directory</li>
- *   <li><b>Whitelist Validation:</b> Reject if executable not in whitelist</li>
+ * <li><b>提取可执行程序：</b>解析命令，提取可执行程序名</li>
+ * <li><b>白名单检查：</b>白名单为空或 null 时全部允许（向后兼容）</li>
+ * <li><b>多命令检测：</b>包含多个命令分隔符时拒绝</li>
+ * <li><b>相对路径安全：</b>以 {@code ./} 或 {@code .\} 开头时，验证路径不逃逸当前目录</li>
+ * <li><b>白名单验证：</b>可执行程序不在白名单中时拒绝</li>
  * </ol>
  *
- * <p>Built-in implementations:
+ * <p>内置实现：
  * <ul>
- *   <li>{@link UnixCommandValidator} - For Unix/Linux/macOS systems</li>
- *   <li>{@link WindowsCommandValidator} - For Windows systems</li>
+ * <li>{@link UnixCommandValidator}：Unix/Linux/macOS 系统</li>
+ * <li>{@link WindowsCommandValidator}：Windows 系统</li>
  * </ul>
  *
  * @see UnixCommandValidator
@@ -42,114 +46,114 @@ import java.util.Set;
 public interface CommandValidator {
 
     /**
-     * Validate if a command is allowed to execute.
+     * 验证命令是否允许执行。
      *
-     * <p>Validation checks (in order):
+     * <p>依次进行以下检查：
      * <ol>
-     *   <li>Extract executable name</li>
-     *   <li>If whitelist is null/empty → allow (backward compatible)</li>
-     *   <li>Check for multiple command separators → reject if found</li>
-     *   <li>Check relative path safety → reject if escapes current directory</li>
-     *   <li>Check whitelist → reject if not in whitelist</li>
+     * <li>提取可执行程序名</li>
+     * <li>白名单为 null 或空时允许（向后兼容）</li>
+     * <li>检测到多命令分隔符时拒绝</li>
+     * <li>相对路径逃逸当前目录时拒绝</li>
+     * <li>可执行程序不在白名单中时拒绝</li>
      * </ol>
      *
-     * @param command The command string to validate
-     * @param allowedCommands Set of allowed command executables (null or empty means allow all)
-     * @return ValidationResult containing the validation outcome
+     * @param command 待验证命令字符串
+     * @param allowedCommands 允许的可执行程序集合（null 或空表示全部允许）
+     * @return 包含验证结果的 ValidationResult
      */
     ValidationResult validate(String command, Set<String> allowedCommands);
 
     /**
-     * Extract the executable name from a command string.
+     * 从命令字符串提取可执行程序名。
      *
-     * <p>Extraction process:
+     * <p>提取过程：
      * <ul>
-     *   <li>Remove surrounding quotes (if present)</li>
-     *   <li>Extract first token (before space/tab)</li>
-     *   <li>Remove directory path (platform-specific)</li>
-     *   <li>Remove file extensions (platform-specific)</li>
+     * <li>移除外围引号（若存在）</li>
+     * <li>提取空格或制表符前的首个词元</li>
+     * <li>移除目录路径（平台相关）</li>
+     * <li>移除文件扩展名（平台相关）</li>
      * </ul>
      *
-     * @param command The command string
-     * @return The executable name, or empty string if extraction fails
+     * @param command 命令字符串
+     * @return 可执行程序名；提取失败时为空字符串
      */
     String extractExecutable(String command);
 
     /**
-     * Check if the command contains multiple command separators.
+     * 检查命令是否包含多个命令分隔符。
      *
-     * <p>Uses platform-specific detection:
+     * <p>采用平台特定检测：
      * <ul>
-     *   <li>Unix: {@code &}, {@code |}, {@code ;}, newline (escape: {@code \})</li>
-     *   <li>Windows: {@code &}, {@code |}, newline (escape: {@code ^})</li>
+     * <li>Unix：{@code &}、{@code |}、{@code ;}、换行（转义符：{@code \}）</li>
+     * <li>Windows：{@code &}、{@code |}、换行（转义符：{@code ^}）</li>
      * </ul>
-     * <p>Separators within quotes are ignored.
+     * <p>忽略引号内的分隔符。
      *
-     * @param command The command string
-     * @return true if multiple commands are detected, false otherwise
+     * @param command 命令字符串
+     * @return 检测到多命令时为 true，否则为 false
      */
     boolean containsMultipleCommands(String command);
 
     /**
-     * Validate if a relative path (starting with ./ or .\) stays within the current directory.
+     * 验证相对路径（以 ./ 或 .\ 开头）是否保持在当前目录内。
      *
-     * <p><b>Algorithm:</b> Uses depth-tracking to detect directory traversal:
+     * <p><b>算法：</b>通过深度跟踪检测目录遍历：
      * <ol>
-     *   <li>Normalize path separators ({@code \} → {@code /})</li>
-     *   <li>Remove leading {@code ./}</li>
-     *   <li>Split by {@code /} into segments</li>
-     *   <li>Track depth: {@code ..} decreases depth, normal dirs increase depth</li>
-     *   <li>If depth &lt; 0 at any point → path escapes current directory</li>
+     * <li>规范化路径分隔符（{@code \} → {@code /}）</li>
+     * <li>移除开头的 {@code ./}</li>
+     * <li>按 {@code /} 拆分片段</li>
+     * <li>跟踪深度：{@code ..} 减一，普通目录加一</li>
+     * <li>任意时刻深度 &lt; 0，表示路径逃逸当前目录</li>
      * </ol>
      *
-     * <p><b>Examples:</b>
+     * <p><b>示例：</b>
      * <ul>
-     *   <li>{@code ./script.sh} → ✅ allowed (depth: 0→1)</li>
-     *   <li>{@code ./subdir/script.sh} → ✅ allowed (depth: 0→1→2)</li>
-     *   <li>{@code ./a/b/../c/script.sh} → ✅ allowed (depth: 0→1→2→1→2)</li>
-     *   <li>{@code ./../script.sh} → ❌ rejected (depth: 0→-1)</li>
-     *   <li>{@code ./../../script.sh} → ❌ rejected (depth: 0→-1→-2)</li>
+     * <li>{@code ./script.sh}：允许，深度 0→1</li>
+     * <li>{@code ./subdir/script.sh}：允许，深度 0→1→2</li>
+     * <li>{@code ./a/b/../c/script.sh}：允许，深度 0→1→2→1→2</li>
+     * <li>{@code ./../script.sh}：拒绝，深度 0→-1</li>
+     * <li>{@code ./../../script.sh}：拒绝，深度 0→-1→-2</li>
      * </ul>
      *
-     * <p>Supports both Unix ({@code /}) and Windows ({@code \}) path separators.
+     * <p>同时支持 Unix（{@code /}）和 Windows（{@code \}）路径分隔符。
      *
-     * @param path The path to validate
-     * @return true if the path stays within current directory, false if it escapes
+     * @param path 待验证路径
+     * @return 保持在当前目录内为 true，逃逸则为 false
      */
     default boolean isPathWithinCurrentDirectory(String path) {
-        // Normalize path: replace all backslashes with forward slashes
+        // 规范化路径：将反斜杠替换为正斜杠
         String normalizedPath = path.replace('\\', '/');
 
-        // Remove leading ./
+        // 移除开头的 ./
         normalizedPath = normalizedPath.substring(2);
 
-        // Split by / and process each segment
+        // 按 / 拆分并处理每个片段
         String[] segments = normalizedPath.split("/");
         int depth = 0;
 
         for (String segment : segments) {
             if (segment.isEmpty() || segment.equals(".")) {
-                // Skip empty segments and current directory references
+                // 跳过空片段和当前目录引用
                 continue;
             } else if (segment.equals("..")) {
-                // Go up one level
+                // 向上一级
                 depth--;
-                // If depth becomes negative, we've escaped the current directory
+                // 深度变为负数，表示已逃逸当前目录
                 if (depth < 0) {
                     return false;
                 }
             } else {
-                // Regular directory or file name, go down one level
+                // 普通目录或文件名，向下一级
                 depth++;
             }
         }
 
-        // If we end up at depth >= 0, we're still within or at current directory
+        // 最终深度 >= 0，仍位于当前目录内或当前目录本身
         return depth >= 0;
     }
 
     /**
-     * Result of command validation.
+     * 命令验证结果。
      */
     class ValidationResult {
         private final boolean allowed;

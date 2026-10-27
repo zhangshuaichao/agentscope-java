@@ -43,30 +43,30 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 /**
- * AgentTool implementation that wraps a sub-agent for multi-turn conversation.
+ * 将子智能体包装为支持多轮对话的 AgentTool 实现。
  *
- * <p>This tool allows an agent to be called as a tool by other agents, supporting multi-turn
- * conversation with session management. Each session maintains its own agent instance and state.
+ * <p>允许其他智能体将此智能体作为工具调用，通过会话管理支持多轮对话。每个会话维护自己的智能体实例和状态。
  *
- * <p>Thread safety is ensured by using {@link SubAgentProvider} to create a fresh agent instance
- * for each new session.
+ * <p>通过 {@link SubAgentProvider} 为每个新会话创建新的智能体实例，以保证线程安全。
  *
- * <p>The tool exposes two parameters:
- *
+ * <p>工具暴露两个参数：
  * <ul>
- *   <li>{@code session_id} - Optional. Omit to start a new session, provide to continue an
- *       existing one.
- *   <li>{@code message} - Required. The message to send to the agent.
+ * <li>{@code session_id}：可选，省略时开启新会话，提供时继续已有会话。
+ * <li>{@code message}：必填，发送给智能体的消息。
  * </ul>
  */
 public class SubAgentTool implements AgentTool {
 
     private static final Logger logger = LoggerFactory.getLogger(SubAgentTool.class);
 
-    /** Parameter name for session ID. */
+    /**
+     * 会话 ID 的参数名称。
+     */
     private static final String PARAM_SESSION_ID = "session_id";
 
-    /** Parameter name for message. */
+    /**
+     * 消息的参数名称。
+     */
     private static final String PARAM_MESSAGE = "message";
 
     private final String name;
@@ -75,13 +75,13 @@ public class SubAgentTool implements AgentTool {
     private final SubAgentConfig config;
 
     /**
-     * Creates a new SubAgentTool.
+     * 创建 SubAgentTool。
      *
-     * @param agentProvider Provider for creating agent instances
-     * @param config Configuration for the tool
+     * @param agentProvider 创建智能体实例的提供者
+     * @param config 工具配置
      */
     public SubAgentTool(SubAgentProvider<?> agentProvider, SubAgentConfig config) {
-        // Create a sample agent to derive name and description
+        // 创建示例智能体以推导名称和描述。
         Agent sampleAgent = agentProvider.provide();
 
         this.agentProvider = agentProvider;
@@ -113,19 +113,20 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Executes a conversation with the sub-agent, managing session lifecycle.
+     * 与子智能体执行对话，并管理会话生命周期。
      *
-     * <p>This method handles:
+     * <p>【学习提示】会话连续性来自状态存储，而不是复用同一个智能体对象：每次订阅都会调用提供者创建实例，续接时再加载状态。这里没有按会话 ID 加锁；新实例隔离并不等于同一会话的并发状态更新自动安全。
      *
+     * <p>此方法处理：
      * <ul>
-     *   <li>AgentStateStore ID generation for new conversations
-     *   <li>Agent state loading for continued sessions
-     *   <li>Message execution (streaming or non-streaming based on config)
-     *   <li>Agent state persistence after execution
+     * <li>为新对话生成 AgentStateStore ID。
+     * <li>继续会话时加载智能体状态。
+     * <li>执行消息（根据配置使用流式或非流式模式）。
+     * <li>执行后持久化智能体状态。
      * </ul>
      *
-     * @param param The tool call parameters containing input and emitter
-     * @return A Mono emitting the tool result block
+     * @param param 包含输入和发射器的工具调用参数
+     * @return 发出工具结果块的 Mono
      */
     private Mono<ToolResultBlock> executeConversation(ToolCallParam param) {
         return Mono.deferContextual(
@@ -133,29 +134,29 @@ public class SubAgentTool implements AgentTool {
                     try {
                         Map<String, Object> input = param.getInput();
 
-                        // Get or create session ID
+                        // 获取或创建会话 ID。
                         String sessionId = (String) input.get(PARAM_SESSION_ID);
                         boolean isNewSession = sessionId == null;
                         if (isNewSession) {
                             sessionId = UUID.randomUUID().toString();
                         }
 
-                        // Get message
+                        // 获取消息。
                         String message = (String) input.get(PARAM_MESSAGE);
                         if (message == null || message.isEmpty()) {
                             return Mono.just(ToolResultBlock.error("Message is required"));
                         }
 
-                        // Create agent for this session
+                        // 为此会话创建智能体。
                         final String finalSessionId = sessionId;
                         Agent agent = agentProvider.provide();
 
-                        // Load existing state if continuing session
+                        // 若继续已有会话，则加载已有状态。
                         if (!isNewSession) {
                             loadAgentState(finalSessionId, agent);
                         }
 
-                        // Build user message
+                        // 构建用户消息。
                         Msg userMsg =
                                 Msg.builder()
                                         .role(MsgRole.USER)
@@ -169,10 +170,10 @@ public class SubAgentTool implements AgentTool {
                                 agent.getName(),
                                 message.substring(0, Math.min(50, message.length())));
 
-                        // Get emitter for event forwarding
+                        // 获取用于事件转发的发射器。
                         ToolEmitter emitter = param.getEmitter();
 
-                        // Execute and save state after completion
+                        // 执行并在完成后保存状态。
                         Mono<ToolResultBlock> result;
                         if (config.isForwardEvents()) {
                             result =
@@ -188,19 +189,19 @@ public class SubAgentTool implements AgentTool {
                                             agent, userMsg, finalSessionId, runtimeContext);
                         }
 
-                        // Interrupt the sub-agent when the subscription is cancelled
-                        // (e.g. ToolExecutor timeout triggers a retry on a new subscription).
-                        // Without this, the orphan agent keeps consuming LLM tokens, SSH
-                        // connections, and thread pool resources until it finishes naturally.
+                        // 订阅被取消时中断子智能体
+                        // （例如 ToolExecutor 超时后以新订阅触发重试）。
+                        // 否则，失去调用方的智能体仍会消耗 LLM token、SSH
+                        // 连接和线程池资源，直到自然结束。
                         //
-                        // Uses doFinally(CANCEL) rather than doOnCancel because doOnCancel
-                        // also fires on normal error propagation cleanup, which would
-                        // attempt to interrupt an already-failed agent.
+                        // 使用 doFinally(CANCEL) 而不是 doOnCancel，因为 doOnCancel
+                        // 也会在常规错误传播的清理阶段触发，从而
+                        // 尝试中断已经失败的智能体。
                         //
-                        // Uses interrupt(RuntimeContext) instead of the deprecated
-                        // interrupt(InterruptSource) because the latter only looks up
-                        // `defaultSessionId` which may differ from the session the call
-                        // actually runs in.
+                        // 使用 interrupt(RuntimeContext) 而不是已弃用的
+                        // interrupt(InterruptSource)，因为后者只查找
+                        // `defaultSessionId`，它可能不同于本次调用
+                        // 实际运行的会话。
                         result =
                                 result.doFinally(
                                         signal -> {
@@ -209,7 +210,7 @@ public class SubAgentTool implements AgentTool {
                                             }
                                         });
 
-                        // Save state after execution
+                        // 执行后保存状态。
                         return result.doOnSuccess(r -> saveAgentState(finalSessionId, agent));
                     } catch (Exception e) {
                         logger.error("Error in session setup: {}", e.getMessage(), e);
@@ -221,8 +222,7 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Interrupts the sub-agent when the tool call is cancelled (e.g. by timeout-triggered
-     * retry), preventing it from becoming an orphan agent that silently consumes resources.
+     * 工具调用被取消时（例如超时触发重试）中断子智能体，防止其成为默默消耗资源的孤立智能体。
      */
     private void interruptAgent(Agent agent, RuntimeContext ctx) {
         if (agent instanceof ReActAgent ra) {
@@ -236,9 +236,7 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Loads sub-agent state for the conversation identified by {@code sessionId} from
-     * {@link SubAgentConfig#getStateStore()} and merges it into the live agent's
-     * {@link AgentState}. Errors are logged but do not interrupt execution.
+     * 从 {@link SubAgentConfig#getStateStore()} 加载 {@code sessionId} 标识的对话所对应的子智能体状态，并合并到当前智能体的 {@link AgentState}。错误会记录日志，但不中断执行。
      */
     private void loadAgentState(String sessionId, Agent agent) {
         if (!(agent instanceof ReActAgent ra) || ra.sessionLogEnabled()) {
@@ -260,8 +258,7 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Saves the live {@link AgentState} for the conversation identified by {@code sessionId} into
-     * {@link SubAgentConfig#getStateStore()}. Errors are logged but do not interrupt execution.
+     * 将 {@code sessionId} 标识的对话的当前 {@link AgentState} 保存到 {@link SubAgentConfig#getStateStore()}。错误会记录日志，但不中断执行。
      */
     private void saveAgentState(String sessionId, Agent agent) {
         if (!(agent instanceof ReActAgent ra) || ra.sessionLogEnabled()) {
@@ -295,16 +292,15 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Executes agent call with streaming, forwarding events to the emitter.
+     * 以流式方式调用智能体，并向发射器转发事件。
      *
-     * <p>Uses the agent's streaming API and forwards each event to the provided emitter as JSON.
-     * The final response is extracted from the last event.
+     * <p>使用智能体的流式 API，将每个事件作为 JSON 转发给指定发射器。从最后一个事件提取最终响应。
      *
-     * @param agent The agent to execute
-     * @param userMsg The user message to send
-     * @param sessionId The session ID for result building
-     * @param emitter The emitter to forward events to
-     * @return A Mono emitting the tool result block
+     * @param agent 要执行的智能体
+     * @param userMsg 要发送的用户消息
+     * @param sessionId 构建结果时使用的会话 ID
+     * @param emitter 接收转发事件的发射器
+     * @return 发出工具结果块的 Mono
      */
     private Mono<ToolResultBlock> executeWithStreaming(
             Agent agent,
@@ -343,14 +339,14 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Executes agent call without streaming.
+     * 以非流式方式调用智能体。
      *
-     * <p>Uses the agent's standard call API. No events are forwarded to the emitter.
+     * <p>使用智能体的标准调用 API，不向发射器转发事件。
      *
-     * @param agent The agent to execute
-     * @param userMsg The user message to send
-     * @param sessionId The session ID for result building
-     * @return A Mono emitting the tool result block
+     * @param agent 要执行的智能体
+     * @param userMsg 要发送的用户消息
+     * @param sessionId 构建结果时使用的会话 ID
+     * @return 发出工具结果块的 Mono
      */
     private Mono<ToolResultBlock> executeWithoutStreaming(
             Agent agent, Msg userMsg, String sessionId, RuntimeContext runtimeContext) {
@@ -386,15 +382,14 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Forwards an event to the emitter as serialized JSON.
+     * 将事件序列化为 JSON 并转发到发射器。
      *
-     * <p>Serializes the event using JsonCodec and emits it as a text block. Serialization
-     * failures are logged but do not interrupt execution.
+     * <p>使用 JsonCodec 序列化事件，以文本块形式发出。序列化失败会记录日志，但不中断执行。
      *
-     * @param event The event to forward
-     * @param emitter The emitter to send the event to
-     * @param agent The agent
-     * @param sessionId Current session ID
+     * @param event 要转发的事件
+     * @param emitter 接收事件的发射器
+     * @param agent 智能体
+     * @param sessionId 当前会话 ID
      */
     private void forwardEvent(Event event, ToolEmitter emitter, Agent agent, String sessionId) {
         try {
@@ -413,19 +408,18 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Builds the final tool result with session context.
+     * 构建包含会话上下文的最终工具结果。
      *
-     * <p>Formats the response to include the session ID, allowing callers to continue the
-     * conversation by passing the session ID in subsequent calls.
+     * <p>在格式化响应中包含会话 ID，使调用方能在后续调用中传入此 ID 继续对话。
      *
-     * @param response The agent's response message
-     * @param sessionId The session ID to include in the result
-     * @return A tool result block containing the formatted response
+     * @param response 智能体的响应消息
+     * @param sessionId 结果中包含的会话 ID
+     * @return 包含格式化响应的工具结果块
      */
     private ToolResultBlock buildResult(Msg response, String sessionId) {
         String textContent = response.getTextContent();
 
-        // Return response with session context
+        // 返回包含会话上下文的响应。
         return ToolResultBlock.text(
                 String.format(
                         "session_id: %s\n\n%s",
@@ -433,16 +427,15 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Builds the JSON schema for tool parameters.
+     * 构建工具参数的 JSON 模式。
      *
-     * <p>Creates a schema with two properties:
-     *
+     * <p>创建包含两个属性的模式：
      * <ul>
-     *   <li>{@code session_id} - Optional string for continuing existing conversations
-     *   <li>{@code message} - Required string containing the message to send
+     * <li>{@code session_id}：可选字符串，用于继续已有对话。
+     * <li>{@code message}：必填字符串，包含要发送的消息。
      * </ul>
      *
-     * @return A map representing the JSON schema for tool parameters
+     * @return 表示工具参数 JSON 模式的映射
      */
     private Map<String, Object> buildSchema() {
         Map<String, Object> schema = new HashMap<>();
@@ -450,7 +443,7 @@ public class SubAgentTool implements AgentTool {
 
         Map<String, Object> properties = new HashMap<>();
 
-        // AgentStateStore ID (optional)
+        // AgentStateStore ID（可选）。
         Map<String, Object> sessionIdProp = new HashMap<>();
         sessionIdProp.put("type", "string");
         sessionIdProp.put(
@@ -460,7 +453,7 @@ public class SubAgentTool implements AgentTool {
                         + " the session_id from the previous response and pass it here.");
         properties.put(PARAM_SESSION_ID, sessionIdProp);
 
-        // Message (required)
+        // 消息（必填）。
         Map<String, Object> messageProp = new HashMap<>();
         messageProp.put("type", "string");
         messageProp.put("description", "Message to send to the agent");
@@ -473,16 +466,14 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Resolves the tool name from config or derives it from the agent.
+     * 从配置解析工具名称，或从智能体推导名称。
      *
-     * <p>Priority: explicit config.toolName > derived from agent name.
-     * If derived from the agent name, the name will be sanitized to comply with strict LLM API constraints
-     * (e.g., ^[a-zA-Z0-9_-]{1,64}$). For non-English characters (like Chinese) or excessively long names,
-     * a deterministic short hash of the original name is appended to prevent naming collisions.
+     * <p>优先级：显式 config.toolName > 从智能体名称推导。
+     * 若从智能体名称推导，会清理名称以满足严格的 LLM API 约束（例如 ^[a-zA-Z0-9_-]{1,64}$）。对于非英文字符（如中文）或过长名称，会附加原始名称的确定性短哈希，以避免命名冲突。
      *
-     * @param agent The agent to derive name from if not configured
-     * @param config The configuration that may override the name
-     * @return The resolved tool name
+     * @param agent 未配置时从中推导名称的智能体
+     * @param config 可覆盖名称的配置
+     * @return 解析出的工具名称
      */
     private String resolveToolName(Agent agent, SubAgentConfig config) {
         if (config.getToolName() != null && !config.getToolName().trim().isEmpty()) {
@@ -497,17 +488,16 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Helper method for {@link #resolveToolName(Agent, SubAgentConfig)}.
-     * Extracts valid characters, lazily computes a deterministic hash
-     * if necessary, and strictly enforces length limits via safe truncation.
+     * {@link #resolveToolName(Agent, SubAgentConfig)} 的辅助方法。
+     * 提取合法字符，必要时延迟计算确定性哈希，并通过安全截断严格限制长度。
      *
-     * @param prefix The prefix to prepend to the tool name (e.g., "call_").
-     * @param originalName The original name of the agent.
-     * @return A sanitized, safe-to-use tool name.
+     * @param prefix 工具名称的前缀（例如 "call_"）。
+     * @param originalName 智能体的原始名称。
+     * @return 清理后的可安全使用的工具名称。
      */
     private String sanitizeName(String prefix, String originalName) {
-        // Keep the underscore, replace other illegal characters with underscores uniformly,
-        // merge consecutive underscores, and remove the first and last underscores
+        // 保留下划线，将其他非法字符统一替换为下划线，
+        // 合并连续下划线，并移除首尾下划线。
         String lowerOriginal = originalName.toLowerCase(Locale.ROOT);
         String safePart =
                 lowerOriginal
@@ -525,7 +515,7 @@ public class SubAgentTool implements AgentTool {
         boolean needsHash = !isInformationLost || resolvedName.length() > 64;
 
         if (needsHash) {
-            // Generate deterministic hash
+            // 生成确定性哈希。
             UUID uuid = UUID.nameUUIDFromBytes(originalName.getBytes(StandardCharsets.UTF_8));
             String shortHash = uuid.toString().replace("-", "").substring(0, 8);
             String suffix = "_" + shortHash;
@@ -543,14 +533,14 @@ public class SubAgentTool implements AgentTool {
             if (resolvedName.length() > 64) {
                 int allowedSafePartLen = 64 - prefix.length() - suffix.length();
                 if (allowedSafePartLen > 0) {
-                    // replaceAll("_+$", "") strips any trailing underscores created by the cut,
-                    // preventing double underscores when the suffix is appended.
+                    // replaceAll("_+$", "") 移除截断产生的尾部下划线，
+                    // 防止附加后缀时出现双下划线。
                     safePart = safePart.substring(0, allowedSafePartLen).replaceAll("_+$", "");
                     resolvedName = prefix + safePart + suffix;
                 } else {
-                    // If prefix + suffix alone exceeds or equals 64 characters,
-                    // discard the safePart entirely and forcefully truncate the prefix + hash
-                    // combination.
+                    // 如果仅前缀加后缀就达到或超过 64 个字符，
+                    // 则完全舍弃 safePart，强制截断前缀与哈希
+                    // 的组合。
                     resolvedName =
                             (prefix + shortHash)
                                     .substring(
@@ -563,25 +553,24 @@ public class SubAgentTool implements AgentTool {
     }
 
     /**
-     * Resolves the tool description from config or derives it from the agent.
+     * 从配置解析工具描述，或从智能体推导描述。
      *
-     * <p>Priority: config.description > agent.description > default. The default description is
-     * generated as "Call {agentName} to complete tasks".
+     * <p>优先级：config.description > agent.description > 默认值。默认描述生成为 "Call {agentName} to complete tasks"。
      *
-     * @param agent The agent to derive description from if not configured
-     * @param config The configuration that may override the description
-     * @return The resolved description
+     * @param agent 未配置时从中推导描述的智能体
+     * @param config 可覆盖描述的配置
+     * @return 解析出的描述
      */
     private String resolveDescription(Agent agent, SubAgentConfig config) {
         if (config.getDescription() != null && !config.getDescription().isEmpty()) {
             return config.getDescription();
         }
-        // Use agent description if available
+        // 若智能体描述可用，则使用它。
         String agentDesc = agent.getDescription();
         if (agentDesc != null && !agentDesc.isEmpty()) {
             return agentDesc;
         }
-        // Generate default description
+        // 生成默认描述。
         return "Call " + agent.getName() + " to complete tasks";
     }
 }
