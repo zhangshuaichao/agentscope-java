@@ -45,14 +45,14 @@ import reactor.core.publisher.Mono;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // Create long-term memory instance
+ * // 创建长期记忆实例
  * LongTermMemoryBase longTermMemory = Mem0LongTermMemory.builder()
  *     .agentName("Assistant")
  *     .userName("user_123")
  *     .apiBaseUrl("http://localhost:8000")
  *     .build();
  *
- * // Use in ReActAgent
+ * // 在 ReActAgent 中使用
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
  *     .model(model)

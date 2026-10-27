@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  * <pre>{@code
  * ExternalApiReader reader = ExternalApiReader.builder()
  *     .requestBuilder((filePath, client) -> {
- *         // Build task submission request
+ *         // 构建任务提交请求
  *         String json = String.format(
  *             "{\"file_path\":\"%s\",\"engine\":\"pipeline\"}",
  *             filePath
@@ -59,15 +59,15 @@ import reactor.core.publisher.Mono;
  *             .build();
  *     })
  *     .responseParser((response, client) -> {
- *         // Extract task_id from response, then poll for results
+ *         // 从响应提取 task_id，然后轮询结果
  *         String responseBody = response.body().string();
- *         // Parse JSON and poll...
+ *         // 解析 JSON 并轮询……
  *         return markdown;
  *     })
  *     .chunkSize(512)
  *     .splitStrategy(SplitStrategy.PARAGRAPH)
  *     .overlapSize(50)
- *     .supportedFormats("pdf", "docx", "pptx", "xlsx", "txt")  // Specify supported formats
+ *     .supportedFormats("pdf", "docx", "pptx", "xlsx", "txt")  // 指定支持的格式
  *     .build();
  *
  * List<Document> docs = reader.read(ReaderInput.fromString("path/to/file.pdf")).block();
@@ -77,7 +77,7 @@ import reactor.core.publisher.Mono;
  * <pre>{@code
  * ExternalApiReader reader = ExternalApiReader.builder()
  *     .requestBuilder((filePath, client) -> {
- *         // Custom request building logic
+ *         // 自定义请求构建逻辑
  *         byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
  *         RequestBody body = RequestBody.create(fileBytes, MediaType.get("application/octet-stream"));
  *         return new Request.Builder()
@@ -87,7 +87,7 @@ import reactor.core.publisher.Mono;
  *             .build();
  *     })
  *     .responseParser((response, client) -> {
- *         // Custom response parsing logic
+ *         // 自定义响应解析逻辑
  *         return response.body().string();
  *     })
  *     .build();

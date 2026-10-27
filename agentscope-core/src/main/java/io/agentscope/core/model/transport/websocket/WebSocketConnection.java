@@ -44,15 +44,15 @@ import reactor.core.publisher.Mono;
  * WebSocketTransport client = JdkWebSocketTransport.create();
  * client.connect(request, String.class)
  *     .flatMapMany(connection -> {
- *         // Send JSON message
+ *         // 发送 JSON 消息
  *         connection.send("{\"type\":\"config\"}").subscribe();
  *
- *         // Receive JSON messages
+ *         // 接收 JSON 消息
  *         return connection.receive();
  *     })
  *     .subscribe(
  *         json -> handleMessage(json),
- *         error -> handleError(error)  // WebSocketTransportException with context
+ *         error -> handleError(error)  // 包含上下文的 WebSocketTransportException
  *     );
  * }</pre>
  *
@@ -61,10 +61,10 @@ import reactor.core.publisher.Mono;
  * <pre>{@code
  * client.connect(request, byte[].class)
  *     .flatMapMany(connection -> {
- *         // Send binary message
+ *         // 发送二进制消息
  *         connection.send(binaryData).subscribe();
  *
- *         // Receive binary messages
+ *         // 接收二进制消息
  *         return connection.receive();
  *     })
  *     .subscribe(

@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  *     @ToolParam(name = "unit", description = "Unit of measurement", required = false)
  *     String unit
  * ) {
- *     // Implementation
+ *     // 实现逻辑
  * }
  * }</pre>
  *

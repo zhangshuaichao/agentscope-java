@@ -35,7 +35,7 @@ import io.agentscope.core.message.Msg;
  *                 if (event.isLast()) {
  *                     System.out.println("✓ Reasoning complete");
  *                 } else {
- *                     System.out.print("...");  // Progress indicator
+ *                     System.out.print("...");  // 进度指示
  *                 }
  *             }
  *             case TOOL_RESULT -> {
@@ -153,10 +153,10 @@ public class Event {
      * agent.stream(userMsg, options)
      *     .subscribe(event -> {
      *         if (event.isLast()) {
-     *             // Complete message - safe to persist or process
+     *             // 完整消息，可进行持久化或后续处理
      *             database.save(event.getMessage());
      *         } else {
-     *             // Intermediate chunk - update UI
+     *             // 中间分块，用于更新 UI
      *             ui.append(event.getMessage().getTextContent());
      *         }
      *     });

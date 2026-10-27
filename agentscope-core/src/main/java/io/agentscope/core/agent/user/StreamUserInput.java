@@ -40,10 +40,10 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Default console input/output
+ * // 默认控制台输入输出
  * StreamUserInput consoleInput = StreamUserInput.builder().build();
  *
- * // Custom streams (e.g., for testing)
+ * // 自定义流，例如用于测试
  * StreamUserInput customInput = StreamUserInput.builder()
  *     .inputStream(myInputStream)
  *     .outputStream(myOutputStream)

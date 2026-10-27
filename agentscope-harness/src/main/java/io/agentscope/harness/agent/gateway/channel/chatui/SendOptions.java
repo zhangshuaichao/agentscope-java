@@ -36,17 +36,17 @@ import java.util.Objects;
  * <h2>用法</h2>
  *
  * <pre>{@code
- * // One session per user (most common)
+ * // 每用户一个会话（最常见）
  * chat.send(SendOptions.userId("user-1"), "hello");
  *
- * // Same user, different sessions
+ * // 同一用户的不同会话
  * chat.send(SendOptions.of("user-1", "session-a"), "hello");
  * chat.send(SendOptions.of("user-1", "session-b"), "hello");
  *
- * // Target a specific agent in multi-agent setups
+ * // 多智能体配置中指定目标智能体
  * chat.send(SendOptions.userId("user-1").withAgentId("support"), "help me");
  *
- * // Pass application context into the agent turn
+ * // 将应用上下文传入智能体轮次
  * chat.send(
  *     SendOptions.userId("user-1")
  *         .withAttribute("tenant", "acme")

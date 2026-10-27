@@ -44,17 +44,17 @@ import java.util.Set;
  * <pre>{@code
  * AgentStateStore store = new JsonFileAgentStateStore(Path.of("state"));
  *
- * // Save state for an anonymous session
+ * // 保存匿名会话状态
  * store.save(null, "session-1", "agent_state", state);
  *
- * // Save state scoped to a user
+ * // 保存用户作用域内的状态
  * store.save("alice", "session-1", "agent_state", state);
  *
- * // Load state
+ * // 加载状态
  * Optional<AgentState> loaded =
  *         store.get("alice", "session-1", "agent_state", AgentState.class);
  *
- * // List all sessions owned by a user (null lists anonymous sessions)
+ * // 列出用户的所有会话，null 表示匿名会话
  * Set<String> mySessions = store.listSessionIds("alice");
  * }</pre>
  */

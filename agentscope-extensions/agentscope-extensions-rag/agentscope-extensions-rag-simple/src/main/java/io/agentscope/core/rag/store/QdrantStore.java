@@ -75,7 +75,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Using builder with TLS and compatibility options (recommended)
+ * // 使用带 TLS 和兼容性选项的构建器（推荐）
  * try (QdrantStore store = QdrantStore.builder()
  *         .location("http://localhost:6333")
  *         .collectionName("my_collection")
@@ -86,10 +86,10 @@ import reactor.core.scheduler.Schedulers;
  *         .build()) {
  *     store.add(document).block();
  *     List<Document> results = store.search(queryEmbedding, 5).block();
- *     // Store is automatically closed here
+ *     // 存储在此处自动关闭
  * }
  *
- * // Using static factory method (simpler, uses defaults)
+ * // 使用静态工厂方法（更简单，采用默认值）
  * try (QdrantStore store = QdrantStore.create("http://localhost:6333", "my_collection", 1024)) {
  *     store.add(document).block();
  *     List<Document> results = store.search(queryEmbedding, 5).block();
@@ -899,7 +899,7 @@ public class QdrantStore implements VDBStoreBase, AutoCloseable {
      * <pre>{@code
      * try (QdrantStore store = new QdrantStore("http://localhost:6333", "collection", 1024)) {
      *     store.add(1L, embedding).block();
-     *     // Store is automatically closed here
+     *     // 存储在此处自动关闭
      * }
      * }</pre>
      */

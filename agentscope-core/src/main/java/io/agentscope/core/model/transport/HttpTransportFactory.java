@@ -32,10 +32,10 @@ import org.slf4j.LoggerFactory;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Get the default transport (lazily created)
+ * // 获取默认传输实现，延迟创建
  * HttpTransport transport = HttpTransportFactory.getDefault();
  *
- * // Set a custom default transport
+ * // 设置自定义默认传输实现
  * HttpTransport custom = OkHttpTransport.builder()
  *     .config(HttpTransportConfig.builder()
  *         .connectTimeout(Duration.ofSeconds(30))
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *     .build();
  * HttpTransportFactory.setDefault(custom);
  *
- * // Register a transport for automatic cleanup
+ * // 注册传输实现以便自动清理
  * HttpTransportFactory.register(myTransport);
  * }</pre>
  *

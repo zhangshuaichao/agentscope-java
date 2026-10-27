@@ -27,7 +27,7 @@ package io.agentscope.core.rag.integration.dify.exception;
  *     difyClient.retrieve(...);
  * } catch (DifyAuthException e) {
  *     log.error("Authentication failed: {}", e.getMessage());
- *     // Check your API key configuration
+ *     // 检查 API 密钥配置
  * }
  * }</pre>
  */

@@ -58,10 +58,10 @@ import reactor.core.publisher.Mono;
  *     .config(config)
  *     .build();
  *
- * // Retrieve documents
+ * // 检索文档
  * List<Document> docs = knowledge.retrieve("What is AI?", retrieveConfig).block();
  *
- * // Use with Agent
+ * // 与智能体配合使用
  * ReActAgent agent = ReActAgent.builder()
  *     .knowledge(knowledge)
  *     .ragMode(RAGMode.AGENTIC)

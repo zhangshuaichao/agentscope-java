@@ -39,10 +39,10 @@ import java.util.List;
  * String storedHash = readStoredHash();
  *
  * if (storedHash != null && !storedHash.equals(currentHash)) {
- *     // List was modified, need full rewrite
+ *     // 列表已有内容被修改，需要完整重写
  *     rewriteEntireList(values);
  * } else if (values.size() > existingCount) {
- *     // List grew, can append incrementally
+ *     // 列表增长，可以增量追加
  *     appendNewItems(values);
  * }
  * }</pre>

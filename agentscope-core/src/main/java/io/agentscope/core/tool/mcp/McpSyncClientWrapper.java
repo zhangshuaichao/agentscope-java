@@ -29,7 +29,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>使用示例：
  * <pre>{@code
- * McpSyncClient client = ... // created via McpClient.sync()
+ * McpSyncClient client = ... // 通过 McpClient.sync() 创建
  * McpSyncClientWrapper wrapper = new McpSyncClientWrapper("my-mcp", client);
  * wrapper.initialize()
  *     .then(wrapper.callTool("tool_name", Map.of("arg1", "value1")))

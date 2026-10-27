@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * <pre>{@code
  * ReActAgent agent = ReActAgent.builder()
  *     .name("assistant")
- *     .model("glm:glm-5.2") // resolved by ModelRegistry through this provider
+ *     .model("glm:glm-5.2") // 由 ModelRegistry 通过此提供者解析
  *     .build();
  * }</pre>
  */

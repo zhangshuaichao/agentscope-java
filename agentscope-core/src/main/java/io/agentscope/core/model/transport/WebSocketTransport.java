@@ -39,20 +39,20 @@ import reactor.core.publisher.Mono;
  * <p>文本协议用法示例：
  *
  * <pre>{@code
- * // Create client (reusable)
+ * // 创建可复用的客户端
  * WebSocketTransport client = JdkWebSocketTransport.create();
  *
- * // Create connection request
+ * // 创建连接请求
  * WebSocketRequest request = WebSocketRequest.builder("wss://api.openai.com/v1/realtime")
  *     .header("Authorization", "Bearer " + apiKey)
  *     .build();
  *
- * // Establish connection (specify String type)
+ * // 建立连接，指定 String 类型
  * client.connect(request, String.class)
  *     .flatMapMany(connection -> {
- *         // Send JSON configuration
+ *         // 发送 JSON 配置
  *         connection.send(sessionConfig).subscribe();
- *         // Receive JSON messages
+ *         // 接收 JSON 消息
  *         return connection.receive();
  *     })
  *     .subscribe(json -> handleMessage(json));
@@ -61,12 +61,12 @@ import reactor.core.publisher.Mono;
  * <p>二进制协议用法示例：
  *
  * <pre>{@code
- * // Establish connection (specify byte[] type)
+ * // 建立连接，指定 byte[] 类型
  * client.connect(request, byte[].class)
  *     .flatMapMany(connection -> {
- *         // Send binary data
+ *         // 发送二进制数据
  *         connection.send(binaryFrame).subscribe();
- *         // Receive binary data
+ *         // 接收二进制数据
  *         return connection.receive();
  *     })
  *     .subscribe(data -> handleBinaryMessage(data));

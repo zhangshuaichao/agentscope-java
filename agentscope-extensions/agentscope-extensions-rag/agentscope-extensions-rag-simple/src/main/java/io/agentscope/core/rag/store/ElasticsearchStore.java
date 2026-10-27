@@ -69,7 +69,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Using builder with authentication
+ * // 使用带身份验证的构建器
  * try (ElasticsearchStore store = ElasticsearchStore.builder()
  * .url("http://localhost:9200")
  * .indexName("my_rag_index")

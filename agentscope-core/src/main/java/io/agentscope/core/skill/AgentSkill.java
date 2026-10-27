@@ -46,15 +46,15 @@ import java.util.Set;
  *
  * <p><b>用法示例：</b>
  * <pre>{@code
- * // From markdown with frontmatter (use SkillUtil)
+ * // 从带 frontmatter 的 Markdown 创建，使用 SkillUtil
  * String skillMd = "---\nname: my-skill\ndescription: Does something\n---\nContent here";
  * Map<String, String> resources = Map.of("file1.txt", "content1");
  * AgentSkill skill = SkillUtil.createFrom(skillMd, resources);
  *
- * // Direct construction
+ * // 直接构造
  * AgentSkill skill2 = new AgentSkill("my-skill", "Does something", "Content here", resources);
  *
- * // Create modified version using builder
+ * // 使用构建器创建修改后的版本
  * AgentSkill modified = skill.toBuilder()
  *     .description("Updated description")
  *     .skillContent("Modified instructions")
@@ -317,7 +317,7 @@ public class AgentSkill {
      *
      * <p><b>用法示例：</b>
      * <pre>{@code
-     * // Create from scratch
+     * // 从头创建
      * AgentSkill skill = AgentSkill.builder()
      *     .name("my-skill")
      *     .description("Does something")
@@ -325,7 +325,7 @@ public class AgentSkill {
      *     .addResource("file.txt", "content")
      *     .build();
      *
-     * // Modify existing skill
+     * // 修改已有技能
      * AgentSkill modified = existingSkill.toBuilder()
      *     .description("Updated description")
      *     .addResource("new_file.txt", "new content")

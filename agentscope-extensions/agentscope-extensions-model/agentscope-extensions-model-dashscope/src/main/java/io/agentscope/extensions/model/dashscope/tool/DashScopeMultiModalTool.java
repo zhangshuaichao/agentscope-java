@@ -816,7 +816,7 @@ public class DashScopeMultiModalTool {
      *   "request_id": "...",
      *   "output": {
      *     "audio": {
-     *       "url": "https://..."  // or "data": "base64..."
+     *       "url": "https://..."  // 或 "data": "base64..."
      *     }
      *   }
      * }

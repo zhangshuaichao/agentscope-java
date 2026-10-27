@@ -1,0 +1,2128 @@
+{
+  "baseline": "a543f993cce6e22fb37c31ae14443cf9104dbeae",
+  "method": "只统计本次交付范围内pre中实际变化的Java解释注释，逐块验证非注释词元和字符串一致；纯文本图示/内容值/代码断言不计已译。",
+  "files": 95,
+  "translated_comments": 310,
+  "details": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create a model (requires dependency: agentscope-extensions-model-dashscope)",
+          "after": "// 创建模型，需要 agentscope-extensions-model-dashscope 依赖"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create a toolkit with tools",
+          "after": "// 创建并注册工具的工具集"
+        },
+        {
+          "example_index": 0,
+          "before": "// Build the agent",
+          "after": "// 构建智能体"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use the agent",
+          "after": "// 使用智能体"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// External call to interrupt",
+          "after": "// 从外部发起中断"
+        },
+        {
+          "example_index": 0,
+          "before": "// Inside agent's Mono chain, at checkpoints:",
+          "after": "// 在智能体 Mono 链的检查点处："
+        },
+        {
+          "example_index": 0,
+          "before": "// AgentBase.call() catches the exception:",
+          "after": "// AgentBase.call() 捕获此异常："
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/Event.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Progress indicator",
+          "after": "// 进度指示"
+        },
+        {
+          "example_index": 2,
+          "before": "// Complete message - safe to persist or process",
+          "after": "// 完整消息，可进行持久化或后续处理"
+        },
+        {
+          "example_index": 2,
+          "before": "// Intermediate chunk - update UI",
+          "after": "// 中间分块，用于更新 UI"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/EventSource.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Extend for a grandchild agent:",
+          "after": "// 扩展到孙级智能体："
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/StreamOptions.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Only reasoning events, incremental mode",
+          "after": "// 仅推理事件，使用增量模式"
+        },
+        {
+          "example_index": 0,
+          "before": "// Reasoning events, but hide intermediate deltas and only keep the final reasoning result",
+          "after": "// 推理事件，但隐藏中间增量，仅保留最终推理结果"
+        },
+        {
+          "example_index": 0,
+          "before": "// Multiple specific types",
+          "after": "// 多个指定类型"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/user/StreamUserInput.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Default console input/output",
+          "after": "// 默认控制台输入输出"
+        },
+        {
+          "example_index": 0,
+          "before": "// Custom streams (e.g., for testing)",
+          "after": "// 自定义流，例如用于测试"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/user/UserAgent.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Simple console input (default)",
+          "after": "// 简单控制台输入，默认方式"
+        },
+        {
+          "example_index": 0,
+          "before": "// With custom input method",
+          "after": "// 使用自定义输入方法"
+        },
+        {
+          "example_index": 0,
+          "before": "// With hooks",
+          "after": "// 使用钩子"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/formatter/ResponseFormat.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Plain text",
+          "after": "// 纯文本"
+        },
+        {
+          "example_index": 0,
+          "before": "// JSON object",
+          "after": "// JSON 对象"
+        },
+        {
+          "example_index": 0,
+          "before": "// JSON Schema with strict validation",
+          "after": "// 使用严格校验的 JSON Schema"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/hook/Hook.java",
+      "translated_example_comments": 10,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Basic hook with default priority",
+          "after": "// 使用默认优先级的基础钩子"
+        },
+        {
+          "example_index": 0,
+          "before": "// Display streaming output",
+          "after": "// 显示流式输出"
+        },
+        {
+          "example_index": 0,
+          "before": "// High priority hook (executes first)",
+          "after": "// 高优先级钩子，先执行"
+        },
+        {
+          "example_index": 0,
+          "before": "// High priority",
+          "after": "// 高优先级"
+        },
+        {
+          "example_index": 0,
+          "before": "// Inject auth token before any other hook",
+          "after": "// 在其他钩子之前注入认证令牌"
+        },
+        {
+          "example_index": 0,
+          "before": "// ... add auth",
+          "after": "// ……添加认证信息"
+        },
+        {
+          "example_index": 0,
+          "before": "// Modifying events",
+          "after": "// 修改事件"
+        },
+        {
+          "example_index": 0,
+          "before": "// Modify messages before LLM reasoning",
+          "after": "// 在 LLM 推理前修改消息"
+        },
+        {
+          "example_index": 0,
+          "before": "// Modify tool result",
+          "after": "// 修改工具结果"
+        },
+        {
+          "example_index": 0,
+          "before": "// ... process result",
+          "after": "// ……处理结果"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/hook/ReasoningChunkEvent.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Incremental mode: print only new content",
+          "after": "// 增量模式：只打印新增内容"
+        },
+        {
+          "example_index": 0,
+          "before": "// OR Cumulative mode: update entire display",
+          "after": "// 或者使用累积模式，更新完整显示内容"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/hook/SummaryChunkEvent.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Incremental mode: print only new content",
+          "after": "// 增量模式：只打印新增内容"
+        },
+        {
+          "example_index": 0,
+          "before": "// OR Cumulative mode: update entire display",
+          "after": "// 或者使用累积模式，更新完整显示内容"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/memory/LongTermMemory.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create long-term memory instance",
+          "after": "// 创建长期记忆实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use in ReActAgent",
+          "after": "// 在 ReActAgent 中使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/memory/LongTermMemoryMode.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Recommended",
+          "after": "// 推荐"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/memory/LongTermMemoryTools.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create long-term memory instance",
+          "after": "// 创建长期记忆实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create tool adapter",
+          "after": "// 创建工具适配器"
+        },
+        {
+          "example_index": 0,
+          "before": "// Register in ReActAgent (done automatically by framework)",
+          "after": "// 在 ReActAgent 中注册，由框架自动完成"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/memory/StaticLongTermMemoryHook.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Hook is automatically registered in STATIC_CONTROL/BOTH mode",
+          "after": "// STATIC_CONTROL/BOTH 模式下自动注册此钩子"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ExecutionConfig.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Priority: per-request > agent-level > component-defaults > system-defaults",
+          "after": "// 优先级：请求级 > 智能体级 > 组件默认值 > 系统默认值"
+        },
+        {
+          "example_index": 1,
+          "before": "// Result: timeout=2min, maxAttempts=3 (from defaults), ...",
+          "after": "// 结果：timeout=2min，maxAttempts=3（来自默认配置），……"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/GenerateOptions.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Result: temperature=0.7, executionConfig with timeout=30s and maxAttempts=3",
+          "after": "// 结果：temperature=0.7，executionConfig 中 timeout=30s、maxAttempts=3"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ToolChoice.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Force model to call a specific tool",
+          "after": "// 强制模型调用指定工具"
+        },
+        {
+          "example_index": 0,
+          "before": "// Let model decide (default)",
+          "after": "// 由模型决定，默认行为"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/transport/HttpTransportFactory.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Get the default transport (lazily created)",
+          "after": "// 获取默认传输实现，延迟创建"
+        },
+        {
+          "example_index": 0,
+          "before": "// Set a custom default transport",
+          "after": "// 设置自定义默认传输实现"
+        },
+        {
+          "example_index": 0,
+          "before": "// Register a transport for automatic cleanup",
+          "after": "// 注册传输实现以便自动清理"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/transport/ProxyConfig.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Simple HTTP proxy",
+          "after": "// 简单 HTTP 代理"
+        },
+        {
+          "example_index": 0,
+          "before": "// HTTP proxy with authentication",
+          "after": "// 带认证的 HTTP 代理"
+        },
+        {
+          "example_index": 0,
+          "before": "// SOCKS5 proxy with authentication",
+          "after": "// 带认证的 SOCKS5 代理"
+        },
+        {
+          "example_index": 0,
+          "before": "// Using builder for advanced configuration",
+          "after": "// 使用构建器进行高级配置"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/transport/WebSocketTransport.java",
+      "translated_example_comments": 8,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create client (reusable)",
+          "after": "// 创建可复用的客户端"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create connection request",
+          "after": "// 创建连接请求"
+        },
+        {
+          "example_index": 0,
+          "before": "// Establish connection (specify String type)",
+          "after": "// 建立连接，指定 String 类型"
+        },
+        {
+          "example_index": 0,
+          "before": "// Send JSON configuration",
+          "after": "// 发送 JSON 配置"
+        },
+        {
+          "example_index": 0,
+          "before": "// Receive JSON messages",
+          "after": "// 接收 JSON 消息"
+        },
+        {
+          "example_index": 1,
+          "before": "// Establish connection (specify byte[] type)",
+          "after": "// 建立连接，指定 byte[] 类型"
+        },
+        {
+          "example_index": 1,
+          "before": "// Send binary data",
+          "after": "// 发送二进制数据"
+        },
+        {
+          "example_index": 1,
+          "before": "// Receive binary data",
+          "after": "// 接收二进制数据"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/transport/websocket/WebSocketConnection.java",
+      "translated_example_comments": 5,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Send JSON message",
+          "after": "// 发送 JSON 消息"
+        },
+        {
+          "example_index": 0,
+          "before": "// Receive JSON messages",
+          "after": "// 接收 JSON 消息"
+        },
+        {
+          "example_index": 0,
+          "before": "// WebSocketTransportException with context",
+          "after": "// 包含上下文的 WebSocketTransportException"
+        },
+        {
+          "example_index": 1,
+          "before": "// Send binary message",
+          "after": "// 发送二进制消息"
+        },
+        {
+          "example_index": 1,
+          "before": "// Receive binary messages",
+          "after": "// 接收二进制消息"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/AgentSkill.java",
+      "translated_example_comments": 5,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// From markdown with frontmatter (use SkillUtil)",
+          "after": "// 从带 frontmatter 的 Markdown 创建，使用 SkillUtil"
+        },
+        {
+          "example_index": 0,
+          "before": "// Direct construction",
+          "after": "// 直接构造"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create modified version using builder",
+          "after": "// 使用构建器创建修改后的版本"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create from scratch",
+          "after": "// 从头创建"
+        },
+        {
+          "example_index": 1,
+          "before": "// Modify existing skill",
+          "after": "// 修改已有技能"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/SkillBox.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Register skill",
+          "after": "// 注册技能"
+        },
+        {
+          "example_index": 0,
+          "before": "// Register skill with tool",
+          "after": "// 注册技能及其工具"
+        },
+        {
+          "example_index": 0,
+          "before": "// same reference skill will not be registered again",
+          "after": "// 同一引用的技能不会重复注册"
+        },
+        {
+          "example_index": 1,
+          "before": "// do nothing",
+          "after": "// 不执行操作"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/SkillFilter.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Builder level: only allow two skills",
+          "after": "// 构建器层面：只允许两个技能"
+        },
+        {
+          "example_index": 0,
+          "before": "// Runtime: disable one of them for this call",
+          "after": "// 运行时：本次调用禁用其中一个技能"
+        },
+        {
+          "example_index": 0,
+          "before": "// Merge: skill_a enabled, skill_b disabled",
+          "after": "// 合并结果：skill_a 启用，skill_b 禁用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/repository/ClasspathSkillRepository.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Load from parent directory containing multiple skills",
+          "after": "// 从包含多个技能的父目录加载"
+        },
+        {
+          "example_index": 1,
+          "before": "// Get all available skill names",
+          "after": "// 获取所有可用技能名称"
+        },
+        {
+          "example_index": 1,
+          "before": "// Load a specific skill",
+          "after": "// 加载指定技能"
+        },
+        {
+          "example_index": 1,
+          "before": "// Load all skills at once",
+          "after": "// 一次加载全部技能"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/util/MarkdownSkillParser.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Parse markdown with frontmatter",
+          "after": "// 解析带 frontmatter 的 Markdown"
+        },
+        {
+          "example_index": 1,
+          "before": "// Generate markdown with frontmatter",
+          "after": "// 生成带 frontmatter 的 Markdown"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/util/SkillUtil.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create skill from markdown with default source",
+          "after": "// 使用默认来源从 Markdown 创建技能"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create skill from markdown with custom source",
+          "after": "// 使用自定义来源从 Markdown 创建技能"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/state/AgentStateStore.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Save state for an anonymous session",
+          "after": "// 保存匿名会话状态"
+        },
+        {
+          "example_index": 0,
+          "before": "// Save state scoped to a user",
+          "after": "// 保存用户作用域内的状态"
+        },
+        {
+          "example_index": 0,
+          "before": "// Load state",
+          "after": "// 加载状态"
+        },
+        {
+          "example_index": 0,
+          "before": "// List all sessions owned by a user (null lists anonymous sessions)",
+          "after": "// 列出用户的所有会话，null 表示匿名会话"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/state/ListHashUtil.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// List was modified, need full rewrite",
+          "after": "// 列表已有内容被修改，需要完整重写"
+        },
+        {
+          "example_index": 0,
+          "before": "// List grew, can append incrementally",
+          "after": "// 列表增长，可以增量追加"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ContextStore.java",
+      "translated_example_comments": 5,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Single instance per type",
+          "after": "// 每种类型一个实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// Multiple instances of same type",
+          "after": "// 同一类型的多个实例"
+        },
+        {
+          "example_index": 1,
+          "before": "// Store multiple UserContext instances",
+          "after": "// 存储多个 UserContext 实例"
+        },
+        {
+          "example_index": 1,
+          "before": "// Retrieve specific instance",
+          "after": "// 获取指定实例"
+        },
+        {
+          "example_index": 2,
+          "before": "// Single DatabaseConfig instance",
+          "after": "// 单个 DatabaseConfig 实例"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/DefaultContextStore.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Singleton - no key needed",
+          "after": "// 单实例，无需键"
+        },
+        {
+          "example_index": 1,
+          "before": "// Register by interface",
+          "after": "// 按接口注册"
+        },
+        {
+          "example_index": 3,
+          "before": "// Type inferred from object",
+          "after": "// 从对象推断类型"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/SchemaOnlyTool.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Or: toolkit.registerAgentTool(new SchemaOnlyTool(schema));",
+          "after": "// 或者：toolkit.registerAgentTool(new SchemaOnlyTool(schema));"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/Tool.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Implementation",
+          "after": "// 实现逻辑"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolEmitter.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Automatically injected by framework",
+          "after": "// 由框架自动注入"
+        },
+        {
+          "example_index": 0,
+          "before": "// Step 1",
+          "after": "// 步骤 1"
+        },
+        {
+          "example_index": 0,
+          "before": "// Step 2",
+          "after": "// 步骤 2"
+        },
+        {
+          "example_index": 0,
+          "before": "// Final result (this is what the LLM sees)",
+          "after": "// 最终结果，LLM 将看到此内容"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolExecutionContext.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Register custom POJO",
+          "after": "// 注册自定义 POJO"
+        },
+        {
+          "example_index": 0,
+          "before": "// Auto-injected by type in tool methods",
+          "after": "// 在工具方法中按类型自动注入"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolExecutionContextProvider.java",
+      "translated_example_comments": 10,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// 1. Define your context POJO with Spring scope",
+          "after": "// 1. 定义带 Spring 作用域的上下文 POJO"
+        },
+        {
+          "example_index": 0,
+          "before": "// getters/setters...",
+          "after": "// 读取与设置方法……"
+        },
+        {
+          "example_index": 0,
+          "before": "// 2. Implement ToolExecutionContextProvider",
+          "after": "// 2. 实现 ToolExecutionContextProvider"
+        },
+        {
+          "example_index": 0,
+          "before": "// Try to resolve from Spring container",
+          "after": "// 尝试从 Spring 容器解析"
+        },
+        {
+          "example_index": 0,
+          "before": "// Convert Spring bean to ToolExecutionContext",
+          "after": "// 将 Spring Bean 转换为 ToolExecutionContext"
+        },
+        {
+          "example_index": 0,
+          "before": "// Direct bean resolution for custom types",
+          "after": "// 为自定义类型直接解析 Bean"
+        },
+        {
+          "example_index": 0,
+          "before": "// Context not available",
+          "after": "// 上下文不可用"
+        },
+        {
+          "example_index": 0,
+          "before": "// 3. Register provider in Spring configuration",
+          "after": "// 3. 在 Spring 配置中注册提供者"
+        },
+        {
+          "example_index": 0,
+          "before": "// 4. Use in tool methods - context auto-resolved from Spring!",
+          "after": "// 4. 在工具方法中使用，上下文自动从 Spring 解析"
+        },
+        {
+          "example_index": 0,
+          "before": "// Auto-resolved from Spring RequestScope!",
+          "after": "// 自动从 Spring RequestScope 解析"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolGroup.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Start inactive",
+          "after": "// 初始为未激活状态"
+        },
+        {
+          "example_index": 0,
+          "before": "// Activate when needed",
+          "after": "// 需要时激活"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolParam.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Implementation",
+          "after": "// 实现逻辑"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolResultConverter.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Custom conversion logic",
+          "after": "// 自定义转换逻辑"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/ToolSuspendException.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Signal that this tool needs external execution",
+          "after": "// 表明此工具需要外部执行"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/Toolkit.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Register tool object",
+          "after": "// 注册工具对象"
+        },
+        {
+          "example_index": 0,
+          "before": "// Register MCP client",
+          "after": "// 注册 MCP 客户端"
+        },
+        {
+          "example_index": 2,
+          "before": "// Simple call",
+          "after": "// 简单调用"
+        },
+        {
+          "example_index": 2,
+          "before": "// With agent and context",
+          "after": "// 传入智能体和上下文"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/mcp/McpAsyncClientWrapper.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// created via McpClient.async()",
+          "after": "// 通过 McpClient.async() 创建"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/mcp/McpClientBuilder.java",
+      "translated_example_comments": 6,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// StdIO transport",
+          "after": "// StdIO 传输"
+        },
+        {
+          "example_index": 0,
+          "before": "// SSE transport with headers and query parameters",
+          "after": "// 带请求头和查询参数的 SSE 传输"
+        },
+        {
+          "example_index": 0,
+          "before": "// HTTP transport with multiple query parameters",
+          "after": "// 带多个查询参数的 HTTP 传输"
+        },
+        {
+          "example_index": 0,
+          "before": "// StdIO transport with custom protocol versions",
+          "after": "// 使用自定义协议版本的 StdIO 传输"
+        },
+        {
+          "example_index": 6,
+          "before": "// Handle elicitation request asynchronously",
+          "after": "// 异步处理信息征询请求"
+        },
+        {
+          "example_index": 7,
+          "before": "// Handle elicitation request synchronously",
+          "after": "// 同步处理信息征询请求"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/mcp/McpSyncClientWrapper.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// created via McpClient.sync()",
+          "after": "// 通过 McpClient.sync() 创建"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/tool/subagent/SubAgentConfig.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Minimal configuration - uses all defaults",
+          "after": "// 最小配置，全部使用默认值"
+        },
+        {
+          "example_index": 0,
+          "before": "// Custom configuration with persistent session",
+          "after": "// 使用持久化会话的自定义配置"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/util/JsonCodec.java",
+      "translated_example_comments": 5,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Get the codec instance",
+          "after": "// 获取编解码器实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// Serialize object to JSON",
+          "after": "// 将对象序列化为 JSON"
+        },
+        {
+          "example_index": 0,
+          "before": "// Deserialize JSON to object",
+          "after": "// 将 JSON 反序列化为对象"
+        },
+        {
+          "example_index": 0,
+          "before": "// Deserialize with generic type",
+          "after": "// 按泛型类型反序列化"
+        },
+        {
+          "example_index": 1,
+          "before": "// For a method parameter declared as List<OrderItem>",
+          "after": "// 针对声明为 List<OrderItem> 的方法参数"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/util/JsonUtils.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Basic usage",
+          "after": "// 基本用法"
+        },
+        {
+          "example_index": 0,
+          "before": "// Cache reference for frequent calls",
+          "after": "// 缓存引用，供频繁调用使用"
+        },
+        {
+          "example_index": 0,
+          "before": "// Replace with custom implementation",
+          "after": "// 替换为自定义实现"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-jdbc/src/main/java/io/agentscope/extensions/jdbc/JdbcDistributedStore.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// HikariCP, Druid, etc.",
+          "after": "// HikariCP、Druid 等。"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0LongTermMemory.java",
+      "translated_example_comments": 9,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create memory instance with authentication",
+          "after": "// 创建带身份验证的记忆实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// For local deployments without authentication",
+          "after": "// 用于不需要身份验证的本地部署"
+        },
+        {
+          "example_index": 0,
+          "before": "// For self-hosted Mem0",
+          "after": "// 用于自行托管的 Mem0"
+        },
+        {
+          "example_index": 0,
+          "before": "// Specify self-hosted API type",
+          "after": "// 指定自行托管的 API 类型"
+        },
+        {
+          "example_index": 0,
+          "before": "// With custom metadata for filtering",
+          "after": "// 使用自定义元数据进行过滤"
+        },
+        {
+          "example_index": 0,
+          "before": "// Custom metadata for storage and filtering",
+          "after": "// 用于存储和过滤的自定义元数据"
+        },
+        {
+          "example_index": 0,
+          "before": "// Record a message (metadata will be stored with the memory)",
+          "after": "// 记录消息（元数据会与记忆一起存储）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Retrieve relevant memories (metadata will be used as filter)",
+          "after": "// 检索相关记忆（元数据用作过滤条件）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Result: \"User prefers homestays when traveling\"",
+          "after": "// 结果：\"User prefers homestays when traveling\""
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianLongTermMemory.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Using try-with-resources (recommended)",
+          "after": "// 使用 try-with-resources（推荐）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Record messages",
+          "after": "// 记录消息"
+        },
+        {
+          "example_index": 0,
+          "before": "// Retrieve memories",
+          "after": "// 检索记忆"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianMemoryClient.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Using builder",
+          "after": "// 使用构建器"
+        },
+        {
+          "example_index": 0,
+          "before": "// Add memory",
+          "after": "// 添加记忆"
+        },
+        {
+          "example_index": 0,
+          "before": "// Search memory",
+          "after": "// 搜索记忆"
+        },
+        {
+          "example_index": 0,
+          "before": "// Close the client when done",
+          "after": "// 使用完毕后关闭客户端"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeLongTermMemory.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create memory instance",
+          "after": "// 创建记忆实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use in ReActAgent",
+          "after": "// 在 ReActAgent 中使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-dashscope/src/main/java/io/agentscope/extensions/model/dashscope/EndpointType.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Explicitly use multimodal API",
+          "after": "// 显式使用多模态 API"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-dashscope/src/main/java/io/agentscope/extensions/model/dashscope/tool/DashScopeMultiModalTool.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// or \"data\": \"base64...\"",
+          "after": "// 或 \"data\": \"base64...\""
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai/src/main/java/io/agentscope/extensions/model/openai/compat/glm/GLMModelProvider.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// resolved by ModelRegistry through this provider",
+          "after": "// 由 ModelRegistry 通过此提供者解析"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai/src/main/java/io/agentscope/extensions/model/openai/compat/kimi/KimiModelProvider.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// resolved by ModelRegistry through this provider",
+          "after": "// 由 ModelRegistry 通过此提供者解析"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mysql/src/main/java/io/agentscope/extensions/mysql/MysqlDistributedStore.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// HikariCP, Druid, etc.",
+          "after": "// HikariCP、Druid 等。"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-postgresql/src/main/java/io/agentscope/extensions/postgresql/PostgresDistributedStore.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// HikariCP, Druid, etc.",
+          "after": "// HikariCP、Druid 等。"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/A2aAgent.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Simple usage.",
+          "after": "// 简单用法。"
+        },
+        {
+          "example_index": 0,
+          "before": "// Auto get AgentCard",
+          "after": "// 自动获取 AgentCard"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/registry/AguiAgentRegistry.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Register a singleton agent",
+          "after": "// 注册单例智能体"
+        },
+        {
+          "example_index": 0,
+          "before": "// Register a factory for per-request agents",
+          "after": "// 注册逐请求创建智能体的工厂"
+        },
+        {
+          "example_index": 0,
+          "before": "// Get an agent",
+          "after": "// 获取智能体"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/main/java/io/agentscope/core/rag/integration/bailian/BailianConfig.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Optional: configure retrieval parameters",
+          "after": "// 可选：配置检索参数"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/main/java/io/agentscope/core/rag/integration/bailian/BailianKnowledge.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// 1. Configure Bailian connection",
+          "after": "// 1. 配置百炼连接"
+        },
+        {
+          "example_index": 0,
+          "before": "// 2. Create knowledge base instance",
+          "after": "// 2. 创建知识库实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// 3. Retrieve documents",
+          "after": "// 3. 检索文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// 4. Use with agents via KnowledgeRetrievalTools",
+          "after": "// 4. 通过 KnowledgeRetrievalTools 与智能体配合使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/DifyKnowledge.java",
+      "translated_example_comments": 5,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// 1. Configure Dify connection",
+          "after": "// 1. 配置 Dify 连接"
+        },
+        {
+          "example_index": 0,
+          "before": "// Configure in code",
+          "after": "// 在代码中配置"
+        },
+        {
+          "example_index": 0,
+          "before": "// 2. Create knowledge base instance",
+          "after": "// 2. 创建知识库实例"
+        },
+        {
+          "example_index": 0,
+          "before": "// 3. Retrieve documents",
+          "after": "// 3. 检索文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// 4. Use with agents via built-in RAG configuration",
+          "after": "// 4. 通过内置 RAG 配置与智能体配合使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/DifyRAGConfig.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Configure in code",
+          "after": "// 在代码中配置"
+        },
+        {
+          "example_index": 0,
+          "before": "// Optional, for self-hosted",
+          "after": "// 可选，用于自行托管"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/RerankConfig.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Optional: reranking provider",
+          "after": "// 可选：重排序提供者"
+        },
+        {
+          "example_index": 0,
+          "before": "// Optional: model name",
+          "after": "// 可选：模型名称"
+        },
+        {
+          "example_index": 0,
+          "before": "// Optional: top N after reranking",
+          "after": "// 可选：重排序后的前 N 项"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/RetrievalMode.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Use hybrid search",
+          "after": "// 使用混合搜索"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/exception/DifyAuthException.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Check your API key configuration",
+          "after": "// 检查 API 密钥配置"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/main/java/io/agentscope/core/rag/integration/dify/model/DifyQueryDeserializer.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Dify Cloud (api.dify.ai)",
+          "after": "// Dify 云服务（api.dify.ai）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Self-hosted Dify",
+          "after": "// 自行托管的 Dify"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/main/java/io/agentscope/core/rag/integration/haystack/HayStackKnowledge.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Retrieve documents",
+          "after": "// 检索文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use with Agent",
+          "after": "// 与智能体配合使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/main/java/io/agentscope/core/rag/integration/ragflow/RAGFlowClient.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// optional",
+          "after": "// 可选"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/main/java/io/agentscope/core/rag/integration/ragflow/RAGFlowKnowledge.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Retrieve documents",
+          "after": "// 检索文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use with Agent",
+          "after": "// 与智能体配合使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/main/java/io/agentscope/core/rag/integration/ragflow/model/ResponseDataDeserializer.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Success case",
+          "after": "// 成功情况"
+        },
+        {
+          "example_index": 0,
+          "before": "// Error or empty case",
+          "after": "// 错误或空结果情况"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/knowledge/SimpleKnowledge.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Add documents",
+          "after": "// 添加文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// Retrieve documents",
+          "after": "// 检索文档"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/reader/ExternalApiReader.java",
+      "translated_example_comments": 6,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Build task submission request",
+          "after": "// 构建任务提交请求"
+        },
+        {
+          "example_index": 0,
+          "before": "// Extract task_id from response, then poll for results",
+          "after": "// 从响应提取 task_id，然后轮询结果"
+        },
+        {
+          "example_index": 0,
+          "before": "// Parse JSON and poll...",
+          "after": "// 解析 JSON 并轮询……"
+        },
+        {
+          "example_index": 0,
+          "before": "// Specify supported formats",
+          "after": "// 指定支持的格式"
+        },
+        {
+          "example_index": 1,
+          "before": "// Custom request building logic",
+          "after": "// 自定义请求构建逻辑"
+        },
+        {
+          "example_index": 1,
+          "before": "// Custom response parsing logic",
+          "after": "// 自定义响应解析逻辑"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/ElasticsearchStore.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Using builder with authentication",
+          "after": "// 使用带身份验证的构建器"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/InMemoryStore.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Add documents",
+          "after": "// 添加文档"
+        },
+        {
+          "example_index": 0,
+          "before": "// Search",
+          "after": "// 搜索"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/MilvusStore.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Using builder with authentication and timeout options",
+          "after": "// 使用带身份验证和超时选项的构建器"
+        },
+        {
+          "example_index": 1,
+          "before": "// Store is automatically closed here",
+          "after": "// 存储在此处自动关闭"
+        },
+        {
+          "example_index": 2,
+          "before": "// Store is automatically closed here",
+          "after": "// 存储在此处自动关闭"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/PgVectorStore.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Using builder with full configuration (recommended)",
+          "after": "// 使用完整配置的构建器（推荐）"
+        },
+        {
+          "example_index": 1,
+          "before": "// optional, defaults to \"public\"",
+          "after": "// 可选，默认为 \"public\""
+        },
+        {
+          "example_index": 1,
+          "before": "// Using static factory method (simpler, uses defaults)",
+          "after": "// 使用静态工厂方法（更简单，采用默认值）"
+        },
+        {
+          "example_index": 2,
+          "before": "// Store is automatically closed here",
+          "after": "// 存储在此处自动关闭"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/QdrantStore.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Using builder with TLS and compatibility options (recommended)",
+          "after": "// 使用带 TLS 和兼容性选项的构建器（推荐）"
+        },
+        {
+          "example_index": 1,
+          "before": "// Store is automatically closed here",
+          "after": "// 存储在此处自动关闭"
+        },
+        {
+          "example_index": 1,
+          "before": "// Using static factory method (simpler, uses defaults)",
+          "after": "// 使用静态工厂方法（更简单，采用默认值）"
+        },
+        {
+          "example_index": 2,
+          "before": "// Store is automatically closed here",
+          "after": "// 存储在此处自动关闭"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-redis/src/main/java/io/agentscope/extensions/redis/sandbox/RedisSandboxExecutionGuard.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// must exceed worst-case call duration",
+          "after": "// 必须超过最坏情况下的调用时长"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-redis/src/main/java/io/agentscope/extensions/redis/state/RedisAgentStateStore.java",
+      "translated_example_comments": 18,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create Jedis RedisClient (new API)",
+          "after": "// 创建 Jedis RedisClient（新 API）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create Jedis RedisClusterClient",
+          "after": "// 创建 Jedis RedisClusterClient"
+        },
+        {
+          "example_index": 1,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create Jedis RedisSentinelClient",
+          "after": "// 创建 Jedis RedisSentinelClient"
+        },
+        {
+          "example_index": 2,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create Lettuce RedisClient",
+          "after": "// 创建 Lettuce RedisClient"
+        },
+        {
+          "example_index": 3,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 4,
+          "before": "// Create Lettuce RedisClusterClient for cluster mode",
+          "after": "// 创建集群模式的 Lettuce RedisClusterClient"
+        },
+        {
+          "example_index": 4,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 5,
+          "before": "// Create Lettuce RedisClient for sentinel",
+          "after": "// 创建哨兵模式的 Lettuce RedisClient"
+        },
+        {
+          "example_index": 5,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 6,
+          "before": "// Create RedissonClient (configure as needed for your deployment mode)",
+          "after": "// 创建 RedissonClient（按部署模式配置）"
+        },
+        {
+          "example_index": 6,
+          "before": "// or for cluster: config.useClusterServers().addNodeAddress(\"redis://localhost:7000\");",
+          "after": "// 或使用集群模式：config.useClusterServers().addNodeAddress(\"redis://localhost:7000\");"
+        },
+        {
+          "example_index": 6,
+          "before": "// or for sentinel: config.useSentinelServers().setMasterName(\"mymaster\").addSentinelAddress(\"redis://localhost:26379\");",
+          "after": "// 或使用哨兵模式：config.useSentinelServers().setMasterName(\"mymaster\").addSentinelAddress(\"redis://localhost:26379\");"
+        },
+        {
+          "example_index": 6,
+          "before": "// Build RedisAgentStateStore",
+          "after": "// 构建 RedisAgentStateStore"
+        },
+        {
+          "example_index": 7,
+          "before": "// Create Redis client",
+          "after": "// 创建 Redis 客户端"
+        },
+        {
+          "example_index": 7,
+          "before": "// Build RedisAgentStateStore with custom key prefix",
+          "after": "// 使用自定义键前缀构建 RedisAgentStateStore"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-redis/src/main/java/io/agentscope/extensions/redis/state/jedis/JedisClientAdapter.java",
+      "translated_example_comments": 8,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create standalone client",
+          "after": "// 创建单机客户端"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create cluster client",
+          "after": "// 创建集群客户端"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create sentinel client",
+          "after": "// 创建哨兵客户端"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create any client type that extends UnifiedJedis",
+          "after": "// 创建任意继承 UnifiedJedis 的客户端类型"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-redis/src/main/java/io/agentscope/extensions/redis/state/lettuce/LettuceClientAdapter.java",
+      "translated_example_comments": 6,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create standalone RedisClient",
+          "after": "// 创建单机 RedisClient"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use with RedisAgentStateStore",
+          "after": "// 与 RedisAgentStateStore 配合使用"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create cluster client",
+          "after": "// 创建集群客户端"
+        },
+        {
+          "example_index": 1,
+          "before": "// Use with RedisAgentStateStore",
+          "after": "// 与 RedisAgentStateStore 配合使用"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create Lettuce RedisClient for sentinel",
+          "after": "// 创建哨兵模式的 Lettuce RedisClient"
+        },
+        {
+          "example_index": 2,
+          "before": "// Use with RedisAgentStateStore",
+          "after": "// 与 RedisAgentStateStore 配合使用"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-redis/src/main/java/io/agentscope/extensions/redis/state/redisson/RedissonClientAdapter.java",
+      "translated_example_comments": 13,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create standalone configuration",
+          "after": "// 创建单机配置"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create RedissonClient",
+          "after": "// 创建 RedissonClient"
+        },
+        {
+          "example_index": 0,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 0,
+          "before": "// Use with RedisAgentStateStore",
+          "after": "// 与 RedisAgentStateStore 配合使用"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create cluster configuration",
+          "after": "// 创建集群配置"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create RedissonClient",
+          "after": "// 创建 RedissonClient"
+        },
+        {
+          "example_index": 1,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create sentinel configuration",
+          "after": "// 创建哨兵配置"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create RedissonClient",
+          "after": "// 创建 RedissonClient"
+        },
+        {
+          "example_index": 2,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create master/slave configuration",
+          "after": "// 创建主从配置"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create RedissonClient",
+          "after": "// 创建 RedissonClient"
+        },
+        {
+          "example_index": 3,
+          "before": "// Create adapter",
+          "after": "// 创建适配器"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-skills/agentscope-extensions-skill-git-repository/src/main/java/io/agentscope/core/skill/repository/GitSkillRepository.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Public repository with default branch",
+          "after": "// 使用默认分支的公开仓库"
+        },
+        {
+          "example_index": 0,
+          "before": "// Specify a branch",
+          "after": "// 指定分支"
+        },
+        {
+          "example_index": 0,
+          "before": "// Private repository (requires system Git credentials)",
+          "after": "// 私有仓库（需要系统 Git 凭据）"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-skills/agentscope-extensions-skill-mysql-repository/src/main/java/io/agentscope/core/skill/repository/mysql/MysqlSkillRepository.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Using simple constructor with default database/table names",
+          "after": "// 使用带默认数据库名和表名的简单构造函数"
+        },
+        {
+          "example_index": 1,
+          "before": "// Using Builder for custom configuration",
+          "after": "// 使用 Builder 自定义配置"
+        },
+        {
+          "example_index": 1,
+          "before": "// Save a skill",
+          "after": "// 保存技能"
+        },
+        {
+          "example_index": 1,
+          "before": "// Get a skill",
+          "after": "// 获取技能"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-skills/agentscope-extensions-skill-postgresql-repository/src/main/java/io/agentscope/core/skill/repository/postgresql/PostgresSkillRepository.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// Using simple constructor with default schema/table names",
+          "after": "// 使用带默认模式名和表名的简单构造函数"
+        },
+        {
+          "example_index": 1,
+          "before": "// Using Builder for custom configuration",
+          "after": "// 使用 Builder 自定义配置"
+        },
+        {
+          "example_index": 1,
+          "before": "// Save a skill",
+          "after": "// 保存技能"
+        },
+        {
+          "example_index": 1,
+          "before": "// Get a skill",
+          "after": "// 获取技能"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TrainingRunner.java",
+      "translated_example_comments": 12,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Method 1: Using sampling rate strategy",
+          "after": "// 方法 1：使用采样率策略"
+        },
+        {
+          "example_index": 0,
+          "before": "// 10% sampling rate",
+          "after": "// 10% 采样率"
+        },
+        {
+          "example_index": 0,
+          "before": "// Implement custom reward logic",
+          "after": "// 实现自定义奖励逻辑"
+        },
+        {
+          "example_index": 0,
+          "before": "// Commit every 5 minutes",
+          "after": "// 每 5 分钟提交"
+        },
+        {
+          "example_index": 0,
+          "before": "// Method 2: Using explicit marking strategy",
+          "after": "// 方法 2：使用显式标记策略"
+        },
+        {
+          "example_index": 0,
+          "before": "// User manually marks",
+          "after": "// 用户手动标记"
+        },
+        {
+          "example_index": 0,
+          "before": "// Custom reward calculation logic",
+          "after": "// 自定义奖励计算逻辑"
+        },
+        {
+          "example_index": 0,
+          "before": "// Method 3: Using custom RewardCalculator class",
+          "after": "// 方法 3：使用自定义 RewardCalculator 类"
+        },
+        {
+          "example_index": 0,
+          "before": "// Implement RewardCalculator interface",
+          "after": "// 实现 RewardCalculator 接口"
+        },
+        {
+          "example_index": 0,
+          "before": "// Start training runner",
+          "after": "// 启动训练运行器"
+        },
+        {
+          "example_index": 0,
+          "before": "// Users use Agent normally (transparent)",
+          "after": "// 用户继续正常调用智能体"
+        },
+        {
+          "example_index": 0,
+          "before": "// Stop training",
+          "after": "// 停止训练"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/ExplicitMarkingStrategy.java",
+      "translated_example_comments": 3,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Create strategy",
+          "after": "// 创建策略"
+        },
+        {
+          "example_index": 0,
+          "before": "// Mark in user code",
+          "after": "// 在用户代码中设置标记（此示例为历史 API，见上方说明）"
+        },
+        {
+          "example_index": 0,
+          "before": "// This call will be trained",
+          "after": "// 历史示例意图为训练此调用；当前用法需 contextWrite"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/SamplingRateStrategy.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// 10% sampling rate",
+          "after": "// 10% 采样率"
+        },
+        {
+          "example_index": 0,
+          "before": "// 50% sampling rate",
+          "after": "// 50% 采样率"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/DistributedStore.java",
+      "translated_example_comments": 2,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// Single store — all components from Redis",
+          "after": "// 单一存储：全部组件来自 Redis"
+        },
+        {
+          "example_index": 0,
+          "before": "// Mixed stores — MySQL for state/files, Redis for sandbox lock/snapshot",
+          "after": "// 混合存储：MySQL 保存状态／文件，Redis 保存沙箱锁／快照"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+      "translated_example_comments": 1,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// in controller",
+          "after": "// 在控制器中"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/GatewayBootstrap.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 1,
+          "before": "// routes to support agent",
+          "after": "// 路由到 support 智能体"
+        },
+        {
+          "example_index": 1,
+          "before": "// routes to sales (default)",
+          "after": "// 路由到 sales（默认智能体）"
+        },
+        {
+          "example_index": 2,
+          "before": "// init + start all channels",
+          "after": "// 初始化并启动全部渠道"
+        },
+        {
+          "example_index": 2,
+          "before": "// stop all channels",
+          "after": "// 停止全部渠道"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/channel/chatui/SendOptions.java",
+      "translated_example_comments": 4,
+      "changes": [
+        {
+          "example_index": 0,
+          "before": "// One session per user (most common)",
+          "after": "// 每用户一个会话（最常见）"
+        },
+        {
+          "example_index": 0,
+          "before": "// Same user, different sessions",
+          "after": "// 同一用户的不同会话"
+        },
+        {
+          "example_index": 0,
+          "before": "// Target a specific agent in multi-agent setups",
+          "after": "// 多智能体配置中指定目标智能体"
+        },
+        {
+          "example_index": 0,
+          "before": "// Pass application context into the agent turn",
+          "after": "// 将应用上下文传入智能体轮次"
+        }
+      ]
+    }
+  ]
+}

@@ -65,15 +65,15 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p><b>中断机制：</b>
  * <pre>{@code
- * // External call to interrupt
+ * // 从外部发起中断
  * agent.interrupt(userMsg);
  *
- * // Inside agent's Mono chain, at checkpoints:
+ * // 在智能体 Mono 链的检查点处：
  * return checkInterruptedAsync()
  *     .then(doWork())
  *     .flatMap(result -> checkInterruptedAsync().thenReturn(result));
  *
- * // AgentBase.call() catches the exception:
+ * // AgentBase.call() 捕获此异常：
  * .onErrorResume(error -> {
  *     if (error instanceof InterruptedException) {
  *         return handleInterrupt(context, msg);

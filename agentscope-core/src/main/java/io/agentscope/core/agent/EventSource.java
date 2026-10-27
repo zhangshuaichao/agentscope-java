@@ -76,7 +76,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  *     .path("main/researcher")
  *     .build();
  *
- * // Extend for a grandchild agent:
+ * // 扩展到孙级智能体：
  * EventSource grandchild = src.withAppendedPath("sub-executor");
  * // grandchild.getDepth() == 2, grandchild.getPath() == "main/researcher/sub-executor"
  * }</pre>

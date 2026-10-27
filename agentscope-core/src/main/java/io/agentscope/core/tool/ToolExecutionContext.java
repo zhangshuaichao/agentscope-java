@@ -30,12 +30,12 @@ import java.util.Objects;
  * <p>示例：
  *
  * <pre>{@code
- * // Register custom POJO
+ * // 注册自定义 POJO
  * ToolExecutionContext context = ToolExecutionContext.builder()
  *     .register(new UserContext("user123"))
  *     .build();
  *
- * // Auto-injected by type in tool methods
+ * // 在工具方法中按类型自动注入
  * @Tool
  * public ToolResultBlock myTool(UserContext ctx) {
  *     return ToolResultBlock.text(ctx.getUserId());

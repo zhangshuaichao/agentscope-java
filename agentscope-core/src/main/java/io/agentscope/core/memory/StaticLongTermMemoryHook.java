@@ -66,7 +66,7 @@ import reactor.core.scheduler.Schedulers;
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
  *     .model(model)
- *     .hook(hook)  // Hook is automatically registered in STATIC_CONTROL/BOTH mode
+ *     .hook(hook)  // STATIC_CONTROL/BOTH 模式下自动注册此钩子
  *     .build();
  * }</pre>
  *

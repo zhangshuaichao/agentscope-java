@@ -28,7 +28,7 @@ import java.lang.reflect.Type;
  * public class CustomConverter implements ToolResultConverter {
  *     @Override
  *     public ToolResultBlock convert(Object result, Type returnType) {
- *         // Custom conversion logic
+ *         // 自定义转换逻辑
  *         return ToolResultBlock.of(...);
  *     }
  * }

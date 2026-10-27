@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>使用示例：
  * <pre>{@code
- * // 1. Configure Bailian connection
+ * // 1. 配置百炼连接
  * BailianConfig config = BailianConfig.builder()
  *     .accessKeyId(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID"))
  *     .accessKeySecret(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET"))
@@ -54,12 +54,12 @@ import reactor.core.publisher.Mono;
  *     .indexId("mymxbdxxxx")
  *     .build();
  *
- * // 2. Create knowledge base instance
+ * // 2. 创建知识库实例
  * BailianKnowledge knowledge = BailianKnowledge.builder()
  *     .config(config)
  *     .build();
  *
- * // 3. Retrieve documents
+ * // 3. 检索文档
  * RetrieveConfig retrieveConfig = RetrieveConfig.builder()
  *     .limit(5)
  *     .scoreThreshold(0.5)
@@ -67,7 +67,7 @@ import reactor.core.publisher.Mono;
  *
  * List<Document> results = knowledge.retrieve("query text", retrieveConfig).block();
  *
- * // 4. Use with agents via KnowledgeRetrievalTools
+ * // 4. 通过 KnowledgeRetrievalTools 与智能体配合使用
  * KnowledgeRetrievalTools tools = new KnowledgeRetrievalTools(knowledge);
  * Toolkit toolkit = new Toolkit();
  * toolkit.registerObject(tools);

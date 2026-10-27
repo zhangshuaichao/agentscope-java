@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
  * <p><b>使用示例：</b>
  *
  * <pre>{@code
- * // Basic hook with default priority
+ * // 使用默认优先级的基础钩子
  * Hook loggingHook = new Hook() {
  *     @Override
  *     public <T extends HookEvent> Mono<T> onEvent(T event) {
@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
  *                 yield Mono.just(e);
  *             }
  *             case ReasoningChunkEvent e -> {
- *                 // Display streaming output
+ *                 // 显示流式输出
  *                 System.out.print(extractText(e.getIncrementalChunk()));
  *                 yield Mono.just(e);
  *             }
@@ -66,20 +66,20 @@ import reactor.core.publisher.Mono;
  *     }
  * };
  *
- * // High priority hook (executes first)
+ * // 高优先级钩子，先执行
  * Hook authHook = new Hook() {
  *     @Override
  *     public int priority() {
- *         return 10;  // High priority
+ *         return 10;  // 高优先级
  *     }
  *
  *     @Override
  *     public <T extends HookEvent> Mono<T> onEvent(T event) {
  *         return switch (event) {
  *             case PreActingEvent e -> {
- *                 // Inject auth token before any other hook
+ *                 // 在其他钩子之前注入认证令牌
  *                 ToolUseBlock toolUse = e.getToolUse();
- *                 // ... add auth
+ *                 // ……添加认证信息
  *                 e.setToolUse(toolUse);
  *                 yield Mono.just(e);
  *             }
@@ -88,13 +88,13 @@ import reactor.core.publisher.Mono;
  *     }
  * };
  *
- * // Modifying events
+ * // 修改事件
  * Hook hintInjector = new Hook() {
  *     @Override
  *     public <T extends HookEvent> Mono<T> onEvent(T event) {
  *         return switch (event) {
  *             case PreReasoningEvent e -> {
- *                 // Modify messages before LLM reasoning
+ *                 // 在 LLM 推理前修改消息
  *                 List<Msg> msgs = new ArrayList<>(e.getInputMessages());
  *                 msgs.add(0, Msg.builder()
  *                         .role(MsgRole.SYSTEM)
@@ -104,9 +104,9 @@ import reactor.core.publisher.Mono;
  *                 yield Mono.just(e);
  *             }
  *             case PostActingEvent e -> {
- *                 // Modify tool result
+ *                 // 修改工具结果
  *                 ToolResultBlock result = e.getToolResult();
- *                 // ... process result
+ *                 // ……处理结果
  *                 e.setToolResult(result);
  *                 yield Mono.just(e);
  *             }

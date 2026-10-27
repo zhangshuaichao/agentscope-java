@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  *     public String getWeather(
  *         @ToolParam(name = "city", description = "City name") String city,
  *         @ToolParam(name = "unit", description = "Temperature unit") String unit) {
- *         // Implementation
+ *         // 实现逻辑
  *         return "Weather data...";
  *     }
  * }

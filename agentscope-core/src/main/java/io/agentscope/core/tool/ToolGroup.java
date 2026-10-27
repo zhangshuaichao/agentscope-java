@@ -30,12 +30,12 @@ import java.util.Set;
  * ToolGroup adminGroup = ToolGroup.builder()
  *     .name("admin")
  *     .description("Administrative tools")
- *     .active(false) // Start inactive
+ *     .active(false) // 初始为未激活状态
  *     .build();
  *
  * adminGroup.addTool("delete_user");
  * adminGroup.addTool("modify_permissions");
- * adminGroup.setActive(true); // Activate when needed
+ * adminGroup.setActive(true); // 需要时激活
  * }</pre>
  */
 public class ToolGroup {

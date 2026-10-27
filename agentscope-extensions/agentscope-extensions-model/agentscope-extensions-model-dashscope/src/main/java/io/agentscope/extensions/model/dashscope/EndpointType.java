@@ -25,7 +25,7 @@ package io.agentscope.extensions.model.dashscope;
  * DashScopeChatModel model = DashScopeChatModel.builder()
  *     .apiKey("sk-xxx")
  *     .modelName("qwen3.5-plus")
- *     .endpointType(EndpointType.MULTIMODAL)  // Explicitly use multimodal API
+ *     .endpointType(EndpointType.MULTIMODAL)  // 显式使用多模态 API
  *     .build();
  * }</pre>
  */

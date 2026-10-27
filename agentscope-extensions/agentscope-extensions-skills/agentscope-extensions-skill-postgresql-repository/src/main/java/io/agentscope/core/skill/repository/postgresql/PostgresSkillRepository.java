@@ -71,11 +71,11 @@ import org.slf4j.LoggerFactory;
  * 建表开关不是迁移器；元数据列能力在构造时缓存，运行中外部改表后需重建实例才能重新探测。
  * <p>示例：
  * <pre>{@code
- * // Using simple constructor with default schema/table names
+ * // 使用带默认模式名和表名的简单构造函数
  * DataSource dataSource = createDataSource();
  * PostgresSkillRepository repo = new PostgresSkillRepository(dataSource, true, true);
  *
- * // Using Builder for custom configuration
+ * // 使用 Builder 自定义配置
  * PostgresSkillRepository repo = PostgresSkillRepository.builder(dataSource)
  *         .schemaName("my_schema")
  *         .skillsTableName("my_skills")
@@ -84,11 +84,11 @@ import org.slf4j.LoggerFactory;
  *         .writeable(true)
  *         .build();
  *
- * // Save a skill
+ * // 保存技能
  * AgentSkill skill = new AgentSkill("my-skill", "Description", "Content", resources);
  * repo.save(List.of(skill), false);
  *
- * // Get a skill
+ * // 获取技能
  * AgentSkill loaded = repo.getSkill("my-skill");
  * }</pre>
  * @deprecated 已由 {@code io.agentscope.extensions.jdbc.skill.JdbcAgentSkillRepository} 取代，

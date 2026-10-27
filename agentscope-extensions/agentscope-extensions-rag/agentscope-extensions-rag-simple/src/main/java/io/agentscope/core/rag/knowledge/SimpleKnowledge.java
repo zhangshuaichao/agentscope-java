@@ -63,11 +63,11 @@ import reactor.core.publisher.Mono;
  *     .embeddingStore(vectorStore)
  *     .build();
  *
- * // Add documents
+ * // 添加文档
  * List<Document> documents = reader.read(input).block();
  * knowledge.addDocuments(documents).block();
  *
- * // Retrieve documents
+ * // 检索文档
  * RetrieveConfig config = RetrieveConfig.builder().limit(5).scoreThreshold(0.5).build();
  * List<Document> results = knowledge.retrieve("query text", config).block();
  * }</pre>

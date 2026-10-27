@@ -47,7 +47,7 @@ import redis.clients.jedis.params.SetParams;
  * UnifiedJedis jedis = new JedisPooled("localhost", 6379);
  *
  * SandboxExecutionGuard guard = RedisSandboxExecutionGuard.builder(jedis)
- *     .leaseTtl(Duration.ofMinutes(30))   // must exceed worst-case call duration
+ *     .leaseTtl(Duration.ofMinutes(30))   // 必须超过最坏情况下的调用时长
  *     .retryInterval(Duration.ofMillis(500))
  *     .build();
  *

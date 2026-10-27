@@ -32,7 +32,7 @@ import javax.sql.DataSource;
  *
  * <p>用法：
  * <pre>{@code
- * DataSource dataSource = ... // HikariCP, Druid, etc.
+ * DataSource dataSource = ... // HikariCP、Druid 等。
  *
  * HarnessAgent agent = HarnessAgent.builder()
  *     .name("my-agent")

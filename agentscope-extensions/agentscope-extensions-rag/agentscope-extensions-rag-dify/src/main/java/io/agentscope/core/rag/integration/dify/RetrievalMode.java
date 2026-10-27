@@ -27,7 +27,7 @@ package io.agentscope.core.rag.integration.dify;
  * <p>用法示例：
  * <pre>{@code
  * DifyRAGConfig config = DifyRAGConfig.builder()
- *     .retrievalMode(RetrievalMode.HYBRID_SEARCH)  // Use hybrid search
+ *     .retrievalMode(RetrievalMode.HYBRID_SEARCH)  // 使用混合搜索
  *     .build();
  * }</pre>
  */

@@ -26,10 +26,10 @@ import java.io.IOException;
  *
  * <p>Dify 按部署方式以两种形式序列化检索响应的顶层 {@code query} 字段：
  * <pre>{@code
- * // Dify Cloud (api.dify.ai)
+ * // Dify 云服务（api.dify.ai）
  * {"query": "ping", "records": [...]}
  *
- * // Self-hosted Dify
+ * // 自行托管的 Dify
  * {"query": {"content": "ping"}, "records": [...]}
  * }</pre>
  *

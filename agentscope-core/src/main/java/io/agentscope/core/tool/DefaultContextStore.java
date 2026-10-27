@@ -174,7 +174,7 @@ class DefaultContextStore implements ContextStore {
          * <p>示例：
          * <pre>{@code
          * DatabaseConfig config = new DatabaseConfig();
-         * builder.register(config);  // Singleton - no key needed
+         * builder.register(config);  // 单实例，无需键
          * }</pre>
          *
          * @param object 要注册的对象（不能为 null）
@@ -196,7 +196,7 @@ class DefaultContextStore implements ContextStore {
          * <p>示例：
          * <pre>{@code
          * UserContextImpl impl = new UserContextImpl();
-         * builder.register(UserContext.class, impl);  // Register by interface
+         * builder.register(UserContext.class, impl);  // 按接口注册
          * }</pre>
          *
          * @param type 类型键（不能为 null）
@@ -257,7 +257,7 @@ class DefaultContextStore implements ContextStore {
          * <p>示例：
          * <pre>{@code
          * UserContext admin = new UserContext("admin");
-         * builder.register("admin", admin);  // Type inferred from object
+         * builder.register("admin", admin);  // 从对象推断类型
          * }</pre>
          *
          * @param key 标识实例的键（不能为 null）

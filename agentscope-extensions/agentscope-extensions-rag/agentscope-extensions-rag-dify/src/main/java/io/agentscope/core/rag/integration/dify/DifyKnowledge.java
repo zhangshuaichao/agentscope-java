@@ -38,20 +38,20 @@ import reactor.core.publisher.Mono;
  *
  * <p>用法示例：
  * <pre>{@code
- * // 1. Configure Dify connection
+ * // 1. 配置 Dify 连接
  * DifyRAGConfig config = DifyRAGConfig.builder()
  *     .apiKey(System.getenv("DIFY_RAG_API_KEY"))
- *     .datasetId("your-dataset-id")  // Configure in code
+ *     .datasetId("your-dataset-id")  // 在代码中配置
  *     .retrievalMode(RetrievalMode.HYBRID_SEARCH)
  *     .enableRerank(true)
  *     .build();
  *
- * // 2. Create knowledge base instance
+ * // 2. 创建知识库实例
  * DifyKnowledge knowledge = DifyKnowledge.builder()
  *     .config(config)
  *     .build();
  *
- * // 3. Retrieve documents
+ * // 3. 检索文档
  * RetrieveConfig retrieveConfig = RetrieveConfig.builder()
  *     .limit(5)
  *     .scoreThreshold(0.5)
@@ -59,7 +59,7 @@ import reactor.core.publisher.Mono;
  *
  * List<Document> results = knowledge.retrieve("query text", retrieveConfig).block();
  *
- * // 4. Use with agents via built-in RAG configuration
+ * // 4. 通过内置 RAG 配置与智能体配合使用
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
  *     .model(chatModel)

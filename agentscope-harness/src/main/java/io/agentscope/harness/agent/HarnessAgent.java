@@ -697,7 +697,7 @@ public class HarnessAgent implements Agent, AutoCloseable {
      * HarnessAgent agent = HarnessAgent.builder()...build();
      * ChatUiChannel chat = agent.channel(ChatUiChannel.perPeer());
      *
-     * // in controller
+     * // 在控制器中
      * chat.send("user-123", "hello");
      * }</pre>
      *

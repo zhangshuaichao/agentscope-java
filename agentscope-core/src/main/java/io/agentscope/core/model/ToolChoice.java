@@ -29,12 +29,12 @@ package io.agentscope.core.model;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // Force model to call a specific tool
+ * // 强制模型调用指定工具
  * GenerateOptions options = GenerateOptions.builder()
  *     .toolChoice(new ToolChoice.Specific("generate_response"))
  *     .build();
  *
- * // Let model decide (default)
+ * // 由模型决定，默认行为
  * GenerateOptions options = GenerateOptions.builder()
  *     .toolChoice(new ToolChoice.Auto())
  *     .build();

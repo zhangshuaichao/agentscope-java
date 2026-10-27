@@ -44,7 +44,7 @@ import javax.sql.DataSource;
  * <h2>用法</h2>
  *
  * <pre>{@code
- * DataSource dataSource = ... // HikariCP, Druid, etc.
+ * DataSource dataSource = ... // HikariCP、Druid 等。
  *
  * HarnessAgent agent = HarnessAgent.builder()
  *     .name("my-agent")

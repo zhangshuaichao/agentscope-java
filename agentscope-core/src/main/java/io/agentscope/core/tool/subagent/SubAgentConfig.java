@@ -41,10 +41,10 @@ import io.agentscope.core.state.JsonFileAgentStateStore;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Minimal configuration - uses all defaults
+ * // 最小配置，全部使用默认值
  * SubAgentConfig config = SubAgentConfig.defaults();
  *
- * // Custom configuration with persistent session
+ * // 使用持久化会话的自定义配置
  * SubAgentConfig config = SubAgentConfig.builder()
  *     .toolName("ask_expert")
  *     .description("Ask the expert a question")

@@ -23,9 +23,9 @@ package io.agentscope.core.rag.integration.dify;
  * <p>用法示例：
  * <pre>{@code
  * RerankConfig rerankConfig = RerankConfig.builder()
- *     .providerName("cohere")           // Optional: reranking provider
- *     .modelName("rerank-english-v2.0") // Optional: model name
- *     .topN(5)                          // Optional: top N after reranking
+ *     .providerName("cohere")           // 可选：重排序提供者
+ *     .modelName("rerank-english-v2.0") // 可选：模型名称
+ *     .topN(5)                          // 可选：重排序后的前 N 项
  *     .build();
  *
  * DifyRAGConfig config = DifyRAGConfig.builder()

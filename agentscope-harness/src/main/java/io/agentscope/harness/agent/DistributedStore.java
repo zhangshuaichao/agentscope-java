@@ -35,10 +35,10 @@ import java.util.Objects;
  * {@code DistributedStore} 传给 {@link HarnessAgent.Builder#distributedStore(DistributedStore)}：
  *
  * <pre>{@code
- * // Single store — all components from Redis
+ * // 单一存储：全部组件来自 Redis
  * DistributedStore store = RedisDistributedStore.fromJedis(jedis);
  *
- * // Mixed stores — MySQL for state/files, Redis for sandbox lock/snapshot
+ * // 混合存储：MySQL 保存状态／文件，Redis 保存沙箱锁／快照
  * DistributedStore store = DistributedStore.builder()
  *     .agentStateStore(mysqlStore.agentStateStore())
  *     .baseStore(mysqlStore.baseStore())

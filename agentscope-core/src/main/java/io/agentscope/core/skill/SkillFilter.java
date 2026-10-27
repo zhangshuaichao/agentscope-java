@@ -32,13 +32,13 @@ import java.util.Set;
  *
  * <p><b>用法示例：</b>
  * <pre>{@code
- * // Builder level: only allow two skills
+ * // 构建器层面：只允许两个技能
  * SkillFilter base = SkillFilter.only("skill_a", "skill_b");
  *
- * // Runtime: disable one of them for this call
+ * // 运行时：本次调用禁用其中一个技能
  * SkillFilter runtime = SkillFilter.disable("skill_b");
  *
- * // Merge: skill_a enabled, skill_b disabled
+ * // 合并结果：skill_a 启用，skill_b 禁用
  * SkillFilter effective = base.overlay(runtime);
  * }</pre>
  */

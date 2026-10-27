@@ -69,12 +69,12 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Using builder with full configuration (recommended)
+ * // 使用完整配置的构建器（推荐）
  * try (PgVectorStore store = PgVectorStore.builder()
  *         .jdbcUrl("jdbc:postgresql://localhost:5432/mydb")
  *         .username("postgres")
  *         .password("password")
- *         .schema("my_schema")  // optional, defaults to "public"
+ *         .schema("my_schema")  // 可选，默认为 "public"
  *         .tableName("embeddings")
  *         .dimensions(1024)
  *         .distanceType(PgVectorStore.DistanceType.COSINE)
@@ -83,7 +83,7 @@ import reactor.core.scheduler.Schedulers;
  *     List<Document> results = store.search(searchDto).block();
  * }
  *
- * // Using static factory method (simpler, uses defaults)
+ * // 使用静态工厂方法（更简单，采用默认值）
  * try (PgVectorStore store = PgVectorStore.create(
  *         "jdbc:postgresql://localhost:5432/mydb",
  *         "postgres", "password", "embeddings", 1024)) {
@@ -841,7 +841,7 @@ public class PgVectorStore implements VDBStoreBase, AutoCloseable {
      *         .dimensions(1024)
      *         .build()) {
      *     store.add(documents).block();
-     *     // Store is automatically closed here
+     *     // 存储在此处自动关闭
      * }
      * }</pre>
      */

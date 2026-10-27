@@ -62,13 +62,13 @@ import reactor.core.publisher.Mono;
  *
  * <p>使用示例：
  * <pre>{@code
- * // StdIO transport
+ * // StdIO 传输
  * McpClientWrapper client = McpClientBuilder.create("git-mcp")
  *         .stdioTransport("python", "-m", "mcp_server_git")
  *         .buildAsync()
  *         .block();
  *
- * // SSE transport with headers and query parameters
+ * // 带请求头和查询参数的 SSE 传输
  * McpClientWrapper client = McpClientBuilder.create("remote-mcp")
  *         .sseTransport("https://mcp.example.com/sse")
  *         .header("Authorization", "Bearer " + token)
@@ -77,13 +77,13 @@ import reactor.core.publisher.Mono;
  *         .buildAsync()
  *         .block();
  *
- * // HTTP transport with multiple query parameters
+ * // 带多个查询参数的 HTTP 传输
  * McpClientWrapper client = McpClientBuilder.create("http-mcp")
  *         .streamableHttpTransport("https://mcp.example.com/http")
  *         .queryParams(Map.of("token", "abc123", "env", "prod"))
  *         .buildSync();
  *
- * // StdIO transport with custom protocol versions
+ * // 使用自定义协议版本的 StdIO 传输
  * McpClientWrapper client = McpClientBuilder.create("mcp")
  *         .stdioTransport("python", "server.py")
  *         .protocolVersions("2024-11-05", "2025-03-26")
@@ -383,7 +383,7 @@ public class McpClientBuilder {
      * McpClientWrapper client = McpClientBuilder.create("mcp")
      *     .stdioTransport("python", "-m", "mcp_server")
      *     .asyncElicitation(request -> {
-     *         // Handle elicitation request asynchronously
+     *         // 异步处理信息征询请求
      *         return Mono.just(ElicitResult.builder()...build());
      *     })
      *     .buildAsync()
@@ -413,7 +413,7 @@ public class McpClientBuilder {
      * McpClientWrapper client = McpClientBuilder.create("mcp")
      *     .stdioTransport("python", "-m", "mcp_server")
      *     .syncElicitation(request -> {
-     *         // Handle elicitation request synchronously
+     *         // 同步处理信息征询请求
      *         return ElicitResult.builder()...build();
      *     })
      *     .buildSync();

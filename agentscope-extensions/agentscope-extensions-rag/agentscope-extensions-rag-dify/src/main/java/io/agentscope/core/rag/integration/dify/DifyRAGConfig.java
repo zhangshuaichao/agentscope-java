@@ -28,8 +28,8 @@ import java.util.Map;
  * <pre>{@code
  * DifyRAGConfig config = DifyRAGConfig.builder()
  *     .apiKey(System.getenv("DIFY_RAG_API_KEY"))
- *     .datasetId("your-dataset-id")  // Configure in code
- *     .apiBaseUrl("https://api.dify.ai/v1")  // Optional, for self-hosted
+ *     .datasetId("your-dataset-id")  // 在代码中配置
+ *     .apiBaseUrl("https://api.dify.ai/v1")  // 可选，用于自行托管
  *     .retrievalMode(RetrievalMode.HYBRID_SEARCH)
  *     .topK(10)
  *     .scoreThreshold(0.5)

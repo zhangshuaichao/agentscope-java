@@ -77,7 +77,7 @@ public class RAGFlowClient {
      * {
      *   "question": "What is advantage of ragflow?",
      *   "dataset_ids": ["b2a62730759d11ef987d0242ac120004"],
-     *   "document_ids": ["77df9ef4759a11ef8bdd0242ac120004"],  // optional
+     *   "document_ids": ["77df9ef4759a11ef8bdd0242ac120004"],  // 可选
      *   "top_k": 10,
      *   "similarity_threshold": 0.3,
      *   "metadata_condition": {

@@ -34,39 +34,39 @@ import redis.clients.jedis.UnifiedJedis;
  *
  * <p>单机 RedisClient 示例：
  * <pre>{@code
- * // Create standalone client
+ * // 创建单机客户端
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
  *
- * // Create adapter
+ * // 创建适配器
  * JedisClientAdapter adapter = JedisClientAdapter.of(redisClient);
  * }</pre>
  * <p>集群 RedisClusterClient 示例：
  * <pre>{@code
- * // Create cluster client
+ * // 创建集群客户端
  * Set<HostAndPort> nodes = new HashSet<>();
  * nodes.add(new HostAndPort("localhost", 7000));
  * nodes.add(new HostAndPort("localhost", 7001));
  * RedisClusterClient clusterClient = RedisClusterClient.create(nodes);
  *
- * // Create adapter
+ * // 创建适配器
  * JedisClientAdapter adapter = JedisClientAdapter.of(clusterClient);
  * }</pre>
  * <p>哨兵 RedisSentinelClient 示例：
  * <pre>{@code
- * // Create sentinel client
+ * // 创建哨兵客户端
  * Set<String> sentinels = new HashSet<>();
  * sentinels.add("localhost:26379");
  * RedisSentinelClient sentinelClient = RedisSentinelClient.create("mymaster", sentinels);
  *
- * // Create adapter
+ * // 创建适配器
  * JedisClientAdapter adapter = JedisClientAdapter.of(sentinelClient);
  * }</pre>
  * <p>直接使用 UnifiedJedis：
  * <pre>{@code
- * // Create any client type that extends UnifiedJedis
+ * // 创建任意继承 UnifiedJedis 的客户端类型
  * UnifiedJedis unifiedJedis = new RedisClient("redis://localhost:6379");
  *
- * // Create adapter
+ * // 创建适配器
  * JedisClientAdapter adapter = JedisClientAdapter.of(unifiedJedis);
  * }</pre>
  */

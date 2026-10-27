@@ -48,10 +48,10 @@ import reactor.core.publisher.Mono;
  *     .dimensions(1024)
  *     .build();
  *
- * // Add documents
+ * // 添加文档
  * store.add(documents).block();
  *
- * // Search
+ * // 搜索
  * List<Document> results = store.search(queryEmbedding, 5, 0.8).block();
  * }</pre>
  *

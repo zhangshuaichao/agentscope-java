@@ -59,24 +59,24 @@ import redis.clients.jedis.UnifiedJedis;
  * <p><strong>Jedis 示例：</strong>
  * <p>单机 RedisClient：
  * <pre>{@code
- * // Create Jedis RedisClient (new API)
+ * // 创建 Jedis RedisClient（新 API）
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .jedisClient(redisClient)
  *     .build();
  * }</pre>
  * <p>集群 RedisClusterClient：
  * <pre>{@code
- * // Create Jedis RedisClusterClient
+ * // 创建 Jedis RedisClusterClient
  * Set<HostAndPort> nodes = new HashSet<>();
  * nodes.add(new HostAndPort("localhost", 7000));
  * nodes.add(new HostAndPort("localhost", 7001));
  * nodes.add(new HostAndPort("localhost", 7002));
  * RedisClusterClient redisClusterClient = RedisClusterClient.create(nodes);
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .jedisClient(redisClusterClient)
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
@@ -84,13 +84,13 @@ import redis.clients.jedis.UnifiedJedis;
  * }</pre>
  * <p>哨兵 RedisSentinelClient：
  * <pre>{@code
- * // Create Jedis RedisSentinelClient
+ * // 创建 Jedis RedisSentinelClient
  * Set<String> sentinelNodes = new HashSet<>();
  * sentinelNodes.add("localhost:26379");
  * sentinelNodes.add("localhost:26380");
  * RedisSentinelClient redisSentinelClient = RedisSentinelClient.create("mymaster", sentinelNodes);
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .jedisClient(redisSentinelClient)
  *     .build();
@@ -99,21 +99,21 @@ import redis.clients.jedis.UnifiedJedis;
  * <p><strong>Lettuce 示例：</strong>
  * <p>单机：
  * <pre>{@code
- * // Create Lettuce RedisClient
+ * // 创建 Lettuce RedisClient
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClient(redisClient)
  *     .build();
  * }</pre>
  * <p>集群：
  * <pre>{@code
- * // Create Lettuce RedisClusterClient for cluster mode
+ * // 创建集群模式的 Lettuce RedisClusterClient
  * RedisClusterClient clusterClient = RedisClusterClient.create(
  *     RedisURI.create("localhost", 7000));
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClusterClient(clusterClient)
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
@@ -121,7 +121,7 @@ import redis.clients.jedis.UnifiedJedis;
  * }</pre>
  * <p>哨兵：
  * <pre>{@code
- * // Create Lettuce RedisClient for sentinel
+ * // 创建哨兵模式的 Lettuce RedisClient
  * RedisURI sentinelUri = RedisURI.builder()
  *     .withSentinelMasterId("mymaster")
  *     .withSentinel("localhost", 26379)
@@ -129,7 +129,7 @@ import redis.clients.jedis.UnifiedJedis;
  *     .build();
  * RedisClient redisClient = RedisClient.create(sentinelUri);
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClient(redisClient)
  *     .build();
@@ -137,15 +137,15 @@ import redis.clients.jedis.UnifiedJedis;
  *
  * <p><strong>Redisson 示例：</strong>
  * <pre>{@code
- * // Create RedissonClient (configure as needed for your deployment mode)
+ * // 创建 RedissonClient（按部署模式配置）
  * Config config = new Config();
  * config.useSingleServer().setAddress("redis://localhost:6379");
- * // or for cluster: config.useClusterServers().addNodeAddress("redis://localhost:7000");
- * // or for sentinel: config.useSentinelServers().setMasterName("mymaster").addSentinelAddress("redis://localhost:26379");
+ * // 或使用集群模式：config.useClusterServers().addNodeAddress("redis://localhost:7000");
+ * // 或使用哨兵模式：config.useSentinelServers().setMasterName("mymaster").addSentinelAddress("redis://localhost:26379");
  *
  * RedissonClient redissonClient = Redisson.create(config);
  *
- * // Build RedisAgentStateStore
+ * // 构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .redissonClient(redissonClient)
  *     .build();
@@ -153,10 +153,10 @@ import redis.clients.jedis.UnifiedJedis;
  *
  * <p><strong>自定义键前缀：</strong>
  * <pre>{@code
- * // Create Redis client
+ * // 创建 Redis 客户端
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
  *
- * // Build RedisAgentStateStore with custom key prefix
+ * // 使用自定义键前缀构建 RedisAgentStateStore
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .jedisClient(redisClient)
  *     .keyPrefix("myapp:session:")

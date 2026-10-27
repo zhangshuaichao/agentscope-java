@@ -158,14 +158,14 @@ public class SkillBox {
      *
      * <p>用法示例：
      * <pre>{@code
-     * // Register skill
+     * // 注册技能
      * skillBox.registration()
      *     .skill(skill)
      *     .apply();
      *
-     * // Register skill with tool
+     * // 注册技能及其工具
      * skillBox.registration()
-     *     .skill(skill) // same reference skill will not be registered again
+     *     .skill(skill) // 同一引用的技能不会重复注册
      *     .tool(toolObject)
      *     .apply();
      * }</pre>
@@ -209,7 +209,7 @@ public class SkillBox {
      * AgentSkill mySkill = new AgentSkill("my-skill", "Description", "Content", null);
      *
      * skillBox.registerSkill(mySkill);
-     * skillBox.registerSkill(mySkill); // do nothing
+     * skillBox.registerSkill(mySkill); // 不执行操作
      * }</pre>
      *
      * @param skill 要注册的智能体技能

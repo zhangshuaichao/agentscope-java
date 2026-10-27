@@ -29,7 +29,7 @@ package io.agentscope.core.tool;
  * <pre>{@code
  * @Tool(name = "external_api", description = "Call external API")
  * public ToolResultBlock callExternalApi(@ToolParam(name = "url") String url) {
- *     // Signal that this tool needs external execution
+ *     // 表明此工具需要外部执行
  *     throw new ToolSuspendException("Requires external API call to: " + url);
  * }
  * }</pre>

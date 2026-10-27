@@ -42,16 +42,16 @@ import reactor.core.publisher.Mono;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // Create long-term memory instance
+ * // 创建长期记忆实例
  * LongTermMemoryBase memory = Mem0LongTermMemory.builder()
  *     .agentName("Assistant")
  *     .userName("user_123")
  *     .build();
  *
- * // Create tool adapter
+ * // 创建工具适配器
  * LongTermMemoryTools tools = new LongTermMemoryTools(memory);
  *
- * // Register in ReActAgent (done automatically by framework)
+ * // 在 ReActAgent 中注册，由框架自动完成
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
  *     .model(model)

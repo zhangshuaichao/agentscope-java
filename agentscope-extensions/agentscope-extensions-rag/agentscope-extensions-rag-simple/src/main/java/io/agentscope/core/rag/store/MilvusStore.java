@@ -69,7 +69,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Using builder with authentication and timeout options
+ * // 使用带身份验证和超时选项的构建器
  * try (MilvusStore store = MilvusStore.builder()
  *         .uri("http://localhost:19530")
  *         .databaseName("my_database")
@@ -80,7 +80,7 @@ import reactor.core.scheduler.Schedulers;
  *         .build()) {
  *     store.add(document).block();
  *     List<Document> results = store.search(queryEmbedding, 5).block();
- *     // Store is automatically closed here
+ *     // 存储在此处自动关闭
  * }
  * }</pre>
  *
@@ -772,7 +772,7 @@ public class MilvusStore implements VDBStoreBase, AutoCloseable {
      *         .dimensions(1024)
      *         .build()) {
      *     store.add(documents).block();
-     *     // Store is automatically closed here
+     *     // 存储在此处自动关闭
      * }
      * }</pre>
      */

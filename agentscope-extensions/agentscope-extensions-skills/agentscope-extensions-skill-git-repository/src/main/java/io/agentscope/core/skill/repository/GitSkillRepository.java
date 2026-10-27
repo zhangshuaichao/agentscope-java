@@ -53,20 +53,20 @@ import org.slf4j.LoggerFactory;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // Public repository with default branch
+ * // 使用默认分支的公开仓库
  * GitSkillRepository repo = new GitSkillRepository(
  *     "https://github.com/agentscope/skills.git"
  * );
  * AgentSkill skill = repo.getSkill("calculator");
  * repo.close();
  *
- * // Specify a branch
+ * // 指定分支
  * GitSkillRepository repo = new GitSkillRepository(
  *     "https://github.com/agentscope/skills.git",
  *     "develop"
  * );
  *
- * // Private repository (requires system Git credentials)
+ * // 私有仓库（需要系统 Git 凭据）
  * GitSkillRepository repo = new GitSkillRepository(
  *     "git@github.com:myorg/private-skills.git"
  * );

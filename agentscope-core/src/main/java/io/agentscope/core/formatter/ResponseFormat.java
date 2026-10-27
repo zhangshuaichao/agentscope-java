@@ -30,13 +30,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * <p>使用示例：
  * <pre>{@code
- * // Plain text
+ * // 纯文本
  * ResponseFormat format = ResponseFormat.text();
  *
- * // JSON object
+ * // JSON 对象
  * ResponseFormat format = ResponseFormat.jsonObject();
  *
- * // JSON Schema with strict validation
+ * // 使用严格校验的 JSON Schema
  * JsonSchema schema = JsonSchema.builder()
  *     .name("MathResponse")
  *     .schema(Map.of("type", "object", ...))

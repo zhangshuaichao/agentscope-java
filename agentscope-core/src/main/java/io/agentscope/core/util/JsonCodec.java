@@ -26,16 +26,16 @@ import java.lang.reflect.Type;
  *
  * <p>用法：
  * <pre>{@code
- * // Get the codec instance
+ * // 获取编解码器实例
  * JsonCodec codec = JsonUtils.getJsonCodec();
  *
- * // Serialize object to JSON
+ * // 将对象序列化为 JSON
  * String json = codec.toJson(myObject);
  *
- * // Deserialize JSON to object
+ * // 将 JSON 反序列化为对象
  * MyClass obj = codec.fromJson(json, MyClass.class);
  *
- * // Deserialize with generic type
+ * // 按泛型类型反序列化
  * List<MyClass> list = codec.fromJson(json, new TypeReference<List<MyClass>>() {});
  * }</pre>
  *
@@ -117,7 +117,7 @@ public interface JsonCodec {
      *
      * <p>用法示例：
      * <pre>{@code
-     * // For a method parameter declared as List<OrderItem>
+     * // 针对声明为 List<OrderItem> 的方法参数
      * Type paramType = parameter.getParameterizedType();
      * List<OrderItem> items = (List<OrderItem>) codec.convertValue(value, paramType);
      * }</pre>

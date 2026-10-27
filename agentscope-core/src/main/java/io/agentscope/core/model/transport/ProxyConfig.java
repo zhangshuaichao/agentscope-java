@@ -31,16 +31,16 @@ import java.util.regex.Pattern;
  * <p>用法示例：
  *
  * <pre>{@code
- * // Simple HTTP proxy
+ * // 简单 HTTP 代理
  * ProxyConfig proxy = ProxyConfig.http("proxy.example.com", 8080);
  *
- * // HTTP proxy with authentication
+ * // 带认证的 HTTP 代理
  * ProxyConfig proxy = ProxyConfig.http("proxy.example.com", 8080, "user", "pass");
  *
- * // SOCKS5 proxy with authentication
+ * // 带认证的 SOCKS5 代理
  * ProxyConfig proxy = ProxyConfig.socks5("socks.example.com", 1080, "user", "pass");
  *
- * // Using builder for advanced configuration
+ * // 使用构建器进行高级配置
  * ProxyConfig proxy = ProxyConfig.builder()
  *     .type(ProxyType.HTTP)
  *     .host("proxy.example.com")

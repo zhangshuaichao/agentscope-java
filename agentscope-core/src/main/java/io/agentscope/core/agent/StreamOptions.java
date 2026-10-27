@@ -37,13 +37,13 @@ import java.util.Set;
  * <p><b>用法示例：</b>
  *
  * <pre>{@code
- * // Only reasoning events, incremental mode
+ * // 仅推理事件，使用增量模式
  * StreamOptions options = StreamOptions.builder()
  *     .eventTypes(EventType.REASONING)
  *     .incremental(true)
  *     .build();
  *
- * // Reasoning events, but hide intermediate deltas and only keep the final reasoning result
+ * // 推理事件，但隐藏中间增量，仅保留最终推理结果
  * StreamOptions options = StreamOptions.builder()
  *     .eventTypes(EventType.REASONING)
  *     .includeReasoningChunk(false)
@@ -51,7 +51,7 @@ import java.util.Set;
  *     .incremental(true)
  *     .build();
  *
- * // Multiple specific types
+ * // 多个指定类型
  * StreamOptions options = StreamOptions.builder()
  *     .eventTypes(EventType.REASONING, EventType.TOOL_RESULT)
  *     .incremental(true)

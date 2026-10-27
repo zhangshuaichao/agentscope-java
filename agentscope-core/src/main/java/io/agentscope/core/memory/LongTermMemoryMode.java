@@ -42,7 +42,7 @@ package io.agentscope.core.memory;
  *     .name("Assistant")
  *     .model(model)
  *     .longTermMemory(memory)
- *     .longTermMemoryMode(LongTermMemoryMode.BOTH)  // Recommended
+ *     .longTermMemoryMode(LongTermMemoryMode.BOTH)  // 推荐
  *     .build();
  * }</pre>
  *

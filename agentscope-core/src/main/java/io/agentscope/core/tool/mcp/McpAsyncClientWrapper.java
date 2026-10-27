@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>使用示例：
  * <pre>{@code
- * McpAsyncClient client = ... // created via McpClient.async()
+ * McpAsyncClient client = ... // 通过 McpClient.async() 创建
  * McpAsyncClientWrapper wrapper = new McpAsyncClientWrapper("my-mcp", client);
  * wrapper.initialize()
  *     .then(wrapper.callTool("tool_name", Map.of("arg1", "value1")))

@@ -30,16 +30,16 @@ import org.slf4j.LoggerFactory;
  *
  * <p>用法：
  * <pre>{@code
- * // Basic usage
+ * // 基本用法
  * JsonUtils.getJsonCodec().toJson(obj);
  * JsonUtils.getJsonCodec().fromJson(json, MyClass.class);
  *
- * // Cache reference for frequent calls
+ * // 缓存引用，供频繁调用使用
  * JsonCodec codec = JsonUtils.getJsonCodec();
  * codec.toJson(obj1);
  * codec.toJson(obj2);
  *
- * // Replace with custom implementation
+ * // 替换为自定义实现
  * JsonUtils.setJsonCodec(new MyCustomJsonCodec());
  * }</pre>
  *

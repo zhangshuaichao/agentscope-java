@@ -34,10 +34,10 @@ package io.agentscope.core.tool;
  *
  * <p>使用示例：
  * <pre>{@code
- * // Single instance per type
+ * // 每种类型一个实例
  * DatabaseConfig config = store.get(DatabaseConfig.class);
  *
- * // Multiple instances of same type
+ * // 同一类型的多个实例
  * UserContext admin = store.get("admin", UserContext.class);
  * UserContext guest = store.get("guest", UserContext.class);
  * }</pre>
@@ -56,11 +56,11 @@ public interface ContextStore {
      *
      * <p>示例：
      * <pre>{@code
-     * // Store multiple UserContext instances
+     * // 存储多个 UserContext 实例
      * store.register("user123", new UserContext("user123"));
      * store.register("user456", new UserContext("user456"));
      *
-     * // Retrieve specific instance
+     * // 获取指定实例
      * UserContext user123 = store.get("user123", UserContext.class);
      * }</pre>
      *
@@ -83,7 +83,7 @@ public interface ContextStore {
      *
      * <p>示例：
      * <pre>{@code
-     * // Single DatabaseConfig instance
+     * // 单个 DatabaseConfig 实例
      * DatabaseConfig config = store.get(DatabaseConfig.class);
      * }</pre>
      *

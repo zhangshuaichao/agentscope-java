@@ -43,7 +43,7 @@ import reactor.core.publisher.Mono;
  *     .build();
  *
  * toolkit.registerSchema(schema);
- * // Or: toolkit.registerAgentTool(new SchemaOnlyTool(schema));
+ * // 或者：toolkit.registerAgentTool(new SchemaOnlyTool(schema));
  * }</pre>
  *
  * @see ToolSchema

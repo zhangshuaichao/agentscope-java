@@ -129,7 +129,7 @@ public class Toolkit {
      *
      * <p>使用示例：
      * <pre>{@code
-     * // Register tool object
+     * // 注册工具对象
      * toolkit.registration()
      *     .tool(myToolObject)
      *     .group("myGroup")
@@ -138,7 +138,7 @@ public class Toolkit {
      *     ))
      *     .apply();
      *
-     * // Register MCP client
+     * // 注册 MCP 客户端
      * toolkit.registration()
      *     .mcpClient(mcpClientWrapper)
      *     .enableTools(List.of("tool1", "tool2"))
@@ -513,13 +513,13 @@ public class Toolkit {
      * <p>使用示例：
      *
      * <pre>{@code
-     * // Simple call
+     * // 简单调用
      * ToolCallParam param = ToolCallParam.builder()
      *     .toolUseBlock(toolCall)
      *     .build();
      * toolkit.callTool(param);
      *
-     * // With agent and context
+     * // 传入智能体和上下文
      * ToolCallParam param = ToolCallParam.builder()
      *     .toolUseBlock(toolCall)
      *     .agent(agent)

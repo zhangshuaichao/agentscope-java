@@ -36,19 +36,19 @@ import io.agentscope.core.message.ToolResultBlock;
  * @Tool(name = "long_task", description = "Execute a long running task")
  * public ToolResultBlock execute(
  *     @ToolParam(name = "input") String input,
- *     ToolEmitter emitter  // Automatically injected by framework
+ *     ToolEmitter emitter  // 由框架自动注入
  * ) {
  *     emitter.emit(ToolResultBlock.text("Starting task..."));
  *
- *     // Step 1
+ *     // 步骤 1
  *     processStep1(input);
  *     emitter.emit(ToolResultBlock.text("Step 1 completed"));
  *
- *     // Step 2
+ *     // 步骤 2
  *     processStep2(input);
  *     emitter.emit(ToolResultBlock.text("Step 2 completed"));
  *
- *     // Final result (this is what the LLM sees)
+ *     // 最终结果，LLM 将看到此内容
  *     return ToolResultBlock.text("Task completed successfully");
  * }
  * }</pre>

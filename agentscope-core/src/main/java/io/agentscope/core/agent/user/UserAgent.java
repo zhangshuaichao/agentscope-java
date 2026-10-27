@@ -45,19 +45,19 @@ import reactor.core.publisher.Mono;
  *
  * <p>用法示例：
  * <pre>{@code
- * // Simple console input (default)
+ * // 简单控制台输入，默认方式
  * UserAgent user = UserAgent.builder()
  *     .name("User")
  *     .build();
  * Msg input = user.call().block();
  *
- * // With custom input method
+ * // 使用自定义输入方法
  * UserAgent user = UserAgent.builder()
  *     .name("User")
  *     .inputMethod(myCustomInput)
  *     .build();
  *
- * // With hooks
+ * // 使用钩子
  * UserAgent user = UserAgent.builder()
  *     .name("User")
  *     .hooks(List.of(myHook))

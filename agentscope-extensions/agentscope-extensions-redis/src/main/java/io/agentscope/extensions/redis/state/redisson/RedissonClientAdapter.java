@@ -38,66 +38,66 @@ import org.redisson.client.codec.StringCodec;
  *
  * <p>单机示例：
  * <pre>{@code
- * // Create standalone configuration
+ * // 创建单机配置
  * Config config = new Config();
  * config.useSingleServer()
  *     .setAddress("redis://localhost:6379")
  *     .setConnectionMinimumIdleSize(5)
  *     .setConnectionPoolSize(20);
  *
- * // Create RedissonClient
+ * // 创建 RedissonClient
  * RedissonClient redissonClient = Redisson.create(config);
  *
- * // Create adapter
+ * // 创建适配器
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  *
- * // Use with RedisAgentStateStore
+ * // 与 RedisAgentStateStore 配合使用
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .redissonClient(redissonClient)
  *     .build();
  * }</pre>
  * <p>集群示例：
  * <pre>{@code
- * // Create cluster configuration
+ * // 创建集群配置
  * Config config = new Config();
  * config.useClusterServers()
  *     .addNodeAddress("redis://localhost:7000", "redis://localhost:7001", "redis://localhost:7002")
  *     .setScanInterval(2000);
  *
- * // Create RedissonClient
+ * // 创建 RedissonClient
  * RedissonClient redissonClient = Redisson.create(config);
  *
- * // Create adapter
+ * // 创建适配器
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  * }</pre>
  * <p>哨兵示例：
  * <pre>{@code
- * // Create sentinel configuration
+ * // 创建哨兵配置
  * Config config = new Config();
  * config.useSentinelServers()
  *     .setMasterName("mymaster")
  *     .addSentinelAddress("redis://localhost:26379", "redis://localhost:26380")
  *     .setDatabase(0);
  *
- * // Create RedissonClient
+ * // 创建 RedissonClient
  * RedissonClient redissonClient = Redisson.create(config);
  *
- * // Create adapter
+ * // 创建适配器
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  * }</pre>
  * <p>主从示例：
  * <pre>{@code
- * // Create master/slave configuration
+ * // 创建主从配置
  * Config config = new Config();
  * config.useMasterSlaveServers()
  *     .setMasterAddress("redis://localhost:6379")
  *     .addSlaveAddress("redis://localhost:6380", "redis://localhost:6381")
  *     .setReadMode(ReadMode.SLAVE);
  *
- * // Create RedissonClient
+ * // 创建 RedissonClient
  * RedissonClient redissonClient = Redisson.create(config);
  *
- * // Create adapter
+ * // 创建适配器
  * RedissonClientAdapter adapter = RedissonClientAdapter.of(redissonClient);
  * }</pre>
  */

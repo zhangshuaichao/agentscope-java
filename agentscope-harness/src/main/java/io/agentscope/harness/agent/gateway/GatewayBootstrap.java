@@ -65,8 +65,8 @@ import java.util.function.Consumer;
  *     .build();
  *
  * ChatUiChannel chat = gw.chatUiChannel(config);
- * chat.send("vip-user-1", "help me").block();  // routes to support agent
- * chat.send("normal-user", "hi").block();      // routes to sales (default)
+ * chat.send("vip-user-1", "help me").block();  // 路由到 support 智能体
+ * chat.send("normal-user", "hi").block();      // 路由到 sales（默认智能体）
  * }</pre>
  *
  * <h2>外部渠道</h2>
@@ -77,8 +77,8 @@ import java.util.function.Consumer;
  *     .channel(mySlackChannel)
  *     .build();
  *
- * gw.start();   // init + start all channels
- * gw.stop();    // stop all channels
+ * gw.start();   // 初始化并启动全部渠道
+ * gw.stop();    // 停止全部渠道
  * }</pre>
  */
 public final class GatewayBootstrap {

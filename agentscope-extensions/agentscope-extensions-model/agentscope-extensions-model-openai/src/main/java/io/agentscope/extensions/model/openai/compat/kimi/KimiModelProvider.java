@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * <pre>{@code
  * ReActAgent agent = ReActAgent.builder()
  *     .name("assistant")
- *     .model("kimi:kimi-k3") // resolved by ModelRegistry through this provider
+ *     .model("kimi:kimi-k3") // 由 ModelRegistry 通过此提供者解析
  *     .build();
  * }</pre>
  */

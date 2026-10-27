@@ -42,12 +42,12 @@ import java.util.zip.ZipInputStream;
  * <p><b>使用示例：</b>
  *
  * <pre>{@code
- * // Create skill from markdown with default source
+ * // 使用默认来源从 Markdown 创建技能
  * String skillMd = "---\nname: my-skill\ndescription: Does something\n---\nContent here";
  * Map<String, String> resources = Map.of("file1.txt", "content1");
  * AgentSkill skill = SkillUtil.createFrom(skillMd, resources);
  *
- * // Create skill from markdown with custom source
+ * // 使用自定义来源从 Markdown 创建技能
  * AgentSkill skill2 = SkillUtil.createFrom(skillMd, resources, "github");
  * }</pre>
  */

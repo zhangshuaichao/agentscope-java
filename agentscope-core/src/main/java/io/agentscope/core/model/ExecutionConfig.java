@@ -42,7 +42,7 @@ import java.util.function.Predicate;
  * 从而叠加来自不同来源的配置：
  *
  * <pre>{@code
- * // Priority: per-request > agent-level > component-defaults > system-defaults
+ * // 优先级：请求级 > 智能体级 > 组件默认值 > 系统默认值
  * ExecutionConfig effective = ExecutionConfig.mergeConfigs(
  *     perRequestConfig,
  *     ExecutionConfig.mergeConfigs(agentConfig, ExecutionConfig.MODEL_DEFAULTS)
@@ -260,7 +260,7 @@ public class ExecutionConfig {
      *     .timeout(Duration.ofMinutes(2))
      *     .build();
      *
-     * // Result: timeout=2min, maxAttempts=3 (from defaults), ...
+     * // 结果：timeout=2min，maxAttempts=3（来自默认配置），……
      * ExecutionConfig merged = ExecutionConfig.mergeConfigs(agentLevel, defaults);
      * }</pre>
      *

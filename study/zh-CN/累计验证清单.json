@@ -1,9 +1,9 @@
 {
   "baseline": "a543f993cce6e22fb37c31ae14443cf9104dbeae",
   "scope": "完整core352 + Harness294 +已列出扩展生产源码；并非全仓翻译完成",
-  "covered_java_files": 958,
-  "modified_java_files": 945,
-  "learning_notes": 222,
+  "covered_java_files": 1158,
+  "modified_java_files": 1145,
+  "learning_notes": 266,
   "lexical_checks": "PASS",
   "core_class_comment_audit": {
     "files": 352,
@@ -2438,6 +2438,125 @@
       "learning_notes": 1
     },
     {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkAccessTokenProvider.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 545,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkCallbackController.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 796,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkCallbackCrypto.java",
+      "original_comments": 11,
+      "current_comments": 13,
+      "code_tokens": 838,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkChannel.java",
+      "original_comments": 19,
+      "current_comments": 21,
+      "code_tokens": 1435,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkChannelProperties.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 497,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkChannelRegistry.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 175,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkInboundMapper.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1096,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkOutboundClient.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 982,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkStreamClient.java",
+      "original_comments": 8,
+      "current_comments": 10,
+      "code_tokens": 1614,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuAccessTokenProvider.java",
+      "original_comments": 7,
+      "current_comments": 9,
+      "code_tokens": 702,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuCallbackController.java",
+      "original_comments": 14,
+      "current_comments": 19,
+      "code_tokens": 1054,
+      "learning_notes": 2
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuChannel.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1185,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuChannelProperties.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 328,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuChannelRegistry.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 126,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuCrypto.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 692,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuInboundMapper.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 1578,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuOutboundClient.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 1118,
+      "learning_notes": 0
+    },
+    {
       "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-github/src/main/java/io/agentscope/extensions/channel/github/GitHubBotIdentityResolver.java",
       "original_comments": 5,
       "current_comments": 5,
@@ -2540,6 +2659,202 @@
       "original_comments": 9,
       "current_comments": 9,
       "code_tokens": 905,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComAccessTokenProvider.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 542,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComCallbackController.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1279,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComChannel.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1176,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComChannelProperties.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 470,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComChannelRegistry.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 126,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComCrypto.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 857,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComInboundMapper.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 1110,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComOutboundClient.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1052,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/InMemoryWeixinStateStore.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 1561,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinChannel.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 3726,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinChannelProperties.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 429,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinCredentialProvider.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 78,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinCredentialRejectedException.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 43,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinCredentials.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 69,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinEndpointPolicy.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 545,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinInboundMapper.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 586,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinInboxClaim.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 76,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinInboxMessage.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 79,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinLease.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 75,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinLoginChallenge.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinLoginClient.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1030,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinLoginSession.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 108,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinLoginStep.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 114,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinOperationException.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 30,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinOutboundClient.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1726,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinProtocolHeaders.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 232,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinRuntimeListener.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 118,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-weixin/src/main/java/io/agentscope/extensions/channel/weixin/WeixinStateStore.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 211,
       "learning_notes": 1
     },
     {
@@ -2743,6 +3058,181 @@
       "original_comments": 17,
       "current_comments": 17,
       "code_tokens": 1749,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0AddRequest.java",
+      "original_comments": 29,
+      "current_comments": 29,
+      "code_tokens": 1430,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0AddResponse.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 191,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0ApiType.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 87,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0Client.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 883,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0LongTermMemory.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 932,
+      "learning_notes": 3
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0Message.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 288,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0SearchRequest.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 1119,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0SearchResponse.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 137,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-mem0/src/main/java/io/agentscope/core/memory/mem0/Mem0SearchResult.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 523,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianAddRequest.java",
+      "original_comments": 34,
+      "current_comments": 34,
+      "code_tokens": 581,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianAddResponse.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 293,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianLongTermMemory.java",
+      "original_comments": 29,
+      "current_comments": 29,
+      "code_tokens": 1494,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianMemoryClient.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 721,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianMemoryNode.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 275,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianMessage.java",
+      "original_comments": 15,
+      "current_comments": 15,
+      "code_tokens": 203,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianSearchRequest.java",
+      "original_comments": 42,
+      "current_comments": 42,
+      "code_tokens": 690,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-memory-bailian/src/main/java/io/agentscope/core/memory/bailian/BailianSearchResponse.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 155,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeAddRequest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 244,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeAddResponse.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 889,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeClient.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 573,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeLongTermMemory.java",
+      "original_comments": 29,
+      "current_comments": 29,
+      "code_tokens": 822,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeMessage.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 203,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeSearchRequest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 294,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeSearchResponse.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 768,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-mem/agentscope-extensions-reme/src/main/java/io/agentscope/core/memory/reme/ReMeTrajectory.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 166,
       "learning_notes": 0
     },
     {
@@ -3957,6 +4447,776 @@
       "learning_notes": 0
     },
     {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/A2aAgent.java",
+      "original_comments": 43,
+      "current_comments": 47,
+      "code_tokens": 3684,
+      "learning_notes": 2
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/A2aAgentConfig.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 219,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/card/AgentCardResolver.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 36,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/card/FixedAgentCardResolver.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 120,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/card/WellKnownAgentCardResolver.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 263,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/ClientEventContext.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 937,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/ClientEventHandler.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 52,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/ClientEventHandlerRouter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 272,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/MessageEventHandler.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 245,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/TaskEventHandler.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 466,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/event/TaskUpdateEventHandler.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 986,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/AudioBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/BaseMediaBlockParser.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 477,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ContentBlockParser.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 55,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ContentBlockParserRouter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 384,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/DataPartParser.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 852,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/FilePartParser.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 498,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/HintBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 163,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ImageBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/MessageConstants.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 168,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/MetadataUtil.java",
+      "original_comments": 8,
+      "current_comments": 10,
+      "code_tokens": 579,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/PartParser.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 54,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/PartParserRouter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 159,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/TextBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 92,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/TextPartParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 206,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ThinkingBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 92,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ToolResultBlockParser.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 200,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/ToolUseBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 127,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/message/VideoBlockParser.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/utils/LoggerUtil.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 426,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-client/src/main/java/io/agentscope/core/a2a/agent/utils/MessageConvertUtil.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 1484,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/AgentScopeA2aServer.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 1856,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/card/AgentScopeAgentCardConverter.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1069,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/card/ConfigurableAgentCard.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 901,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/constants/A2aServerConstants.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 32,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/AgentExecuteProperties.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 151,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/AgentScopeAgentExecutor.java",
+      "original_comments": 15,
+      "current_comments": 17,
+      "code_tokens": 2936,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/runner/AgentRequestOptions.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 107,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/runner/AgentRunner.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 91,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/runner/BaseReActAgentRunner.java",
+      "original_comments": 3,
+      "current_comments": 5,
+      "code_tokens": 283,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/executor/runner/ReActAgentWithBuilderRunner.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 95,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/registry/AgentRegistry.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 69,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/registry/AgentRegistryService.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 288,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/request/AgentScopeA2aRequestHandler.java",
+      "original_comments": 18,
+      "current_comments": 20,
+      "code_tokens": 1417,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/request/SdkInternals.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 220,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/CustomTransportProperties.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 35,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/DeploymentProperties.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 251,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/TransportProperties.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 283,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/TransportWrapper.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 58,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/TransportWrapperBuilder.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 122,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/jsonrpc/JsonRpcTransportMetadata.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 62,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/jsonrpc/JsonRpcTransportWrapper.java",
+      "original_comments": 10,
+      "current_comments": 12,
+      "code_tokens": 2549,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/transport/jsonrpc/JsonRpcTransportWrapperBuilder.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 157,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/utils/MessageConvertUtil.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 1706,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-a2a/agentscope-extensions-a2a-server/src/main/java/io/agentscope/core/a2a/server/utils/NetworkUtils.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 298,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/AguiException.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 96,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/AguiInterruptConstants.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/AguiUtil.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 210,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/AguiAdapterConfig.java",
+      "original_comments": 33,
+      "current_comments": 33,
+      "code_tokens": 925,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/AguiAgentAdapter.java",
+      "original_comments": 43,
+      "current_comments": 43,
+      "code_tokens": 3735,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/AguiAgentAdapterFactory.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 51,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/AgentEventConverter.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 58,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/AgentEventConverterRegistry.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 616,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/AgentLifecycleEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1051,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/AguiEventEnricher.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 68,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/AguiStreamContext.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 2299,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/BaseEventPropertiesEnricher.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 172,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/CustomAgentEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 145,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/ExternalExecutionEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 104,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/ModelCallUsageEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 419,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/PermissionConfirmEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 736,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/RawAgentEventConverter.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 119,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/SubagentEventConverter.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 934,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/TextBlockEventConverter.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 203,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/ThinkingBlockEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 220,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/ToolCallEventConverter.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 219,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/adapter/strategy/ToolResultEventConverter.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 309,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/converter/AguiMessageConverter.java",
+      "original_comments": 34,
+      "current_comments": 34,
+      "code_tokens": 3988,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/converter/AguiStateConverter.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 552,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/converter/AguiToolConverter.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 211,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/encoder/AguiEventEncoder.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 189,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/event/AguiEvent.java",
+      "original_comments": 50,
+      "current_comments": 50,
+      "code_tokens": 7659,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/event/AguiEventType.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 71,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/event/AguiEvents.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1362,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiContext.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 233,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiFunctionCall.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 232,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiMessage.java",
+      "original_comments": 28,
+      "current_comments": 28,
+      "code_tokens": 1050,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiResume.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 325,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiTool.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 336,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AguiToolCall.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 305,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/AudioInputContent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 116,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/DocumentInputContent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 116,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/ImageInputContent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 116,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/InputContent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 157,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/InputContentDataSource.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 75,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/InputContentSource.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 103,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/InputContentUrlSource.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 81,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/MessageContent.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 112,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/MessageContentDeserializer.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 221,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/MessageContentSerializer.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 146,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/RunAgentInput.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 1063,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/TextInputContent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 58,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/model/VideoInputContent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 116,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/processor/AgentResolver.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 89,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/processor/AguiRequestProcessor.java",
+      "original_comments": 33,
+      "current_comments": 33,
+      "code_tokens": 1597,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/processor/AguiResumeCoordinator.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1178,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/registry/AguiAgentRegistry.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 371,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/runtime/AguiRequestBodyParser.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 81,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/runtime/AguiRuntimeContextRequest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 927,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/runtime/AguiRuntimeContextResolver.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 39,
+      "learning_notes": 0
+    },
+    {
       "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/main/java/io/agentscope/core/rag/integration/bailian/BailianClient.java",
       "original_comments": 16,
       "current_comments": 18,
@@ -4571,6 +5831,146 @@
       "current_comments": 73,
       "code_tokens": 4733,
       "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/backend/TrinityClient.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 802,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/backend/TrinityModelAdapter.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 500,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/backend/dto/CommitRequest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 218,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/backend/dto/FeedbackRequest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 286,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/backend/dto/StatusResponse.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 120,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/reward/RewardCalculator.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 34,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/AgentCloner.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 528,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/RunExecutionContext.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 573,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/RunRegistry.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 234,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TaskExecutionRegistry.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 788,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TaskIdGenerator.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 107,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TrainingConfig.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 765,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TrainingRouter.java",
+      "original_comments": 29,
+      "current_comments": 29,
+      "code_tokens": 1380,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TrainingRunner.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 908,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/ExplicitMarkingStrategy.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 467,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/SamplingRateStrategy.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 225,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/SelectionDecision.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 346,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/TrainingAnnotation.java",
+      "original_comments": 15,
+      "current_comments": 15,
+      "code_tokens": 753,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/TrainingContext.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 372,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/strategy/TrainingSelectionStrategy.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 103,
+      "learning_notes": 0
     },
     {
       "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/DistributedStore.java",

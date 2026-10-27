@@ -418,7 +418,7 @@ public class GenerateOptions {
      *     .executionConfig(customExecConfig)
      *     .build();
      *
-     * // Result: temperature=0.7, executionConfig with timeout=30s and maxAttempts=3
+     * // 结果：temperature=0.7，executionConfig 中 timeout=30s、maxAttempts=3
      * GenerateOptions merged = GenerateOptions.mergeOptions(perRequest, defaults);
      * }</pre>
      *

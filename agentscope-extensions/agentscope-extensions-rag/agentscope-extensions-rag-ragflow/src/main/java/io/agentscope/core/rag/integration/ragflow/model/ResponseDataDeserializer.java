@@ -32,10 +32,10 @@ import java.util.List;
  * <p><b>API 响应示例：</b>
  *
  * <pre>{@code
- * // Success case
+ * // 成功情况
  * {"code": 0, "data": {"chunks": [...], "total": 1}}
  *
- * // Error or empty case
+ * // 错误或空结果情况
  * {"code": 404, "message": "Dataset not found", "data": false}
  * {"code": 0, "message": "No results", "data": null}
  * }</pre>

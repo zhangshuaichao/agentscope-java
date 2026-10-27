@@ -32,7 +32,7 @@ import java.util.Map;
  *     .accessKeySecret(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET"))
  *     .workspaceId("llm-xxx")
  *     .indexId("mymxbdxxxx")
- *     // Optional: configure retrieval parameters
+ *     // 可选：配置检索参数
  *     .denseSimilarityTopK(50)
  *     .sparseSimilarityTopK(50)
  *     .enableReranking(true)

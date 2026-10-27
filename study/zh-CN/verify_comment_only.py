@@ -67,13 +67,23 @@ def verify(path, base):
     old_licenses = [c for c in old_comments if 'Licensed under the Apache License' in c]
     new_licenses = [c for c in new_comments if 'Licensed under the Apache License' in c]
     assert old_licenses == new_licenses, f'License change: {path}'
-    # 保留代码示例的精确字节，包括示例内部原有英文注释。
+    # 示例中的解释注释可以翻译，但示例代码词元、字符串和标识符必须保持一致。
     old_pre = [m for c in old_comments for m in re.findall(r'<pre>.*?</pre>', c, re.S)]
     new_pre = [m for c in new_comments for m in re.findall(r'<pre>.*?</pre>', c, re.S)]
-    assert old_pre == new_pre, f'Javadoc example change: {path}'
+    assert len(old_pre) == len(new_pre), f'Javadoc example count change: {path}'
+    for before_pre, after_pre in zip(old_pre, new_pre):
+        if before_pre == after_pre:
+            continue
+        # 移除外层 Javadoc 每行装饰符，保留示例本身；不解码 HTML，不改字面量。
+        before_source = re.sub(r'(?m)^\s*\* ?', '', before_pre)
+        after_source = re.sub(r'(?m)^\s*\* ?', '', after_pre)
+        assert scan_java(before_source)[0] == scan_java(after_source)[0], f'Javadoc example code/string change: {path}'
+    # pre 已单独校验，排除其包裹的 {@code ...}，避免把示例注释误判为符号变化。
+    old_docs = [re.sub(r'<pre>.*?</pre>', '', c, flags=re.S) for c in old_comments]
+    new_docs = [re.sub(r'<pre>.*?</pre>', '', c, flags=re.S) for c in new_comments]
     for pattern in (r'\{@(?:code|link|linkplain|literal|value)\s+[^}]*\}', r'@(?:param|throws|exception)\s+[^\s]+'):
-        before = protected_parts(old_comments, pattern)
-        after = protected_parts(new_comments, pattern)
+        before = protected_parts(old_docs, pattern)
+        after = protected_parts(new_docs, pattern)
         assert not before - after, f'Missing/changed Javadoc symbol/tag: {path}'
     # Java 会在词法分析前解释 Unicode 转义，新增此类转义不能当作普通注释放行。
     before_escapes = protected_parts(old_comments, r'\\u+[0-9a-fA-F]{4}')

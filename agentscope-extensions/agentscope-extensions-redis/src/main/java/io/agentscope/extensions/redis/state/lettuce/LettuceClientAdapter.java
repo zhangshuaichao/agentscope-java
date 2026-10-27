@@ -43,20 +43,20 @@ import org.slf4j.LoggerFactory;
  *
  * <p>单机示例：
  * <pre>{@code
- * // Create standalone RedisClient
+ * // 创建单机 RedisClient
  * RedisClient redisClient = RedisClient.create("redis://localhost:6379");
  *
- * // Use with RedisAgentStateStore
+ * // 与 RedisAgentStateStore 配合使用
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClient(redisClient)
  *     .build();
  * }</pre>
  * <p>集群示例：
  * <pre>{@code
- * // Create cluster client
+ * // 创建集群客户端
  * RedisClusterClient clusterClient = RedisClusterClient.create("redis://localhost:7000");
  *
- * // Use with RedisAgentStateStore
+ * // 与 RedisAgentStateStore 配合使用
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClusterClient(clusterClient)
  *     .keyLayoutVersion(RedisAgentStateStore.KeyLayoutVersion.V1)
@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * }</pre>
  * <p>哨兵示例：
  * <pre>{@code
- * // Create Lettuce RedisClient for sentinel
+ * // 创建哨兵模式的 Lettuce RedisClient
  * RedisURI sentinelUri = RedisURI.builder()
  *     .withSentinelMasterId("mymaster")
  *     .withSentinel("localhost", 26379)
@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
  *     .build();
  * RedisClient redisClient = RedisClient.create(sentinelUri);
  *
- * // Use with RedisAgentStateStore
+ * // 与 RedisAgentStateStore 配合使用
  * AgentStateStore stateStore = RedisAgentStateStore.builder()
  *     .lettuceClient(redisClient)
  *     .build();

@@ -47,10 +47,10 @@ import java.util.Objects;
  * <p><b>示例：</b>
  * <pre>{@code
  * case ReasoningChunkEvent e -> {
- *     // Incremental mode: print only new content
+ *     // 增量模式：只打印新增内容
  *     System.out.print(extractText(e.getIncrementalChunk()));
  *
- *     // OR Cumulative mode: update entire display
+ *     // 或者使用累积模式，更新完整显示内容
  *     ui.setText(extractText(e.getAccumulated()));
  *
  *     yield Mono.just(e);

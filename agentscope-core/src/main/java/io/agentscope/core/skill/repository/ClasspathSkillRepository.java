@@ -60,15 +60,15 @@ import org.slf4j.LoggerFactory;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // Load from parent directory containing multiple skills
+ * // 从包含多个技能的父目录加载
  * try (ClasspathSkillRepository repository = new ClasspathSkillRepository("skills")) {
- *     // Get all available skill names
+ *     // 获取所有可用技能名称
  *     List<String> skillNames = repository.getAllSkillNames();
  *
- *     // Load a specific skill
+ *     // 加载指定技能
  *     AgentSkill skillA = repository.getSkill("skill-a");
  *
- *     // Load all skills at once
+ *     // 一次加载全部技能
  *     List<AgentSkill> allSkills = repository.getAllSkills();
  * }
  * }</pre>

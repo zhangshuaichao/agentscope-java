@@ -23,17 +23,17 @@ package io.agentscope.core.tool;
  * <p><b>Spring 集成示例：</b>
  *
  * <pre>{@code
- * // 1. Define your context POJO with Spring scope
+ * // 1. 定义带 Spring 作用域的上下文 POJO
  * @Component
  * @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
  * public class UserContext {
  *     private String userId;
  *     private String sessionId;
  *     private Map<String, String> permissions;
- *     // getters/setters...
+ *     // 读取与设置方法……
  * }
  *
- * // 2. Implement ToolExecutionContextProvider
+ * // 2. 实现 ToolExecutionContextProvider
  * public class SpringContextProvider implements ToolExecutionContextProvider {
  *     private final ApplicationContext applicationContext;
  *
@@ -44,22 +44,22 @@ package io.agentscope.core.tool;
  *     @Override
  *     public <T> T resolveContext(Class<T> targetType) {
  *         try {
- *             // Try to resolve from Spring container
+ *             // 尝试从 Spring 容器解析
  *             if (targetType == ToolExecutionContext.class) {
- *                 // Convert Spring bean to ToolExecutionContext
+ *                 // 将 Spring Bean 转换为 ToolExecutionContext
  *                 UserContext userCtx = applicationContext.getBean(UserContext.class);
  *                 return (T) ToolExecutionContext.of(userCtx);
  *             } else {
- *                 // Direct bean resolution for custom types
+ *                 // 为自定义类型直接解析 Bean
  *                 return applicationContext.getBean(targetType);
  *             }
  *         } catch (Exception e) {
- *             return null; // Context not available
+ *             return null; // 上下文不可用
  *         }
  *     }
  * }
  *
- * // 3. Register provider in Spring configuration
+ * // 3. 在 Spring 配置中注册提供者
  * @Configuration
  * public class AgentScopeConfig {
  *     @Bean
@@ -70,11 +70,11 @@ package io.agentscope.core.tool;
  *     }
  * }
  *
- * // 4. Use in tool methods - context auto-resolved from Spring!
+ * // 4. 在工具方法中使用，上下文自动从 Spring 解析
  * @Tool(name = "query_db", description = "Query database")
  * public ToolResultBlock queryDb(
  *     @ToolParam(name = "query") String query,
- *     UserContext context  // Auto-resolved from Spring RequestScope!
+ *     UserContext context  // 自动从 Spring RequestScope 解析
  * ) {
  *     String userId = context.getUserId();
  *     // ...

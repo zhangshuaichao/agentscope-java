@@ -204,17 +204,17 @@ import reactor.util.context.Context;
  * <pre>{@code
  * import io.agentscope.extensions.model.dashscope.DashScopeChatModel;
  *
- * // Create a model (requires dependency: agentscope-extensions-model-dashscope)
+ * // 创建模型，需要 agentscope-extensions-model-dashscope 依赖
  * DashScopeChatModel model = DashScopeChatModel.builder()
  *     .apiKey(System.getenv("DASHSCOPE_API_KEY"))
  *     .modelName("qwen-plus")
  *     .build();
  *
- * // Create a toolkit with tools
+ * // 创建并注册工具的工具集
  * Toolkit toolkit = new Toolkit();
  * toolkit.registerObject(new MyToolClass());
  *
- * // Build the agent
+ * // 构建智能体
  * ReActAgent agent = ReActAgent.builder()
  *     .name("Assistant")
  *     .sysPrompt("You are a helpful assistant.")
@@ -223,7 +223,7 @@ import reactor.util.context.Context;
  *     .maxIters(10)
  *     .build();
  *
- * // Use the agent
+ * // 使用智能体
  * Msg response = agent.call(Msg.builder()
  *     .name("user")
  *     .role(MsgRole.USER)

@@ -55,12 +55,12 @@ import org.yaml.snakeyaml.representer.Representer;
  *
  * <p>使用示例：
  * <pre>{@code
- * // Parse markdown with frontmatter
+ * // 解析带 frontmatter 的 Markdown
  * ParsedMarkdown parsed = MarkdownSkillParser.parse(markdownContent);
  * Map<String, Object> metadata = parsed.getMetadata();
  * String content = parsed.getContent();
  *
- * // Generate markdown with frontmatter
+ * // 生成带 frontmatter 的 Markdown
  * String markdown = MarkdownSkillParser.generate(metadata, content);
  * }</pre>
  */
