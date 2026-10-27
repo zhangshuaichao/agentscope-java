@@ -19,11 +19,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A content block that provides hints to the LLM during reasoning.
+ * 在推理过程中向大语言模型提供提示信息的内容块。
  *
- * <p>Hint blocks are injected by middleware or memory systems (e.g., RAG) to supply
- * contextual information that guides the agent's reasoning without being part of
- * the conversation history.
+ * <p>由中间件或记忆系统（例如 RAG）注入，为智能体推理提供上下文指引，而不作为对话历史的一部分。
  */
 public final class HintBlock extends ContentBlock {
 
@@ -46,27 +44,25 @@ public final class HintBlock extends ContentBlock {
     }
 
     /**
-     * Gets the unique identifier of this hint block.
+     * 获取提示块的唯一标识符。
      *
-     * @return The hint block ID
+     * @return 提示块 ID
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the hint text.
+     * 获取提示文本。
      *
-     * @return The hint content
+     * @return 提示内容
      */
     public String getHint() {
         return hint;
     }
 
     /**
-     * Returns the sender or origin of this hint. For team messages this is the sender's display
-     * name (e.g. {@code "alice"}); for system notifications it may be {@code "system"} or
-     * {@code null}.
+     * 返回提示的发送者或来源。团队消息使用发送者的显示名称（例如 {@code "alice"}）；系统通知可为 {@code "system"} 或 {@code null}。
      */
     public String getSource() {
         return source;

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted when an agent begins processing an invocation.
+ * 智能体开始处理一次调用时发出。
  */
 public class AgentStartEvent extends AgentEvent {
 

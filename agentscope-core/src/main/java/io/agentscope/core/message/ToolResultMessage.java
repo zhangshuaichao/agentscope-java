@@ -24,15 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Msg} with {@link MsgRole#TOOL} pinned at construction time.
+ * 构造时将角色固定为 {@link MsgRole#TOOL} 的 {@link Msg}。
  *
- * <p>Carries one or more {@link ToolResultBlock}s as its content. The
- * three-argument constructor takes the tool call id, tool name and a result
- * string, automatically wrapping the string in a {@link TextBlock} inside the
- * {@link ToolResultBlock}.
+ * <p>内容由一个或多个 {@link ToolResultBlock} 组成。三参数构造器接收工具调用 ID、工具名称和结果字符串，自动将字符串包装为 {@link ToolResultBlock} 内的 {@link TextBlock}。
  *
- * <p>Also offers an independent {@link Builder} that lets callers accumulate
- * multiple tool results, attach metadata, or set timestamp/usage explicitly.
+ * <p>还提供独立的 {@link Builder}，用于累积多个工具结果、附加元数据或显式设置时间戳和用量。
  */
 public final class ToolResultMessage extends Msg {
 
@@ -85,21 +81,16 @@ public final class ToolResultMessage extends Msg {
     }
 
     /**
-     * Creates a builder for {@link ToolResultMessage} with a randomly generated
-     * ID and the current timestamp pre-populated.
+     * 创建 {@link ToolResultMessage} 的构建器，并预填随机生成的 ID 和当前时间戳。
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Fluent builder for {@link ToolResultMessage}. The role is fixed to
-     * {@link MsgRole#TOOL} and {@link #role(MsgRole)} is unsupported.
+     * {@link ToolResultMessage} 的链式构建器。角色固定为 {@link MsgRole#TOOL}，不支持 {@link #role(MsgRole)}。
      *
-     * <p>{@link #result(String, String, String)} and {@link #result(ToolResultBlock)}
-     * append to the accumulating result list; {@link #results(ToolResultBlock...)}
-     * and {@link #results(List)} (and the inherited {@code content(...)} setters)
-     * replace it wholesale.
+     * <p>{@link #result(String, String, String)} 和 {@link #result(ToolResultBlock)} 向结果列表追加内容；{@link #results(ToolResultBlock...)}、{@link #results(List)} 以及继承的 {@code content(...)} 设置方法则整体替换列表。
      */
     public static final class Builder extends Msg.Builder {
 
@@ -108,7 +99,9 @@ public final class ToolResultMessage extends Msg {
             super.content = new ArrayList<>();
         }
 
-        /** Unsupported on {@link ToolResultMessage.Builder}: role is fixed to TOOL. */
+        /**
+         * {@link ToolResultMessage.Builder} 不支持此操作：角色固定为 TOOL。
+         */
         @Override
         public Builder role(MsgRole role) {
             throw new UnsupportedOperationException(
@@ -116,8 +109,7 @@ public final class ToolResultMessage extends Msg {
         }
 
         /**
-         * Appends a {@link ToolResultBlock} built from a tool call id, tool name
-         * and result text.
+         * 追加由工具调用 ID、工具名称和结果文本构造的 {@link ToolResultBlock}。
          */
         public Builder result(String toolCallId, String toolName, String resultText) {
             return result(
@@ -127,7 +119,9 @@ public final class ToolResultMessage extends Msg {
                             List.of(TextBlock.builder().text(resultText).build())));
         }
 
-        /** Appends a single {@link ToolResultBlock}. */
+        /**
+         * 追加单个 {@link ToolResultBlock}。
+         */
         public Builder result(ToolResultBlock block) {
             if (block != null) {
                 if (!(super.content instanceof ArrayList)) {
@@ -138,13 +132,17 @@ public final class ToolResultMessage extends Msg {
             return this;
         }
 
-        /** Replaces all accumulated results with the given list. */
+        /**
+         * 用给定列表替换全部已累积的结果。
+         */
         public Builder results(List<ToolResultBlock> results) {
             super.content = results == null ? new ArrayList<>() : new ArrayList<>(results);
             return this;
         }
 
-        /** Replaces all accumulated results with the given blocks. */
+        /**
+         * 用给定内容块替换全部已累积的结果。
+         */
         public Builder results(ToolResultBlock... results) {
             super.content =
                     results == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(results));

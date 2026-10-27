@@ -21,17 +21,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * Represents image content in a message with URL or Base64 source.
+ * 表示消息中以 URL 或 Base64 为来源的图像内容。
  *
- * <p>This content block supports images from two sources:
+ * <p>此内容块支持两种图像来源：
  * <ul>
- *   <li>URL source - images accessible via HTTP/HTTPS URLs or local file URLs</li>
- *   <li>Base64 source - images encoded as Base64 strings with MIME type</li>
+ * <li>URL 来源：通过 HTTP/HTTPS URL 或本地文件 URL 访问的图像</li>
+ * <li>Base64 来源：以 Base64 字符串编码并附带 MIME 类型的图像</li>
  * </ul>
  *
- * <p>Image blocks are essential for multimodal AI interactions where agents
- * need to process visual information from images, diagrams, screenshots,
- * or other visual content.
+ * <p>图像块用于多模态 AI 交互，使智能体能够处理图像、图表、屏幕截图等视觉信息。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class ImageBlock extends ContentBlock {
@@ -43,22 +41,22 @@ public final class ImageBlock extends ContentBlock {
     private final Integer maxPixels;
 
     /**
-     * Creates a new image block with source.
+     * 使用来源创建图像块。
      *
-     * @param source The image source (URL or Base64)
-     * @throws NullPointerException if source is null
+     * @param source 图像来源（URL 或 Base64）
+     * @throws NullPointerException 当 source 为 null 时
      */
     public ImageBlock(@JsonProperty("source") Source source) {
         this(source, null, null);
     }
 
     /**
-     * Creates a new image block for JSON deserialization.
+     * 创建用于 JSON 反序列化的图像块。
      *
-     * @param source The image source (URL or Base64)
-     * @param minPixels Used to set the minimum pixel threshold for input image.
-     * @param maxPixels Used to set the maximum pixel threshold for input image.
-     * @throws NullPointerException if source is null
+     * @param source 图像来源（URL 或 Base64）
+     * @param minPixels 输入图像的最小像素阈值
+     * @param maxPixels 输入图像的最大像素阈值
+     * @throws NullPointerException 当 source 为 null 时
      */
     @JsonCreator
     private ImageBlock(
@@ -71,43 +69,43 @@ public final class ImageBlock extends ContentBlock {
     }
 
     /**
-     * Gets the source of this image.
+     * 获取图像来源。
      *
-     * @return The image source containing URL or Base64 data
+     * @return 包含 URL 或 Base64 数据的图像来源
      */
     public Source getSource() {
         return source;
     }
 
     /**
-     * Gets the minimum pixel threshold for input image.
+     * 获取输入图像的最小像素阈值。
      *
-     * @return The minimum pixel threshold
+     * @return 最小像素阈值
      */
     public Integer getMinPixels() {
         return minPixels;
     }
 
     /**
-     * Gets the maximum pixel threshold for input image.
+     * 获取输入图像的最大像素阈值。
      *
-     * @return The maximum pixel threshold
+     * @return 最大像素阈值
      */
     public Integer getMaxPixels() {
         return maxPixels;
     }
 
     /**
-     * Creates a new builder for constructing ImageBlock instances.
+     * 创建用于构造 ImageBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing ImageBlock instances.
+     * 用于构造 ImageBlock 实例的构建器。
      */
     public static class Builder {
 
@@ -118,10 +116,10 @@ public final class ImageBlock extends ContentBlock {
         private Integer maxPixels;
 
         /**
-         * Sets the source for the image.
+         * 设置图像来源。
          *
-         * @param source The image source (URL or Base64)
-         * @return This builder for chaining
+         * @param source 图像来源（URL 或 Base64）
+         * @return 当前构建器，支持链式调用
          */
         public Builder source(Source source) {
             this.source = source;
@@ -129,10 +127,10 @@ public final class ImageBlock extends ContentBlock {
         }
 
         /**
-         * Sets the minimum pixel threshold for input image frames.
+         * 设置输入图像帧的最小像素阈值。
          *
-         * @param minPixels The minimum pixel threshold
-         * @return This builder for chaining
+         * @param minPixels 最小像素阈值
+         * @return 当前构建器，支持链式调用
          */
         public Builder minPixels(Integer minPixels) {
             this.minPixels = minPixels;
@@ -140,10 +138,10 @@ public final class ImageBlock extends ContentBlock {
         }
 
         /**
-         * Sets the maximum pixel threshold for input image frames.
+         * 设置输入图像帧的最大像素阈值。
          *
-         * @param maxPixels The maximum pixel threshold
-         * @return This builder for chaining
+         * @param maxPixels 最大像素阈值
+         * @return 当前构建器，支持链式调用
          */
         public Builder maxPixels(Integer maxPixels) {
             this.maxPixels = maxPixels;
@@ -151,10 +149,10 @@ public final class ImageBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new ImageBlock with the configured source.
+         * 使用配置的来源构建 ImageBlock。
          *
-         * @return A new ImageBlock instance
-         * @throws NullPointerException if source is null
+         * @return 新的 ImageBlock 实例
+         * @throws NullPointerException 当 source 为 null 时
          */
         public ImageBlock build() {
             return new ImageBlock(source, minPixels, maxPixels);

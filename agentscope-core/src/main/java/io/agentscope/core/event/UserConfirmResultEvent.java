@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
- * Emitted after the user has responded to a {@link RequireUserConfirmEvent}.
+ * 用户响应 {@link RequireUserConfirmEvent} 后发出。
  */
 public class UserConfirmResultEvent extends AgentEvent {
 

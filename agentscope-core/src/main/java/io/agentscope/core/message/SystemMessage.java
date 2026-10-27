@@ -22,15 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Msg} with {@link MsgRole#SYSTEM} pinned at construction time.
+ * 构造时将角色固定为 {@link MsgRole#SYSTEM} 的 {@link Msg}。
  *
- * <p>Provides convenience constructors that take a {@code String} directly
- * (wrapped into a {@link TextBlock}). System messages are restricted to text
- * blocks by {@link Msg}'s validator; passing non-text blocks will throw
- * {@link IllegalArgumentException}.
+ * <p>提供直接接收 {@code String} 的便捷构造器（将字符串包装为 {@link TextBlock}）。{@link Msg} 的验证器将系统消息限制为文本块；传入非文本块会抛出 {@link IllegalArgumentException}。
  *
- * <p>Also offers an independent {@link Builder} for cases that need to set
- * {@code metadata}, {@code timestamp}, {@code usage} or {@code generateReason}.
+ * <p>还提供独立的 {@link Builder}，用于设置 {@code metadata}、{@code timestamp}、{@code usage} 或 {@code generateReason}。
  */
 public final class SystemMessage extends Msg {
 
@@ -80,16 +76,14 @@ public final class SystemMessage extends Msg {
     }
 
     /**
-     * Creates a builder for {@link SystemMessage} with a randomly generated ID
-     * and the current timestamp pre-populated.
+     * 创建 {@link SystemMessage} 的构建器，并预填随机生成的 ID 和当前时间戳。
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Fluent builder for {@link SystemMessage}. The role is fixed to
-     * {@link MsgRole#SYSTEM} and {@link #role(MsgRole)} is unsupported.
+     * {@link SystemMessage} 的链式构建器。角色固定为 {@link MsgRole#SYSTEM}，不支持 {@link #role(MsgRole)}。
      */
     public static final class Builder extends Msg.Builder {
 
@@ -97,7 +91,9 @@ public final class SystemMessage extends Msg {
             super.role = MsgRole.SYSTEM;
         }
 
-        /** Unsupported on {@link SystemMessage.Builder}: role is fixed to SYSTEM. */
+        /**
+         * {@link SystemMessage.Builder} 不支持此操作：角色固定为 SYSTEM。
+         */
         @Override
         public Builder role(MsgRole role) {
             throw new UnsupportedOperationException(

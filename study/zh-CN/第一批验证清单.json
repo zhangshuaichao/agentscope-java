@@ -1,0 +1,487 @@
+{
+  "baseline": "a543f993cce6e22fb37c31ae14443cf9104dbeae",
+  "scope": "第一批已完成的注释文件；不代表全仓完成",
+  "java_files": 68,
+  "learning_notes": 10,
+  "lexical_checks": "PASS: executable tokens and literals, licenses, Javadoc examples and symbols",
+  "maven_tests": "NOT RUN: mvn not installed",
+  "spotless": "NOT RUN: mvn not installed",
+  "files": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentEndEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 125,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentEvent.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1068,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentEventEmitter.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 149,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentEventType.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 426,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentResultEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 136,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AgentStartEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 242,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/AllToolsDeniedEvent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 185,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ConfirmResult.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 247,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/CustomEvent.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 229,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ExceedMaxItersEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 201,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ExternalExecutionResultEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 223,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/HintBlockEvent.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 239,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ModelCallEndEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 174,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ModelCallStartEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 125,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/RequestStopEvent.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 207,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/RequireExternalExecutionEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 223,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/RequireUserConfirmEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 223,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/SubagentExposedEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 239,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolCallDeltaEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 239,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolProgressEvent.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 349,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolResultDataDeltaEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 317,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolResultEndEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 317,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolResultStartEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 263,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/ToolResultTextDeltaEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 306,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/event/UserConfirmResultEvent.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 212,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/AssistantMessage.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 615,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/AudioBlock.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 145,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/Base64Source.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 209,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ContentBlock.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 240,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/DataBlock.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 308,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/GenerateReason.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 37,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/HintBlock.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 153,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ImageBlock.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 293,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/MessageMetadataKeys.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 93,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/Msg.java",
+      "original_comments": 49,
+      "current_comments": 49,
+      "code_tokens": 2569,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/MsgRole.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 21,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/Source.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 96,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/SystemMessage.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 615,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/TextBlock.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 155,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ThinkingBlock.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 255,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ToolExecutionDetails.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 75,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ToolResultBlock.java",
+      "original_comments": 42,
+      "current_comments": 42,
+      "code_tokens": 1495,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ToolResultMessage.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 837,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ToolResultState.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 85,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/ToolUseBlock.java",
+      "original_comments": 30,
+      "current_comments": 30,
+      "code_tokens": 757,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/URLSource.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 237,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/UserMessage.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 615,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/message/VideoBlock.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 444,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/ActingInput.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 39,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/AgentInput.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 39,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/FinalAnswerFilterMiddleware.java",
+      "original_comments": 3,
+      "current_comments": 7,
+      "code_tokens": 667,
+      "learning_notes": 2
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/MiddlewareBase.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 353,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/MiddlewareChain.java",
+      "original_comments": 4,
+      "current_comments": 10,
+      "code_tokens": 260,
+      "learning_notes": 3
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/ModelCallInput.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 102,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/ModelRequestPreparer.java",
+      "original_comments": 5,
+      "current_comments": 7,
+      "code_tokens": 429,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/ReasoningInput.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 70,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/TaskContextProjection.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1450,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/middleware/TaskReminderMiddleware.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 447,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/CachePolicy.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 19,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ChatModelBase.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 281,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/Model.java",
+      "original_comments": 7,
+      "current_comments": 11,
+      "code_tokens": 110,
+      "learning_notes": 2
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ModelContextWindows.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1006,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ModelException.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 244,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ModelHttpException.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 52,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ModelProviderSupport.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 351,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/StructuredOutputReminder.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 17,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/model/ToolChoice.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 94,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/state/AgentState.java",
+      "original_comments": 9,
+      "current_comments": 13,
+      "code_tokens": 1593,
+      "learning_notes": 2
+    }
+  ]
+}

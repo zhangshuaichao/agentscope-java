@@ -20,27 +20,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * Represents audio content in a message.
+ * 表示消息中的音频内容。
  *
- * <p>This content block supports audio from two sources:
+ * <p>此内容块支持两种音频来源：
  * <ul>
- *   <li>URL source - audio files accessible via HTTP/HTTPS URLs or local file URLs</li>
- *   <li>Base64 source - audio encoded as Base64 strings with MIME type</li>
+ * <li>URL 来源：可通过 HTTP/HTTPS URL 或本地文件 URL 访问的音频文件</li>
+ * <li>Base64 来源：以 Base64 字符串编码并附带 MIME 类型的音频</li>
  * </ul>
  *
- * <p>Audio blocks enable multimodal AI interactions where agents need to process
- * or generate audio content such as speech, music, sound effects, or other
- * auditory information.
+ * <p>音频块支持多模态 AI 交互，使智能体能够处理或生成语音、音乐、音效等听觉信息。
  */
 public final class AudioBlock extends ContentBlock {
 
     private final Source source;
 
     /**
-     * Creates a new audio block for JSON deserialization.
+     * 创建用于 JSON 反序列化的音频块。
      *
-     * @param source The audio source (URL or Base64)
-     * @throws NullPointerException if source is null
+     * @param source 音频来源（URL 或 Base64）
+     * @throws NullPointerException 当 source 为 null 时
      */
     @JsonCreator
     public AudioBlock(@JsonProperty("source") Source source) {
@@ -48,35 +46,35 @@ public final class AudioBlock extends ContentBlock {
     }
 
     /**
-     * Gets the source of this audio content.
+     * 获取音频内容的来源。
      *
-     * @return The audio source containing URL or Base64 data
+     * @return 包含 URL 或 Base64 数据的音频来源
      */
     public Source getSource() {
         return source;
     }
 
     /**
-     * Creates a new builder for constructing AudioBlock instances.
+     * 创建用于构造 AudioBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing AudioBlock instances.
+     * 用于构造 AudioBlock 实例的构建器。
      */
     public static class Builder {
 
         private Source source;
 
         /**
-         * Sets the source for the audio content.
+         * 设置音频内容的来源。
          *
-         * @param source The audio source (URL or Base64)
-         * @return This builder for chaining
+         * @param source 音频来源（URL 或 Base64）
+         * @return 当前构建器，支持链式调用
          */
         public Builder source(Source source) {
             this.source = source;
@@ -84,10 +82,10 @@ public final class AudioBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new AudioBlock with the configured source.
+         * 使用配置的来源构建 AudioBlock。
          *
-         * @return A new AudioBlock instance
-         * @throws NullPointerException if source is null
+         * @return 新的 AudioBlock 实例
+         * @throws NullPointerException 当 source 为 null 时
          */
         public AudioBlock build() {
             return new AudioBlock(source);

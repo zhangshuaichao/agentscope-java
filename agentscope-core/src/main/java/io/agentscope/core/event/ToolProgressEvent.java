@@ -22,8 +22,8 @@ import io.agentscope.core.message.TextBlock;
 import java.util.Map;
 
 /**
- * An intermediate update published by a running tool through {@link
- * io.agentscope.core.tool.ToolEmitter}.
+ * 运行中的工具通过 {@link
+ * io.agentscope.core.tool.ToolEmitter} 发布的中间进度更新。
  */
 public class ToolProgressEvent extends AgentEvent {
 
@@ -50,7 +50,7 @@ public class ToolProgressEvent extends AgentEvent {
     }
 
     /**
-     * Backward-compatible constructor for callers that do not provide metadata.
+     * 供未提供元数据的调用方使用的向后兼容构造器。
      */
     public ToolProgressEvent(
             String id,
@@ -88,21 +88,21 @@ public class ToolProgressEvent extends AgentEvent {
     }
 
     /**
-     * The progress chunk as published by the tool.
+     * 工具发布的进度片段。
      *
-     * @return the emitted content block, text or otherwise
+     * @return 发出的内容块，可以是文本或其他类型
      */
     public ContentBlock getContent() {
         return content;
     }
 
     /**
-     * The progress chunk when it is text.
+     * 进度片段为文本时，返回其文本内容。
      *
-     * <p>Most consumers only render progress, so the common case is exposed directly; a non-text
-     * chunk reads as {@code null} here and stays available through {@link #getContent()}.
+     * <p>多数消费方只渲染进度，因此直接暴露常用的文本情形；非文本片段
+     * 在此读取为 {@code null}，但仍可通过 {@link #getContent()} 获取。
      *
-     * @return the chunk's text, or {@code null} when the chunk is not a text block
+     * @return 片段的文本；片段不是文本块时为 {@code null}
      */
     public String getText() {
         return content instanceof TextBlock textBlock ? textBlock.getText() : null;

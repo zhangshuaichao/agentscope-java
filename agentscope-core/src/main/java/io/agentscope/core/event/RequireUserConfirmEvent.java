@@ -21,7 +21,7 @@ import io.agentscope.core.message.ToolUseBlock;
 import java.util.List;
 
 /**
- * Emitted when the agent requires user confirmation before executing tool calls (HITL).
+ * 智能体执行工具调用前需要用户确认（HITL，人在回路）时发出。
  */
 public class RequireUserConfirmEvent extends AgentEvent {
 

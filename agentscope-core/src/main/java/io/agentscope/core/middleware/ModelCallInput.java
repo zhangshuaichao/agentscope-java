@@ -22,12 +22,12 @@ import io.agentscope.core.model.ToolSchema;
 import java.util.List;
 
 /**
- * Input context for {@link MiddlewareBase#onModelCall}.
+ * {@link MiddlewareBase#onModelCall} 的输入上下文。
  *
- * @param messages the messages to send to the model
- * @param tools    the non-null tool schemas, empty when no tools are available
- * @param options  generation options
- * @param model    the model instance to call
+ * @param messages 要发送给模型的消息
+ * @param tools    非 null 的工具模式列表；没有可用工具时为空
+ * @param options  生成选项
+ * @param model    要调用的模型实例
  */
 public record ModelCallInput(
         List<Msg> messages, List<ToolSchema> tools, GenerateOptions options, Model model) {

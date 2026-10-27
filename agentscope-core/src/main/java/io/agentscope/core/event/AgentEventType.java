@@ -20,12 +20,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Fine-grained event types emitted during agent execution.
+ * 智能体执行期间发出的细粒度事件类型。
  *
- * <p>Each value carries a canonical name plus optional {@link JsonAlias} entries
- * for legacy names so older JSON payloads continue to deserialize.
+ * <p>每个值包含规范名称，以及可选的旧名称 {@link JsonAlias} 条目，
+ * 使旧 JSON 载荷仍然能够反序列化。
  *
- * <p>Legacy aliases recognised on deserialization:
+ * <p>反序列化时识别以下旧版别名：
  * <ul>
  *   <li>{@code RUN_STARTED}, {@code REPLY_START} → {@link #AGENT_START}</li>
  *   <li>{@code RUN_FINISHED}, {@code REPLY_END} → {@link #AGENT_END}</li>
@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  *   <li>{@code TOOL_RESULT_BINARY_DELTA} → {@link #TOOL_RESULT_DATA_DELTA}</li>
  * </ul>
  *
- * <p>Serialization always emits the canonical form.
+ * <p>序列化时始终输出规范形式。
  */
 public enum AgentEventType {
     @JsonAlias({"RUN_STARTED", "REPLY_START"})
@@ -102,14 +102,14 @@ public enum AgentEventType {
     }
 
     /**
-     * Resolve an enum value from its canonical string or any legacy alias.
+     * 根据规范字符串或任意旧版别名解析枚举值。
      *
-     * <p>Falls back to a case-sensitive match against {@link #getValue()} and the
-     * declared aliases when Jackson's default enum lookup misses.
+     * <p>Jackson 默认的枚举查找未命中时，回退为对 {@link #getValue()}
+     * 和声明的别名执行区分大小写的匹配。
      *
-     * @param raw the incoming string value
-     * @return the corresponding enum constant
-     * @throws IllegalArgumentException when {@code raw} matches no value or alias
+     * @param raw 传入的字符串值
+     * @return 对应的枚举常量
+     * @throws IllegalArgumentException 当 {@code raw} 不匹配任何值或别名时抛出
      */
     @JsonCreator
     public static AgentEventType fromValue(String raw) {
@@ -121,7 +121,7 @@ public enum AgentEventType {
                 return type;
             }
         }
-        // Legacy aliases — keep the mapping co-located with the enum for grep-ability.
+        // 旧版别名：映射与枚举放在一起，便于搜索。
         return switch (raw) {
             case "RUN_STARTED", "REPLY_START" -> AGENT_START;
             case "RUN_FINISHED", "REPLY_END" -> AGENT_END;

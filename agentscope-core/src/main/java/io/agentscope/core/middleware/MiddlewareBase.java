@@ -28,33 +28,30 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Middleware provides interception mechanisms at 6 key execution points
- * in the Agent lifecycle.
+ * 中间件在智能体生命周期的 6 个关键执行点提供拦截机制。
  *
- * <p><b>Onion Pattern</b> (4 hooks — wrap execution with before/after logic):
+ * <p><b>洋葱模式</b>（4 个钩子，在执行前后包装逻辑）：
  * <ul>
- *   <li>{@link #onAgent} — intercepts the entire agent invocation</li>
- *   <li>{@link #onReasoning} — intercepts the reasoning/model-call phase</li>
- *   <li>{@link #onActing} — intercepts individual tool-call execution</li>
- *   <li>{@link #onModelCall} — intercepts the raw model API call</li>
+ *   <li>{@link #onAgent}：拦截整个智能体调用</li>
+ *   <li>{@link #onReasoning}：拦截推理／模型调用阶段</li>
+ *   <li>{@link #onActing}：拦截单个工具调用的执行</li>
+ *   <li>{@link #onModelCall}：拦截原始模型 API 调用</li>
  * </ul>
  *
- * <p><b>Transformer/Pipeline Pattern</b> (1 hook — sequential transform):
+ * <p><b>转换器／流水线模式</b>（1 个钩子，依次转换）：
  * <ul>
- *   <li>{@link #onSystemPrompt} — transforms the system prompt string</li>
+ *   <li>{@link #onSystemPrompt}：转换系统提示词字符串</li>
  * </ul>
  *
- * <p><b>Notification Pattern</b> (one-way synchronous notification, no {@code next}
- * delegation):
+ * <p><b>通知模式</b>（单向同步通知，不通过 {@code next} 委派）：
  * <ul>
- *   <li>{@link #onAgentStateReady} — notified once this call's AgentState is ready</li>
+ *   <li>{@link #onAgentStateReady}：本次调用的 AgentState 就绪后收到通知</li>
  * </ul>
  *
- * <p>Each onion/transformer hook has a default implementation that delegates
- * directly to {@code next}, so subclasses only need to override the hooks they
- * care about; {@link #onAgentStateReady} defaults to a no-op.
+ * <p>每个洋葱式／转换式钩子的默认实现都会直接委派给 {@code next}，
+ * 因此子类只需重写自己关心的钩子；{@link #onAgentStateReady} 默认不执行操作。
  *
- * <p><b>Example:</b>
+ * <p><b>示例：</b>
  * <pre>{@code
  * MiddlewareBase logging = new MiddlewareBase() {
  *     @Override
@@ -71,8 +68,8 @@ import reactor.core.publisher.Mono;
 public interface MiddlewareBase {
 
     /**
-     * Middleware extension points. Adding a point adds one constant here; the
-     * grouping mechanism stays unchanged.
+     * 中间件扩展点。新增扩展点时只需在此添加一个常量，
+     * 分组机制保持不变。
      */
     enum ExtensionPoint {
         ON_AGENT,
@@ -84,52 +81,45 @@ public interface MiddlewareBase {
     }
 
     /**
-     * Returns the extension points where this middleware is active. This is
-     * a participation switch, not a statement about which methods are
-     * overridden: a point declared active but not overridden simply runs
-     * its default (pass-through / no-op), and a point omitted is never
-     * invoked — even if overridden.
+     * 返回此中间件启用的扩展点。这是参与开关，而不是对方法是否被重写
+     * 的声明：某个扩展点已启用但对应方法未重写时，只运行默认实现
+     * （直接透传或不执行操作）；未列出的扩展点即使被重写也不会调用。
      *
-     * <p>The default is active at every extension point, including ones
-     * added in future releases, so middlewares that do not override this
-     * method keep today's behavior unchanged. Once overridden, the active
-     * set is exactly the returned set; an empty set disables this
-     * middleware at every point while keeping its registration.
+     * <p>默认在所有扩展点上启用，包括未来版本新增的扩展点，
+     * 因此未重写此方法的中间件会保持现有行为。重写后，启用范围
+     * 就严格等于返回的集合；空集合会在保留注册的同时禁用全部扩展点。
      *
-     * <p>Activation is decided once at agent construction; mutating the
-     * returned set (or changing later results) has no effect on an
-     * already-built agent.
+     * <p>启用情况在构建智能体时一次性确定；之后修改返回的集合
+     * 或改变后续调用的返回结果，都不会影响已构建的智能体。
      *
-     * @return the set of extension points this middleware participates in;
-     *         {@code null} is treated as the full set; elements that do not equal
-     *         an {@link ExtensionPoint} constant never activate any point
+     * @return 此中间件参与的扩展点集合；{@code null} 视为完整集合；
+     *         不等于某个 {@link ExtensionPoint} 常量的元素不会启用任何扩展点
      */
     default Set<ExtensionPoint> activePoints() {
         return EnumSet.allOf(ExtensionPoint.class);
     }
 
     /**
-     * Returns this middleware's execution order.
+     * 返回此中间件的执行顺序。
      *
-     * <p>A larger number means a higher priority and places the middleware closer to the outside
-     * of the onion chain: for example, {@code 2} runs before {@code 1}, and {@code 0} runs after
-     * {@code 1}. Middlewares with the same order retain their builder registration order. The
-     * default value is {@code 1}.
+     * <p>数值越大，优先级越高，在洋葱链中越靠外：例如 {@code 2} 先于
+     * {@code 1} 运行，而 {@code 0} 后于 {@code 1} 运行。顺序值相同的中间件
+     * 保持在构建器中的注册顺序。默认值为 {@code 1}。
      *
-     * @return the execution order; higher values execute first before delegating to {@code next}
+     * @return 执行顺序；数值越大，越先执行，然后再委派给 {@code next}
      */
     default int order() {
         return 1;
     }
 
     /**
-     * Intercept the entire agent invocation.
+     * 拦截整个智能体调用。
      *
-     * @param agent the agent instance
-     * @param ctx   per-call runtime context (session, user, attributes)
-     * @param input agent input (messages)
-     * @param next  calls the next middleware or the core agent logic
-     * @return event stream from the agent invocation
+     * @param agent 智能体实例
+     * @param ctx   调用级运行上下文（会话、用户、属性）
+     * @param input 智能体输入（消息）
+     * @param next  调用下一个中间件或智能体核心逻辑
+     * @return 智能体调用产生的事件流
      */
     default Flux<AgentEvent> onAgent(
             Agent agent,
@@ -140,13 +130,13 @@ public interface MiddlewareBase {
     }
 
     /**
-     * Intercept the reasoning phase (LLM call + streaming output parsing).
+     * 拦截推理阶段（LLM 调用与流式输出解析）。
      *
-     * @param agent the agent instance
-     * @param ctx   per-call runtime context (session, user, attributes)
-     * @param input reasoning input (messages, tools, options)
-     * @param next  calls the next middleware or the core reasoning logic
-     * @return event stream from reasoning
+     * @param agent 智能体实例
+     * @param ctx   调用级运行上下文（会话、用户、属性）
+     * @param input 推理输入（消息、工具、选项）
+     * @param next  调用下一个中间件或核心推理逻辑
+     * @return 推理产生的事件流
      */
     default Flux<AgentEvent> onReasoning(
             Agent agent,
@@ -157,13 +147,13 @@ public interface MiddlewareBase {
     }
 
     /**
-     * Intercept the tool-call execution phase.
+     * 拦截工具调用执行阶段。
      *
-     * @param agent the agent instance
-     * @param ctx   per-call runtime context (session, user, attributes)
-     * @param input acting input (the tool calls)
-     * @param next  calls the next middleware or the core acting logic
-     * @return event stream from acting
+     * @param agent 智能体实例
+     * @param ctx   调用级运行上下文（会话、用户、属性）
+     * @param input 行动输入（工具调用）
+     * @param next  调用下一个中间件或核心行动逻辑
+     * @return 行动产生的事件流
      */
     default Flux<AgentEvent> onActing(
             Agent agent,
@@ -174,17 +164,17 @@ public interface MiddlewareBase {
     }
 
     /**
-     * Intercept the raw model API call.
+     * 拦截原始模型 API 调用。
      *
-     * <p>Transformations to {@link io.agentscope.core.event.TextBlockDeltaEvent} instances in the
-     * returned stream are reflected in the final response message. This allows middleware to
-     * normalize model text before consumers, including native structured-output parsing, use it.
+     * <p>对返回流中 {@link io.agentscope.core.event.TextBlockDeltaEvent} 实例的转换
+     * 会反映到最终响应消息中。因此，中间件可以在使用方（包括原生结构化输出解析）
+     * 使用模型文本之前，先将其规范化。
      *
-     * @param agent the agent instance
-     * @param ctx   per-call runtime context (session, user, attributes)
-     * @param input model-call input (messages, tools, options, model)
-     * @param next  calls the next middleware or the actual model invocation
-     * @return event stream from the model call
+     * @param agent 智能体实例
+     * @param ctx   调用级运行上下文（会话、用户、属性）
+     * @param input 模型调用输入（消息、工具、选项、模型）
+     * @param next  调用下一个中间件或实际模型
+     * @return 模型调用产生的事件流
      */
     default Flux<AgentEvent> onModelCall(
             Agent agent,
@@ -195,47 +185,42 @@ public interface MiddlewareBase {
     }
 
     /**
-     * Transform the system prompt string (pipeline pattern).
+     * 转换系统提示词字符串（流水线模式）。
      *
-     * <p>Multiple middlewares are applied sequentially; each receives the
-     * output of the previous one.
+     * <p>多个中间件依次应用；每个中间件接收前一个的输出。
      *
-     * @param agent         the agent instance
-     * @param ctx           per-call runtime context (session, user, attributes)
-     * @param currentPrompt the current system prompt
-     * @return the (possibly transformed) system prompt
+     * @param agent         智能体实例
+     * @param ctx           调用级运行上下文（会话、用户、属性）
+     * @param currentPrompt 当前系统提示词
+     * @return 系统提示词（可能已经转换）
      */
     default Mono<String> onSystemPrompt(Agent agent, RuntimeContext ctx, String currentPrompt) {
         return Mono.just(currentPrompt);
     }
 
     /**
-     * Notified once per lifecycle execution (subscription), right after this call's
-     * {@link AgentState} is bound to the {@link RuntimeContext} — resolved from the
-     * {@code (userId, sessionId)} slot or freshly created for a brand-new session — and
-     * before the input enters the pipeline (memory, reasoning).
+     * 每次生命周期执行（订阅）通知一次，时机为本次调用的 {@link AgentState}
+     * 刚绑定到 {@link RuntimeContext} 之后：状态可能来自
+     * {@code (userId, sessionId)} 对应的槽位，也可能为全新会话新建。
+     * 此时输入尚未进入处理流水线（记忆、推理）。
      *
-     * <p>This is a one-way synchronous notification without {@code next} delegation:
-     * middlewares run in {@link #order()} sequence (higher first) and must be non-blocking —
-     * never re-enter the same session's agent, which would deadlock on its call gate. A
-     * thrown exception fails the call: it propagates to the caller unchanged and the
-     * remaining middlewares are not invoked.
+     * <p>这是没有 {@code next} 委派的单向同步通知：中间件按 {@link #order()}
+     * 顺序运行（数值较大的先运行），且不得阻塞。绝不能再次进入同一会话的智能体，
+     * 否则会在调用门控处发生死锁。抛出异常会使本次调用失败：异常原样传播给调用方，
+     * 剩余中间件不再调用。
      *
-     * <p>Lifecycle window: the notification runs after this call has been admitted and
-     * registered for interruption, but before the request-state binding, the tracing
-     * envelope, and the error-event chain are in place. An interrupt issued while the
-     * notification runs is honored; a thrown exception, however, reaches the caller
-     * directly without ErrorEvent hooks or tracing spans — keep implementations
-     * non-blocking and fast-failing.
+     * <p>生命周期窗口：通知执行时，本次调用已经获准进入并注册了中断处理，
+     * 但请求状态绑定、追踪封装与错误事件链尚未就绪。通知期间发出的中断
+     * 会得到处理；但抛出的异常会直接到达调用方，不经过 ErrorEvent 钩子
+     * 或追踪跨度，因此实现应保持非阻塞并快速失败。
      *
-     * @param agent         the agent instance
-     * @param ctx           per-call runtime context (session, user, attributes)
-     * @param state         this call's just-ready state, same instance as
-     *                      {@code ctx.getAgentState()}, never {@code null}; a brand-new
-     *                      session starts with an empty context
-     * @param inputMessages this call's input (after {@code onAgent} middleware, not yet
-     *                      merged with memory) as a private mutable copy; in-place changes
-     *                      apply to the whole call, the caller's original list is unaffected
+     * @param agent         智能体实例
+     * @param ctx           调用级运行上下文（会话、用户、属性）
+     * @param state         本次调用刚就绪的状态，与 {@code ctx.getAgentState()}
+     *                      是同一实例，绝不为 {@code null}；全新会话的上下文为空
+     * @param inputMessages 本次调用的输入（已经经过 {@code onAgent} 中间件，尚未
+     *                      与记忆合并），以私有可变副本形式提供；原地修改影响整个调用，
+     *                      但不会改变调用方的原始列表
      */
     default void onAgentStateReady(
             Agent agent, RuntimeContext ctx, AgentState state, List<Msg> inputMessages) {}

@@ -23,13 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 import reactor.core.publisher.Mono;
 
-/** Final, asynchronous request preparation, after all model-call middleware transformations. */
+/** 在所有模型调用中间件完成转换后，执行最终的异步请求准备。 */
 @FunctionalInterface
 public interface ModelRequestPreparer {
     String MANIFEST_ATTRIBUTE_PREFIX = "agentscope.model_request_manifest.";
     String BUILD_EVENT_NAME = "context_build";
 
-    /** Emit one independent build outcome, including rejection before any provider call. */
+    /** 发出一个独立的构建结果，包括在调用任何服务商之前就被拒绝的情况。 */
     default Mono<ModelCallInput> prepareObserved(
             Agent agent,
             RuntimeContext context,
@@ -37,6 +37,8 @@ public interface ModelRequestPreparer {
             String callId,
             Purpose purpose,
             Consumer<AgentEvent> events) {
+        // 【学习提示】把清理旧清单与请求准备放在订阅阶段，使每次重试都重新构建。
+        // 内层 defer 也让 prepare 同步抛出的异常进入响应式错误通道，供 doOnError 观察。
         return Mono.defer(
                 () -> {
                     RuntimeContext rc = context == null ? RuntimeContext.empty() : context;
@@ -68,7 +70,7 @@ public interface ModelRequestPreparer {
         payload.put("status", error == null ? "passed" : "failed");
         Object manifest = rc.get(MANIFEST_ATTRIBUTE_PREFIX + callId);
         if (manifest != null) payload.put("context_manifest", manifest);
-        // Exception text can contain source content; record only its type.
+        // 异常文本可能包含源内容，因此只记录异常类型。
         if (error != null) payload.put("error_type", error.getClass().getSimpleName());
         events.accept(new CustomEvent(BUILD_EVENT_NAME, payload));
     }
@@ -77,7 +79,7 @@ public interface ModelRequestPreparer {
         return false;
     }
 
-    /** Called anew on subscription, including retries. Must not invoke the main model itself. */
+    /** 每次订阅（包括重试）都会重新调用。不得在此直接调用主模型。 */
     Mono<ModelCallInput> prepare(
             Agent agent,
             RuntimeContext context,

@@ -16,8 +16,8 @@
 package io.agentscope.core.model;
 
 /**
- * Exception thrown when model operations fail.
- * This exception provides a unified way to handle errors from different model providers.
+ * 模型操作失败时抛出的异常。
+ * 此异常提供统一方式处理不同模型服务商的错误。
  */
 public class ModelException extends RuntimeException {
 
@@ -25,12 +25,12 @@ public class ModelException extends RuntimeException {
     private final String provider;
 
     /**
-     * Creates a ModelException with a message.
+     * 使用错误消息创建 ModelException。
      *
-     * <p>Use this constructor for general model errors when specific model/provider
-     * information is not available or relevant.
+     * <p>当无法获取具体模型／服务商信息，或这些信息与问题无关时，
+     * 使用此构造方法表示一般模型错误。
      *
-     * @param message the error message
+     * @param message 错误消息
      */
     public ModelException(String message) {
         super(message);
@@ -39,12 +39,12 @@ public class ModelException extends RuntimeException {
     }
 
     /**
-     * Creates a ModelException with a message and cause.
+     * 使用错误消息与原因创建 ModelException。
      *
-     * <p>Use this constructor when wrapping another exception that caused the model error.
+     * <p>当需要包装引发模型错误的底层异常时，使用此构造方法。
      *
-     * @param message the error message
-     * @param cause the underlying cause of the exception
+     * @param message 错误消息
+     * @param cause 异常的底层原因
      */
     public ModelException(String message, Throwable cause) {
         super(message, cause);
@@ -53,14 +53,14 @@ public class ModelException extends RuntimeException {
     }
 
     /**
-     * Creates a ModelException with message and model information.
+     * 使用错误消息与模型信息创建 ModelException。
      *
-     * <p>Use this constructor when the error is specific to a particular model
-     * and provider, allowing for more targeted error handling and debugging.
+     * <p>当错误与特定模型及服务商有关时，使用此构造方法，
+     * 以便更有针对性地处理错误和调试。
      *
-     * @param message the error message
-     * @param modelName the name of the model that caused the error
-     * @param provider the provider of the model (e.g., "openai", "dashscope")
+     * @param message 错误消息
+     * @param modelName 发生错误的模型名称
+     * @param provider 模型服务商（例如 "openai"、"dashscope"）
      */
     public ModelException(String message, String modelName, String provider) {
         super(message);
@@ -69,15 +69,15 @@ public class ModelException extends RuntimeException {
     }
 
     /**
-     * Creates a ModelException with message, cause, and model information.
+     * 使用错误消息、原因及模型信息创建 ModelException。
      *
-     * <p>Use this constructor when wrapping another exception that caused the model error,
-     * and the error is specific to a particular model and provider.
+     * <p>当需要包装引发模型错误的底层异常，
+     * 且错误与特定模型和服务商有关。
      *
-     * @param message the error message
-     * @param cause the underlying cause of the exception
-     * @param modelName the name of the model that caused the error
-     * @param provider the provider of the model (e.g., "openai", "dashscope")
+     * @param message 错误消息
+     * @param cause 异常的底层原因
+     * @param modelName 发生错误的模型名称
+     * @param provider 模型服务商（例如 "openai"、"dashscope"）
      */
     public ModelException(String message, Throwable cause, String modelName, String provider) {
         super(message, cause);
@@ -86,18 +86,18 @@ public class ModelException extends RuntimeException {
     }
 
     /**
-     * Gets the name of the model that caused the error.
+     * 获取发生错误的模型名称。
      *
-     * @return the model name, or null if not set
+     * @return 模型名称；未设置时为 null
      */
     public String getModelName() {
         return modelName;
     }
 
     /**
-     * Gets the provider of the model that caused the error.
+     * 获取发生错误的模型所属服务商。
      *
-     * @return the provider name, or null if not set
+     * @return 服务商名称；未设置时为 null
      */
     public String getProvider() {
         return provider;

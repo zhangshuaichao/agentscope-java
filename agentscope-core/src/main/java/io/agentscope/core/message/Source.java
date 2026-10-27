@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * Base class for media sources (URL or Base64).
+ * 媒体来源（URL 或 Base64）的基类。
  *
- * Uses Jackson annotations for polymorphic JSON serialization.
+ * 使用 Jackson 注解实现多态 JSON 序列化。
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({

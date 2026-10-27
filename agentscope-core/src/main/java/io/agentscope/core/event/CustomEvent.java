@@ -20,20 +20,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
- * Generic extensible event for signals that don't fit a specific {@link AgentEvent} subtype.
+ * 通用的可扩展事件，用于不适合特定 {@link AgentEvent} 子类型的信号。
  *
- * <p>Used by service-layer middleware to notify front-end subscribers about state changes (task
- * progress, team membership, permission updates, etc.) without polluting the core agent event enum
- * with application-specific types.
+ * <p>服务层中间件使用它向前端订阅方通知状态变化（任务进度、团队成员、权限更新等），
+ * 避免将应用专用类型混入核心智能体事件枚举。
  *
- * <p>Front-end implementations should handle unknown {@link #getName()} values gracefully — skip
- * with no error.
+ * <p>前端实现应平稳处理未知的 {@link #getName()} 值：直接跳过，不报错。
  *
- * <p>Well-known {@code name} values:
+ * <p>已知的 {@code name} 值：
  * <ul>
- *   <li>{@code "state_updated"} — agent state (tasks / permission) changed during a tool call</li>
- *   <li>{@code "team_updated"} — team membership changed (member added / team created or
- *   dissolved)</li>
+ *   <li>{@code "state_updated"}：工具调用期间智能体状态（任务／权限）发生变化</li>
+ *   <li>{@code "team_updated"}：团队成员关系发生变化（增加成员、创建或解散团队）</li>
  * </ul>
  */
 public class CustomEvent extends AgentEvent {
@@ -67,14 +64,14 @@ public class CustomEvent extends AgentEvent {
     }
 
     /**
-     * Returns the kind of notification. See class javadoc for well-known values.
+     * 返回通知种类。已知值见类级 Javadoc。
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Returns the arbitrary JSON-serializable payload whose schema depends on {@link #getName()}.
+     * 返回可序列化为 JSON 的任意载荷，其模式由 {@link #getName()} 决定。
      */
     public Map<String, Object> getValue() {
         return value;

@@ -15,7 +15,7 @@
  */
 package io.agentscope.core.model;
 
-/** Shared helpers for model providers. */
+/** 模型服务商的公共辅助方法。 */
 public final class ModelProviderSupport {
 
     private ModelProviderSupport() {}

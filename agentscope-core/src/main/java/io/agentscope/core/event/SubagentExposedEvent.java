@@ -19,9 +19,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted when a spawned subagent is exposed as a user-addressable entry point via
- * {@code agent_spawn(expose_to_user=true)}. SSE/streaming consumers use this event to
- * render a new conversation entry point in the client UI.
+ * 通过 {@code agent_spawn(expose_to_user=true)} 将新建子智能体暴露为用户可访问的
+ * 入口时发出。SSE／流式事件消费方使用此事件，在客户端界面中呈现新的对话入口。
  */
 public class SubagentExposedEvent extends AgentEvent {
 

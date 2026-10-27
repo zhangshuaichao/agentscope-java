@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Pure, transient projection. Never appends reminders to durable conversation history. */
+/** 纯粹的临时投影，绝不将提醒追加到持久化对话历史中。 */
 public final class TaskContextProjection {
     private TaskContextProjection() {}
 
@@ -52,12 +52,12 @@ public final class TaskContextProjection {
         return project(input, state, true);
     }
 
-    /** Requirement/evidence projections require an explicitly enabled capability. */
+    /** 需求与证据投影必须显式启用对应能力。 */
     public static List<Msg> project(List<Msg> input, TaskContextState state, boolean assurance) {
         return project(input, state, assurance, assurance);
     }
 
-    /** Selects requirement and verification projections independently. */
+    /** 分别选择需求投影与验证投影。 */
     public static List<Msg> project(
             List<Msg> input,
             TaskContextState state,

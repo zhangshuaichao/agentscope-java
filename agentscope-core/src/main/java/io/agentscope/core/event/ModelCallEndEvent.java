@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.agentscope.core.model.ChatUsage;
 
 /**
- * Emitted when the agent finishes a model (LLM) call.
+ * 智能体完成一次模型（LLM）调用时发出。
  */
 public class ModelCallEndEvent extends AgentEvent {
 

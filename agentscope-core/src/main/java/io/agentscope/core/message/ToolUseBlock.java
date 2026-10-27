@@ -23,49 +23,43 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a tool use request within a message.
+ * 表示消息中的工具使用请求。
  *
- * <p>This content block is used when an agent requests to execute a tool.
- * It contains the tool's unique identifier, name, input parameters, and optionally
- * the raw content for streaming tool calls.
+ * <p>智能体请求执行工具时使用此内容块。它包含工具调用的唯一标识符、工具名称、输入参数，以及用于流式工具调用的可选原始内容。
  *
- * <p>The tool input is stored as a generic map of string keys to object values,
- * allowing for flexible parameter passing to different tool implementations.
+ * <p>工具输入保存为字符串键到对象值的通用映射，便于向不同工具实现灵活传参。
  */
 public final class ToolUseBlock extends ContentBlock {
 
-    /** Metadata key for Gemini thought signature (byte[] value). */
+    /**
+     * Gemini 思考签名的元数据键（值为 byte[]）。
+     */
     public static final String METADATA_THOUGHT_SIGNATURE = "thoughtSignature";
 
     /**
-     * Metadata key marking this tool call as a provider server tool (Boolean value). Server tools
-     * (e.g. Anthropic's built-in web_search) are executed on the provider's infrastructure and
-     * must not be dispatched to the local toolkit; their results arrive in the same assistant
-     * message as {@link ToolResultBlock}s carrying the same marker.
+     * 标记工具调用属于提供商服务端工具的布尔元数据键。服务端工具（例如 Anthropic 内置的 web_search）在提供商基础设施上执行，不得分派给本地工具集；结果在同一助手消息中以带相同标记的 {@link ToolResultBlock} 返回。
      */
     public static final String METADATA_SERVER_TOOL = "serverTool";
 
     /**
-     * Metadata key marking a streamed tool call whose accumulated raw arguments never formed a
-     * valid JSON object (Boolean value) — typically truncated by the output token limit. Such a
-     * call must not be executed with empty arguments.
+     * 标记流式工具调用累积的原始参数始终未形成有效 JSON 对象的布尔元数据键，常见原因是输出 token 上限导致截断。此类调用不得使用空参数执行。
      */
     public static final String METADATA_MALFORMED_ARGUMENTS = "malformedArguments";
 
     private final String id;
     private final String name;
     private final Map<String, Object> input;
-    private final String content; // Raw content for streaming tool calls
-    private final Map<String, Object> metadata; // Provider-specific metadata
+    private final String content; // 流式工具调用的原始内容
+    private final Map<String, Object> metadata; // 提供商特定的元数据
     private final ToolCallState state;
 
     /**
-     * Creates a new tool use block with metadata (convenience constructor).
+     * 创建带元数据的工具使用块（便捷构造器）。
      *
-     * @param id Unique identifier for this tool call
-     * @param name Name of the tool to execute
-     * @param input Input parameters for the tool (will be defensively copied)
-     * @param metadata Provider-specific metadata (will be defensively copied)
+     * @param id 工具调用的唯一标识符
+     * @param name 要执行的工具名称
+     * @param input 工具输入参数（进行防御性复制）
+     * @param metadata 提供商特定的元数据（进行防御性复制）
      */
     public ToolUseBlock(
             String id, String name, Map<String, Object> input, Map<String, Object> metadata) {
@@ -73,24 +67,24 @@ public final class ToolUseBlock extends ContentBlock {
     }
 
     /**
-     * Creates a new tool use block without metadata (convenience constructor).
+     * 创建不带元数据的工具使用块（便捷构造器）。
      *
-     * @param id Unique identifier for this tool call
-     * @param name Name of the tool to execute
-     * @param input Input parameters for the tool (will be defensively copied)
+     * @param id 工具调用的唯一标识符
+     * @param name 要执行的工具名称
+     * @param input 工具输入参数（进行防御性复制）
      */
     public ToolUseBlock(String id, String name, Map<String, Object> input) {
         this(id, name, input, null, null, null);
     }
 
     /**
-     * Creates a new tool use block with raw content for streaming.
+     * 创建包含流式处理原始内容的工具使用块。
      *
-     * @param id Unique identifier for this tool call
-     * @param name Name of the tool to execute
-     * @param input Input parameters for the tool (will be defensively copied)
-     * @param content Raw content for streaming tool calls
-     * @param metadata Provider-specific metadata (will be defensively copied)
+     * @param id 工具调用的唯一标识符
+     * @param name 要执行的工具名称
+     * @param input 工具输入参数（进行防御性复制）
+     * @param content 流式工具调用的原始内容
+     * @param metadata 提供商特定的元数据（进行防御性复制）
      */
     public ToolUseBlock(
             String id,
@@ -102,14 +96,14 @@ public final class ToolUseBlock extends ContentBlock {
     }
 
     /**
-     * Creates a new tool use block with all fields.
+     * 使用全部字段创建工具使用块。
      *
-     * @param id Unique identifier for this tool call
-     * @param name Name of the tool to execute
-     * @param input Input parameters for the tool (will be defensively copied)
-     * @param content Raw content for streaming tool calls
-     * @param metadata Provider-specific metadata (will be defensively copied)
-     * @param state The tool call state, defaults to PENDING if null
+     * @param id 工具调用的唯一标识符
+     * @param name 要执行的工具名称
+     * @param input 工具输入参数（进行防御性复制）
+     * @param content 流式工具调用的原始内容
+     * @param metadata 提供商特定的元数据（进行防御性复制）
+     * @param state 工具调用状态，为 null 时默认为 PENDING
      */
     @JsonCreator
     public ToolUseBlock(
@@ -121,7 +115,7 @@ public final class ToolUseBlock extends ContentBlock {
             @JsonProperty("state") ToolCallState state) {
         this.id = id;
         this.name = name;
-        // Defensive copy to prevent external modifications
+        // 进行防御性复制，避免外部修改
         this.input =
                 input == null
                         ? Collections.emptyMap()
@@ -135,67 +129,65 @@ public final class ToolUseBlock extends ContentBlock {
     }
 
     /**
-     * Gets the unique identifier of this tool call.
+     * 获取工具调用的唯一标识符。
      *
-     * @return The tool call ID
+     * @return 工具调用 ID
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the name of the tool to execute.
+     * 获取要执行的工具名称。
      *
-     * @return The tool name
+     * @return 工具名称
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Gets the input parameters for the tool.
+     * 获取工具输入参数。
      *
-     * @return The tool input parameters map
+     * @return 工具输入参数映射
      */
     public Map<String, Object> getInput() {
         return input;
     }
 
     /**
-     * Gets the raw content for streaming tool calls.
+     * 获取流式工具调用的原始内容。
      *
-     * @return The raw content, or null if not set
+     * @return 原始内容；未设置时为 null
      */
     public String getContent() {
         return content;
     }
 
     /**
-     * Gets the provider-specific metadata.
+     * 获取提供商特定的元数据。
      *
-     * <p>For Gemini, this may contain the thought signature under the key
-     * {@link #METADATA_THOUGHT_SIGNATURE}.
+     * <p>对于 Gemini，可能在 {@link #METADATA_THOUGHT_SIGNATURE} 键下包含思考签名。
      *
-     * @return The metadata map, or an empty map if not set
+     * @return 元数据映射；未设置时为空映射
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Gets the tool call state.
+     * 获取工具调用状态。
      *
-     * @return The tool call state
+     * @return 工具调用状态
      */
     public ToolCallState getState() {
         return state;
     }
 
     /**
-     * Checks whether this tool call is executed by the provider on the server side (marked via
-     * {@link #METADATA_SERVER_TOOL}).
+     * 检查工具调用是否由提供商在服务端执行（通过 {@link #METADATA_SERVER_TOOL} 标记）。
      *
-     * @return true if this is a server-side tool call
+     * @return 属于服务端工具调用时为 true
      */
     @JsonIgnore
     public boolean isServerTool() {
@@ -203,10 +195,9 @@ public final class ToolUseBlock extends ContentBlock {
     }
 
     /**
-     * Checks whether this tool call's streamed arguments never formed a valid JSON object
-     * (marked via {@link #METADATA_MALFORMED_ARGUMENTS}), e.g. truncated mid-arguments.
+     * 检查工具调用的流式参数是否始终未形成有效 JSON 对象（通过 {@link #METADATA_MALFORMED_ARGUMENTS} 标记），例如参数传输到一半被截断。
      *
-     * @return true if the accumulated arguments were malformed
+     * @return 累积参数格式错误时为 true
      */
     @JsonIgnore
     public boolean hasMalformedArguments() {
@@ -214,26 +205,26 @@ public final class ToolUseBlock extends ContentBlock {
     }
 
     /**
-     * Returns a copy of this block with the given state.
+     * 返回使用给定状态的内容块副本。
      *
-     * @param state The new state
-     * @return A new ToolUseBlock with the updated state
+     * @param state 新状态
+     * @return 更新了状态的新 ToolUseBlock
      */
     public ToolUseBlock withState(ToolCallState state) {
         return new ToolUseBlock(this.id, this.name, this.input, this.content, this.metadata, state);
     }
 
     /**
-     * Creates a new builder for constructing a ToolUseBlock.
+     * 创建用于构造 ToolUseBlock 的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing ToolUseBlock instances.
+     * 用于构造 ToolUseBlock 实例的构建器。
      */
     public static class Builder {
         private String id;
@@ -244,10 +235,10 @@ public final class ToolUseBlock extends ContentBlock {
         private ToolCallState state;
 
         /**
-         * Sets the unique identifier for the tool call.
+         * 设置工具调用的唯一标识符。
          *
-         * @param id The tool call ID
-         * @return This builder for chaining
+         * @param id 工具调用 ID
+         * @return 当前构建器，支持链式调用
          */
         public Builder id(String id) {
             this.id = id;
@@ -255,10 +246,10 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Sets the name of the tool to execute.
+         * 设置要执行的工具名称。
          *
-         * @param name The tool name
-         * @return This builder for chaining
+         * @param name 工具名称
+         * @return 当前构建器，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -266,10 +257,10 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Sets the input parameters for the tool.
+         * 设置工具输入参数。
          *
-         * @param input The tool input parameters map
-         * @return This builder for chaining
+         * @param input 工具输入参数映射
+         * @return 当前构建器，支持链式调用
          */
         public Builder input(Map<String, Object> input) {
             this.input = input;
@@ -277,10 +268,10 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Sets the raw content for streaming tool calls.
+         * 设置流式工具调用的原始内容。
          *
-         * @param content The raw content for streaming
-         * @return This builder for chaining
+         * @param content 流式处理的原始内容
+         * @return 当前构建器，支持链式调用
          */
         public Builder content(String content) {
             this.content = content;
@@ -288,13 +279,12 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Sets the provider-specific metadata.
+         * 设置提供商特定的元数据。
          *
-         * <p>For Gemini, use {@link ToolUseBlock#METADATA_THOUGHT_SIGNATURE} as the key
-         * to store thought signatures.
+         * <p>对于 Gemini，使用 {@link ToolUseBlock#METADATA_THOUGHT_SIGNATURE} 作为键来存储思考签名。
          *
-         * @param metadata The metadata map
-         * @return This builder for chaining
+         * @param metadata 元数据映射
+         * @return 当前构建器，支持链式调用
          */
         public Builder metadata(Map<String, Object> metadata) {
             this.metadata = metadata;
@@ -302,10 +292,10 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Sets the tool call state.
+         * 设置工具调用状态。
          *
-         * @param state The tool call state
-         * @return This builder for chaining
+         * @param state 工具调用状态
+         * @return 当前构建器，支持链式调用
          */
         public Builder state(ToolCallState state) {
             this.state = state;
@@ -313,9 +303,9 @@ public final class ToolUseBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new ToolUseBlock with the configured properties.
+         * 使用配置的属性构建 ToolUseBlock。
          *
-         * @return A new ToolUseBlock instance
+         * @return 新的 ToolUseBlock 实例
          */
         public ToolUseBlock build() {
             return new ToolUseBlock(id, name, input, content, metadata, state);

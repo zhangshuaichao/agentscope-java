@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted when an agent finishes processing an invocation.
+ * 智能体完成一次调用的处理时发出。
  */
 public class AgentEndEvent extends AgentEvent {
 

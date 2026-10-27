@@ -22,15 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Msg} with {@link MsgRole#ASSISTANT} pinned at construction time.
+ * 构造时将角色固定为 {@link MsgRole#ASSISTANT} 的 {@link Msg}。
  *
- * <p>Provides convenience constructors that take a {@code String} directly
- * (wrapped into a {@link TextBlock}) or any combination of {@link ContentBlock}s,
- * including {@link ThinkingBlock} and {@link ToolUseBlock} which are common in
- * assistant turns.
+ * <p>提供便捷构造器，可直接传入 {@code String}（包装为 {@link TextBlock}），
+ * 或任意组合的 {@link ContentBlock}，包括助手轮次常用的 {@link ThinkingBlock} 和 {@link ToolUseBlock}。
  *
- * <p>Also offers an independent {@link Builder} for cases that need to set
- * {@code metadata}, {@code timestamp}, {@code usage} or {@code generateReason}.
+ * <p>还提供独立的 {@link Builder}，用于设置 {@code metadata}、{@code timestamp}、
+ * {@code usage} 或 {@code generateReason}。
  */
 public final class AssistantMessage extends Msg {
 
@@ -80,16 +78,14 @@ public final class AssistantMessage extends Msg {
     }
 
     /**
-     * Creates a builder for {@link AssistantMessage} with a randomly generated
-     * ID and the current timestamp pre-populated.
+     * 创建 {@link AssistantMessage} 的构建器，并预填随机生成的 ID 和当前时间戳。
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Fluent builder for {@link AssistantMessage}. The role is fixed to
-     * {@link MsgRole#ASSISTANT} and {@link #role(MsgRole)} is unsupported.
+     * {@link AssistantMessage} 的链式构建器。角色固定为 {@link MsgRole#ASSISTANT}，不支持 {@link #role(MsgRole)}。
      */
     public static final class Builder extends Msg.Builder {
 
@@ -97,7 +93,9 @@ public final class AssistantMessage extends Msg {
             super.role = MsgRole.ASSISTANT;
         }
 
-        /** Unsupported on {@link AssistantMessage.Builder}: role is fixed to ASSISTANT. */
+        /**
+         * {@link AssistantMessage.Builder} 不支持此操作：角色固定为 ASSISTANT。
+         */
         @Override
         public Builder role(MsgRole role) {
             throw new UnsupportedOperationException(

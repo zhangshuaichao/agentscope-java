@@ -20,17 +20,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents video content in a message.
+ * 表示消息中的视频内容。
  *
- * <p>This content block supports video from two sources:
+ * <p>此内容块支持两种视频来源：
  * <ul>
- *   <li>URL source - video files accessible via HTTP/HTTPS URLs or local file URLs</li>
- *   <li>Base64 source - video encoded as Base64 strings with MIME type</li>
+ * <li>URL 来源：可通过 HTTP/HTTPS URL 或本地文件 URL 访问的视频文件</li>
+ * <li>Base64 来源：以 Base64 字符串编码并附带 MIME 类型的视频</li>
  * </ul>
  *
- * <p>Video blocks enable advanced multimodal AI interactions where agents need to process
- * or analyze video content such as presentations, tutorials, surveillance footage,
- * or other visual media that includes motion and temporal elements.
+ * <p>视频块支持高级多模态 AI 交互，使智能体能够处理或分析演示、教程、监控录像等包含运动和时间元素的视频内容。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class VideoBlock extends ContentBlock {
@@ -48,23 +46,23 @@ public final class VideoBlock extends ContentBlock {
     private final Integer totalPixels;
 
     /**
-     * Creates a new video block with source.
+     * 使用来源创建视频块。
      *
-     * @param source The video source (URL or Base64)
+     * @param source 视频来源（URL 或 Base64）
      */
     public VideoBlock(@JsonProperty("source") Source source) {
         this(source, null, null, null, null, null);
     }
 
     /**
-     * Creates a new video block for JSON deserialization.
+     * 创建用于 JSON 反序列化的视频块。
      *
-     * @param source The video source (URL or Base64)
-     * @param fps The frames per second. The value range is [0.1, 10], and the default value is 2.0.
-     * @param maxFrames The maximum number of frames captured in the video.
-     * @param minPixels Used to set the minimum pixel threshold for input video frames.
-     * @param maxPixels Used to set the maximum pixel threshold for input video frames.
-     * @param totalPixels Used to limit the total pixels of all frames extracted from the video (single image pixels × total frames).
+     * @param source 视频来源（URL 或 Base64）
+     * @param fps 每秒帧数，范围为 [0.1, 10]，默认值为 2.0
+     * @param maxFrames 从视频中采集的最大帧数
+     * @param minPixels 输入视频帧的最小像素阈值
+     * @param maxPixels 输入视频帧的最大像素阈值
+     * @param totalPixels 从视频提取的所有帧的总像素上限（单幅图像像素数 × 总帧数）
      */
     @JsonCreator
     private VideoBlock(
@@ -83,69 +81,69 @@ public final class VideoBlock extends ContentBlock {
     }
 
     /**
-     * Gets the source of this video content.
+     * 获取视频内容的来源。
      *
-     * @return The video source containing URL or Base64 data
+     * @return 包含 URL 或 Base64 数据的视频来源
      */
     public Source getSource() {
         return source;
     }
 
     /**
-     * Gets the frames per second (FPS) of the video.
+     * 获取视频的每秒帧数（FPS）。
      *
-     * @return The frames per second value
+     * @return 每秒帧数
      */
     public Float getFps() {
         return fps;
     }
 
     /**
-     * Gets the maximum number of frames to capture from the video.
+     * 获取从视频中采集的最大帧数。
      *
-     * @return The maximum number of frames
+     * @return 最大帧数
      */
     public Integer getMaxFrames() {
         return maxFrames;
     }
 
     /**
-     * Gets the minimum pixel threshold for input video frames.
+     * 获取输入视频帧的最小像素阈值。
      *
-     * @return The minimum pixel threshold
+     * @return 最小像素阈值
      */
     public Integer getMinPixels() {
         return minPixels;
     }
 
     /**
-     * Gets the maximum pixel threshold for input video frames.
+     * 获取输入视频帧的最大像素阈值。
      *
-     * @return The maximum pixel threshold
+     * @return 最大像素阈值
      */
     public Integer getMaxPixels() {
         return maxPixels;
     }
 
     /**
-     * Gets the total pixels of all frames extracted from the video (single image pixels × total frames).
-     * @return The total pixels
+     * 获取从视频提取的所有帧的总像素数（单幅图像像素数 × 总帧数）。
+     * @return 总像素数
      */
     public Integer getTotalPixels() {
         return totalPixels;
     }
 
     /**
-     * Creates a new builder for constructing VideoBlock instances.
+     * 创建用于构造 VideoBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing VideoBlock instances.
+     * 用于构造 VideoBlock 实例的构建器。
      */
     public static class Builder {
 
@@ -162,10 +160,10 @@ public final class VideoBlock extends ContentBlock {
         private Integer totalPixels;
 
         /**
-         * Sets the source for the video content.
+         * 设置视频内容的来源。
          *
-         * @param source The video source (URL or Base64)
-         * @return This builder for chaining
+         * @param source 视频来源（URL 或 Base64）
+         * @return 当前构建器，支持链式调用
          */
         public Builder source(Source source) {
             this.source = source;
@@ -173,10 +171,10 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Sets the frames per second (FPS) of the video.
+         * 设置视频的每秒帧数（FPS）。
          *
-         * @param fps The frames per second value
-         * @return This builder for chaining
+         * @param fps 每秒帧数
+         * @return 当前构建器，支持链式调用
          */
         public Builder fps(Float fps) {
             this.fps = fps;
@@ -184,10 +182,10 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Sets the maximum number of frames to capture from the video.
+         * 设置从视频中采集的最大帧数。
          *
-         * @param maxFrames The maximum number of frames
-         * @return This builder for chaining
+         * @param maxFrames 最大帧数
+         * @return 当前构建器，支持链式调用
          */
         public Builder maxFrames(Integer maxFrames) {
             this.maxFrames = maxFrames;
@@ -195,10 +193,10 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Sets the minimum pixel threshold for input video frames.
+         * 设置输入视频帧的最小像素阈值。
          *
-         * @param minPixels The minimum pixel threshold
-         * @return This builder for chaining
+         * @param minPixels 最小像素阈值
+         * @return 当前构建器，支持链式调用
          */
         public Builder minPixels(Integer minPixels) {
             this.minPixels = minPixels;
@@ -206,10 +204,10 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Sets the maximum pixel threshold for input video frames.
+         * 设置输入视频帧的最大像素阈值。
          *
-         * @param maxPixels The maximum pixel threshold
-         * @return This builder for chaining
+         * @param maxPixels 最大像素阈值
+         * @return 当前构建器，支持链式调用
          */
         public Builder maxPixels(Integer maxPixels) {
             this.maxPixels = maxPixels;
@@ -217,10 +215,10 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Sets the total pixels of all frames extracted from the video (single image pixels × total frames).
+         * 设置从视频提取的所有帧的总像素数（单幅图像像素数 × 总帧数）。
          *
-         * @param totalPixels The total pixels
-         * @return This builder for chaining
+         * @param totalPixels 总像素数
+         * @return 当前构建器，支持链式调用
          */
         public Builder totalPixels(Integer totalPixels) {
             this.totalPixels = totalPixels;
@@ -228,9 +226,9 @@ public final class VideoBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new VideoBlock with the configured source.
+         * 使用配置的来源构建 VideoBlock。
          *
-         * @return A new VideoBlock instance
+         * @return 新的 VideoBlock 实例
          */
         public VideoBlock build() {
             return new VideoBlock(source, fps, maxFrames, minPixels, maxPixels, totalPixels);

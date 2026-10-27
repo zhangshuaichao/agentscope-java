@@ -29,8 +29,7 @@ public enum ToolResultState {
     RUNNING("running"),
 
     /**
-     * The tool call was suspended and awaits execution outside the agent runtime. A suspended
-     * result carries no output: the real result is supplied by the caller on resume.
+     * 工具调用已挂起，等待在智能体运行时之外执行。挂起结果不携带输出；真实结果由调用方在恢复时提供。
      */
     SUSPENDED("suspended");
 

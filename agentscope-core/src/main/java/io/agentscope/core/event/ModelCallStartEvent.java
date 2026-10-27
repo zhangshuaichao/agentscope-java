@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted when the agent starts a model (LLM) call.
+ * 智能体开始一次模型（LLM）调用时发出。
  */
 public class ModelCallStartEvent extends AgentEvent {
 

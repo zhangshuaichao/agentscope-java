@@ -19,11 +19,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * One-shot hint block event.
+ * 一次性提示块事件。
  *
- * <p>Unlike text/thinking blocks, hint blocks are not streamed — the full content is available at
- * creation time (team messages, background tool results, user interruptions, etc.). A single event
- * carries the complete hint.
+ * <p>与文本块／思考块不同，提示块不采用流式传输：创建时即已有完整内容
+ * （例如团队消息、后台工具结果、用户中断等）。一个事件承载完整提示。
  */
 public class HintBlockEvent extends AgentEvent {
 
@@ -68,12 +67,12 @@ public class HintBlockEvent extends AgentEvent {
     }
 
     /**
-     * Returns the sender or origin of this hint. For team messages this is the sender's display
-     * name (e.g. {@code "alice"}); for system notifications it may be {@code "system"} or
-     * {@code null}.
+     * 返回此提示的发送方或来源。对于团队消息，这是发送方的显示名称
+     * （例如 {@code "alice"}）；对于系统通知，可能是 {@code "system"} 或
+     * {@code null}。
      *
-     * <p>Named {@code hintSource} to avoid collision with {@link AgentEvent#getSource()} which
-     * carries the subagent forwarding path.
+     * <p>命名为 {@code hintSource}，以避免与承载子智能体转发路径的
+     * {@link AgentEvent#getSource()} 冲突。
      */
     public String getHintSource() {
         return hintSource;

@@ -22,14 +22,12 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Unified data block for arbitrary binary media (image / audio / video / file).
+ * 用于任意二进制媒体（图像、音频、视频、文件）的统一数据块。
  *
- * <p>Unlike the legacy {@link ImageBlock}, {@link AudioBlock}, {@link VideoBlock}
- * subclasses — which the SDK retains for back-compat — {@code DataBlock} is the
- * forward-looking polymorphic container for every binary modality. New code
- * should prefer {@code DataBlock} over the legacy subclasses; the legacy types
- * stay around as valid {@link MsgRole#USER} payloads to keep existing pipelines
- * working.
+ * <p>SDK 保留旧的 {@link ImageBlock}、{@link AudioBlock}、{@link VideoBlock} 子类以兼容历史代码；
+ * 而 {@code DataBlock} 是面向后续演进、覆盖所有二进制模态的多态容器。
+ * 新代码应优先使用 {@code DataBlock}。旧类型仍可作为有效的 {@link MsgRole#USER} 载荷，
+ * 保证现有处理流水线继续工作。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class DataBlock extends ContentBlock {
@@ -41,12 +39,12 @@ public final class DataBlock extends ContentBlock {
     private final String name;
 
     /**
-     * Creates a new data block for JSON deserialization.
+     * 创建用于 JSON 反序列化的数据块。
      *
-     * @param source The data source (URL or Base64); required
-     * @param id Stable identifier; if null, a fresh UUID hex is generated
-     * @param name Optional human-readable name (e.g. file name); may be null
-     * @throws NullPointerException if source is null
+     * @param source 数据来源（URL 或 Base64），必填
+     * @param id 稳定标识符；为 null 时生成新的十六进制 UUID
+     * @param name 可选的可读名称（例如文件名），可为 null
+     * @throws NullPointerException 当 source 为 null 时
      */
     @JsonCreator
     private DataBlock(
@@ -60,43 +58,43 @@ public final class DataBlock extends ContentBlock {
     }
 
     /**
-     * Gets the source of this data block.
+     * 获取数据块的来源。
      *
-     * @return The data source containing URL or Base64 data
+     * @return 包含 URL 或 Base64 数据的数据来源
      */
     public Source getSource() {
         return source;
     }
 
     /**
-     * Gets the identifier of this data block.
+     * 获取数据块的标识符。
      *
-     * @return The block id; never null
+     * @return 数据块 ID，永不为 null
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the optional name of this data block.
+     * 获取数据块的可选名称。
      *
-     * @return The block name, or null if not set
+     * @return 数据块名称；未设置时为 null
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Creates a new builder for constructing DataBlock instances.
+     * 创建用于构造 DataBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing DataBlock instances.
+     * 用于构造 DataBlock 实例的构建器。
      */
     public static class Builder {
 
@@ -107,10 +105,10 @@ public final class DataBlock extends ContentBlock {
         private String name;
 
         /**
-         * Sets the source for the data block.
+         * 设置数据块的来源。
          *
-         * @param source The data source (URL or Base64)
-         * @return This builder for chaining
+         * @param source 数据来源（URL 或 Base64）
+         * @return 当前构建器，支持链式调用
          */
         public Builder source(Source source) {
             this.source = source;
@@ -118,11 +116,10 @@ public final class DataBlock extends ContentBlock {
         }
 
         /**
-         * Sets the identifier for the data block. If left unset, a fresh UUID
-         * is generated at {@link #build()} time.
+         * 设置数据块的标识符。若未设置，则在 {@link #build()} 时生成新的 UUID。
          *
-         * @param id The stable id
-         * @return This builder for chaining
+         * @param id 稳定 ID
+         * @return 当前构建器，支持链式调用
          */
         public Builder id(String id) {
             this.id = id;
@@ -130,10 +127,10 @@ public final class DataBlock extends ContentBlock {
         }
 
         /**
-         * Sets the optional name for the data block.
+         * 设置数据块的可选名称。
          *
-         * @param name The block name (e.g. file name)
-         * @return This builder for chaining
+         * @param name 数据块名称（例如文件名）
+         * @return 当前构建器，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -141,10 +138,10 @@ public final class DataBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new DataBlock with the configured fields.
+         * 使用配置的字段构建 DataBlock。
          *
-         * @return A new DataBlock instance
-         * @throws NullPointerException if source is null
+         * @return 新的 DataBlock 实例
+         * @throws NullPointerException 当 source 为 null 时
          */
         public DataBlock build() {
             return new DataBlock(source, id, name);

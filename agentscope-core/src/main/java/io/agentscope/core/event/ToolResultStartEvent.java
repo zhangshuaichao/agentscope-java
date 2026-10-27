@@ -41,7 +41,7 @@ public class ToolResultStartEvent extends AgentEvent {
     }
 
     /**
-     * Backward-compatible constructor for callers that do not provide metadata.
+     * 供未提供元数据的调用方使用的向后兼容构造器。
      */
     public ToolResultStartEvent(
             String id, String createdAt, String replyId, String toolCallId, String toolCallName) {

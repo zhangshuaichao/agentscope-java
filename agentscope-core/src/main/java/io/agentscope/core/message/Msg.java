@@ -38,18 +38,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Represents a message in the AgentScope framework.
+ * 表示 AgentScope 框架中的消息。
  *
- * <p>Messages are the primary communication unit between agents, users, and tools.
- * Each message has a role (user, assistant, system, or tool), content blocks,
- * and optional metadata.
+ * <p>消息是智能体、用户和工具之间的基本通信单元。每条消息都有角色（user、assistant、system 或 tool）、内容块和可选元数据。
  *
- * <p>Content blocks can include text, images, audio, video, thinking content,
- * tool use blocks, and tool result blocks. The content is stored as an immutable
- * list for thread safety.
+ * <p>内容块可包括文本、图像、音频、视频、思考内容、工具使用块和工具结果块。内容以不可变列表保存，以保证线程安全。
  *
- * <p>Messages are serialized to JSON using Jackson and include a unique ID
- * for tracking purposes.
+ * <p>消息使用 Jackson 序列化为 JSON，并包含用于追踪的唯一 ID。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(
@@ -66,44 +61,35 @@ import java.util.stream.Collectors;
 })
 public class Msg implements State {
 
-    /** Metadata key for storing the generate reason. */
+    /**
+     * 用于存储生成原因的元数据键。
+     */
     public static final String METADATA_GENERATE_REASON = "agentscope_generate_reason";
 
     /**
-     * Metadata key for carrying a {@code List<ConfirmResult>} when resuming a Permission HITL
-     * pause. The receiving {@code ReActAgent.call(msgs)} extracts and applies these results to
-     * the ASKING tool calls in context.
+     * 恢复权限 HITL 暂停时携带 {@code List<ConfirmResult>} 的元数据键。接收方 {@code ReActAgent.call(msgs)} 提取这些结果，并应用于上下文中处于 ASKING 状态的工具调用。
      */
     public static final String METADATA_CONFIRM_RESULTS = "agentscope_confirm_results";
 
     /**
-     * Metadata key storing the {@code replyId} of the {@code RequireUserConfirmEvent} that paused
-     * this assistant turn. Used to correlate the later {@code UserConfirmResultEvent}.
+     * 存储暂停本轮助手执行的 {@code RequireUserConfirmEvent} 的 {@code replyId}，用于关联后续 {@code UserConfirmResultEvent} 的元数据键。
      */
     public static final String METADATA_CONFIRM_REQUEST_REPLY_ID =
             "agentscope_confirm_request_reply_id";
 
     /**
-     * Metadata key storing the {@code replyId} of the {@code RequireExternalExecutionEvent} that
-     * paused this assistant turn. Used to correlate the later
-     * {@code ExternalExecutionResultEvent}.
+     * 存储暂停本轮助手执行的 {@code RequireExternalExecutionEvent} 的 {@code replyId}，用于关联后续 {@code ExternalExecutionResultEvent} 的元数据键。
      */
     public static final String METADATA_EXTERNAL_EXECUTION_REQUEST_REPLY_ID =
             "agentscope_external_execution_request_reply_id";
 
     /**
-     * Metadata key (boolean) marking a message as <em>synthetic</em>: framework-injected rather
-     * than authored by the user, the model, or a tool. Synthetic messages (e.g. the per-turn todo
-     * reminder produced by {@code TaskReminderMiddleware}) are appended transiently to the
-     * reasoning input and are not persisted into {@code AgentState.context}; this flag lets any
-     * downstream consumer that does observe such a message recognise and skip it (memory
-     * extraction, compaction, RAG recall).
+     * 用于将消息标记为<em>合成消息</em>的布尔元数据键：消息由框架注入，而非用户、模型或工具生成。合成消息（例如 {@code TaskReminderMiddleware} 每轮生成的待办提醒）临时追加到推理输入，不会持久化到 {@code AgentState.context}。此标记让观察到该消息的下游消费者（记忆提取、压缩、RAG 召回）能够识别并跳过它。
      */
     public static final String METADATA_SYNTHETIC = "agentscope_synthetic";
 
     /**
-     * Metadata key (string) describing the kind of synthetic reminder carried by a message, e.g.
-     * {@code "todo_state"}. Only meaningful when {@link #METADATA_SYNTHETIC} is {@code true}.
+     * 描述消息所携带的合成提醒种类的字符串元数据键，例如 {@code "todo_state"}。仅当 {@link #METADATA_SYNTHETIC} 为 {@code true} 时有效。
      */
     public static final String METADATA_REMINDER_KIND = "agentscope_reminder_kind";
 
@@ -125,14 +111,14 @@ public class Msg implements State {
     private final ChatUsage usage;
 
     /**
-     * Creates a new message with the specified fields.
+     * 使用指定字段创建消息。
      *
-     * @param id Unique identifier for the message
-     * @param name Optional name for the message (can be null)
-     * @param role The role of the message sender (user, assistant, system, or tool)
-     * @param content List of content blocks that make up the message content
-     * @param metadata Optional metadata map for additional information
-     * @param timestamp Optional timestamp string (if null, will be generated automatically)
+     * @param id 消息唯一标识符
+     * @param name 可选的消息名称（可为 null）
+     * @param role 发送者角色（user、assistant、system 或 tool）
+     * @param content 构成消息内容的内容块列表
+     * @param metadata 用于附加信息的可选元数据映射
+     * @param timestamp 可选时间戳字符串（为 null 时自动生成）
      */
     @JsonCreator
     protected Msg(
@@ -167,16 +153,13 @@ public class Msg implements State {
     }
 
     /**
-     * Validates that the content blocks are compatible with the message role.
+     * 验证内容块与消息角色是否兼容。
      *
-     * <p>The legacy {@link ImageBlock}/{@link AudioBlock}/{@link VideoBlock} types
-     * remain valid on {@link MsgRole#USER} alongside the unified {@link DataBlock}.
-     * {@link MsgRole#TOOL} is legacy and treated as unrestricted (same as assistant)
-     * to preserve back-compat.
+     * <p>旧的 {@link ImageBlock}/{@link AudioBlock}/{@link VideoBlock} 与统一的 {@link DataBlock} 一样，仍可用于 {@link MsgRole#USER}。为保持向后兼容，旧的 {@link MsgRole#TOOL} 角色不受限制（与 assistant 相同）。
      *
-     * @param role The message role
-     * @param content The content blocks
-     * @throws IllegalArgumentException if any block is not allowed for the role
+     * @param role 消息角色
+     * @param content 内容块
+     * @throws IllegalArgumentException 当某个内容块不允许用于该角色时
      */
     private static void validateRoleContent(MsgRole role, List<ContentBlock> content) {
         if (role == null || content == null || content.isEmpty()) {
@@ -207,35 +190,29 @@ public class Msg implements State {
                 }
             }
             case ASSISTANT, TOOL -> {
-                // No restriction; TOOL preserved for back-compat.
+                // 不加限制；保留 TOOL 以维持向后兼容。
             }
         }
     }
 
     /**
-     * Creates a new message builder with a randomly generated ID.
+     * 创建带有随机生成 ID 的消息构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Creates a builder for the concrete {@link Msg} subtype that matches the given role.
+     * 创建与给定角色匹配的具体 {@link Msg} 子类型构建器。
      *
-     * <p>Unlike {@link #builder()} (which produces a plain {@link Msg}), this factory returns
-     * the role-specific builder so the resulting instance is the appropriate subtype:
-     * {@link UserMessage} for {@link MsgRole#USER}, {@link AssistantMessage} for
-     * {@link MsgRole#ASSISTANT}, {@link SystemMessage} for {@link MsgRole#SYSTEM}, and
-     * {@link ToolResultMessage} for {@link MsgRole#TOOL}. A {@code null} role falls back to the
-     * base {@link #builder()}.
+     * <p>与产生普通 {@link Msg} 的 {@link #builder()} 不同，此工厂返回角色专用构建器：{@link MsgRole#USER} 对应 {@link UserMessage}，{@link MsgRole#ASSISTANT} 对应 {@link AssistantMessage}，{@link MsgRole#SYSTEM} 对应 {@link SystemMessage}，{@link MsgRole#TOOL} 对应 {@link ToolResultMessage}。角色为 {@code null} 时回退到基础 {@link #builder()}。
      *
-     * <p>The returned builder's {@code build()} is overridden covariantly, so the declared
-     * {@link Builder} static type still yields the concrete subtype instance at runtime.
+     * <p>返回的构建器以协变返回类型覆写 {@code build()}，因此即使静态类型声明为 {@link Builder}，运行时仍产生具体子类型实例。
      *
-     * @param role the role whose concrete message subtype should be built
-     * @return a role-specific builder, or the base builder when {@code role} is {@code null}
+     * @param role 要构建的具体消息子类型对应的角色
+     * @return 角色专用构建器；{@code role} 为 {@code null} 时返回基础构建器
      */
     public static Builder builderForRole(MsgRole role) {
         if (role == null) {
@@ -250,96 +227,90 @@ public class Msg implements State {
     }
 
     /**
-     * Generates a random UUID string for use as a message ID.
-     * Exposed to subclasses so their convenience constructors can mirror the
-     * behaviour of {@link Builder} without re-implementing UUID logic.
+     * 生成用作消息 ID 的随机 UUID 字符串。向子类开放，使便捷构造器能够复用 {@link Builder} 的行为，而不必重复实现 UUID 逻辑。
      */
     protected static String generateId() {
         return UUID.randomUUID().toString();
     }
 
     /**
-     * Returns the current wall-clock timestamp in this class's canonical format.
-     * Exposed to subclasses so their convenience constructors can stamp messages
-     * identically to {@link Builder}.
+     * 以本类的标准格式返回当前挂钟时间戳。向子类开放，使便捷构造器为消息添加时间戳的方式与 {@link Builder} 一致。
      */
     protected static String currentTimestamp() {
         return TIMESTAMP_FORMATTER.format(Instant.now());
     }
 
     /**
-     * Gets the unique identifier of this message.
+     * 获取消息的唯一标识符。
      *
-     * @return The message ID
+     * @return 消息 ID
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Gets the optional name of this message.
+     * 获取消息的可选名称。
      *
-     * @return The message name, or null if not set
+     * @return 消息名称；未设置时为 null
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Gets the role of the message sender.
+     * 获取消息发送者的角色。
      *
-     * @return The message role (user, assistant, system, or tool)
+     * @return 消息角色（user、assistant、system 或 tool）
      */
     public MsgRole getRole() {
         return role;
     }
 
     /**
-     * Gets the immutable list of content blocks in this message.
+     * 获取消息内容块的不可变列表。
      *
-     * @return The content blocks list, may be empty but never null
+     * @return 内容块列表，可为空但不会为 null
      */
     public List<ContentBlock> getContent() {
         return content;
     }
 
     /**
-     * Gets the metadata associated with this message.
+     * 获取消息关联的元数据。
      *
-     * @return The metadata map, or null if not set
+     * @return 元数据映射；未设置时为 null
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Gets the timestamp of this message.
+     * 获取消息时间戳。
      *
-     * @return The timestamp string in format "yyyy-MM-dd HH:mm:ss.SSS"
+     * @return 格式为 "yyyy-MM-dd HH:mm:ss.SSS" 的时间戳字符串
      */
     public String getTimestamp() {
         return timestamp;
     }
 
     /**
-     * Gets the token usage information associated with this message.
+     * 获取消息关联的 token 用量信息。
      *
-     * <p>Aligns with Python {@code Msg.usage} (PR #1639). When populated,
-     * contains the input/output token counts from the model call that
-     * produced this message.
+     * <p>与 Python 的 {@code Msg.usage}（PR #1639）对齐。存在时包含生成此消息的模型调用所消耗的输入和输出 token 数量。
      *
-     * @return The usage object, or null if not available
+     * @return 用量对象；不可用时为 null
      */
     public ChatUsage getUsage() {
         return usage;
     }
 
     /**
-     * Check if this message has content blocks of the specified type (type-safe).
+     * 以类型安全的方式检查消息是否含有指定类型的内容块。
      *
-     * @param blockClass Block class to check for
-     * @param <T> Content block type
-     * @return true if at least one block of the type exists
+     * @param blockClass 待检查的内容块类
+     * @param <T> 内容块类型
+     * @return 至少存在一个该类型的内容块时为 true
      */
     @Transient
     @JsonIgnore
@@ -348,11 +319,11 @@ public class Msg implements State {
     }
 
     /**
-     * Get all content blocks of the specified type (type-safe).
+     * 以类型安全的方式获取指定类型的全部内容块。
      *
-     * @param blockClass Block class to filter for
-     * @param <T> Content block type
-     * @return List of matching blocks
+     * @param blockClass 用于筛选的内容块类
+     * @param <T> 内容块类型
+     * @return 匹配的内容块列表
      */
     @Transient
     @JsonIgnore
@@ -364,9 +335,9 @@ public class Msg implements State {
     }
 
     /**
-     * Get the first content block, or null if empty.
+     * 获取第一个内容块；列表为空时返回 null。
      *
-     * @return First content block or null
+     * @return 第一个内容块或 null
      */
     @Transient
     @JsonIgnore
@@ -375,11 +346,11 @@ public class Msg implements State {
     }
 
     /**
-     * Get the first content block of the specified type (type-safe).
+     * 以类型安全的方式获取指定类型的第一个内容块。
      *
-     * @param blockClass Block class to search for
-     * @param <T> Content block type
-     * @return First matching block or null
+     * @param blockClass 待查找的内容块类
+     * @param <T> 内容块类型
+     * @return 第一个匹配的内容块或 null
      */
     @Transient
     @JsonIgnore
@@ -392,9 +363,9 @@ public class Msg implements State {
     }
 
     /**
-     * Check if this message contains structured data in metadata.
+     * 检查消息元数据中是否包含结构化数据。
      *
-     * @return true if metadata is present and non-empty
+     * @return 元数据存在且非空时为 true
      */
     @Transient
     @JsonIgnore
@@ -403,13 +374,11 @@ public class Msg implements State {
     }
 
     /**
-     * Extract structured data from message metadata and convert it to the specified type.
+     * 从消息元数据提取结构化数据，并转换为指定类型。
      *
-     * <p>This method is useful when the message contains structured input from a user agent
-     * or structured output from an LLM. The metadata map is converted to a Java object
-     * using Jackson's ObjectMapper.
+     * <p>适用于消息包含用户智能体的结构化输入或大语言模型的结构化输出的情况。使用 Jackson 的 ObjectMapper 将元数据映射转换为 Java 对象。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * public class TaskPlan {
      *     public String goal;
@@ -420,11 +389,11 @@ public class Msg implements State {
      * TaskPlan plan = msg.getStructuredData(TaskPlan.class);
      * }</pre>
      *
-     * @param targetClass The class to convert metadata into
-     * @param <T> Type of the structured data
-     * @return The structured data object
-     * @throws IllegalStateException if no metadata exists
-     * @throws IllegalArgumentException if conversion fails
+     * @param targetClass 元数据要转换成的目标类
+     * @param <T> 结构化数据类型
+     * @return 结构化数据对象
+     * @throws IllegalStateException 当元数据不存在时
+     * @throws IllegalArgumentException 当转换失败时
      */
     @Transient
     @JsonIgnore
@@ -453,12 +422,11 @@ public class Msg implements State {
     }
 
     /**
-     * Extract structured data from message metadata and convert it to the java.util.Map.
+     * 从消息元数据提取结构化数据，并转换为 java.util.Map。
      *
-     * <p>This method is useful when the message contains structured input from a user agent
-     * or structured output from an LLM. support for using dynamic schema processing
+     * <p>适用于消息包含用户智能体的结构化输入或大语言模型的结构化输出的情况，支持动态模式处理。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * String json = """
      *         {
@@ -497,8 +465,8 @@ public class Msg implements State {
      *   Map<String, Object> structuredData = msg.getStructuredData(false);
      * }</pre>
      *
-     * @return The copied metadata
-     * @throws IllegalStateException if no metadata exists
+     * @return 复制的元数据
+     * @throws IllegalStateException 当元数据不存在时
      */
     @Transient
     @JsonIgnore
@@ -532,12 +500,11 @@ public class Msg implements State {
     }
 
     /**
-     * Extracts plain text content from this message.
+     * 从消息提取纯文本内容。
      *
-     * <p>This method concatenates all text blocks in the message, joined by newlines.
-     * If the message contains no text blocks, an empty string is returned.
+     * <p>将所有文本块用换行符连接。消息不含文本块时返回空字符串。
      *
-     * @return The concatenated text content from all text blocks, or empty string if none
+     * @return 所有文本块连接后的文本；没有文本块时为空字符串
      */
     @Transient
     @JsonIgnore
@@ -550,13 +517,11 @@ public class Msg implements State {
     }
 
     /**
-     * Gets the chat usage statistics from this message's metadata.
+     * 从消息元数据获取对话用量统计。
      *
-     * <p>This method retrieves the accumulated token usage information that was
-     * recorded during model generation. Returns null if no usage information
-     * is available.
+     * <p>获取模型生成过程中记录的累积 token 用量信息；不可用时返回 null。
      *
-     * <p>Example usage:
+     * <p>使用示例：
      * <pre>{@code
      * Msg response = agent.call(userMsg).block();
      * ChatUsage usage = response.getChatUsage();
@@ -572,7 +537,7 @@ public class Msg implements State {
      * }
      * }</pre>
      *
-     * @return The ChatUsage object containing token counts and timing, or null if not available
+     * @return 包含 token 数量和耗时的 ChatUsage 对象；不可用时为 null
      */
     @Transient
     @JsonIgnore
@@ -621,20 +586,20 @@ public class Msg implements State {
     }
 
     /**
-     * Gets the reason why this message was generated.
+     * 获取消息的生成原因。
      *
-     * <p>This method helps users understand the context of agent execution:
+     * <p>此方法帮助用户理解智能体执行上下文：
      * <ul>
-     *   <li>{@link GenerateReason#MODEL_STOP} - Task completed normally</li>
-     *   <li>{@link GenerateReason#TOOL_SUSPENDED} - External tools need user execution</li>
-     *   <li>{@link GenerateReason#REASONING_STOP_REQUESTED} - HITL stop in reasoning phase</li>
-     *   <li>{@link GenerateReason#ACTING_STOP_REQUESTED} - HITL stop in acting phase</li>
-     *   <li>{@link GenerateReason#INTERRUPTED} - Agent was interrupted</li>
-     *   <li>{@link GenerateReason#MAX_ITERATIONS} - Maximum iterations reached</li>
-     *   <li>{@link GenerateReason#TOOL_RETURN_DIRECT} - Tool result returned directly to the caller</li>
+     * <li>{@link GenerateReason#MODEL_STOP}：任务正常完成</li>
+     * <li>{@link GenerateReason#TOOL_SUSPENDED}：外部工具需要用户执行</li>
+     * <li>{@link GenerateReason#REASONING_STOP_REQUESTED}：推理阶段因 HITL 停止</li>
+     * <li>{@link GenerateReason#ACTING_STOP_REQUESTED}：行动阶段因 HITL 停止</li>
+     * <li>{@link GenerateReason#INTERRUPTED}：智能体被中断</li>
+     * <li>{@link GenerateReason#MAX_ITERATIONS}：达到最大迭代次数</li>
+     * <li>{@link GenerateReason#TOOL_RETURN_DIRECT}：工具结果直接返回给调用方</li>
      * </ul>
      *
-     * @return The generate reason, defaults to {@link GenerateReason#MODEL_STOP} if not set
+     * @return 生成原因；未设置时默认为 {@link GenerateReason#MODEL_STOP}
      */
     @Transient
     @JsonIgnore
@@ -657,13 +622,12 @@ public class Msg implements State {
     }
 
     /**
-     * Creates a new message with the specified generate reason.
+     * 创建具有指定生成原因的新消息。
      *
-     * <p>This method returns a new Msg instance with the updated generate reason
-     * stored in metadata. The original message is not modified (immutable).
+     * <p>返回新的 Msg 实例，将更新后的生成原因保存到元数据中，不修改原消息（保持不可变）。
      *
-     * @param reason The generate reason to set
-     * @return A new Msg instance with the updated generate reason
+     * @param reason 要设置的生成原因
+     * @return 更新了生成原因的新 Msg 实例
      */
     public Msg withGenerateReason(GenerateReason reason) {
         Map<String, Object> newMetadata = new HashMap<>(this.metadata);
@@ -679,10 +643,10 @@ public class Msg implements State {
     }
 
     /**
-     * Returns a copy of this message with the given content blocks.
+     * 返回使用给定内容块的消息副本。
      *
-     * @param newContent the replacement content blocks
-     * @return a new Msg with identical metadata but replaced content
+     * @param newContent 替换用的内容块
+     * @return 元数据相同、内容被替换的新 Msg
      */
     public Msg withContent(List<ContentBlock> newContent) {
         return new Msg(
@@ -696,10 +660,10 @@ public class Msg implements State {
     }
 
     /**
-     * Returns a copy of this message with the given metadata.
+     * 返回使用给定元数据的消息副本。
      *
-     * @param newMetadata the replacement metadata
-     * @return a new Msg with identical content but replaced metadata
+     * @param newMetadata 替换用的元数据
+     * @return 内容相同、元数据被替换的新 Msg
      */
     public Msg withMetadata(Map<String, Object> newMetadata) {
         return new Msg(
@@ -729,17 +693,17 @@ public class Msg implements State {
         protected ChatUsage usage;
 
         /**
-         * Creates a new builder with a randomly generated message ID.
+         * 创建带有随机生成消息 ID 的构建器。
          */
         public Builder() {
             randomId();
         }
 
         /**
-         * Sets the unique identifier for the message.
+         * 设置消息的唯一标识符。
          *
-         * @param id The message ID
-         * @return This builder for chaining
+         * @param id 消息 ID
+         * @return 当前构建器，支持链式调用
          */
         public Builder id(String id) {
             this.id = id;
@@ -747,17 +711,17 @@ public class Msg implements State {
         }
 
         /**
-         * Generates a random UUID for the message ID.
+         * 生成随机 UUID 作为消息 ID。
          */
         private void randomId() {
             this.id = UUID.randomUUID().toString();
         }
 
         /**
-         * Sets the optional name for the message.
+         * 设置消息的可选名称。
          *
-         * @param name The message name
-         * @return This builder for chaining
+         * @param name 消息名称
+         * @return 当前构建器，支持链式调用
          */
         public Builder name(String name) {
             this.name = name;
@@ -765,10 +729,10 @@ public class Msg implements State {
         }
 
         /**
-         * Sets the role for the message.
+         * 设置消息角色。
          *
-         * @param role The message role (user, assistant, system, or tool)
-         * @return This builder for chaining
+         * @param role 消息角色（user、assistant、system 或 tool）
+         * @return 当前构建器，支持链式调用
          */
         public Builder role(MsgRole role) {
             this.role = role;
@@ -776,9 +740,9 @@ public class Msg implements State {
         }
 
         /**
-         * Set content from a list of content blocks.
-         * @param content List of content blocks
-         * @return This builder
+         * 通过内容块列表设置内容。
+         * @param content 内容块列表
+         * @return 当前构建器
          */
         public Builder content(List<ContentBlock> content) {
             this.content = content;
@@ -786,10 +750,9 @@ public class Msg implements State {
         }
 
         /**
-         * Set content from a single content block (convenience method).
-         * The block will be wrapped in a list automatically.
-         * @param block Single content block
-         * @return This builder
+         * 通过单个内容块设置内容（便捷方法）。内容块会自动包装为列表。
+         * @param block 单个内容块
+         * @return 当前构建器
          */
         public Builder content(ContentBlock block) {
             this.content = block == null ? List.of() : List.of(block);
@@ -797,9 +760,9 @@ public class Msg implements State {
         }
 
         /**
-         * Set content from varargs content blocks (convenience method).
-         * @param blocks Content blocks
-         * @return This builder
+         * 通过可变参数内容块设置内容（便捷方法）。
+         * @param blocks 内容块
+         * @return 当前构建器
          */
         public Builder content(ContentBlock... blocks) {
             this.content = blocks == null ? List.of() : List.of(blocks);
@@ -807,9 +770,9 @@ public class Msg implements State {
         }
 
         /**
-         * Set text content from a string.
-         * @param text Text content
-         * @return This builder
+         * 通过字符串设置文本内容。
+         * @param text 文本内容
+         * @return 当前构建器
          */
         public Builder textContent(String text) {
             this.content = List.of(TextBlock.builder().text(text).build());
@@ -817,9 +780,9 @@ public class Msg implements State {
         }
 
         /**
-         * Set metadata for structured output.
-         * @param metadata Metadata map
-         * @return This builder
+         * 设置结构化输出的元数据。
+         * @param metadata 元数据映射
+         * @return 当前构建器
          */
         public Builder metadata(Map<String, Object> metadata) {
             this.metadata = metadata == null ? Map.of() : metadata;
@@ -827,10 +790,10 @@ public class Msg implements State {
         }
 
         /**
-         * Sets the timestamp for the message.
+         * 设置消息时间戳。
          *
-         * @param timestamp The timestamp string
-         * @return This builder for chaining
+         * @param timestamp 时间戳字符串
+         * @return 当前构建器，支持链式调用
          */
         public Builder timestamp(String timestamp) {
             this.timestamp =
@@ -839,10 +802,10 @@ public class Msg implements State {
         }
 
         /**
-         * Sets the token usage information for this message.
+         * 设置消息的 token 用量信息。
          *
-         * @param usage The ChatUsage containing token counts
-         * @return This builder for chaining
+         * @param usage 包含 token 数量的 ChatUsage
+         * @return 当前构建器，支持链式调用
          */
         public Builder usage(ChatUsage usage) {
             this.usage = usage;
@@ -850,13 +813,12 @@ public class Msg implements State {
         }
 
         /**
-         * Sets the generate reason for this message.
+         * 设置消息生成原因。
          *
-         * <p>The generate reason indicates why this message was generated by the agent,
-         * helping users understand the execution context and required follow-up actions.
+         * <p>生成原因说明智能体为何产生该消息，帮助用户理解执行上下文和所需的后续操作。
          *
-         * @param reason The generate reason
-         * @return This builder for chaining
+         * @param reason 生成原因
+         * @return 当前构建器，支持链式调用
          */
         public Builder generateReason(GenerateReason reason) {
             if (reason != null) {
@@ -871,10 +833,9 @@ public class Msg implements State {
         }
 
         /**
-         * Builds a new message instance with the configured properties.
-         * If timestamp is not set, it will be auto-generated.
+         * 使用配置的属性构建消息实例。未设置时间戳时自动生成。
          *
-         * @return A new immutable message
+         * @return 新的不可变消息
          */
         public Msg build() {
             return new Msg(id, name, role, content, metadata, timestamp, usage);

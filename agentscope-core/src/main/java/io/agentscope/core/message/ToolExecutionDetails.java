@@ -16,8 +16,7 @@
 package io.agentscope.core.message;
 
 /**
- * Producer-supplied execution facts, separate from model-visible text and task verification.
- * An absent exit code means unknown, never zero. A successful process is not a verified task.
+ * 由结果产生方提供的执行事实，与模型可见文本和任务验证分离。缺少退出码表示未知，而非零。进程成功不代表任务已通过验证。
  */
 public record ToolExecutionDetails(
         String kind, Outcome outcome, Integer exitCode, boolean outputTruncated) {

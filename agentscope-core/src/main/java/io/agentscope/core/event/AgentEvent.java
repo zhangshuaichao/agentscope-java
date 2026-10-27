@@ -27,10 +27,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Base class for all fine-grained agent events.
+ * 所有细粒度智能体事件的基类。
  *
- * <p>Each event carries a unique ID, creation timestamp, and type discriminator.
- * Events are emitted during agent execution and can be consumed via reactive streams.
+ * <p>每个事件携带唯一 ID、创建时间戳和类型判别标记。
+ * 事件在智能体执行期间发出，可通过响应式流消费。
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -76,25 +76,24 @@ import java.util.UUID;
 public abstract class AgentEvent {
 
     /**
-     * Well-known {@link #metadata} key correlating a forwarded subagent event to a harness
-     * {@code TaskRecord} / remote Agent Protocol task id. Distinct from {@link #source}, which
-     * identifies the originating agent path ({@code parentSession/agentId}).
+     * {@link #metadata} 的约定键，将转发的子智能体事件与 Harness 的
+     * {@code TaskRecord}／远程 Agent Protocol 任务 ID 关联。
+     * 与 {@link #source} 不同，后者标识来源智能体路径（{@code parentSession/agentId}）。
      */
     public static final String METADATA_TASK_ID = "taskId";
 
     /**
-     * Well-known {@link #metadata} key identifying the parent agent's session that initiated a
-     * remote subagent run. Distinct from {@link #source} (which embeds the same id as a path
-     * prefix) and from {@link #METADATA_TASK_ID} (which identifies the harness task).
+     * {@link #metadata} 的约定键，标识发起远程子智能体执行的父智能体会话。
+     * 与 {@link #source}（将同一 ID 嵌入为路径前缀）以及
+     * {@link #METADATA_TASK_ID}（标识 Harness 任务）不同。
      */
     public static final String METADATA_PARENT_SESSION_ID = "parentSessionId";
 
     /**
-     * Well-known {@link #metadata} key carrying the {@code GenerateReason} name behind a text
-     * projection. Currently attached to the {@code TextBlock} events synthesized for a
-     * {@code returnDirect} closing message, letting observers distinguish "the model said this"
-     * from "a tool result was substituted for the model's final answer". Absent on ordinary
-     * model-generated text events.
+     * {@link #metadata} 的约定键，携带文本投影背后的 {@code GenerateReason} 名称。
+     * 当前用于 {@code returnDirect} 结束消息所合成的 {@code TextBlock} 事件，
+     * 使观察方能够区分“这是模型说的”与“工具结果替代了模型的最终回答”。
+     * 普通模型生成的文本事件不携带此项。
      */
     public static final String METADATA_GENERATE_REASON = "generate_reason";
 
@@ -118,7 +117,7 @@ public abstract class AgentEvent {
         this.createdAt = createdAt;
     }
 
-    /** Correlation with native history; forwarded child events retain their own identity. */
+    /** 与原生历史关联；转发的子智能体事件保留自身身份。 */
     public ExecutionIdentity getExecution() {
         return execution;
     }
@@ -139,17 +138,16 @@ public abstract class AgentEvent {
     }
 
     /**
-     * Returns the source path identifying the originating agent. {@code null} for events from the
-     * top-level (parent) agent; a slash-separated path (e.g. {@code "main/researcher"}) for events
-     * forwarded from a subagent.
+     * 返回标识来源智能体的路径。顶层（父）智能体的事件为 {@code null}；
+     * 子智能体转发的事件为斜杠分隔路径（例如 {@code "main/researcher"}）。
      */
     public String getSource() {
         return source;
     }
 
     /**
-     * Sets the source path and returns this event. Used by the subagent event forwarding mechanism
-     * to tag child events before injecting them into the parent's event stream.
+     * 设置来源路径并返回此事件。子智能体事件转发机制使用它，在将子事件
+     * 注入父事件流之前添加标记。
      */
     public AgentEvent withSource(String source) {
         this.source = source;
@@ -157,14 +155,14 @@ public abstract class AgentEvent {
     }
 
     /**
-     * Returns optional metadata attached to this event. May be {@code null} or empty.
+     * 返回附加到此事件的可选元数据。可能为 {@code null} 或空集合。
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Attaches arbitrary key-value metadata to this event and returns it for chaining.
+     * 向此事件附加任意键值元数据，并返回事件以支持链式调用。
      */
     public AgentEvent withMetadata(Map<String, Object> metadata) {
         this.metadata = metadata != null ? new LinkedHashMap<>(metadata) : null;
@@ -172,8 +170,8 @@ public abstract class AgentEvent {
     }
 
     /**
-     * Merges a single metadata entry into this event (creates the map if absent) and returns it
-     * for chaining. Passing a {@code null} value removes the key when present.
+     * 将单个元数据条目合并到此事件中（映射不存在时创建），并返回事件以支持链式调用。
+     * 传入 {@code null} 值时，移除已存在的对应键。
      */
     public AgentEvent withMetadataEntry(String key, Object value) {
         if (key == null || key.isBlank()) {

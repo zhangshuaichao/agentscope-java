@@ -21,15 +21,15 @@ import io.agentscope.core.message.ToolUseBlock;
 import java.util.List;
 
 /**
- * Emitted during the acting phase when all tool calls from the most recent reasoning step were
- * denied (by user HITL confirmation or by permission rules).
+ * 最近一轮推理产生的所有工具调用都被拒绝时，在行动阶段发出
+ * （拒绝可能来自用户 HITL 确认或权限规则）。
  *
- * <p>Middlewares observing {@link io.agentscope.core.middleware.MiddlewareBase#onActing} can detect
- * this event and emit a {@link RequestStopEvent} with
- * {@link io.agentscope.core.message.GenerateReason#ALL_TOOLS_DENIED} to prevent the agent from
- * continuing to the next reasoning iteration.
+ * <p>观察 {@link io.agentscope.core.middleware.MiddlewareBase#onActing} 的中间件
+ * 可以检测此事件，并发出原因设为
+ * {@link io.agentscope.core.message.GenerateReason#ALL_TOOLS_DENIED} 的
+ * {@link RequestStopEvent}，阻止智能体继续下一轮推理。
  *
- * <p>If no middleware emits a stop, the agent continues reasoning as before (backward compatible).
+ * <p>如果没有中间件发出停止请求，智能体会像以前一样继续推理（向后兼容）。
  */
 public class AllToolsDeniedEvent extends AgentEvent {
 
@@ -53,7 +53,7 @@ public class AllToolsDeniedEvent extends AgentEvent {
         return AgentEventType.ALL_TOOLS_DENIED;
     }
 
-    /** Returns the tool calls that were denied. */
+    /** 返回被拒绝的工具调用。 */
     public List<ToolUseBlock> getDeniedToolCalls() {
         return deniedToolCalls;
     }

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted as tool call input arguments are streamed incrementally.
+ * 工具调用的输入参数以流式方式增量到达时发出。
  */
 public class ToolCallDeltaEvent extends AgentEvent {
 

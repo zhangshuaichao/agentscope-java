@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Emitted when the agent's ReAct loop exceeds the configured maximum iterations.
+ * 当智能体的 ReAct 循环超过配置的最大迭代次数时发出。
  */
 public class ExceedMaxItersEvent extends AgentEvent {
 

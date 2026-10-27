@@ -20,23 +20,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.agentscope.core.message.GenerateReason;
 
 /**
- * Requests the agent to pause execution after the current phase completes.
+ * 请求智能体在当前阶段完成后暂停执行。
  *
- * <p>Emit this event from a {@link io.agentscope.core.middleware.MiddlewareBase} (e.g. inside
- * {@code onReasoning} or {@code onActing}) to stop the agent loop. The agent finishes the
- * in-flight step, then returns a {@code Msg} whose {@link GenerateReason} is set to
- * {@code generateReason} (defaults to {@link GenerateReason#MIDDLEWARE_STOP_REQUESTED}).
+ * <p>可从 {@link io.agentscope.core.middleware.MiddlewareBase} 中发出此事件
+ * （例如在 {@code onReasoning} 或 {@code onActing} 内），以停止智能体循环。
+ * 智能体先完成正在执行的步骤，再返回一个 {@code Msg}，其 {@link GenerateReason}
+ * 被设为 {@code generateReason}（默认为 {@link GenerateReason#MIDDLEWARE_STOP_REQUESTED}）。
  *
- * <p>The pending state is persisted via {@link io.agentscope.core.message.ToolCallState} in
- * {@code AgentState.context}, so callers can resume by issuing a second {@code agent.call(...)}
- * — pending tool calls will be picked up automatically and execution continues.
+ * <p>待处理状态通过 {@link io.agentscope.core.message.ToolCallState} 持久化在
+ * {@code AgentState.context} 中，因此调用方可再次执行 {@code agent.call(...)} 恢复：
+ * 待处理的工具调用会自动被识别，执行随之继续。
  *
- * <p>Typical use cases:
+ * <p>典型用途：
  * <ul>
- *   <li>Cost / budget guards (stop when token usage exceeds a threshold)
- *   <li>Audit / compliance checkpoints (manual review before destructive actions)
- *   <li>Debug stepping (pause every iteration)
- *   <li>Content moderation gates
+ *   <li>成本／预算保护（词元用量超过阈值时停止）
+ *   <li>审计／合规检查点（破坏性操作前进行人工审核）
+ *   <li>调试单步执行（每轮暂停）
+ *   <li>内容审核关卡
  * </ul>
  */
 public class RequestStopEvent extends AgentEvent {
@@ -57,20 +57,20 @@ public class RequestStopEvent extends AgentEvent {
     }
 
     /**
-     * Create a stop request with the default {@link GenerateReason#MIDDLEWARE_STOP_REQUESTED}.
+     * 使用默认的 {@link GenerateReason#MIDDLEWARE_STOP_REQUESTED} 创建停止请求。
      *
-     * @param reason human-readable description of why the stop was requested
+     * @param reason 供人阅读的停止请求原因说明
      */
     public RequestStopEvent(String reason) {
         this(reason, GenerateReason.MIDDLEWARE_STOP_REQUESTED);
     }
 
     /**
-     * Create a stop request with an explicit generate reason. Used internally by Permission HITL
-     * to surface {@link GenerateReason#PERMISSION_ASKING}.
+     * 使用显式生成原因创建停止请求。权限 HITL 流程在内部用它呈现
+     * {@link GenerateReason#PERMISSION_ASKING}。
      *
-     * @param reason human-readable description
-     * @param generateReason the reason to set on the returned Msg
+     * @param reason 供人阅读的说明
+     * @param generateReason 要设置在返回 Msg 上的原因
      */
     public RequestStopEvent(String reason, GenerateReason generateReason) {
         this.reason = reason;
@@ -83,12 +83,12 @@ public class RequestStopEvent extends AgentEvent {
         return AgentEventType.REQUEST_STOP;
     }
 
-    /** Human-readable description of why the stop was requested. */
+    /** 供人阅读的停止请求原因说明。 */
     public String getReason() {
         return reason;
     }
 
-    /** The {@link GenerateReason} to assign to the returned Msg. */
+    /** 要赋给返回 Msg 的 {@link GenerateReason}。 */
     public GenerateReason getGenerateReason() {
         return generateReason;
     }

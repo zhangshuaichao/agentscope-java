@@ -21,7 +21,7 @@ import io.agentscope.core.message.ToolResultBlock;
 import java.util.List;
 
 /**
- * Emitted after externally-executed tool results are provided back to the agent.
+ * 外部执行的工具结果返回给智能体后发出。
  */
 public class ExternalExecutionResultEvent extends AgentEvent {
 

@@ -21,7 +21,7 @@ import io.agentscope.core.message.ToolUseBlock;
 import java.util.List;
 
 /**
- * Emitted when tool calls require external (out-of-process) execution.
+ * 工具调用需要在外部（进程之外）执行时发出。
  */
 public class RequireExternalExecutionEvent extends AgentEvent {
 

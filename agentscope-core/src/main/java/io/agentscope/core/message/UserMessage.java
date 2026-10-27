@@ -22,17 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Msg} with {@link MsgRole#USER} pinned at construction time.
+ * 构造时将角色固定为 {@link MsgRole#USER} 的 {@link Msg}。
  *
- * <p>Provides convenience constructors that take a {@code String} directly
- * (wrapped into a {@link TextBlock}) or any combination of {@link ContentBlock}s,
- * removing the boilerplate of {@code Msg.builder().role(USER).content(...).build()}.
+ * <p>提供便捷构造器，可直接传入 {@code String}（包装为 {@link TextBlock}）或任意组合的 {@link ContentBlock}，省去 {@code Msg.builder().role(USER).content(...).build()} 的样板代码。
  *
- * <p>Also offers an independent {@link Builder} for cases that need to set
- * {@code metadata}, {@code timestamp}, {@code usage} or {@code generateReason}.
+ * <p>还提供独立的 {@link Builder}，用于设置 {@code metadata}、{@code timestamp}、{@code usage} 或 {@code generateReason}。
  *
- * <p>Allowed content blocks follow the rules enforced by {@link Msg}'s constructor:
- * text, image, audio, video, and data blocks.
+ * <p>允许的内容块遵循 {@link Msg} 构造器的规则：文本、图像、音频、视频和数据块。
  */
 public final class UserMessage extends Msg {
 
@@ -82,16 +78,14 @@ public final class UserMessage extends Msg {
     }
 
     /**
-     * Creates a builder for {@link UserMessage} with a randomly generated ID
-     * and the current timestamp pre-populated.
+     * 创建 {@link UserMessage} 的构建器，并预填随机生成的 ID 和当前时间戳。
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Fluent builder for {@link UserMessage}. The role is fixed to
-     * {@link MsgRole#USER} and {@link #role(MsgRole)} is unsupported.
+     * {@link UserMessage} 的链式构建器。角色固定为 {@link MsgRole#USER}，不支持 {@link #role(MsgRole)}。
      */
     public static final class Builder extends Msg.Builder {
 
@@ -99,7 +93,9 @@ public final class UserMessage extends Msg {
             super.role = MsgRole.USER;
         }
 
-        /** Unsupported on {@link UserMessage.Builder}: role is fixed to USER. */
+        /**
+         * {@link UserMessage.Builder} 不支持此操作：角色固定为 USER。
+         */
         @Override
         public Builder role(MsgRole role) {
             throw new UnsupportedOperationException(

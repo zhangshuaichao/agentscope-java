@@ -19,8 +19,8 @@ import io.agentscope.core.message.ToolUseBlock;
 import java.util.List;
 
 /**
- * Input context for {@link MiddlewareBase#onActing}.
+ * {@link MiddlewareBase#onActing} 的输入上下文。
  *
- * @param toolCalls the tool calls to execute
+ * @param toolCalls 要执行的工具调用
  */
 public record ActingInput(List<ToolUseBlock> toolCalls) {}

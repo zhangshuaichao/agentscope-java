@@ -27,19 +27,18 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Mutable per-agent runtime state.
+ * 每个智能体独立持有的可变运行状态。
  *
- * <p>Carries everything a single agent needs to resume mid-conversation: the conversation buffer,
- * a rolling summary, the per-iteration reply identifier, the permission/tool/task sub-contexts,
- * and a counter for the current reasoning iteration.
+ * <p>保存单个智能体在对话中途恢复所需的信息：对话缓冲区、滚动摘要、
+ * 每轮回复的标识符、权限／工具／任务子上下文，以及当前推理轮次的计数器。
  *
- * <p>The {@link #context} list is exposed as a defensive copy via {@link #getContext()} and as a
- * live, mutable handle via {@link #contextMutable()}, mirroring the pattern used by
- * {@link TaskContextState}. Storage layers may swap whole {@link AgentState} instances or mutate the
- * inner collections in place.
+ * <p>{@link #context} 列表通过 {@link #getContext()} 暴露防御性副本，
+ * 通过 {@link #contextMutable()} 暴露可直接修改的实时引用；
+ * 这一方式与 {@link TaskContextState} 一致。存储层可以替换整个
+ * {@link AgentState} 实例，也可以原地修改内部集合。
  *
- * <p>{@code summary} is modelled as a free-form {@link String}; richer structured forms are left
- * for future iterations once context-compression strategies require them.
+ * <p>{@code summary} 使用自由文本 {@link String} 表示；待未来上下文压缩策略
+ * 需要时，再引入更丰富的结构化形式。
  */
 @JsonPropertyOrder({
     "session_id",
@@ -151,7 +150,7 @@ public final class AgentState implements State {
         return sessionId;
     }
 
-    /** Nullable; {@code null} = anonymous / single-tenant context. */
+    /** 允许为空；{@code null} 表示匿名或单租户上下文。 */
     @JsonProperty("user_id")
     public String getUserId() {
         return userId;
@@ -166,13 +165,17 @@ public final class AgentState implements State {
         this.summary = summary == null ? "" : summary;
     }
 
-    /** Defensive copy of the conversation buffer. */
+    /** 对话缓冲区的防御性副本。 */
     @JsonProperty("context")
+    // 【学习提示】先复制再包装为不可修改列表，调用者既不能修改原列表，
+    // 也不会通过这个返回值观察到后续列表增删；这不是 Msg 元素的深拷贝。
     public List<Msg> getContext() {
         return Collections.unmodifiableList(new ArrayList<>(context));
     }
 
-    /** Live, mutable handle for components that append/replace messages in place. */
+    /** 供组件原地追加或替换消息的可变实时引用。 */
+    // 【学习提示】这里有意暴露真实列表供框架更新状态；它不是只读查询接口。
+    // 调用方应遵守所属会话的执行／并发边界，不能因 getContext() 安全就认为此处同样安全。
     public List<Msg> contextMutable() {
         return context;
     }
@@ -210,11 +213,11 @@ public final class AgentState implements State {
     }
 
     /**
-     * Replaces the permission context for this session. Used to change the evaluation mode at
-     * runtime (e.g. switching into {@link io.agentscope.core.permission.PermissionMode#BYPASS}).
-     * Callers that cache a {@code PermissionEngine} per session must rebuild it after this call.
+     * 替换此会话的权限上下文，用于在运行时改变评估模式
+     * （例如切换到 {@link io.agentscope.core.permission.PermissionMode#BYPASS}）。
+     * 如果调用方按会话缓存了 {@code PermissionEngine}，则必须在调用后重新构建该引擎。
      *
-     * @param permissionContext the new (non-null) permission context
+     * @param permissionContext 新的权限上下文（不可为 null）
      */
     public void setPermissionContext(PermissionContextState permissionContext) {
         this.permissionContext =
@@ -242,17 +245,17 @@ public final class AgentState implements State {
     }
 
     /**
-     * Serialize this state to a pretty-printed JSON string.
+     * 将此状态序列化为格式化的 JSON 字符串。
      *
-     * <p>Intended for external storage stores to persist the entire agent state as a single
-     * JSON document (e.g., {@code agent_state.json}).
+     * <p>供外部存储将完整智能体状态持久化为单个 JSON 文档
+     * （例如 {@code agent_state.json}）。
      */
     public String toJson() {
         return io.agentscope.core.util.JsonUtils.getJsonCodec().toPrettyJson(this);
     }
 
     /**
-     * Deserialize an {@link AgentState} from a JSON string produced by {@link #toJson()}.
+     * 从 {@link #toJson()} 生成的 JSON 字符串中反序列化 {@link AgentState}。
      */
     public static AgentState fromJsonString(String json) {
         return io.agentscope.core.util.JsonUtils.getJsonCodec().fromJson(json, AgentState.class);
@@ -330,7 +333,7 @@ public final class AgentState implements State {
             return this;
         }
 
-        /** Nullable; {@code null} = anonymous / single-tenant context. */
+        /** 允许为空；{@code null} 表示匿名或单租户上下文。 */
         public Builder userId(String userId) {
             this.userId = userId;
             return this;

@@ -16,26 +16,26 @@
 package io.agentscope.core.model;
 
 /**
- * Exception contract for model providers that can expose an HTTP status code.
+ * 为可暴露 HTTP 状态码的模型服务商定义异常契约。
  *
- * <p>This keeps retry classification provider-neutral while allowing extension modules to preserve
- * provider-specific exception types.
+ * <p>此契约使重试分类与具体服务商无关，同时允许扩展模块保留
+ * 服务商特有的异常类型。
  */
 public interface ModelHttpException {
 
     /**
-     * Returns the HTTP status code associated with the model failure.
+     * 返回此次模型失败对应的 HTTP 状态码。
      *
-     * @return HTTP status code, or null when no status code is available
+     * @return HTTP 状态码；无法获取时为 null
      */
     Integer getStatusCode();
 
     /**
-     * Returns whether this HTTP status is retryable by default.
+     * 返回此 HTTP 状态默认是否可重试。
      *
-     * <p>Rate limiting (429) and server errors (5xx) are considered retryable.
+     * <p>限流（429）与服务端错误（5xx）被视为可重试。
      *
-     * @return true if the status code should be retried
+     * @return 此状态码应重试时返回 true
      */
     default boolean isRetryableHttpStatus() {
         Integer statusCode = getStatusCode();

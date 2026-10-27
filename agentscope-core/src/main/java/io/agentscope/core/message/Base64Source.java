@@ -20,21 +20,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * Represents Base64-encoded media content with media type and data.
+ * 表示带有媒体类型和数据的 Base64 编码媒体内容。
  *
- * <p>This source is used for embedding media files directly in messages
- * by encoding the binary data as Base64 strings. The format follows
- * the standard MIME type convention with Base64 encoding.
+ * <p>将二进制数据编码为 Base64 字符串，以便直接嵌入消息。
+ * 格式遵循标准 MIME 类型约定，并采用 Base64 编码。
  *
- * <p>Common media types include:
+ * <p>常见媒体类型包括：
  * <ul>
- *   <li>image/jpeg, image/png, image/gif - for images</li>
- *   <li>audio/mpeg, audio/wav, audio/ogg - for audio</li>
- *   <li>video/mp4, video/avi, video/mov - for video</li>
+ * <li>image/jpeg, image/png, image/gif：图像</li>
+ * <li>audio/mpeg, audio/wav, audio/ogg：音频</li>
+ * <li>video/mp4, video/avi, video/mov：视频</li>
  * </ul>
  *
- * <p>This approach is useful when media files need to be included
- * directly in messages rather than referenced by URL.
+ * <p>适用于需要将媒体文件直接包含在消息中，而非通过 URL 引用的场景。
  */
 public class Base64Source extends Source {
 
@@ -44,11 +42,11 @@ public class Base64Source extends Source {
     private final String data;
 
     /**
-     * Creates a new Base64 source for JSON deserialization.
+     * 创建用于 JSON 反序列化的 Base64 来源。
      *
-     * @param mediaType The MIME type of the media content (e.g., "image/jpeg")
-     * @param data The Base64-encoded media data
-     * @throws NullPointerException if mediaType or data is null
+     * @param mediaType 媒体内容的 MIME 类型（例如 "image/jpeg"）
+     * @param data Base64 编码的媒体数据
+     * @throws NullPointerException 当 mediaType 或 data 为 null 时
      */
     @JsonCreator
     public Base64Source(
@@ -58,34 +56,34 @@ public class Base64Source extends Source {
     }
 
     /**
-     * Gets the MIME type of the media content.
+     * 获取媒体内容的 MIME 类型。
      *
-     * @return The media type as a string (e.g., "image/jpeg")
+     * @return 媒体类型字符串（例如 "image/jpeg"）
      */
     public String getMediaType() {
         return mediaType;
     }
 
     /**
-     * Gets the Base64-encoded media data.
+     * 获取 Base64 编码的媒体数据。
      *
-     * @return The Base64 data string
+     * @return Base64 数据字符串
      */
     public String getData() {
         return data;
     }
 
     /**
-     * Creates a new builder for constructing Base64Source instances.
+     * 创建用于构造 Base64Source 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing Base64Source instances.
+     * 用于构造 Base64Source 实例的构建器。
      */
     public static class Builder {
 
@@ -94,10 +92,10 @@ public class Base64Source extends Source {
         private String data;
 
         /**
-         * Sets the MIME type for the media content.
+         * 设置媒体内容的 MIME 类型。
          *
-         * @param mediaType The MIME type (e.g., "image/jpeg")
-         * @return This builder for chaining
+         * @param mediaType MIME 类型（例如 "image/jpeg"）
+         * @return 当前构建器，支持链式调用
          */
         public Builder mediaType(String mediaType) {
             this.mediaType = mediaType;
@@ -105,10 +103,10 @@ public class Base64Source extends Source {
         }
 
         /**
-         * Sets the Base64-encoded media data.
+         * 设置 Base64 编码的媒体数据。
          *
-         * @param data The Base64 data string
-         * @return This builder for chaining
+         * @param data Base64 数据字符串
+         * @return 当前构建器，支持链式调用
          */
         public Builder data(String data) {
             this.data = data;
@@ -116,10 +114,10 @@ public class Base64Source extends Source {
         }
 
         /**
-         * Builds a new Base64Source with the configured properties.
+         * 使用配置的属性构建 Base64Source。
          *
-         * @return A new Base64Source instance
-         * @throws NullPointerException if mediaType or data is null
+         * @return 新的 Base64Source 实例
+         * @throws NullPointerException 当 mediaType 或 data 为 null 时
          */
         public Base64Source build() {
             return new Base64Source(mediaType, data);

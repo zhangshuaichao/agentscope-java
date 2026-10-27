@@ -18,13 +18,13 @@ package io.agentscope.core.model;
 import java.util.Map;
 
 /**
- * Known context window sizes for popular models. Used by {@link ChatModelBase} subclasses
- * to infer {@link Model#getContextWindowSize()} from the model name when no explicit
- * value is provided via the builder.
+ * 常见模型的已知上下文窗口大小。当构建器未显式配置该值时，
+ * {@link ChatModelBase} 的子类可根据模型名称推断
+ * {@link Model#getContextWindowSize()}。
  *
- * <p>Values are total context window (input + output) in tokens. Entries are matched
- * via prefix: a model name {@code "qwen-max-latest"} matches the {@code "qwen-max"} entry.
- * Longer prefixes are checked first so {@code "gpt-4.1-mini"} matches before {@code "gpt-4.1"}.
+ * <p>数值表示完整上下文窗口（输入与输出之和）的词元数。按前缀匹配条目：
+ * 模型名 {@code "qwen-max-latest"} 匹配 {@code "qwen-max"}。
+ * 优先检查较长前缀，因此先匹配 {@code "gpt-4.1-mini"}，再匹配 {@code "gpt-4.1"}。
  */
 public final class ModelContextWindows {
 
@@ -34,7 +34,7 @@ public final class ModelContextWindows {
 
     public static final Map<String, Integer> DASHSCOPE =
             Map.ofEntries(
-                    // Qwen3 series
+                    // Qwen3 系列
                     Map.entry("qwen3-235b", 131_072),
                     Map.entry("qwen3-32b", 131_072),
                     Map.entry("qwen3-30b", 131_072),
@@ -43,14 +43,14 @@ public final class ModelContextWindows {
                     Map.entry("qwen3-4b", 131_072),
                     Map.entry("qwen3-1.7b", 32_768),
                     Map.entry("qwen3-0.6b", 32_768),
-                    // Qwen3.7 series
+                    // Qwen3.7 系列
                     Map.entry("qwen3.7", 131_072),
                     // Qwen-Max / Plus / Turbo / Long
                     Map.entry("qwen-max", 32_768),
                     Map.entry("qwen-plus", 131_072),
                     Map.entry("qwen-turbo", 1_000_000),
                     Map.entry("qwen-long", 10_000_000),
-                    // Qwen2.5 series
+                    // Qwen2.5 系列
                     Map.entry("qwen2.5", 131_072),
                     // QVQ / QwQ
                     Map.entry("qvq", 131_072),
@@ -145,10 +145,10 @@ public final class ModelContextWindows {
     // @formatter:on
 
     /**
-     * Finds the context window size for the given model name from the provided map.
-     * Uses prefix matching: longest matching prefix wins.
+     * 从给定映射中查找指定模型名称的上下文窗口大小。
+     * 使用前缀匹配：选择最长的匹配前缀。
      *
-     * @return context window size, or 0 if no match
+     * @return 上下文窗口大小；无匹配时为 0
      */
     public static int lookup(String modelName, Map<String, Integer> knownModels) {
         if (modelName == null || modelName.isBlank()) {

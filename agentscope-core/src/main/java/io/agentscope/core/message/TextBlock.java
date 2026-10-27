@@ -19,23 +19,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents plain text content in a message.
+ * 表示消息中的纯文本内容。
  *
- * <p>This is the most basic content block type, containing simple text content.
- * Text blocks are commonly used for user messages, assistant responses,
- * and any other textual communication.
+ * <p>这是最基本的内容块类型，包含简单文本，常用于用户消息、助手响应和其他文本通信。
  *
- * <p>The text content can be empty but never null. The toString() method
- * returns the text content for convenience.
+ * <p>文本可以为空，但永不为 null。为方便使用，toString() 直接返回文本内容。
  */
 public final class TextBlock extends ContentBlock {
 
     private final String text;
 
     /**
-     * Creates a new text block for JSON deserialization.
+     * 创建用于 JSON 反序列化的文本块。
      *
-     * @param text The text content (null will be converted to empty string)
+     * @param text 文本内容（null 会转换为空字符串）
      */
     @JsonCreator
     private TextBlock(@JsonProperty("text") String text) {
@@ -43,9 +40,9 @@ public final class TextBlock extends ContentBlock {
     }
 
     /**
-     * Gets the text content of this block.
+     * 获取此块的文本内容。
      *
-     * @return The text content
+     * @return 文本内容
      */
     public String getText() {
         return text;
@@ -57,26 +54,26 @@ public final class TextBlock extends ContentBlock {
     }
 
     /**
-     * Creates a new builder for constructing TextBlock instances.
+     * 创建用于构造 TextBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing TextBlock instances.
+     * 用于构造 TextBlock 实例的构建器。
      */
     public static class Builder {
 
         private String text;
 
         /**
-         * Sets the text content for the block.
+         * 设置内容块的文本。
          *
-         * @param text The text content
-         * @return This builder for chaining
+         * @param text 文本内容
+         * @return 当前构建器，支持链式调用
          */
         public Builder text(String text) {
             this.text = text;
@@ -84,9 +81,9 @@ public final class TextBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new TextBlock with the configured text.
+         * 使用配置的文本构建 TextBlock。
          *
-         * @return A new TextBlock instance (null text will be converted to empty string)
+         * @return 新的 TextBlock 实例（null 文本会转换为空字符串）
          */
         public TextBlock build() {
             return new TextBlock(text != null ? text : "");

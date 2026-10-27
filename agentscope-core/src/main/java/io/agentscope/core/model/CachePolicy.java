@@ -16,30 +16,30 @@
 package io.agentscope.core.model;
 
 /**
- * Controls whether {@link ModelRegistry} caches models created with a
- * {@link ModelCreationContext}.
+ * 控制 {@link ModelRegistry} 是否缓存通过
+ * {@link ModelCreationContext} 创建的模型。
  *
- * <p>Policy summary:
+ * <p>策略概览：
  *
  * <ul>
- *   <li>{@link #DEFAULT}: preserves legacy behavior. Empty contexts are cached by model id;
- *       non-empty contexts are not cached.
- *   <li>{@link #DISABLED}: never cache. Every resolution creates a new model instance.
- *   <li>{@link #ENABLED}: opt-in caching. The cache identity is either the explicit
- *       {@code cacheId} supplied by the caller or a fingerprint derived only from standard simple
- *       fields. Contexts containing opaque options/components require an explicit {@code cacheId}.
+ *   <li>{@link #DEFAULT}：保留旧行为。空上下文按模型 ID 缓存；
+ *       非空上下文不缓存。
+ *   <li>{@link #DISABLED}：永不缓存。每次解析都创建新的模型实例。
+ *   <li>{@link #ENABLED}：显式启用缓存。缓存标识取调用方提供的
+ *       {@code cacheId}，或仅根据标准简单字段推导的指纹。
+ *       包含不透明选项／组件的上下文必须显式提供 {@code cacheId}。
  * </ul>
  */
 public enum CachePolicy {
     /**
-     * Preserve registry defaults. Legacy {@link ModelRegistry#resolve(String)} calls are cached,
-     * while non-empty context-based resolutions are not cached.
+     * 保留注册表默认行为。旧版 {@link ModelRegistry#resolve(String)} 调用会缓存，
+     * 基于非空上下文的解析则不缓存。
      */
     DEFAULT,
 
-    /** Never cache the created model. */
+    /** 不缓存所创建的模型。 */
     DISABLED,
 
-    /** Cache the created model using an explicit or safely derived context cache identity. */
+    /** 使用显式给定或安全推导的上下文缓存标识，缓存所创建的模型。 */
     ENABLED
 }

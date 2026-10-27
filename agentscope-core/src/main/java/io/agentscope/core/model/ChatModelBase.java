@@ -22,9 +22,9 @@ import java.util.List;
 import reactor.core.publisher.Flux;
 
 /**
- * Abstract base class for all models in the AgentScope framework.
+ * AgentScope 框架中所有模型的抽象基类。
  *
- * <p>This class provides common functionality for model including basic model invocation and tracing.
+ * <p>此类提供模型通用功能，包括基本模型调用和追踪。
  */
 public abstract class ChatModelBase implements Model {
 
@@ -75,15 +75,15 @@ public abstract class ChatModelBase implements Model {
     }
 
     /**
-     * Stream chat completion responses.
-     * The model internally handles message formatting using its configured formatter.
+     * 流式生成聊天补全响应。
+     * 模型在内部使用配置的格式化器转换消息格式。
      *
-     * <p>Tracing data will be captured once telemetry is enabled.
+     * <p>启用遥测后将采集追踪数据。
      *
-     * @param messages AgentScope messages to send to the model
-     * @param tools Optional list of tool schemas (null or empty if no tools)
-     * @param options Optional generation options (null to use defaults)
-     * @return Flux stream of chat responses
+     * @param messages 要发送给模型的 AgentScope 消息
+     * @param tools 可选的工具模式列表（无工具时为 null 或空列表）
+     * @param options 可选的生成选项（null 表示使用默认值）
+     * @return 聊天响应组成的 Flux 流
      */
     @Override
     public final Flux<ChatResponse> stream(
@@ -94,13 +94,13 @@ public abstract class ChatModelBase implements Model {
     }
 
     /**
-     * Internal implementation for streaming chat completion responses.
-     * Subclasses must implement their specific logic here.
+     * 聊天补全流式响应的内部实现。
+     * 子类必须在这里实现各自的具体逻辑。
      *
-     * @param messages AgentScope messages to send to the model
-     * @param tools Optional list of tool schemas (null or empty if no tools)
-     * @param options Optional generation options (null to use defaults)
-     * @return Flux stream of chat responses
+     * @param messages 要发送给模型的 AgentScope 消息
+     * @param tools 可选的工具模式列表（无工具时为 null 或空列表）
+     * @param options 可选的生成选项（null 表示使用默认值）
+     * @return 聊天响应组成的 Flux 流
      */
     protected abstract Flux<ChatResponse> doStream(
             List<Msg> messages, List<ToolSchema> tools, GenerateOptions options);

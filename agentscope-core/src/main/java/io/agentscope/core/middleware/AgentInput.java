@@ -19,8 +19,8 @@ import io.agentscope.core.message.Msg;
 import java.util.List;
 
 /**
- * Input context for {@link MiddlewareBase#onAgent}.
+ * {@link MiddlewareBase#onAgent} 的输入上下文。
  *
- * @param msgs the input messages to the agent
+ * @param msgs 传给智能体的输入消息
  */
 public record AgentInput(List<Msg> msgs) {}

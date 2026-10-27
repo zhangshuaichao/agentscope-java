@@ -22,15 +22,15 @@ import io.agentscope.core.permission.PermissionRule;
 import java.util.List;
 
 /**
- * Represents the result of a single user confirmation decision for a tool call.
+ * 表示用户针对某个工具调用作出的一次确认决定。
  *
- * <p>When confirmed, the caller may supply a modified {@link #toolCall} (allowing the user to
- * tweak input) and/or new {@link #rules} that the {@code PermissionEngine} should remember for
- * future calls — e.g. "always allow this command going forward".
+ * <p>确认时，调用方可以提供修改后的 {@link #toolCall}（允许用户调整输入），
+ * 和／或提供新的 {@link #rules}，由 {@code PermissionEngine} 记住并用于未来调用，
+ * 例如“今后始终允许此命令”。
  *
- * <p>When denied, the caller may supply a human-readable {@link #reason} explaining the denial;
- * it becomes the text of the DENIED tool result written back to the model context (and emitted
- * on the event stream), replacing the default {@code "Permission denied by user"} message.
+ * <p>拒绝时，调用方可提供便于人理解的 {@link #reason} 说明原因；
+ * 它会替代默认的 {@code "Permission denied by user"} 消息，成为写回模型上下文
+ * （并在事件流中发出）的 DENIED 工具结果文本。
  */
 public class ConfirmResult {
 
@@ -51,12 +51,12 @@ public class ConfirmResult {
         this.reason = reason;
     }
 
-    /** Convenience constructor without a denial reason. */
+    /** 不指定拒绝原因的便捷构造器。 */
     public ConfirmResult(boolean confirmed, ToolUseBlock toolCall, List<PermissionRule> rules) {
         this(confirmed, toolCall, rules, null);
     }
 
-    /** Convenience constructor without rules. */
+    /** 不指定规则的便捷构造器。 */
     public ConfirmResult(boolean confirmed, ToolUseBlock toolCall) {
         this(confirmed, toolCall, null, null);
     }
@@ -70,22 +70,21 @@ public class ConfirmResult {
     }
 
     /**
-     * New permission rules to register with the engine when {@link #confirmed} is true. Each rule
-     * extends the engine's allow / deny / ask tables based on its {@code behavior}.
+     * 当 {@link #confirmed} 为 true 时，要向引擎注册的新权限规则。
+     * 每条规则根据其 {@code behavior} 扩展引擎的允许／拒绝／询问规则表。
      *
-     * @return list of rules (may be null or empty)
+     * @return 规则列表（可为 null 或空列表）
      */
     public List<PermissionRule> getRules() {
         return rules;
     }
 
     /**
-     * Optional human-readable reason for a denial ({@link #confirmed} == false). When present,
-     * it is used as the text of the DENIED tool result instead of the default
-     * {@code "Permission denied by user"} message, so the model (and downstream event consumers)
-     * can see why the user rejected the call.
+     * 可选的、便于人理解的拒绝原因（{@link #confirmed} == false）。提供此值时，
+     * 用它作为 DENIED 工具结果文本，替代默认的 {@code "Permission denied by user"}
+     * 消息，使模型及下游事件消费方能知道用户拒绝调用的原因。
      *
-     * @return the denial reason, or null when not supplied
+     * @return 拒绝原因；未提供时为 null
      */
     public String getReason() {
         return reason;

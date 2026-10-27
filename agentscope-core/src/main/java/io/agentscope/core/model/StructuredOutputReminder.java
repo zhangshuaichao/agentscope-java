@@ -16,36 +16,30 @@
 package io.agentscope.core.model;
 
 /**
- * Configuration for how to ensure the model calls generate_response tool in structured output
- * mode.
+ * 配置在结构化输出模式下，如何确保模型调用 generate_response 工具。
  *
- * <p>This enum controls the mechanism used to enforce that the model calls the temporary
- * generate_response tool when generating structured output.
+ * <p>此枚举控制生成结构化输出时，促使模型调用临时 generate_response 工具的机制。
  */
 public enum StructuredOutputReminder {
     /**
-     * Use tool_choice API parameter to force the tool call when the model doesn't call it
-     * voluntarily. This is the default and recommended option.
+     * 当模型未主动调用工具时，使用 tool_choice API 参数强制调用。
+     * 这是默认且推荐的选项。
      *
-     * <p>When this mode is used:
+     * <p>使用此模式时：
      * <ol>
-     *   <li>First round: The model is free to call any tool (including business tools)
-     *   <li>If the model doesn't call generate_response: The next round will force it via
-     *       tool_choice parameter
+     *   <li>第一轮：模型可以自由调用任意工具（包括业务工具）
+     *   <li>如果模型未调用 generate_response：下一轮通过 tool_choice 参数强制调用
      * </ol>
      *
-     * <p>This approach allows the agent to complete multi-step tasks before generating the final
-     * structured output.
+     * <p>这种方式允许智能体先完成多步骤任务，再生成最终结构化输出。
      */
     TOOL_CHOICE,
 
     /**
-     * Inject reminder prompt when model doesn't call the tool. Legacy approach requiring multiple
-     * API calls and retries.
+     * 当模型未调用工具时注入提醒提示词。这是可能需要多次 API 调用和重试的旧方案。
      *
-     * <p>When this mode is used, if the model doesn't call the generate_response tool, a reminder
-     * message will be injected into the conversation and the agent will retry the reasoning step.
-     * This may require multiple iterations to successfully generate the structured output.
+     * <p>使用此模式时，如果模型未调用 generate_response 工具，则向对话注入提醒消息，
+     * 智能体随后重试推理步骤。这可能需要多轮迭代才能成功生成结构化输出。
      */
     PROMPT
 }

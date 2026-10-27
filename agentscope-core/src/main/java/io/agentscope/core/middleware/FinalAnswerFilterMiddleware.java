@@ -33,19 +33,19 @@ import java.util.function.Function;
 import reactor.core.publisher.Flux;
 
 /**
- * Exposes only the text from the final reasoning round of a ReAct stream.
+ * 仅暴露 ReAct 事件流中最后一轮推理产生的文本。
  *
- * <p>Text events are buffered until the current model call completes. If the model produces a
- * tool call during that round, the buffered and subsequent text events are suppressed. Otherwise,
- * the buffered text events are emitted before the corresponding {@link ModelCallEndEvent}.
+ * <p>文本事件先缓冲，直到当前模型调用完成。如果模型在该轮产生工具调用，
+ * 则抑制已缓冲及后续的文本事件；否则，在对应的 {@link ModelCallEndEvent}
+ * 之前发出缓冲的文本事件。
  *
- * <p>This middleware is opt-in and does not change the default behavior of {@code ReActAgent}.
- * Because a round can only be identified as intermediate after a tool call is observed, text from
- * the current round is not emitted until the model call completes or a tool call is detected.
+ * <p>此中间件需要显式启用，不会改变 {@code ReActAgent} 的默认行为。
+ * 只有观察到工具调用后，才能确定某轮属于中间轮次，因此当前轮的文本
+ * 要等到模型调用完成或检测到工具调用之后，才会决定是否发出。
  */
 public class FinalAnswerFilterMiddleware implements MiddlewareBase {
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需的拦截点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_REASONING);
@@ -57,6 +57,8 @@ public class FinalAnswerFilterMiddleware implements MiddlewareBase {
             RuntimeContext ctx,
             ReasoningInput input,
             Function<ReasoningInput, Flux<AgentEvent>> next) {
+        // 【学习提示】defer 为每次订阅单独创建 RoundState，避免不同订阅共享缓冲区。
+        // concatMap 保持事件处理顺序；doFinally 在完成、出错或取消时清理本轮状态。
         return Flux.defer(
                 () -> {
                     RoundState state = new RoundState();
@@ -109,6 +111,8 @@ public class FinalAnswerFilterMiddleware implements MiddlewareBase {
                     return Flux.just(event);
                 }
 
+                // 【学习提示】先复制缓冲区，再清理状态；返回流使用副本，
+                // 因而不会因 clear() 而丢失尚未向下游发出的最终文本。
                 List<AgentEvent> finalEvents = new ArrayList<>(bufferedTextEvents);
                 finalEvents.add(event);
                 clear();

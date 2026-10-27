@@ -1,3 +1,5 @@
+> 中文源码学习分支：[学习入口、术语表、设计思想与阅读路线](study/zh-CN/README.md)。当前为分批交付，请先查看[覆盖范围与验证限制](study/zh-CN/翻译范围与验证.md)。
+
 <p align="center">
   <img
     src="https://img.alicdn.com/imgextra/i1/O1CN01nTg6w21NqT5qFKH1u_!!6000000001621-55-tps-550-550.svg"

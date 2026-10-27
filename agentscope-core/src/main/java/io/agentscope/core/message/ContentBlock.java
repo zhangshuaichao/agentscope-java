@@ -20,28 +20,26 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.agentscope.core.state.State;
 
 /**
- * Base sealed class for all content blocks in messages.
+ * 所有消息内容块的密封基类。
  *
- * <p>Content blocks represent different types of content that can be included in a message,
- * such as text, images, audio, video, or thinking content. This sealed hierarchy ensures
- * type safety and enables exhaustive pattern matching.
+ * <p>内容块表示消息可包含的不同内容类型，如文本、图像、音频、视频或思考内容。
+ * 密封继承层次保证类型安全，并支持穷尽式模式匹配。
  *
- * <p><b>Supported Content Types:</b>
+ * <p><b>支持的内容类型：</b>
  * <ul>
- *   <li>{@link TextBlock} - Plain text content
- *   <li>{@link ThinkingBlock} - Agent reasoning/thinking content
- *   <li>{@link ImageBlock} - Image content (URL or Base64)
- *   <li>{@link AudioBlock} - Audio content (URL or Base64)
- *   <li>{@link VideoBlock} - Video content (URL or Base64)
- *   <li>{@link ToolUseBlock} - Tool execution requests
- *   <li>{@link ToolResultBlock} - Tool execution results
- *   <li>{@link HintBlock} - Hints for LLM reasoning (e.g., from RAG)
- *   <li>{@link DataBlock} - Generic binary data block unifying image/audio/video
+ * <li>{@link TextBlock}：纯文本内容
+ * <li>{@link ThinkingBlock}：智能体推理或思考内容
+ * <li>{@link ImageBlock}：图像内容（URL 或 Base64）
+ * <li>{@link AudioBlock}：音频内容（URL 或 Base64）
+ * <li>{@link VideoBlock}：视频内容（URL 或 Base64）
+ * <li>{@link ToolUseBlock}：工具执行请求
+ * <li>{@link ToolResultBlock}：工具执行结果
+ * <li>{@link HintBlock}：用于大语言模型推理的提示信息（例如来自 RAG）
+ * <li>{@link DataBlock}：统一图像、音频和视频的通用二进制数据块
  * </ul>
  *
- * <p>Uses Jackson annotations for polymorphic JSON serialization with the "type" discriminator
- * field. The sealed modifier restricts subclasses to the specified permits list, enabling
- * compile-time exhaustiveness checking in pattern matching.
+ * <p>使用 Jackson 注解和 "type" 判别字段实现多态 JSON 序列化。
+ * sealed 修饰符将子类限制为 permits 列表中的类型，从而支持模式匹配的编译期穷尽性检查。
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({

@@ -21,25 +21,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * Represents URL-based media content.
+ * 表示基于 URL 的媒体内容。
  *
- * <p>This source references media files accessible via URLs, supporting
- * both remote HTTP/HTTPS URLs and local file URLs. This approach is
- * preferred when media files are hosted externally or when file size
- * makes Base64 encoding impractical.
+ * <p>引用可通过 URL 访问的媒体文件，同时支持远程 HTTP/HTTPS URL 和本地文件 URL。
+ * 媒体文件托管于外部，或文件过大而不适合 Base64 编码时，应优先采用此方式。
  *
- * <p>Supported URL formats:
+ * <p>支持的 URL 格式：
  * <ul>
- *   <li>Remote URLs: https://example.com/image.jpg</li>
- *   <li>Local files: file:///absolute/path/to/file.jpg</li>
+ * <li>远程 URL：https://example.com/image.jpg</li>
+ * <li>本地文件：file:///absolute/path/to/file.jpg</li>
  * </ul>
  *
- * <p>Using URL sources is more efficient for large media files and allows
- * the system to stream content rather than loading everything into memory.
+ * <p>对于大型媒体文件，URL 来源效率更高，可让系统流式处理内容，而不必全部加载到内存。
  *
- * <p>When the URL has no file extension (e.g. CDN signed URLs), set {@code mimeType}
- * explicitly so converters can route the content to the correct media slot without
- * relying on extension-based inference.
+ * <p>URL 不含文件扩展名时（例如 CDN 签名 URL），应显式设置 {@code mimeType}，
+ * 使转换器无需依赖扩展名推断，就能将内容送入正确的媒体位置。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class URLSource extends Source {
@@ -50,11 +46,11 @@ public class URLSource extends Source {
     private final String mimeType;
 
     /**
-     * Creates a new URL source for JSON deserialization.
+     * 创建用于 JSON 反序列化的 URL 来源。
      *
-     * @param url The URL pointing to the media content
-     * @param mimeType Optional MIME type hint (e.g. "image/jpeg"); may be null
-     * @throws NullPointerException if url is null
+     * @param url 指向媒体内容的 URL
+     * @param mimeType 可选 MIME 类型提示（例如 "image/jpeg"），可为 null
+     * @throws NullPointerException 当 url 为 null 时
      */
     @JsonCreator
     public URLSource(@JsonProperty("url") String url, @JsonProperty("mime_type") String mimeType) {
@@ -63,48 +59,46 @@ public class URLSource extends Source {
     }
 
     /**
-     * Creates a new URL source without a MIME type hint.
+     * 创建不带 MIME 类型提示的 URL 来源。
      *
-     * @param url The URL pointing to the media content
-     * @throws NullPointerException if url is null
+     * @param url 指向媒体内容的 URL
+     * @throws NullPointerException 当 url 为 null 时
      */
     public URLSource(String url) {
         this(url, null);
     }
 
     /**
-     * Gets the URL that points to the media content.
+     * 获取指向媒体内容的 URL。
      *
-     * @return The URL as a string
+     * @return URL 字符串
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * Gets the optional MIME type hint for this URL source.
+     * 获取 URL 来源的可选 MIME 类型提示。
      *
-     * <p>When present, converters use this value instead of inferring the type
-     * from the URL's file extension. Useful for extension-less URLs such as
-     * CDN signed links or API-generated media endpoints.
+     * <p>存在此值时，转换器使用它，而不再根据 URL 的文件扩展名推断类型。适用于没有扩展名的 URL，例如 CDN 签名链接或 API 生成的媒体端点。
      *
-     * @return The MIME type (e.g. "image/jpeg"), or null if not set
+     * @return MIME 类型（例如 "image/jpeg"）；未设置时为 null
      */
     public String getMimeType() {
         return mimeType;
     }
 
     /**
-     * Creates a new builder for constructing URLSource instances.
+     * 创建用于构造 URLSource 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Builder for constructing URLSource instances.
+     * 用于构造 URLSource 实例的构建器。
      */
     public static class Builder {
 
@@ -113,10 +107,10 @@ public class URLSource extends Source {
         private String mimeType;
 
         /**
-         * Sets the URL for the media content.
+         * 设置媒体内容的 URL。
          *
-         * @param url The URL pointing to the media content
-         * @return This builder for chaining
+         * @param url 指向媒体内容的 URL
+         * @return 当前构建器，支持链式调用
          */
         public Builder url(String url) {
             this.url = url;
@@ -124,10 +118,10 @@ public class URLSource extends Source {
         }
 
         /**
-         * Sets an optional MIME type hint for extension-less URLs.
+         * 为无扩展名 URL 设置可选 MIME 类型提示。
          *
-         * @param mimeType The MIME type (e.g. "video/mp4")
-         * @return This builder for chaining
+         * @param mimeType MIME 类型（例如 "video/mp4"）
+         * @return 当前构建器，支持链式调用
          */
         public Builder mimeType(String mimeType) {
             this.mimeType = mimeType;
@@ -135,10 +129,10 @@ public class URLSource extends Source {
         }
 
         /**
-         * Builds a new URLSource with the configured fields.
+         * 使用配置的字段构建 URLSource。
          *
-         * @return A new URLSource instance
-         * @throws NullPointerException if url is null
+         * @return 新的 URLSource 实例
+         * @throws NullPointerException 当 url 为 null 时
          */
         public URLSource build() {
             return new URLSource(url, mimeType);

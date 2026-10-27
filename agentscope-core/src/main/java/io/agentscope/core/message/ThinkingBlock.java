@@ -21,32 +21,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents reasoning or thinking content in a message.
+ * 表示消息中的推理或思考内容。
  *
- * <p>This content block is used to capture the internal reasoning process of an agent before
- * taking action. It provides transparency into how the agent arrived at its decisions or tool
- * choices.
+ * <p>此内容块用于捕获智能体采取行动前的内部推理过程，呈现其如何做出决策或选择工具。
  *
- * <p>Thinking blocks are particularly useful in ReAct agents and other reasoning-intensive systems
- * where understanding the agent's thought process is valuable for debugging and analysis.
+ * <p>特别适用于 ReAct 智能体和其他推理密集型系统，有助于调试和分析智能体的思考过程。
  *
- * <p>The optional metadata field can store additional reasoning information such as OpenRouter's
- * reasoning_details (reasoning.text, reasoning.encrypted, reasoning.summary) that need to be
- * preserved and restored when formatting messages back to the API.
+ * <p>可选的 metadata 字段可保存额外推理信息，例如 OpenRouter 的 reasoning_details（reasoning.text、reasoning.encrypted、reasoning.summary）；将消息格式化回 API 时需要保留并恢复这些信息。
  */
 public final class ThinkingBlock extends ContentBlock {
 
-    /** Metadata key for storing OpenRouter/Gemini reasoning details list. */
+    /**
+     * 用于存储 OpenRouter/Gemini 推理详情列表的元数据键。
+     */
     public static final String METADATA_REASONING_DETAILS = "reasoningDetails";
 
     private final String thinking;
     private final Map<String, Object> metadata;
 
     /**
-     * Creates a new thinking block for JSON deserialization.
+     * 创建用于 JSON 反序列化的思考块。
      *
-     * @param text The thinking content (null will be converted to empty string)
-     * @param metadata Optional metadata for storing additional reasoning information
+     * @param text 思考内容（null 会转换为空字符串）
+     * @param metadata 用于存储额外推理信息的可选元数据
      */
     @JsonCreator
     private ThinkingBlock(
@@ -57,50 +54,51 @@ public final class ThinkingBlock extends ContentBlock {
     }
 
     /**
-     * Gets the thinking/reasoning content of this block.
+     * 获取此块的思考或推理内容。
      *
-     * @return The thinking content
+     * @return 思考内容
      */
     public String getThinking() {
         return thinking;
     }
 
     /**
-     * Gets the metadata associated with this thinking block.
+     * 获取此思考块关联的元数据。
      *
-     * <p>Metadata can contain additional reasoning information such as:
+     * <p>元数据可包含额外推理信息，例如：
      *
      * <ul>
-     *   <li>{@link #METADATA_REASONING_DETAILS} - List of OpenAIReasoningDetail objects from
-     *       OpenRouter/Gemini
+     * <li>{@link #METADATA_REASONING_DETAILS}：来自 OpenRouter/Gemini 的 OpenAIReasoningDetail 对象列表
      * </ul>
      *
-     * @return The metadata map, or null if no metadata is set
+     * @return 元数据映射；未设置时为 null
      */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     /**
-     * Creates a new builder for constructing ThinkingBlock instances.
+     * 创建用于构造 ThinkingBlock 实例的构建器。
      *
-     * @return A new builder instance
+     * @return 新的构建器实例
      */
     public static Builder builder() {
         return new Builder();
     }
 
-    /** Builder for constructing ThinkingBlock instances. */
+    /**
+     * 用于构造 ThinkingBlock 实例的构建器。
+     */
     public static class Builder {
 
         private String thinking;
         private Map<String, Object> metadata;
 
         /**
-         * Sets the thinking content for the block.
+         * 设置内容块的思考内容。
          *
-         * @param thinking The thinking content
-         * @return This builder for chaining
+         * @param thinking 思考内容
+         * @return 当前构建器，支持链式调用
          */
         public Builder thinking(String thinking) {
             this.thinking = thinking;
@@ -108,13 +106,12 @@ public final class ThinkingBlock extends ContentBlock {
         }
 
         /**
-         * Sets the metadata for the block.
+         * 设置内容块的元数据。
          *
-         * <p>Metadata can store additional reasoning information that needs to be preserved, such
-         * as OpenRouter's reasoning_details.
+         * <p>元数据可存储需要保留的额外推理信息，例如 OpenRouter 的 reasoning_details。
          *
-         * @param metadata The metadata map
-         * @return This builder for chaining
+         * @param metadata 元数据映射
+         * @return 当前构建器，支持链式调用
          */
         public Builder metadata(Map<String, Object> metadata) {
             this.metadata = metadata;
@@ -122,9 +119,9 @@ public final class ThinkingBlock extends ContentBlock {
         }
 
         /**
-         * Builds a new ThinkingBlock with the configured thinking content and metadata.
+         * 使用配置的思考内容和元数据构建 ThinkingBlock。
          *
-         * @return A new ThinkingBlock instance (null thinking will be converted to empty string)
+         * @return 新的 ThinkingBlock 实例（null 思考内容会转换为空字符串）
          */
         public ThinkingBlock build() {
             return new ThinkingBlock(thinking != null ? thinking : "", metadata);

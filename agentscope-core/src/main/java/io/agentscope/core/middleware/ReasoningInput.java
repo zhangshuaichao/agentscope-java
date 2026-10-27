@@ -21,10 +21,10 @@ import io.agentscope.core.model.ToolSchema;
 import java.util.List;
 
 /**
- * Input context for {@link MiddlewareBase#onReasoning}.
+ * {@link MiddlewareBase#onReasoning} 的输入上下文。
  *
- * @param messages  the messages to send to the model
- * @param tools     the tool schemas available to the model
- * @param options   generation options
+ * @param messages  要发送给模型的消息
+ * @param tools     模型可使用的工具模式
+ * @param options   生成选项
  */
 public record ReasoningInput(List<Msg> messages, List<ToolSchema> tools, GenerateOptions options) {}

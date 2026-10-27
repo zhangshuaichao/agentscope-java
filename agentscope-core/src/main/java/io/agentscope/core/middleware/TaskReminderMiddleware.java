@@ -29,8 +29,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Explains todo usage and projects state for standalone ReActAgent. A final request preparer
- * that owns task projection suppresses this early pass. Synthetic reminders never enter history.
+ * 为独立使用的 ReActAgent 解释待办事项的用法并投影状态。如果最终请求准备器
+ * 已负责投影任务，则抑制此提前处理步骤。合成的提醒绝不进入历史记录。
  */
 public class TaskReminderMiddleware implements MiddlewareBase {
     private final boolean todo;
@@ -76,7 +76,7 @@ public class TaskReminderMiddleware implements MiddlewareBase {
             Never infer task acceptance from all todos being completed.\
             """;
 
-    /** Narrow declaration: subclasses overriding more hooks must extend this set. */
+    /** 仅声明所需的拦截点；子类若重写更多钩子，必须扩展此集合。 */
     @Override
     public Set<ExtensionPoint> activePoints() {
         return EnumSet.of(ExtensionPoint.ON_SYSTEM_PROMPT, ExtensionPoint.ON_REASONING);
