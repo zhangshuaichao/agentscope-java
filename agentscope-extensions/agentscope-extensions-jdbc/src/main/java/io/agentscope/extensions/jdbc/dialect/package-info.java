@@ -62,6 +62,8 @@
  * (3) Adding a database with native locks = override tryEnter() in the vendor class (no separate strategy class)
  * </pre>
  *
+ * <p>架构图中文说明：第一层 dialect.table 按表领域定义接口，DDL 为抽象方法，标准业务 SQL 有默认实现，方法按表简称区分。store/sessions/snapshots 属于基础表组，skills/skill_resources 属于技能表组。AbstractJdbcDialect 汇总全部表接口与 SandboxLockStrategy，保存前缀、逐表覆盖和表组开关；构建时探测数据库、绑定 DataSource、解析表名，再创建或验证表。表名优先采用显式覆盖，其次为前缀加基础名；默认锁使用表实现。第二层 dialect.vendor 每个数据库一类，只覆写 DDL、差异 SQL 与原生锁，其余继承标准实现：MySQL 使用 ON DUPLICATE KEY 和 GET_LOCK，PostgreSQL/SQLite 使用 ON CONFLICT，H2 使用 MERGE INTO。增加原生锁后端时覆写供应商类的 tryEnter，不另建策略类。
+ *
  * <h2>新增表</h2>
  * <ol>
  *   <li>在 {@code table} 中创建表领域接口，方法名以表短名为前缀。</li>

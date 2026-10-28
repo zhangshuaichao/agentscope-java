@@ -1,0 +1,19 @@
+{
+  "report_format": "concise_audit_summary",
+  "detailed_entries_embedded": false,
+  "detail_note": "逐项机器审计记录保留离线，不在仓库内嵌；本文件保留审计范围、结果与限制。逐文件覆盖请参阅全仓覆盖进度.csv。",
+  "full_report_sha256": "1bad98b042daeacecb51aff4acd3d4330a73c48f8a52425192635dbb164a9864",
+  "per_file_coverage": "全仓覆盖进度.csv",
+  "reproducible_checks": [
+    "python study/zh-CN/verify_comment_only.py",
+    "python study/zh-CN/verify_java_syntax.py ."
+  ],
+  "reproduction_limit": "脚本复核词元保护与语法；人工语义审阅不能仅凭脚本重现。",
+  "files": 2121,
+  "passed": 2121,
+  "errors": [],
+  "code_tokens": 1649555,
+  "details_entry_count": 2121,
+  "method": "逐个对比基线的Java可执行token和字符串、许可、Javadoc符号标签及示例非注释token；所有2121个src/main Java，不仅检查已修改文件。",
+  "baseline": "a543f993cce6e22fb37c31ae14443cf9104dbeae"
+}

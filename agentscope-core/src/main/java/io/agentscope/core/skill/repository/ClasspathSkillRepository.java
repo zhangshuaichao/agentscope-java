@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
  *         └── SKILL.md
  * </pre>
  *
+ * <p>目录图中文说明：向仓库传入字符串 skills，表示从 resources 下的 skills 目录读取；skill-a、skill-b、skill-c 是并列技能目录，每个目录包含自己的 SKILL.md。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 从包含多个技能的父目录加载

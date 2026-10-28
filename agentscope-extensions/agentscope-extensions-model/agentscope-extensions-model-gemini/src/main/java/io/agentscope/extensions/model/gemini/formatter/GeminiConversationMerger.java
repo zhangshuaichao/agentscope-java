@@ -47,6 +47,8 @@ import org.slf4j.LoggerFactory;
  * Agent message content...
  * &lt;/history&gt;
  * </pre>
+ *
+ * <p>格式示例中文说明：Conversation History 表示会话历史；history 标签包围历史内容；每个 AgentName 后带角色，再接该智能体消息正文。示例结构与原始文本值保留，以便对照实际格式化结果。
  */
 public class GeminiConversationMerger {
 

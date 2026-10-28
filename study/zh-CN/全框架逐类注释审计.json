@@ -1,0 +1,32 @@
+{
+  "report_format": "concise_audit_summary",
+  "detailed_entries_embedded": false,
+  "detail_note": "逐项机器审计记录保留离线，不在仓库内嵌；本文件保留审计范围、结果与限制。逐文件覆盖请参阅全仓覆盖进度.csv。",
+  "full_report_sha256": "78d73ec3473166a47bd01993c33382d005efa36da35371d7661fc58e78e13f3b",
+  "per_file_coverage": "全仓覆盖进度.csv",
+  "reproducible_checks": [
+    "python study/zh-CN/verify_comment_only.py",
+    "python study/zh-CN/verify_java_syntax.py ."
+  ],
+  "reproduction_limit": "脚本复核词元保护与语法；人工语义审阅不能仅凭脚本重现。",
+  "generated_utc": "2026-10-27T17:37:09.653737+00:00",
+  "scope": "全部框架src/main Java，不含examples",
+  "method": "覆盖全部框架1757生产Java（不含examples）。对词法提取的非许可证说明逐文件/逐声明检查，跳过另行校验的pre代码块；英文启发式61行逐条人工复核，均为符号/原始字符串/格式样例。补译示例见独立审计；图示采用保留原图+中文说明。此检查是覆盖证据，不是译文语义或运行行为的形式化证明。",
+  "summary": {
+    "files": 1757,
+    "type_declarations": 2636,
+    "nonlicense_comment_blocks": 15255,
+    "raw_candidate_lines": 61,
+    "untranslated_explanatory_candidates_after_manual_review": 0,
+    "type_declarations_by_module": {
+      "agentscope-service": 291,
+      "agentscope-extensions": 1442,
+      "agentscope-harness": 417,
+      "agentscope-core": 486
+    },
+    "raw_files_with_candidates": 47,
+    "raw_classes_with_english_candidates": 12
+  },
+  "files_entry_count": 1757,
+  "type_inventory_method": "JDK Compiler API语法树列出所有具名class/interface/enum/record/annotation声明，不依赖正则，不解析类型依赖；1757文件语法错误0。"
+}

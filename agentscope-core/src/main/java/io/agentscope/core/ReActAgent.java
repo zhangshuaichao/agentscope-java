@@ -3624,9 +3624,9 @@ public class ReActAgent extends AgentBase implements AutoCloseable {
                                 List<ToolUseBlock> pending = gate.pendingAsk();
                                 Set<String> autoDenied = gate.autoDeniedIds();
 
-                                // 为每个经过门控的工具在上下文标记 ToolUseBlock.state。ALLOWED
-                                // 调用立即执行；ASKING 调用使智能体暂停并
-                                // 返回；DENIED 调用在下面写入 DENIED ToolResultBlock。
+                                // 为每个经过门控的工具标记 ToolUseBlock.state。只有整批没有 ASKING
+                                // 时才进入 runToolBatch；若仍有待确认项，ALLOWED 也暂不执行。
+                                // DENIED 调用在下面写入 DENIED ToolResultBlock。
                                 Map<String, ToolCallState> stateUpdates = new HashMap<>();
                                 for (ToolUseBlock tc : toolCalls) {
                                     if (autoDenied.contains(tc.getId())) {

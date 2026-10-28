@@ -59,6 +59,8 @@ import reactor.core.scheduler.Schedulers;
  *       ...
  * </pre>
  *
+ * <p>目录图中文说明：__anon__ 保存 userId 为 null 的匿名会话；safe(userId) 下保存各用户会话；safe(sessionId) 区分会话目录。agent_state.json 是单值状态，memory_messages.jsonl 是消息列表，memory_messages.hash 是变化检测哈希。路径隔离不代替调用方身份认证。
+ *
  * <p>{@code safe(...)} 在字符串匹配 {@code ^[a-zA-Z0-9_\-.]+$} 时保留原值；
  * 否则使用不带填充的 Base64-URL 编码，确保文件系统能够接受。
  *

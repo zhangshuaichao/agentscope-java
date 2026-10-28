@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
  * └── skill-name-2/
  *     └── SKILL.md
  * }</pre>
+ * <p>目录图中文对照：每个 skill-name 目录代表一个技能；SKILL.md 是必需入口，包含 YAML 前置元数据；references 是可选参考文档，examples 是可选示例，scripts 是可选脚本。
  *
  * <p>使用示例：
  * <pre>{@code

@@ -34,6 +34,8 @@ import javax.crypto.spec.SecretKeySpec;
  * | 16 bytes IV | AES-CBC + PKCS#7 padded body |
  * </pre>
  *
+ * <p>布局中文说明：前 16 字节是 IV（初始化向量），后面是 AES-CBC 加密且采用 PKCS#7 填充的正文。
+ *
  * <p>签名头 {@code X-Lark-Signature} 按
  * {@code SHA-256(timestamp + nonce + encryptKey + rawBody)} 计算；
  * {@code rawBody} 是原始 HTTP 请求体（序列化为 JSON 的信封，而非解密后的明文）。
@@ -91,6 +93,8 @@ public final class FeishuCrypto {
      * <pre>
      * | 16 bytes IV | AES-256-CBC + PKCS#7 padded plaintext |
      * </pre>
+     *
+     * <p>解密布局中文说明：先取 16 字节 IV，再按 AES-256-CBC 解密并处理 PKCS#7 填充；图中 plaintext 指解密后的明文。
      */
     public String decrypt(String encryptBase64) {
         try {

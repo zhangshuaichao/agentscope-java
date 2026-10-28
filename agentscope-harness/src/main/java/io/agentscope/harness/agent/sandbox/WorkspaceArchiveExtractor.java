@@ -50,7 +50,7 @@ public class WorkspaceArchiveExtractor {
      * <p>目标目录必须已存在。同路径的现有文件会被替换。
      *
      * @param destRoot 解压目标目录，必须已存在
-     * @param tarStream tar 归档输入流，由调用方负责关闭
+     * @param tarStream tar 归档输入流；本方法关闭其归档包装流，不应依赖调用后底层流仍可读取
      * @throws SandboxException.SandboxRuntimeException 检测到路径遍历尝试时抛出
      * @throws Exception 因其他原因解压失败时抛出
      */
@@ -64,7 +64,7 @@ public class WorkspaceArchiveExtractor {
 
                 Path dest = canonicalRoot.resolve(entry.getName()).normalize();
 
-                // 最终检查：验证目标严格位于根目录内
+                // 最终词法检查：目标路径不能越出根目录；此检查不解析符号链接。
                 if (!dest.startsWith(canonicalRoot)) {
                     throw new SandboxException.SandboxRuntimeException(
                             SandboxErrorCode.WORKSPACE_ARCHIVE_READ_ERROR,

@@ -1,0 +1,75 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.extensions.mysql.store;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.junit.jupiter.api.Test;
+
+class MysqlJdbcStoreDialectTest {
+
+    private static final int INNODB_UTF8MB4_INDEX_LIMIT_BYTES = 3072;
+    private static final int UTF8MB4_MAX_BYTES_PER_CHAR = 4;
+
+    @Test
+    void createTablePrimaryKeyFitsInnoDbUtf8mb4Limit() {
+        String ddl = new MysqlJdbcStoreDialect().getCreateTableSql();
+
+        int namespacePathLength = varcharLength(ddl, "namespace_path");
+        int itemKeyLength = varcharLength(ddl, "item_key");
+        long compositePkBytes =
+                (long) (namespacePathLength + itemKeyLength) * UTF8MB4_MAX_BYTES_PER_CHAR;
+
+        assertTrue(
+                compositePkBytes <= INNODB_UTF8MB4_INDEX_LIMIT_BYTES,
+                () ->
+                        String.format(
+                                "Composite PK is %d bytes, over the InnoDB utf8mb4 limit of %d"
+                                        + " bytes",
+                                compositePkBytes, INNODB_UTF8MB4_INDEX_LIMIT_BYTES));
+    }
+
+    @Test
+    void createTablePinsBinaryCollationOnKeyColumnsOnly() {
+        // 表默认 utf8mb4 不区分大小写，没有显式二进制排序规则时，
+        // "README.md" 与 "readme.md" 主键冲突，第二次 put 静默
+        // 覆盖第一次。对比空白规范化后的 DDL；列填充仅为格式，
+        // 约定关注列与排序规则的对应关系。
+        String ddl = normalise(new MysqlJdbcStoreDialect().getCreateTableSql());
+
+        assertTrue(ddl.contains("namespace_path VARCHAR(512) COLLATE utf8mb4_bin NOT NULL"));
+        assertTrue(ddl.contains("item_key VARCHAR(255) COLLATE utf8mb4_bin NOT NULL"));
+        assertTrue(ddl.contains("value_json LONGTEXT NOT NULL"));
+        assertFalse(ddl.contains("LONGTEXT COLLATE"));
+    }
+
+    private static String normalise(final String ddl) {
+        return ddl.replaceAll("\\s+", " ").trim();
+    }
+
+    private static int varcharLength(String ddl, String columnName) {
+        Matcher matcher =
+                Pattern.compile("(?i)\\b" + Pattern.quote(columnName) + "\\s+VARCHAR\\((\\d+)\\)")
+                        .matcher(ddl);
+        if (!matcher.find()) {
+            throw new IllegalStateException("Missing VARCHAR definition for " + columnName);
+        }
+        return Integer.parseInt(matcher.group(1));
+    }
+}

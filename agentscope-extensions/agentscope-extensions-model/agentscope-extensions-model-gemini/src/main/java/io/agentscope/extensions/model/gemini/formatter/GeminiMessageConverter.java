@@ -156,7 +156,7 @@ public class GeminiMessageConverter {
                     parts.add(partBuilder.build());
 
                 } else if (block instanceof ToolResultBlock trb) {
-                    // 服务端结果保留在 model Content 内；本地结果排队，
+                    // 服务端结果保留在原消息的 Content 内（正常助手响应为 model 角色）；本地结果排队，
                     // 在当前消息之后作为独立的 user Content 输出。
                     if (isCodeExecutionResult(trb)) {
                         buildCodeExecutionResultPart(trb)
@@ -232,7 +232,7 @@ public class GeminiMessageConverter {
                 result.add(content);
             }
             // 【学习提示】本地函数结果与服务端工具结果走不同协议表示；前者要合并为
-            // 用户轮次中的响应 Part，后者留在模型 Content，不能只按“都是工具结果”平铺。
+            // 用户轮次中的响应 Part，后者留在原消息 Content；其角色经 convertRole 映射而非强制 model。
             if (!functionResponseParts.isEmpty()) {
                 appendFunctionResponses(result, functionResponseParts);
             }

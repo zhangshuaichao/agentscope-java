@@ -1,0 +1,50 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.harness.coding.session;
+
+/**
+ * 受管会话公开视图，由 {@link SessionAgentManager#list} 和 {@link SessionAgentManager#viewSession} 返回，暴露会话信息而不暴露内部可变状态。
+ */
+public record SessionView(
+        String sessionKey,
+        String agentId,
+        String sessionId,
+        String label,
+        String kind,
+        String spawnedBy,
+        int spawnDepth,
+        long createdAtMs,
+        long lastActivityMs,
+        String sessionFilePath,
+        String spawnRunId,
+        String gateKey) {
+
+    public static SessionView from(SessionEntry e) {
+        return new SessionView(
+                e.sessionKey(),
+                e.agentId(),
+                e.sessionId(),
+                e.label(),
+                e.kind().getValue(),
+                e.spawnedBy(),
+                e.spawnDepth(),
+                e.createdAtMs(),
+                e.lastActivityMs(),
+                e.sessionFilePath(),
+                e.spawnRunId(),
+                e.gateKey());
+    }
+}

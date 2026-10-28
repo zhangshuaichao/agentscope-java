@@ -97,6 +97,8 @@ public final class WeComCrypto {
      * <pre>
      * | 16 bytes random | 4 bytes msg_len (big-endian) | msg (XML, msg_len bytes) | receive_id |
      * </pre>
+     *
+     * <p>字节布局中文说明：16 字节随机数、4 字节大端消息长度、该长度的 XML 消息正文，以及 receive_id 接收方标识；接收方校验与正文解密是不同步骤。
      */
     public String decrypt(String encryptBase64) {
         try {

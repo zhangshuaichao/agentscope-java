@@ -702,7 +702,8 @@ public final class HarnessGateway implements Gateway, WakeupDispatcher.WakeupTar
     // ------------------------------------------------------------------
 
     // 【学习提示】acquire 可能阻塞，因此订阅安排到 boundedElastic；defer 决定获取时机，
-    // doFinally 覆盖终止清理。注意 leaseRef 在 defer 外创建，同一个返回值被重复／并发订阅
+    // doFinally 终止时尝试清理已记录租约；取消与 acquire/set 交错时不能据此保证租约必定释放。
+    // 注意 leaseRef 在 defer 外创建，同一个返回值被重复／并发订阅
     // 时会共享它；不能由“使用 defer”推断所有租约状态都按订阅隔离。
     private Mono<Msg> withGatedTurn(String gateKey, Supplier<Mono<Msg>> turn) {
         AtomicReference<TurnLease> leaseRef = new AtomicReference<>();

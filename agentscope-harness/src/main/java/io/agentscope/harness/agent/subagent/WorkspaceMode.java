@@ -30,6 +30,8 @@ package io.agentscope.harness.agent.subagent;
  * (general-purpose, always SHARED)       mainWorkspace  (fully mirrors main agent)
  * </pre>
  *
+ * <p>表格中文说明：指定 workspacePath 且 ISOLATED 时，定义目录也是运行根目录；指定路径且 SHARED 时，运行根为 mainWorkspace，忽略定义目录中的 skills/knowledge。不指定路径且 ISOLATED 时，自动建立 mainWorkspace/agents/名称/workspace；不指定且 SHARED 时使用主工作区。通用子智能体始终 SHARED，完整沿用主智能体工作区。
+ *
  * <p><b>阶段 B-0：持久化会话分桶：</b>当启动时的
  * {@link io.agentscope.core.agent.RuntimeContext} 携带 {@code userId} 和
  * {@code parentSessionId} 时，ISOLATED 模式子智能体按父级身份划分持久化状态。

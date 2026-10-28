@@ -1,0 +1,614 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.harness.agent.skill.runtime;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.agentscope.core.agent.RuntimeContext;
+import io.agentscope.core.message.ContentBlock;
+import io.agentscope.core.message.TextBlock;
+import io.agentscope.core.message.ToolResultBlock;
+import io.agentscope.core.skill.AgentSkill;
+import io.agentscope.core.skill.SkillFilter;
+import io.agentscope.core.tool.ToolCallParam;
+import io.agentscope.core.tool.Toolkit;
+import io.agentscope.harness.agent.skill.SkillResources;
+import io.agentscope.harness.agent.skill.runtime.MarketplaceStager.StageResult;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+@SuppressWarnings("deprecation")
+class SkillRuntimeTest {
+
+    // =========================================================================
+    //  SkillCatalog
+    // =========================================================================
+
+    @Nested
+    class CatalogTests {
+
+        @Test
+        void emptyCatalogReportsZero() {
+            SkillCatalog c = SkillCatalog.empty();
+            assertTrue(c.isEmpty());
+            assertEquals(0, c.size());
+            assertNull(c.get("anything"));
+        }
+
+        @Test
+        void preservesInsertionOrder() {
+            HarnessSkillEntry a = HarnessSkillEntry.of(skill("alpha", "src"), null);
+            HarnessSkillEntry b = HarnessSkillEntry.of(skill("beta", "src"), null);
+            HarnessSkillEntry c = HarnessSkillEntry.of(skill("gamma", "src"), null);
+            SkillCatalog cat = SkillCatalog.of(List.of(a, b, c));
+            assertEquals(List.of("alpha_src", "beta_src", "gamma_src"), cat.ids());
+        }
+
+        @Test
+        void laterEntryWithSameIdOverwrites() {
+            HarnessSkillEntry a = HarnessSkillEntry.of(skill("alpha", "src"), null);
+            HarnessSkillEntry aDup = HarnessSkillEntry.of(skill("alpha", "src"), null);
+            SkillCatalog cat = SkillCatalog.of(List.of(a, aDup));
+            assertEquals(1, cat.size());
+            assertSame(aDup.skill(), cat.get("alpha_src").skill());
+        }
+    }
+
+    // =========================================================================
+    //  ShellPathPolicy
+    // =========================================================================
+
+    @Nested
+    class ShellPathPolicyTests {
+
+        @Test
+        void escapeSpacesReplacesWithBackslashSpace() {
+            assertEquals("hello", ShellPathPolicy.escapeSpaces("hello"));
+            assertEquals("hello\\ world", ShellPathPolicy.escapeSpaces("hello world"));
+            assertEquals("V2Ray\\ 代理配置助手", ShellPathPolicy.escapeSpaces("V2Ray 代理配置助手"));
+            assertEquals("a\\ b\\ c", ShellPathPolicy.escapeSpaces("a b c"));
+        }
+
+        @Test
+        void sandboxResolveEscapesSpacesInSkillName() {
+            ShellPathPolicy policy = ShellPathPolicy.sandbox();
+            String result = policy.resolve("V2Ray 代理配置助手", new StageResult.WorkspaceNative());
+            assertEquals("/workspace/skills/V2Ray\\ 代理配置助手", result);
+        }
+
+        @Test
+        void sandboxResolveEscapesSpacesInCachedSkill() {
+            ShellPathPolicy policy = ShellPathPolicy.sandbox();
+            String result =
+                    policy.resolve("ignored", new StageResult.Cached("alice", "ns", "my skill"));
+            assertEquals("/workspace/.skills-cache/alice/ns/my\\ skill", result);
+        }
+
+        @Test
+        void localWithShellResolveEscapesSpaces() {
+            ShellPathPolicy policy = ShellPathPolicy.localWithShell(Paths.get("/tmp/my workspace"));
+            String result = policy.resolve("my skill", new StageResult.WorkspaceNative());
+            String expected =
+                    Paths.get("/tmp/my workspace")
+                            .resolve("skills")
+                            .resolve("my skill")
+                            .toAbsolutePath()
+                            .toString()
+                            .replace(" ", "\\ ");
+            assertEquals(expected, result);
+        }
+
+        @Test
+        void noShellAlwaysReturnsNull() {
+            ShellPathPolicy policy = ShellPathPolicy.noShell();
+            assertNull(policy.resolve("any name", new StageResult.WorkspaceNative()));
+            assertNull(policy.resolve("any name", new StageResult.Cached("alice", "ns", "name")));
+            assertNull(policy.resolve("any name", StageResult.NONE));
+            assertNull(policy.resolve("any name", null));
+        }
+
+        @Test
+        void nullStageOrNoneReturnsNull() {
+            ShellPathPolicy policy = ShellPathPolicy.sandbox();
+            assertNull(policy.resolve("alpha", null));
+            assertNull(policy.resolve("alpha", StageResult.NONE));
+        }
+    }
+
+    // =========================================================================
+    //  SkillPromptBuilder
+    // =========================================================================
+
+    @Nested
+    class PromptBuilderTests {
+
+        @Test
+        void emptyCatalogReturnsEmptyString() {
+            assertEquals("", new SkillPromptBuilder().render(SkillCatalog.empty()));
+        }
+
+        @Test
+        void rendersSkillIdAndOmitsFilesRootWhenAbsent() {
+            HarnessSkillEntry e = HarnessSkillEntry.of(skill("alpha", "wkspace"), null);
+            String out = new SkillPromptBuilder().render(SkillCatalog.of(List.of(e)));
+            assertTrue(out.contains("<skill-id>alpha_wkspace</skill-id>"));
+            // 不渲染真实 <files-root>...</files-root> 元素。
+            // 标题文本只描述性提及 "<files-root>"，没有结束标签。
+            assertFalse(out.contains("</files-root>"));
+            // 没有任何 filesRoot 时，不生成代码执行章节。
+            assertFalse(out.contains("## Code Execution"));
+        }
+
+        @Test
+        void rendersFilesRootAndCodeExecutionWhenAvailable() {
+            HarnessSkillEntry e =
+                    new HarnessSkillEntry(
+                            skill("alpha", "wkspace"), null, "/workspace/skills/alpha");
+            String out = new SkillPromptBuilder().render(SkillCatalog.of(List.of(e)));
+            assertTrue(out.contains("<files-root>/workspace/skills/alpha</files-root>"));
+            assertTrue(out.contains("## Code Execution"));
+            assertTrue(out.contains("<files-root>"));
+            assertTrue(out.contains("access to the execute tool"));
+            assertFalse(out.contains("execute_shell_command"));
+        }
+
+        @Test
+        void mixedCatalogKeepsInlineSkillWithoutPromisingItAResourceRoot() {
+            HarnessSkillEntry inline = HarnessSkillEntry.of(skill("inline", "workspace"), null);
+            HarnessSkillEntry scripted =
+                    new HarnessSkillEntry(
+                            skill("scripted", "workspace"), null, "/workspace/skills/scripted");
+
+            String out =
+                    new SkillPromptBuilder().render(SkillCatalog.of(List.of(inline, scripted)));
+
+            assertTrue(out.contains("<skill-id>inline_workspace</skill-id>"));
+            assertTrue(out.contains("<files-root>/workspace/skills/scripted</files-root>"));
+            assertFalse(out.contains("<files-root>/workspace/skills/inline</files-root>"));
+            assertTrue(out.contains("Skills without <files-root> provide documentation"));
+            assertFalse(out.contains("Each skill in <available_skills>"));
+        }
+
+        @Test
+        void rendersEscapedFilesRootWhenPathContainsSpaces() {
+            HarnessSkillEntry e =
+                    new HarnessSkillEntry(
+                            skill("v2ray-helper", "wkspace"),
+                            null,
+                            "/workspace/skills/V2Ray\\ 代理配置助手");
+            String out = new SkillPromptBuilder().render(SkillCatalog.of(List.of(e)));
+            assertTrue(out.contains("<files-root>/workspace/skills/V2Ray\\ 代理配置助手</files-root>"));
+        }
+
+        @Test
+        void filterRemovesHiddenSkills() {
+            HarnessSkillEntry visible = HarnessSkillEntry.of(skill("visible", "src"), null);
+            HarnessSkillEntry hidden = HarnessSkillEntry.of(skill("hidden", "src"), null);
+            SkillCatalog cat = SkillCatalog.of(List.of(visible, hidden));
+            SkillFilter only = SkillFilter.only("visible");
+
+            String out = new SkillPromptBuilder().render(cat, only);
+            assertTrue(out.contains("<skill-id>visible_src</skill-id>"));
+            assertFalse(out.contains("<skill-id>hidden_src</skill-id>"));
+        }
+
+        @Test
+        void filterRejectingAllReturnsEmpty() {
+            HarnessSkillEntry e = HarnessSkillEntry.of(skill("alpha", "src"), null);
+            assertEquals(
+                    "",
+                    new SkillPromptBuilder()
+                            .render(SkillCatalog.of(List.of(e)), SkillFilter.none()));
+        }
+
+        @Test
+        void filterWithBareNameMatchesCompositeId() {
+            HarnessSkillEntry visible =
+                    HarnessSkillEntry.of(
+                            skill("host-forensics-client", "filesystem-agentscope_skills"), null);
+            HarnessSkillEntry hidden =
+                    HarnessSkillEntry.of(
+                            skill("other-skill", "filesystem-agentscope_skills"), null);
+            SkillCatalog cat = SkillCatalog.of(List.of(visible, hidden));
+            // 用户传入裸技能名，这是自然的 API 用法。
+            SkillFilter only = SkillFilter.only("host-forensics-client");
+
+            String out = new SkillPromptBuilder().render(cat, only);
+            assertTrue(
+                    out.contains(
+                            "<skill-id>host-forensics-client_filesystem-agentscope_skills</skill-id>"));
+            assertFalse(
+                    out.contains("<skill-id>other-skill_filesystem-agentscope_skills</skill-id>"));
+        }
+
+        @Test
+        void defaultRendersSlimViewWithinByteBudget() {
+            // 真实技能市场技能可能输出的丰富前置信息。
+            Map<String, Object> frontmatter = new LinkedHashMap<>();
+            frontmatter.put("name", "data-analysis");
+            frontmatter.put(
+                    "description",
+                    "Analyze CSV datasets and produce summary statistics and charts.");
+            frontmatter.put("license", "MIT");
+            frontmatter.put("version", "1.2.0");
+            frontmatter.put("allowed-tools", List.of("Read", "Grep", "Bash"));
+            AgentSkill rich = new AgentSkill(frontmatter, "# Body", null, "workspace", null);
+            HarnessSkillEntry e =
+                    new HarnessSkillEntry(rich, null, "/workspace/skills/data-analysis");
+
+            String out = new SkillPromptBuilder().render(SkillCatalog.of(List.of(e)));
+
+            // 精简视图仅含 name/description/skill-id/files-root，不含额外前置信息。
+            assertTrue(out.contains("<name>data-analysis</name>"));
+            assertTrue(out.contains("<description>Analyze CSV datasets"));
+            assertTrue(out.contains("<skill-id>data-analysis_workspace</skill-id>"));
+            assertFalse(out.contains("<license>"));
+            assertFalse(out.contains("<version>"));
+            assertFalse(out.contains("<item>"));
+            // 渲染字节快照实测约 1.2k；2k 预算防止退化成
+            // 完整元数据视图（本技能约 2.2k）或标题膨胀。
+            assertTrue(
+                    out.getBytes(StandardCharsets.UTF_8).length < 2048,
+                    "rendered bytes: " + out.getBytes(StandardCharsets.UTF_8).length);
+        }
+
+        @Test
+        void fullMetadataOptInKeepsRenderingFrontmatter() {
+            Map<String, Object> frontmatter = new LinkedHashMap<>();
+            frontmatter.put("name", "data-analysis");
+            frontmatter.put(
+                    "description",
+                    "Analyze CSV datasets and produce summary statistics and charts.");
+            frontmatter.put("license", "MIT");
+            frontmatter.put("allowed-tools", List.of("Read", "Grep"));
+            AgentSkill rich = new AgentSkill(frontmatter, "# Body", null, "workspace", null);
+            HarnessSkillEntry e = HarnessSkillEntry.of(rich, null);
+
+            String out =
+                    new SkillPromptBuilder(null, null, true).render(SkillCatalog.of(List.of(e)));
+
+            assertTrue(out.contains("<license>MIT</license>"));
+            assertTrue(out.contains("<allowed-tools>"));
+            assertTrue(out.contains("<item>Read</item>"));
+        }
+    }
+
+    // =========================================================================
+    //  SkillLoadTool
+    // =========================================================================
+
+    @Nested
+    class LoadToolTests {
+
+        @Test
+        void returnsSkillMarkdownForSkillMdPath() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("alpha").build();
+            HarnessSkillEntry e =
+                    HarnessSkillEntry.of(
+                            skillWith("alpha", "Alpha description.", "# Body line\n", null), null);
+            r.install(SkillCatalog.of(List.of(e)), ctx, null);
+
+            ToolResultBlock res = invoke(r, ctx, "alpha_workspace", "SKILL.md");
+            String text = textOf(res);
+            assertTrue(text.contains("Successfully loaded skill: alpha_workspace"));
+            assertTrue(text.contains("# Body line"));
+            assertFalse(text.contains("Files root:"));
+        }
+
+        @Test
+        void inMemoryResourceHitsBeforeLazyFallback() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("alpha").build();
+            Map<String, String> mem = new HashMap<>();
+            mem.put("scripts/run.py", "in-memory-body");
+            SkillResources lazy = recording(Map.of("scripts/run.py", "lazy-body"));
+            HarnessSkillEntry e =
+                    HarnessSkillEntry.of(skillWith("alpha", "Alpha desc.", "# body", mem), lazy);
+            r.install(SkillCatalog.of(List.of(e)), ctx, null);
+
+            String text = textOf(invoke(r, ctx, "alpha_workspace", "scripts/run.py"));
+            assertTrue(text.contains("in-memory-body"));
+            assertFalse(text.contains("lazy-body"));
+        }
+
+        @Test
+        void lazyFallbackUsedWhenInMemoryMisses() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("alpha").build();
+            SkillResources lazy = recording(Map.of("references/guide.md", "from-fs"));
+            HarnessSkillEntry e =
+                    HarnessSkillEntry.of(skillWith("alpha", "Alpha desc.", "# body", null), lazy);
+            r.install(SkillCatalog.of(List.of(e)), ctx, null);
+
+            String text = textOf(invoke(r, ctx, "alpha_workspace", "references/guide.md"));
+            assertTrue(text.contains("from-fs"));
+        }
+
+        @Test
+        void notFoundEnumeratesBothSources() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("alpha").build();
+            Map<String, String> mem = Map.of("references/a.md", "x");
+            SkillResources lazy = recording(Map.of("scripts/b.py", "y"));
+            HarnessSkillEntry e =
+                    HarnessSkillEntry.of(skillWith("alpha", "Alpha desc.", "# body", mem), lazy);
+            r.install(SkillCatalog.of(List.of(e)), ctx, null);
+
+            String err = errorOf(invoke(r, ctx, "alpha_workspace", "does-not-exist"));
+            assertTrue(err.contains("Resource not found"));
+            assertTrue(err.contains("SKILL.md"));
+            assertTrue(err.contains("references/a.md"));
+            assertTrue(err.contains("scripts/b.py"));
+        }
+
+        @Test
+        void unknownSkillIdReturnsError() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("empty").build();
+            r.install(SkillCatalog.empty(), ctx, null);
+            String err = errorOf(invoke(r, ctx, "ghost_x", "SKILL.md"));
+            assertTrue(err.contains("Skill not found"));
+        }
+
+        @Test
+        void missingParametersReturnsError() {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("empty").build();
+            r.install(SkillCatalog.empty(), ctx, null);
+            String err1 =
+                    errorOf(
+                            r.loadTool()
+                                    .callAsync(
+                                            ToolCallParam.builder()
+                                                    .runtimeContext(ctx)
+                                                    .input(Map.of())
+                                                    .build())
+                                    .block());
+            assertTrue(err1.contains("skillId"));
+        }
+
+        private ToolResultBlock invoke(
+                SkillRuntime r, RuntimeContext ctx, String skillId, String path) {
+            ToolCallParam p =
+                    ToolCallParam.builder()
+                            .runtimeContext(ctx)
+                            .input(Map.of("skillId", skillId, "path", path))
+                            .build();
+            return r.loadTool().callAsync(p).block();
+        }
+    }
+
+    // =========================================================================
+    // SkillRuntime 安装生命周期
+    // =========================================================================
+
+    @Nested
+    class RuntimeLifecycle {
+
+        @Test
+        void firstInstallRegistersUngroupedToolVisibleToPersistedEmptyGroupState() {
+            Toolkit tk = new Toolkit();
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext ctx = RuntimeContext.builder().sessionId("lifecycle").build();
+            assertNull(tk.getTool(SkillLoadTool.TOOL_NAME));
+            r.install(SkillCatalog.empty(), ctx, tk);
+            assertNotNull(tk.getTool(SkillLoadTool.TOOL_NAME));
+            assertTrue(tk.getActiveGroups().isEmpty());
+            assertTrue(
+                    tk.getToolSchemas(List.of()).stream()
+                            .anyMatch(schema -> SkillLoadTool.TOOL_NAME.equals(schema.getName())));
+            // 第二次安装不得抛异常，也不得替换为新实例。
+            r.install(SkillCatalog.empty(), ctx, tk);
+            assertSame(r.loadTool(), tk.getTool(SkillLoadTool.TOOL_NAME));
+        }
+
+        @Test
+        void catalogsRemainIsolatedByRuntimeContextWithoutReRegistering() {
+            Toolkit tk = new Toolkit();
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext firstCtx = RuntimeContext.builder().sessionId("first").build();
+            RuntimeContext secondCtx = RuntimeContext.builder().sessionId("second").build();
+            HarnessSkillEntry first = HarnessSkillEntry.of(skill("first", "src"), null);
+            r.install(SkillCatalog.of(List.of(first)), firstCtx, tk);
+
+            HarnessSkillEntry second = HarnessSkillEntry.of(skill("second", "src"), null);
+            r.install(SkillCatalog.of(List.of(second)), secondCtx, tk);
+
+            assertEquals(List.of("first_src"), r.currentCatalog(firstCtx).ids());
+            assertEquals(List.of("second_src"), r.currentCatalog(secondCtx).ids());
+            assertTrue(
+                    textOf(invoke(r, firstCtx, "first_src", "SKILL.md"))
+                            .contains("Successfully loaded skill"));
+            assertTrue(
+                    errorOf(invoke(r, firstCtx, "second_src", "SKILL.md")).contains("not found"));
+            assertTrue(
+                    textOf(invoke(r, secondCtx, "second_src", "SKILL.md"))
+                            .contains("Successfully loaded skill"));
+            assertTrue(
+                    errorOf(invoke(r, secondCtx, "first_src", "SKILL.md")).contains("not found"));
+
+            // 两个上下文使用同一个无状态已注册工具实例。
+            assertSame(r.loadTool(), tk.getTool(SkillLoadTool.TOOL_NAME));
+        }
+
+        @Test
+        void concurrentSessionsCannotLoadEachOthersSkills() throws Exception {
+            SkillRuntime r = new SkillRuntime();
+            RuntimeContext firstCtx = RuntimeContext.builder().sessionId("first").build();
+            RuntimeContext secondCtx = RuntimeContext.builder().sessionId("second").build();
+            r.install(
+                    SkillCatalog.of(List.of(HarnessSkillEntry.of(skill("first", "src"), null))),
+                    firstCtx,
+                    null);
+            r.install(
+                    SkillCatalog.of(List.of(HarnessSkillEntry.of(skill("second", "src"), null))),
+                    secondCtx,
+                    null);
+
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Boolean> first =
+                        executor.submit(
+                                () ->
+                                        textOf(invoke(r, firstCtx, "first_src", "SKILL.md"))
+                                                        .contains("Successfully loaded skill")
+                                                && errorOf(
+                                                                invoke(
+                                                                        r,
+                                                                        firstCtx,
+                                                                        "second_src",
+                                                                        "SKILL.md"))
+                                                        .contains("not found"));
+                Future<Boolean> second =
+                        executor.submit(
+                                () ->
+                                        textOf(invoke(r, secondCtx, "second_src", "SKILL.md"))
+                                                        .contains("Successfully loaded skill")
+                                                && errorOf(
+                                                                invoke(
+                                                                        r,
+                                                                        secondCtx,
+                                                                        "first_src",
+                                                                        "SKILL.md"))
+                                                        .contains("not found"));
+
+                assertTrue(first.get(5, TimeUnit.SECONDS));
+                assertTrue(second.get(5, TimeUnit.SECONDS));
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+
+        @Test
+        void deprecatedRuntimeApiRemainsFunctionalWithoutLeakingIntoScopedCalls() {
+            SkillRuntime r = new SkillRuntime();
+            Toolkit tk = new Toolkit();
+            HarnessSkillEntry legacy = HarnessSkillEntry.of(skill("legacy", "src"), null);
+
+            r.install(SkillCatalog.of(List.of(legacy)), tk);
+
+            assertEquals(List.of("legacy_src"), r.currentCatalog().ids());
+            assertTrue(
+                    textOf(invoke(r, null, "legacy_src", "SKILL.md"))
+                            .contains("Successfully loaded skill"));
+            assertTrue(
+                    errorOf(invoke(r, RuntimeContext.empty(), "legacy_src", "SKILL.md"))
+                            .contains("not found"));
+        }
+
+        @Test
+        void deprecatedLoadToolConstructorRemainsContextFreeOnly() {
+            HarnessSkillEntry legacy = HarnessSkillEntry.of(skill("legacy", "src"), null);
+            AtomicReference<SkillCatalog> ref =
+                    new AtomicReference<>(SkillCatalog.of(List.of(legacy)));
+            SkillLoadTool tool = new SkillLoadTool(ref);
+            Map<String, Object> input = Map.of("skillId", "legacy_src", "path", "SKILL.md");
+
+            ToolResultBlock contextFree =
+                    tool.callAsync(ToolCallParam.builder().input(input).build()).block();
+            ToolResultBlock contextScoped =
+                    tool.callAsync(
+                                    ToolCallParam.builder()
+                                            .runtimeContext(RuntimeContext.empty())
+                                            .input(input)
+                                            .build())
+                            .block();
+
+            assertTrue(textOf(contextFree).contains("Successfully loaded skill"));
+            assertTrue(errorOf(contextScoped).contains("not found"));
+        }
+
+        private ToolResultBlock invoke(
+                SkillRuntime r, RuntimeContext ctx, String skillId, String path) {
+            return r.loadTool()
+                    .callAsync(
+                            ToolCallParam.builder()
+                                    .runtimeContext(ctx)
+                                    .input(Map.of("skillId", skillId, "path", path))
+                                    .build())
+                    .block();
+        }
+    }
+
+    // =========================================================================
+    // 辅助方法
+    // =========================================================================
+
+    private static AgentSkill skill(String name, String source) {
+        return new AgentSkill(
+                name, "A description for " + name + ".", "# Body for " + name, null, source);
+    }
+
+    private static AgentSkill skillWith(
+            String name, String description, String body, Map<String, String> resources) {
+        return new AgentSkill(name, description, body, resources, "workspace");
+    }
+
+    private static String textOf(ToolResultBlock b) {
+        if (b == null || b.getOutput() == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (ContentBlock cb : b.getOutput()) {
+            if (cb instanceof TextBlock tb) {
+                sb.append(tb.getText());
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String errorOf(ToolResultBlock b) {
+        return textOf(b);
+    }
+
+    private static SkillResources recording(Map<String, String> backing) {
+        return new SkillResources() {
+            @Override
+            public Optional<String> read(String relativePath) {
+                return Optional.ofNullable(backing.get(relativePath));
+            }
+
+            @Override
+            public Optional<byte[]> readBinary(String relativePath) {
+                String s = backing.get(relativePath);
+                return s == null ? Optional.empty() : Optional.of(s.getBytes());
+            }
+
+            @Override
+            public List<String> list() {
+                return List.copyOf(backing.keySet());
+            }
+        };
+    }
+}

@@ -132,6 +132,8 @@ public final class DingTalkCallbackCrypto {
      * | 16 bytes random | 4 bytes msg_len (big-endian) | msg (msg_len bytes) | optional trailing bytes |
      * </pre>
      *
+     * <p>字节布局中文说明：前 16 字节为随机数，接着 4 字节按大端序保存消息长度，然后是对应长度的消息正文，最后可能带平台附加尾部字节。
+     *
      * <p>{@code msg_len} 之后的尾随字节不属于消息，予以忽略。
      * 此信封的钉钉事件回调变体会在这里附加接收者 ID。
      */

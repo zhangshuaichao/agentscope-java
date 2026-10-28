@@ -1,0 +1,125 @@
+{
+  "method": "保留原始图示结构/路径/字面值，在紧邻位置添加中文逐项说明；YAML注释另行直接翻译。",
+  "files": 22,
+  "items": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/Event.java",
+      "chinese_explanation": "图示中文说明：前两项是同一推理消息的非终结事件；最后一项的 isLast=true 标记该消息的最后一个事件。Final 是终结标记，不是另一条模型消息。"
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/permission/package-info.java",
+      "chinese_explanation": "流程图中文说明：拒绝规则→询问规则→工具自检→允许规则→BYPASS 模式回退→默认询问；这是优先级链，后面的模式不能覆盖前面已经返回的结果。"
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/state/JsonFileAgentStateStore.java",
+      "chinese_explanation": "目录图中文说明：__anon__ 保存 userId 为 null 的匿名会话；safe(userId) 下保存各用户会话；safe(sessionId) 区分会话目录。agent_state.json 是单值状态，memory_messages.jsonl 是消息列表，memory_messages.hash 是变化检测哈希。路径隔离不代替调用方身份认证。"
+    },
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/repository/ClasspathSkillRepository.java",
+      "chinese_explanation": "目录图中文说明：向仓库传入字符串 skills，表示从 resources 下的 skills 目录读取；skill-a、skill-b、skill-c 是并列技能目录，每个目录包含自己的 SKILL.md。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/AgentSpecLoader.java",
+      "chinese_explanation": "YAML 示例中文说明：description 描述代码安全与性能审查职责；workspace.mode 可选 isolated（隔离，默认）或 shared（共享）；path 是可选定义目录，可相对主工作区或为绝对路径。model 覆盖模型，maxIters 为可选最大迭代数（示例为 12，默认 10），tools 是允许工具列表。compaction 缺省或 null 表示继承，false 禁用，true 使用默认值；triggerMessages=20 表示触发消息数，keepMessages=5 保留尾部消息，keepTokens=0 使用消息数量窗口。仅当 workspace.path 缺省时读取下方内联正文，其示例意思是“你是一名代码审查员”。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/WorkspaceMode.java",
+      "chinese_explanation": "表格中文说明：指定 workspacePath 且 ISOLATED 时，定义目录也是运行根目录；指定路径且 SHARED 时，运行根为 mainWorkspace，忽略定义目录中的 skills/knowledge。不指定路径且 ISOLATED 时，自动建立 mainWorkspace/agents/名称/workspace；不指定且 SHARED 时使用主工作区。通用子智能体始终 SHARED，完整沿用主智能体工作区。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/bus/WorkspaceMessageBus.java",
+      "chinese_explanation": "目录图中文说明：queues 下存放模式 A 的队列项，消费过程为列目录、读取、删除；logs 下存放模式 C 的追加式日志项。两个 key-hash 目录按通道键区分，entryId 标识消息项。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspaceManager.java",
+      "chinese_explanation": "目录图中文说明：AGENTS.md 是工作约定，MEMORY.md 与按日 memory 文件承载记忆；skills 保存技能，knowledge 保存知识。subagents 下是子智能体声明；agents/agentId/workspace 是自动建立的隔离运行根，sessions/sessions.json 是会话索引；.agentscope-runtime 是本地后端的私有原生会话日志目录。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/AbstractBaseSandbox.java",
+      "chinese_explanation": "分支图中文说明：A，工作区已就绪且目录存在，只应用临时条目；B，已就绪但目录丢失，从快照恢复并应用临时条目；C，尚未就绪且快照可恢复，用快照填充后应用全部条目；D，尚未就绪且无可用快照，按完整工作区配置从头初始化。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-dingtalk/src/main/java/io/agentscope/extensions/channel/dingtalk/DingTalkCallbackCrypto.java",
+      "chinese_explanations": [
+        "字节布局中文说明：前 16 字节为随机数，接着 4 字节按大端序保存消息长度，然后是对应长度的消息正文，最后可能带平台附加尾部字节。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-feishu/src/main/java/io/agentscope/extensions/channel/feishu/FeishuCrypto.java",
+      "chinese_explanations": [
+        "布局中文说明：前 16 字节是 IV（初始化向量），后面是 AES-CBC 加密且采用 PKCS#7 填充的正文。",
+        "解密布局中文说明：先取 16 字节 IV，再按 AES-256-CBC 解密并处理 PKCS#7 填充；图中 plaintext 指解密后的明文。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-channel/agentscope-extensions-channel-wecom/src/main/java/io/agentscope/extensions/channel/wecom/WeComCrypto.java",
+      "chinese_explanations": [
+        "字节布局中文说明：16 字节随机数、4 字节大端消息长度、该长度的 XML 消息正文，以及 receive_id 接收方标识；接收方校验与正文解密是不同步骤。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-jdbc/src/main/java/io/agentscope/extensions/jdbc/dialect/package-info.java",
+      "chinese_explanations": [
+        "架构图中文说明：第一层 dialect.table 按表领域定义接口，DDL 为抽象方法，标准业务 SQL 有默认实现，方法按表简称区分。store/sessions/snapshots 属于基础表组，skills/skill_resources 属于技能表组。AbstractJdbcDialect 汇总全部表接口与 SandboxLockStrategy，保存前缀、逐表覆盖和表组开关；构建时探测数据库、绑定 DataSource、解析表名，再创建或验证表。表名优先采用显式覆盖，其次为前缀加基础名；默认锁使用表实现。第二层 dialect.vendor 每个数据库一类，只覆写 DDL、差异 SQL 与原生锁，其余继承标准实现：MySQL 使用 ON DUPLICATE KEY 和 GET_LOCK，PostgreSQL/SQLite 使用 ON CONFLICT，H2 使用 MERGE INTO。增加原生锁后端时覆写供应商类的 tryEnter，不另建策略类。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/RunExecutionContext.java",
+      "chinese_explanations": [
+        "关系图中文说明：同一任务 task-001 表示用户询问天气，分别运行 0、1、2 次，每次有独立的消息 ID 集合、消息内容和奖励值。任务标识关联原请求，运行标识区分重复实验。",
+        "生命周期中文说明：TrainingRouter 创建单次运行上下文，传给 TrinityModelAdapter 收集消息 ID；影子智能体完成后收集数据，计算奖励，按 taskId、runId、msg_ids、reward 提交反馈，最后可注册上下文供查询。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-training/src/main/java/io/agentscope/core/training/runner/TaskExecutionRegistry.java",
+      "chinese_explanations": [
+        "映射图中文说明：键是任务 ID，值是该任务各次 RunExecutionContext 的列表；例如 task-001 对应运行 0、1、2，task-002 对应运行 0、1，task-003 只有运行 0。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-oss/src/main/java/io/agentscope/extensions/oss/OssBaseStore.java",
+      "chinese_explanations": [
+        "键布局中文说明：命名空间各段拼接后，.json 对象保存条目数据，.version 对象保存版本计数；两个独立对象不自动构成原子事务。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-oss/src/main/java/io/agentscope/extensions/oss/OssAgentStateStore.java",
+      "chinese_explanations": [
+        "键布局中文说明：.json 保存单个 State；.list.json 保存状态列表的 JSON 数组；.list.hash 保存增量追加检测哈希。前缀、用户、会话和状态键共同定位对象。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/reader/TableFormat.java",
+      "chinese_explanations": [
+        "表格示例中文说明：Header1、Header2 是两列标题，下一行分隔标题和数据，Cell1、Cell2 是一行单元格内容。",
+        "文本格式示例中文说明：system-info 提示“按 JSON 数组载入的表格”；第一组数组保存列名，后续数组保存每行单元格。示例字符串保持原样以对应实际输出。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-protocol/agentscope-extensions-agui/src/main/java/io/agentscope/core/agui/encoder/AguiEventEncoder.java",
+      "chinese_explanations": [
+        "SSE 帧中文说明：data: 后是事件 JSON，两个换行符结束一帧；EVENT_TYPE 为事件类型占位值，不是单独的 SSE 事件名。",
+        "SSE 帧中文说明：data: 行承载事件 JSON，末尾两个换行结束帧。",
+        "SSE 注释帧中文说明：冒号开头的 comment text 是注释或心跳正文，两个换行结束帧，不是业务事件 JSON。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/main/java/io/agentscope/extensions/model/gemini/formatter/GeminiConversationMerger.java",
+      "chinese_explanations": [
+        "格式示例中文说明：Conversation History 表示会话历史；history 标签包围历史内容；每个 AgentName 后带角色，再接该智能体消息正文。示例结构与原始文本值保留，以便对照实际格式化结果。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-cos/src/main/java/io/agentscope/extensions/cos/CosAgentStateStore.java",
+      "chinese_explanations": [
+        "键布局中文说明：.json 保存单个 State；.list.json 保存状态列表的 JSON 数组；.list.hash 保存增量追加检测哈希。前缀、用户、会话和状态键共同定位对象。"
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-cos/src/main/java/io/agentscope/extensions/cos/CosBaseStore.java",
+      "chinese_explanations": [
+        "键布局中文说明：命名空间各段拼接后，.json 对象保存条目数据，.version 对象保存版本计数；两个独立对象不自动构成原子事务。"
+      ]
+    }
+  ]
+}

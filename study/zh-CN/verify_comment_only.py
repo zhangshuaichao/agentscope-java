@@ -58,14 +58,50 @@ def normalize_tag(text):
 def protected_parts(comments, pattern):
     return Counter(normalize_tag(match) for comment in comments for match in re.findall(pattern, comment, re.S))
 
+def hash_comment_example(source):
+    """仅识别带环境赋值/命令行或 YAML 映射特征的非 Java 示例。"""
+    shell = re.search(r'(?m)^\s*(?:[A-Z_][A-Z0-9_]*=|export\s|(?:curl|mvn|java|git|npm|python)\s|--[a-zA-Z][\w.-]*=)', source)
+    yaml = len(re.findall(r'(?m)^\s*[\w-]+:\s+\S', source)) >= 2 and ';' not in strip_hash_comments(source)
+    http_routes = re.search(r"(?m)^\s*(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+/", source)
+    return bool(shell or yaml or http_routes)
+
+
+def strip_hash_comments(source):
+    """移除 shell/YAML 的 # 说明，保留引号内 #、shebang 与非注释字符原样。"""
+    lines = []
+    for line in source.splitlines():
+        quote = None
+        escaped = False
+        cut = len(line)
+        for i, char in enumerate(line):
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\" and quote != "'":
+                escaped = True
+                continue
+            if quote:
+                if char == quote:
+                    quote = None
+            elif char in ("'", '"'):
+                quote = char
+            elif char == '#' and (i == 0 or line[i - 1].isspace()) and not line[i:i+2] == '#!':
+                cut = i
+                break
+        retained = line[:cut].rstrip()
+        if retained.strip():
+            lines.append(retained)
+    return '\n'.join(lines)
+
+
 def verify(path, base):
     old = subprocess.check_output(['git', 'show', f'{base}:{path}'], cwd=ROOT, text=True)
     new = (ROOT / path).read_text()
     old_tokens, old_comments = scan_java(old)
     new_tokens, new_comments = scan_java(new)
     assert old_tokens == new_tokens, f'Executable token/string change: {path}'
-    old_licenses = [c for c in old_comments if 'Licensed under the Apache License' in c]
-    new_licenses = [c for c in new_comments if 'Licensed under the Apache License' in c]
+    old_licenses = [c for c in old_comments if re.search(r'Licensed under the Apache License|Copyright|SPDX-License-Identifier', c)]
+    new_licenses = [c for c in new_comments if re.search(r'Licensed under the Apache License|Copyright|SPDX-License-Identifier', c)]
     assert old_licenses == new_licenses, f'License change: {path}'
     # 示例中的解释注释可以翻译，但示例代码词元、字符串和标识符必须保持一致。
     old_pre = [m for c in old_comments for m in re.findall(r'<pre>.*?</pre>', c, re.S)]
@@ -77,7 +113,10 @@ def verify(path, base):
         # 移除外层 Javadoc 每行装饰符，保留示例本身；不解码 HTML，不改字面量。
         before_source = re.sub(r'(?m)^\s*\* ?', '', before_pre)
         after_source = re.sub(r'(?m)^\s*\* ?', '', after_pre)
-        assert scan_java(before_source)[0] == scan_java(after_source)[0], f'Javadoc example code/string change: {path}'
+        if hash_comment_example(before_source):
+            assert strip_hash_comments(before_source) == strip_hash_comments(after_source), f'Shell/YAML example code/string change: {path}'
+        else:
+            assert scan_java(before_source)[0] == scan_java(after_source)[0], f'Javadoc example code/string change: {path}'
     # pre 已单独校验，排除其包裹的 {@code ...}，避免把示例注释误判为符号变化。
     old_docs = [re.sub(r'<pre>.*?</pre>', '', c, flags=re.S) for c in old_comments]
     new_docs = [re.sub(r'<pre>.*?</pre>', '', c, flags=re.S) for c in new_comments]

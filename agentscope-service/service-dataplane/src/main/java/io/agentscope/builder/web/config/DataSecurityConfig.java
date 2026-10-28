@@ -1,0 +1,143 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.builder.web.config;
+
+import io.agentscope.builder.control.ControlPlaneClient;
+import io.agentscope.builder.web.auth.EnvironmentKeyAuthFilter;
+import io.agentscope.builder.web.auth.InternalTokenAuthFilter;
+import io.agentscope.builder.web.auth.JwtService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
+
+/**
+ * Builder 数据平面的 WebFlux Security 配置。
+ * <ul>
+ * <li>{@code /actuator/health|info}：公开。
+ * <li>{@code /api/environments/{id}/work/**} 及自行托管会话路由：由 {@link EnvironmentKeyAuthFilter} 使用 {@code X-Builder-Environment-Key} 认证。
+ * <li>{@code /api/**}：要求已认证主体，可使用用户 JWT（与控制平面共享签名密钥）、环境密钥，或调度器／控制平面跨平面调用的内部令牌 {@code X-Builder-Internal-Token}。
+ * <li>{@code /**}：公开（数据平面不提供浏览器静态资源，仅保护 {@code /api/**}）。
+ * </ul>
+ */
+@Configuration
+@EnableWebFluxSecurity
+public class DataSecurityConfig {
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http,
+            JwtService jwtService,
+            ControlPlaneClient controlPlaneClient,
+            @Value("${builder.internal-token:${BUILDER_INTERNAL_TOKEN:}}") String internalToken) {
+        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeExchange(
+                        auth ->
+                                auth.pathMatchers("/actuator/health", "/actuator/info")
+                                        .permitAll()
+                                        .pathMatchers("/api/internal/**")
+                                        .hasAuthority(InternalTokenAuthFilter.ROLE_INTERNAL)
+                                        .pathMatchers("/api/**")
+                                        .authenticated()
+                                        .anyExchange()
+                                        .permitAll())
+                .exceptionHandling(
+                        ex ->
+                                ex.authenticationEntryPoint(
+                                        new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .addFilterBefore(
+                        new InternalTokenAuthFilter(internalToken),
+                        SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(
+                        new EnvironmentKeyAuthFilter(controlPlaneClient::verifyEnvironmentKey),
+                        SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(
+                        new JwtAuthFilter(jwtService), SecurityWebFiltersOrder.AUTHENTICATION)
+                .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    /**
+     * 从每个请求提取并验证 JWT Bearer 令牌的 WebFilter。
+     */
+    static class JwtAuthFilter implements WebFilter {
+
+        private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
+
+        private final JwtService jwtService;
+
+        JwtAuthFilter(JwtService jwtService) {
+            this.jwtService = jwtService;
+        }
+
+        @Override
+        public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+            String header = exchange.getRequest().getHeaders().getFirst("Authorization");
+            if (header == null || !header.startsWith("Bearer ")) {
+                return chain.filter(exchange);
+            }
+            String token = header.substring(7);
+            try {
+                Claims claims = jwtService.parse(token);
+                String userId = jwtService.extractUserId(claims);
+                List<String> roles = jwtService.extractRoles(claims);
+                List<SimpleGrantedAuthority> authorities =
+                        roles.stream()
+                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()))
+                                .toList();
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                return chain.filter(exchange)
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
+            } catch (JwtException e) {
+                log.debug("JWT validation failed: {}", e.getMessage());
+                return chain.filter(exchange);
+            }
+        }
+    }
+}

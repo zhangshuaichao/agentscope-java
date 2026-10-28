@@ -1,0 +1,994 @@
+{
+  "scope": "冻结批9后的独立语义抽查与批10修正；不是全实现正确性证明",
+  "reviewed_source_points": 30,
+  "prompt_spec_translation_files": 5,
+  "prompt_spec_source_files": 6,
+  "core": {
+    "generated_utc": "2026-10-27T18:12:21.832974+00:00",
+    "scope": "独立高风险 core/Harness 注释语义抽查；冻结批 9，只读源文件",
+    "method": "逐项阅读注释及控制流、异步工厂、取消/错误分支，并交叉检查被调用权限/资源清理实现。无测试执行、无网络、无源文件修改。",
+    "summary": {
+      "samples": 11,
+      "needs_clarification": 3,
+      "consistent_with_boundaries": 8
+    },
+    "samples": [
+      {
+        "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+        "method": "runLifecycle / runInContext",
+        "reviewed_comment": "deferContextual 在订阅时读取上下文并形成独立作用域",
+        "conclusion": "PASS：Mono.using 的资源/执行工厂在订阅时触发；runInContext 从 cv 读取 RuntimeContext，输入列表新建副本。不推导任意共享字段线程安全。",
+        "evidence": [
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 313,
+            "code": "resource -> Mono.deferContextual(cv -> runInContext(msgs, doCallFn, cv))"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 322,
+            "code": "RuntimeContext rc = cv.getOrDefault(RUNTIME_CONTEXT_KEY, null);"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 344,
+            "code": "List<Msg> msgs = new ArrayList<>(inputMsgs != null ? inputMsgs : List.of());"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+        "method": "runLifecycleBody / releaseCallExecution",
+        "reviewed_comment": "成功、失败、取消三个分支释放执行作用域",
+        "conclusion": "PASS_WITH_BOUNDARY：usingWhen 三路径均调用释放钩子；基类钩子本身空实现，ReAct 子类才关闭 SessionExecution 并 finish recorder。这是释放路径保证，不是底层资源永不失败的保证。",
+        "evidence": [
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 397,
+            "code": "scope -> releaseCallExecution(scope, \"completed\")"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 398,
+            "code": "(scope, error) -> releaseCallExecution(scope, \"failed\")"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/agent/AgentBase.java",
+            "line": 399,
+            "code": "scope -> releaseCallExecution(scope, \"cancelled\")"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 898,
+            "code": "if (execution != null) execution.close(recorder);"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 923,
+            "code": "recorder.finish(ce.state, status)"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+        "method": "callInternal",
+        "reviewed_comment": "普通 call 从共享事件流提取最终结果",
+        "conclusion": "PASS：调用 buildAgentStream 后筛 AgentResultEvent，再 takeLast(1).next；与文档描述一致。",
+        "evidence": [
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 1273,
+            "code": "return buildAgentStream(msgs, context, doCallFn)"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 1274,
+            "code": ".filter(e -> e instanceof AgentResultEvent)"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 1277,
+            "code": ".takeLast(1)"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+        "method": "actingStream",
+        "reviewed_comment": "ALLOWED 调用立即执行；ASKING 暂停",
+        "conclusion": "NEEDS_CLARIFICATION：同批任意 pending ASK 存在时，整个批次不进入 runToolBatch，自动允许调用也等待；立即执行是错误绝对化。学习提示“ALLOWED 才进入后续执行路径”本身可成立。",
+        "evidence": [
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3651,
+            "code": "if (pending.isEmpty()) {\n                                    return runToolBatch("
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3669,
+            "code": "resultHolder.set(List.of());"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3683,
+            "code": "new RequireUserConfirmEvent(replyId, pending)"
+          }
+        ],
+        "suggested_comment": "ALLOWED 标记表示已获准；仅在本批没有待确认调用时进入 runToolBatch。若存在 ASKING，本次先持久化拒绝结果并返回确认事件，不执行已允许调用。"
+      },
+      {
+        "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+        "method": "evaluateOne",
+        "reviewed_comment": "旧 AgentTool 非 ToolBase 直接通过；已 ALLOWED 跳过权限引擎",
+        "conclusion": "PASS：两条早返回位于 activeToolkit lookup/engine check 前后对应位置。此处确为兼容边界，未承诺所有旧工具受控。",
+        "evidence": [
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3925,
+            "code": "if (use.getState() == ToolCallState.ALLOWED)"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3929,
+            "code": "if (!(tool instanceof ToolBase tb))"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+            "line": 3935,
+            "code": ".checkPermission(tb, input)"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+        "method": "wrappedCall / wrappedStreamEvents",
+        "reviewed_comment": "沙箱占用绑定订阅，完成错误取消进入释放路径",
+        "conclusion": "PASS_WITH_BOUNDARY：Mono.using/Flux.using 资源工厂 acquireForCall，清理器 releaseForCall；指引用/生命周期释放，不代表取消能够撤回已发生外部副作用。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+            "line": 1015,
+            "code": "sandboxLifecycleMw.acquireForCall(effective);"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+            "line": 1022,
+            "code": "sandboxLifecycleMw.releaseForCall(eff);"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/HarnessAgent.java",
+            "line": 1058,
+            "code": "private Flux<AgentEvent> wrappedStreamEvents("
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+        "method": "execWithTimeoutPromotion / handleExecError",
+        "reviewed_comment": "超时默认仅结束同步观察窗口，不取消原执行，可接管而非重跑",
+        "conclusion": "PASS：超时加在 bridge.thenApply 创建的依赖 future；非 forceSync 分支采用 bridge 映射结果；forceSync 分支主动 dispose，是明确例外。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+            "line": 992,
+            "code": "CompletableFuture<Msg> race = bridge.thenApply(m -> m);"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+            "line": 993,
+            "code": "race.orTimeout(timeoutMs, TimeUnit.MILLISECONDS);"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+            "line": 1068,
+            "code": "if (forceSync) {"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/AgentSpawnTool.java",
+            "line": 1091,
+            "code": "new TaskRunSpec.AdoptedTaskRunSpec(textFuture)"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+        "method": "putTask (AdoptedTaskRunSpec)",
+        "reviewed_comment": "接管已有执行而不是重新提交 supplier，避免超时提升触发重复副作用",
+        "conclusion": "PASS：采用 adopted.future 并 whenComplete 跟踪；supplyAsync 仅 LocalTaskRunSpec 分支存在。该分支避免二次提交，不构成跨节点 exactly-once 保证。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 311,
+            "code": "future = adopted.future();"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 314,
+            "code": "future.whenComplete("
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 335,
+            "code": "} else if (spec instanceof TaskRunSpec.LocalTaskRunSpec local) {"
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+        "method": "updateStatus / persistCancellation",
+        "reviewed_comment": "synchronized 只约束当前实例，终态不被迟到更新覆盖",
+        "conclusion": "PASS_WITH_BOUNDARY：两个更新方法均 synchronized；updateStatus 读到 terminal 则返回。跨进程和持久化失败不受此保证，persistRecord 捕获异常仅记录日志，学习提示已提示检查存储层。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 856,
+            "code": "private synchronized void updateStatus("
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 843,
+            "code": "private synchronized Optional<TaskRecord> persistCancellation("
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 872,
+            "code": "&& existing.get().getStatus().isTerminal()) {"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepository.java",
+            "line": 834,
+            "code": "\"Failed to persist task record {} for session {}: {}\""
+          }
+        ],
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+        "method": "PlanExitTool.checkPermissions / callAsync",
+        "reviewed_comment": "仅在用户批准上面的 ASK 后执行",
+        "conclusion": "NEEDS_CLARIFICATION：checkPermissions 确实返回 ASK，但 callAsync 未验证批准，直接 manager.exit；引擎只保留 decisionReason 含 safety 的 ASK，否则继续 allow/BYPASS/default；因此“必须用户批准”不能当方法级安全保证。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+            "line": 192,
+            "code": "PermissionDecision.ask("
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+            "line": 208,
+            "code": "manager.exit(state);"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/permission/PermissionEngine.java",
+            "line": 171,
+            "code": ".contains(\"safety\")) {"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/permission/PermissionEngine.java",
+            "line": 176,
+            "code": "return continueAfterToolCheck(tool, input);"
+          },
+          {
+            "path": "agentscope-core/src/main/java/io/agentscope/core/permission/PermissionEngine.java",
+            "line": 192,
+            "code": "if (context.getMode() == PermissionMode.BYPASS) {"
+          }
+        ],
+        "suggested_comment": "正常权限管线通过后执行退出计划模式；此方法自身不验证用户确认。轻量路径遵守 ASK；配置权限引擎时，最终结果还取决于规则和模式，不能将工具自检 ASK 理解为不可覆盖的人工批准保证。"
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+        "method": "class Javadoc",
+        "reviewed_comment": "计划模式启用时拒绝其他所有修改性工具；用户确认后才恢复写权限",
+        "conclusion": "NEEDS_CLARIFICATION：除三个计划工具外，ALWAYS_ALLOWED 还包含 todo_write/agent_spawn/agent_send/task_output 等；additionalAllowed 提供显式例外。ASK 为默认人工交接意图，并非不受权限引擎模式影响的不可绕过保证。",
+        "evidence": [
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+            "line": 66,
+            "code": "private static final Set<String> ALWAYS_ALLOWED ="
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+            "line": 274,
+            "code": "return ALWAYS_ALLOWED.contains(toolName)"
+          },
+          {
+            "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+            "line": 275,
+            "code": "|| additionalAllowed.contains(toolName)"
+          }
+        ],
+        "suggested_comment": "计划模式允许计划工具、内置白名单及 additionalAllowed 显式例外，并按中间件规则过滤其他工具；不要表述为拒绝其他全部修改性工具。plan_exit 默认通过 ASK 请求人工交接，但最终权限决定取决于引擎规则与模式，工具方法不独立校验批准。"
+      }
+    ]
+  },
+  "storage_transport": {
+    "scope": "独立只读语义抽查；冻结批9源码未编辑",
+    "reviewed_count": 9,
+    "runtime_tests_run": false,
+    "external_service_access": false,
+    "findings": [
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/LocalSessionTurnGate.java",
+        "method": "acquire",
+        "comment_under_review": "公平队列不保护其他节点；重复 close 会增加许可数",
+        "code_evidence": "L32 实例 ConcurrentHashMap；L36 new Semaphore(1,true)；L37 acquire；L40 return semaphore::release，无一次性 CAS",
+        "conclusion": "PASS。锁实际更精确地限于此实例；原说明未宣称跨实例互斥。",
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/HarnessGateway.java",
+        "method": "withGatedTurn / withGatedStream",
+        "comment_under_review": "defer 外 leaseRef 被重复订阅共享；doFinally 终止清理",
+        "code_evidence": "L708 AtomicReference 在 Mono.defer 外；L713 acquire 后 set；L727 doFinally读取该引用并close；最后 subscribeOn boundedElastic。Flux 方法结构相同。",
+        "conclusion": "PASS_WITH_PRECISION_SUGGESTION：共享状态和阻塞调度说明准确，但“doFinally 覆盖终止清理”不能读作取消竞态下保证释放。",
+        "suggested_comment": "将“doFinally 覆盖终止清理”改为“doFinally 在终止时尝试清理当前已记录租约；取消与 acquire/set 交错时不能据此推断租约必定释放”。"
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/LocalSandboxSnapshot.java",
+        "method": "persist",
+        "comment_under_review": "临时文件+ATOMIC_MOVE；无 fsync，不保证断电持久",
+        "code_evidence": "L75 同目录临时文件；transferTo 后关闭 OutputStream；Files.move ATOMIC_MOVE+REPLACE_EXISTING；异常只删除 tmp 并抛 SnapshotException。无降级/force。",
+        "conclusion": "PASS。原类说明“要么完整写入，要么不存在”在已有旧快照场景不够精确，失败可能保留旧版本。",
+        "suggested_comment": "建议旧说明改为“新快照通过原子移动发布，不暴露部分写入的新文件；失败时可能保留先前已有快照”。"
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceArchiveExtractor.java",
+        "method": "extractTarArchive",
+        "comment_under_review": "normalize 不解析符号链接；@param tarStream 由调用方负责关闭",
+        "code_evidence": "L58 normalize().toAbsolutePath；L60 try-with-resources 包装 TarArchiveInputStream(tarStream)，退出即关闭包装流；L65-68 词法 startsWith；L74-80 createDirectories/Files.copy。",
+        "conclusion": "FIX_RECOMMENDED：隔离学习提示准确；输入流关闭契约文字与 try-with-resources 包装流管理矛盾。另“严格位于”不准确，startsWith 容许等于根。",
+        "suggested_comment": "@param tarStream tar 归档输入流；本方法通过 try-with-resources 关闭归档包装流，不应依赖调用后底层流仍可继续读取。L67 改为“最终词法检查：目标路径不能越出根目录”。"
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/local/LocalFilesystem.java",
+        "method": "fileLocks / edit",
+        "comment_under_review": "实例级逐路径锁仅保护 edit 读改写，不保证全局事务",
+        "code_evidence": "L97 非static map；L369 resolved.toAbsolutePath().normalize().toString；computeIfAbsent锁；L371 lock；读/替换/写在 try 内，L392 finally unlock。未 toRealPath。",
+        "conclusion": "PASS。未宣称写入原子性、跨进程锁或符号链接别名锁。",
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/remote/RemoteFilesystem.java",
+        "method": "withIndex / grep / exists",
+        "comment_under_review": "索引非强一致完整视图，已有部分匹配不补扫；内容从远端读取",
+        "code_evidence": "grep L419候选索引；L436 store.get；L451 !matches.isEmpty即return，否则 searchAllItems；exists L637 索引命中直接true，未命中才 store.get 和searchAllItems。",
+        "conclusion": "PASS。学习提示准确限制扫描完整性；exists 也可能保留过期阳性，未承诺权威读。",
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-examples/agents/agentscope-paw/src/main/java/io/agentscope/claw2/marketplace/MarketplacePersistence.java",
+        "method": "mutate / writeAtomic",
+        "comment_under_review": "落盘与热更新非事务；BindingPersistence独立锁不能跨组件互斥",
+        "code_evidence": "L50 本实例 ReentrantLock；L74 writeAtomic 在 registry.reload 前；reload RuntimeException 转HTTP错误无文件回滚；L129 bootstrap.configPath；BindingPersistence L57独立锁/L133相同 configPath。",
+        "conclusion": "PASS。没有把原子文件替换夸为跨组件/跨运行时事务。",
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-examples/agents/agentscope-paw/src/main/java/io/agentscope/claw2/web/toolbus/ToolEventBus.java",
+        "method": "publish / subscribe",
+        "comment_under_review": "有限内存广播，不重试、不持久化；sessionKey 过滤不是身份验证",
+        "code_evidence": "L33 multicast().onBackpressureBuffer(256,false)；L39 tryEmitNext返回值忽略；subscribe仅filter(sessionKey.equals)，无身份校验/补偿逻辑。",
+        "conclusion": "PASS。准确区分分流、权限与可靠传输。",
+        "suggested_comment": null
+      },
+      {
+        "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/local/LocalFilesystemWithShell.java",
+        "method": "execute / joinQuietly",
+        "comment_under_review": "后台排空不使 execute 非阻塞；Shell不因文件API路径模式而隔离",
+        "code_evidence": "L340-345 ProcessBuilder sh/cmd仅工作目录；L350环境覆盖；L363 waitFor(timeout)；L365 destroyForcibly仅proc；L367-368 joinQuietly；L489 join有上限。",
+        "conclusion": "PASS。未承诺整个子进程树终止或取消回滚，阻塞调度提醒有代码依据。",
+        "suggested_comment": null
+      }
+    ]
+  },
+  "model_rag": {
+    "scope": "只读语义抽查；无运行、模型调用、远端操作或源码修改",
+    "checked_locations": 8,
+    "passes": 6,
+    "needs_qualification": 2,
+    "items": [
+      {
+        "file": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-dashscope/src/main/java/io/agentscope/extensions/model/dashscope/formatter/DashScopeResponseParser.java",
+        "method": "addToolCallsFromMessage",
+        "comment_lines": [
+          150,
+          150
+        ],
+        "comment": "流式工具调用先建立身份，后续参数增量再由上层累加；为续传生成新 ID 会破坏关联。",
+        "evidence": [
+          {
+            "lines": [
+              169,
+              199
+            ],
+            "code": "            String name = function.getName();\n            String argsJson = function.getArguments();\n\n            // DashScope 流式工具调用：\n            // 首个分片包含 name、id 及部分参数；\n            // 后续分片仅包含参数片段，没有 name/id。\n            if (name != null && ToolValidator.requireNonBlank(\"DashScope\", name, id)) {\n                // 首个分片具有完整元数据。\n                String callId =\n                        id != null ? id : (\"tool_call_\" + System.currentTimeMillis() + \"_\" + idx);\n                blocks.add(\n                        ToolUseBlock.builder()\n                                .id(callId)\n                                .name(name)\n                                .input(Map.of())\n                                .content(argsJson)\n                                .build());\n            } else if (argsJson != null) {\n                // 后续分片仅含参数片段。\n                // 片段不能拥有独立 ID：当 ID 为空时，累加器\n                // 将续传分片合并到最后一个具名工具调用\n                // （与 OpenAI、Anthropic 解析器约定一致）。若为每片生成\n                // 新 ID，会把片段孤立成独立的无名工具调用。\n                String callId = id != null ? id : \"\";\n                blocks.add(\n                        ToolUseBlock.builder()\n                                .id(callId)\n                                .name(FRAGMENT_PLACEHOLDER)\n                                .input(Map.of())\n                                .content(argsJson)\n                                .build());"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "解析器对具名首块建立 ID，续传保留供应商已有 ID 或使用空 ID，并保留原始参数字符串。ToolCallsAccumulator.determineKey L250-274 优先 ID，空 ID 占位名称复用 lastToolCallKey；merge L95-98 累积原始片段。未宣称交错且无 ID 的并行调用可无歧义恢复，亦未将解析描述为执行。",
+        "suggested_comment": null
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai-official/src/main/java/io/agentscope/extensions/model/openaiofficial/ResponsesStreamingAssembler.java",
+        "method": "assemble",
+        "comment_lines": [
+          89,
+          90
+        ],
+        "comment": "一个 SDK 响应流对应一个累积状态对象；concatMap 保持事件处理顺序。",
+        "evidence": [
+          {
+            "lines": [
+              85,
+              105
+            ],
+            "code": "    static Flux<ChatResponse> assemble(\n            StreamResponse<ResponseStreamEvent> streamResponse,\n            String modelName,\n            Instant startTime) {\n        // 【学习提示】一个 SDK 响应流对应一个累积状态对象；concatMap 保持事件处理顺序，\n        // 使工具参数片段与终态元数据沿同一状态机组装，而不是并行乱序更新。\n        StreamingState state = new StreamingState(modelName, startTime);\n\n        return Flux.fromStream(streamResponse.stream())\n                .doFinally(signal -> closeQuietly(streamResponse))\n                .concatMap(\n                        event -> {\n                            try {\n                                return Flux.fromIterable(state.processEvent(event));\n                            } catch (OpenAIOfficialModelException e) {\n                                return Flux.error(e);\n                            } catch (RuntimeException e) {\n                                return Flux.error(OpenAIErrorTranslator.translate(e, modelName));\n                            }\n                        })\n                .onErrorMap(e -> OpenAIErrorTranslator.translate(e, modelName));"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "StreamingState 在 assemble 调用内创建一次，Flux.fromStream 使用已有 SDK Stream，concatMap 串行处理事件；doFinally 负责关闭。注释未声称该 Flux 可重复订阅或状态按订阅隔离，也未声称 close 能撤销已执行的服务端工作。",
+        "suggested_comment": null
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai-official/src/main/java/io/agentscope/extensions/model/openaiofficial/ResponsesStreamingAssembler.java",
+        "method": "StreamingState.handleTerminal",
+        "comment_lines": [
+          262,
+          263
+        ],
+        "comment": "增量文本到达不代表请求已成功结束；终态仍须检查拒绝，并补齐用量与历史重放元数据。",
+        "evidence": [
+          {
+            "lines": [
+              261,
+              290
+            ],
+            "code": "        private ChatResponse handleTerminal(Response response) {\n            // 【学习提示】增量文本到达不代表请求已成功结束；终态仍须检查拒绝，\n            // 并补齐用量及供历史重放使用的元数据，不能仅靠最后一个文本增量推断完成。\n            // 拒绝检查关卡\n            String refusal = extractRefusal(response);\n            if (!refusal.isEmpty()) {\n                throw new OpenAIOfficialModelException(\n                        \"Model response was refused: \" + refusal, null, modelName);\n            }\n\n            // 从终态 response.output() 重新提取\n            String encryptedContent = null;\n            for (ResponseOutputItem item : response.output()) {\n                if (item.isReasoning()) {\n                    ResponseReasoningItem reasoning = item.asReasoning();\n                    if (encryptedContent == null) {\n                        Optional<String> ec = reasoning.encryptedContent();\n                        if (ec.isPresent() && !ec.get().isEmpty()) {\n                            encryptedContent = ec.get();\n                        }\n                    }\n                }\n            }\n            String reasoningText = reasoningTextAccumulator.toString();\n\n            // 构建元数据\n            String responseId = response.id();\n            Map<String, Object> metadata = ResponsesHelper.extractResponseMetadata(response);\n            String finishReason = (String) metadata.get(OpenAIOfficialConstants.MD_RESPONSE_STATUS);\n            ChatUsage usage = ResponsesHelper.extractUsage(response, startTime);"
+          },
+          {
+            "lines": [
+              292,
+              313
+            ],
+            "code": "            // 推理元数据放在 ThinkingBlock 上，用于推理重放\n            List<ContentBlock> terminalContent = new ArrayList<>();\n            if (encryptedContent != null || !reasoningText.isEmpty()) {\n                Map<String, Object> thinkingMetadata = new HashMap<>();\n                if (encryptedContent != null) {\n                    thinkingMetadata.put(\n                            OpenAIOfficialConstants.MD_REASONING_ENCRYPTED_CONTENT,\n                            encryptedContent);\n                }\n                if (!reasoningText.isEmpty()) {\n                    thinkingMetadata.put(OpenAIOfficialConstants.MD_REASONING_TEXT, reasoningText);\n                }\n                terminalContent.add(ThinkingBlock.builder().metadata(thinkingMetadata).build());\n            }\n\n            return ChatResponse.builder()\n                    .id(responseId)\n                    .content(terminalContent)\n                    .usage(usage)\n                    .metadata(metadata)\n                    .finishReason(finishReason)\n                    .build();"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "先提取拒绝并抛异常，再抽取终态加密推理、用量及状态；推理文本保存在 ThinkingBlock.metadata，不重新作为可见文本输出。注释未将终态等同成功，也未暗示能撤回此前已发出的增量。",
+        "suggested_comment": null
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/main/java/io/agentscope/extensions/model/gemini/formatter/GeminiMessageConverter.java",
+        "method": "convertMessages / appendFunctionResponses / convertRole",
+        "comment_lines": [
+          159,
+          160,
+          234,
+          235
+        ],
+        "comment": "服务端结果保留在 model Content；本地结果作为 user Content 输出。",
+        "evidence": [
+          {
+            "lines": [
+              158,
+              199
+            ],
+            "code": "                } else if (block instanceof ToolResultBlock trb) {\n                    // 服务端结果保留在 model Content 内；本地结果排队，\n                    // 在当前消息之后作为独立的 user Content 输出。\n                    if (isCodeExecutionResult(trb)) {\n                        buildCodeExecutionResultPart(trb)\n                                .ifPresent(partBuilder -> parts.add(partBuilder.build()));\n                    } else if (trb.isServerTool()) {\n                        restoreServerToolResponse(trb)\n                                .ifPresent(\n                                        toolResponse -> {\n                                            Part.Builder partBuilder =\n                                                    Part.builder().toolResponse(toolResponse);\n                                            Map<String, Object> metadata = trb.getMetadata();\n                                            if (metadata != null\n                                                    && metadata.containsKey(\n                                                            ToolUseBlock\n                                                                    .METADATA_THOUGHT_SIGNATURE)) {\n                                                applyThoughtSignature(\n                                                        partBuilder,\n                                                        metadata.get(\n                                                                ToolUseBlock\n                                                                        .METADATA_THOUGHT_SIGNATURE),\n                                                        trb.getName());\n                                            }\n                                            parts.add(partBuilder.build());\n                                        });\n                    } else {\n                        String textOutput = convertToolResultToString(trb.getOutput());\n                        // 为本地函数调用创建 FunctionResponse，将输出\n                        // 放在 \"output\" 键下\n                        Map<String, Object> responseMap = new HashMap<>();\n                        responseMap.put(\"output\", textOutput);\n\n                        FunctionResponse functionResponse =\n                                FunctionResponse.builder()\n                                        .id(trb.getId())\n                                        .name(trb.getName())\n                                        .response(responseMap)\n                                        .build();\n\n                        functionResponseParts.add(\n                                Part.builder().functionResponse(functionResponse).build());"
+          },
+          {
+            "lines": [
+              228,
+              237
+            ],
+            "code": "            // 存在 Part 时添加消息\n            if (!parts.isEmpty()) {\n                String role = convertRole(msg.getRole());\n                Content content = Content.builder().role(role).parts(parts).build();\n                result.add(content);\n            }\n            // 【学习提示】本地函数结果与服务端工具结果走不同协议表示；前者要合并为\n            // 用户轮次中的响应 Part，后者留在模型 Content，不能只按“都是工具结果”平铺。\n            if (!functionResponseParts.isEmpty()) {\n                appendFunctionResponses(result, functionResponseParts);"
+          },
+          {
+            "lines": [
+              336,
+              364
+            ],
+            "code": "    private void appendFunctionResponses(List<Content> result, List<Part> responseParts) {\n        if (!result.isEmpty()) {\n            int lastIndex = result.size() - 1;\n            Content lastContent = result.get(lastIndex);\n            List<Part> lastParts = lastContent.parts().orElse(List.of());\n            boolean lastIsFunctionResponseContent =\n                    \"user\".equals(lastContent.role().orElse(null))\n                            && !lastParts.isEmpty()\n                            && lastParts.stream()\n                                    .allMatch(part -> part.functionResponse().isPresent());\n            if (lastIsFunctionResponseContent) {\n                List<Part> mergedParts = new ArrayList<>(lastParts);\n                mergedParts.addAll(responseParts);\n                result.set(lastIndex, Content.builder().role(\"user\").parts(mergedParts).build());\n                return;\n            }\n        }\n        result.add(Content.builder().role(\"user\").parts(responseParts).build());\n    }\n\n    /**\n     * 将 MsgRole 转为 Gemini API 角色字符串。\n     *\n     * @param role AgentScope 消息角色\n     * @return Gemini API 角色（\"user\" 或 \"model\"）\n     */\n    private String convertRole(MsgRole role) {\n        // Gemini API 中，assistant 对应 \"model\"，其他角色都对应 \"user\"\n        return role == MsgRole.ASSISTANT ? \"model\" : \"user\";"
+          }
+        ],
+        "status": "NEEDS_QUALIFICATION",
+        "conclusion": "本地结果明确构建为 user，并只与紧邻且全部 Part 都是函数响应的 user Content 合并；服务端结果仅加入原消息 parts，角色实际由原 MsgRole 决定。只有 ASSISTANT 输入映射为 model，其他输入映射为 user。将 model 写成无条件保证过强；正常解析得到的模型消息确实是 model。",
+        "suggested_comment": "服务端工具结果保留在原消息的 Content 中（正常助手响应映射为 model），不会由该分支强制重写角色；本地函数响应另行组成 user Content，仅合并相邻且纯函数响应的 user 轮次。"
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-ollama/src/main/java/io/agentscope/extensions/model/ollama/OllamaChatModel.java",
+        "method": "doStream 流式与非流式分支",
+        "comment_lines": [
+          227,
+          228,
+          247,
+          248
+        ],
+        "comment": "稳定响应 ID 在 defer 内按订阅建立；非流式阻塞调用延迟执行并调度到 boundedElastic，两种模式共用超时/重试。",
+        "evidence": [
+          {
+            "lines": [
+              222,
+              271
+            ],
+            "code": "        Flux<ChatResponse> responseFlux;\n        if (stream) {\n            responseFlux =\n                    Flux.defer(\n                            () -> {\n                                // 【学习提示】稳定响应 ID 属于本次订阅；放在 defer 内使重新订阅\n                                // 获得独立状态，同一流的后续分片则复用首个响应 ID。\n                                final String[] finalStableId = new String[1];\n\n                                return httpClient.stream(request)\n                                        .map(\n                                                response -> {\n                                                    ChatResponse parsedResponse =\n                                                            formatter.parseResponse(\n                                                                    response, Instant.now());\n\n                                                    if (finalStableId[0] == null) {\n                                                        finalStableId[0] = parsedResponse.getId();\n                                                        return parsedResponse;\n                                                    }\n\n                                                    return parsedResponse.withId(finalStableId[0]);\n                                                });\n                            });\n        } else {\n            // 【学习提示】非流式 HTTP 调用仍封装为延迟执行的 Flux，并调度到 boundedElastic，\n            // 避免在响应式事件循环线程直接执行阻塞 I/O；两种模式最终共用超时／重试策略。\n            responseFlux =\n                    Flux.defer(\n                                    () -> {\n                                        Instant startTime = Instant.now();\n                                        try {\n                                            OllamaResponse response = httpClient.chat(request);\n                                            return Flux.just(\n                                                    formatter.parseResponse(response, startTime));\n                                        } catch (Exception e) {\n                                            return Flux.error(e);\n                                        }\n                                    })\n                            .subscribeOn(Schedulers.boundedElastic());\n        }\n\n        return responseFlux.transform(\n                flux ->\n                        ModelUtils.applyTimeoutAndRetry(\n                                flux,\n                                mergedOptions.toGenerateOptions(),\n                                defaultOptions.toGenerateOptions(),\n                                modelName,\n                                \"ollama\"));"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "String[1] 位于 Flux.defer 内；首个解析响应 ID 保存，之后 withId 复用。ChatResponse.Builder.build L195-197 对空 ID 生成 UUID，故默认解析器首块具备非空 ID。非流式 chat 位于 defer，subscribeOn boundedElastic；分支之后共用 ModelUtils.applyTimeoutAndRetry。重试重新订阅会产生新一轮状态，注释没有承诺跨重试保持同一 ID。",
+        "suggested_comment": null
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/embedding/EmbeddingUtils.java",
+        "method": "applyTimeoutAndRetry",
+        "comment_lines": [
+          45,
+          45
+        ],
+        "comment": "timeout 再 retryWhen，因此时长限制每次尝试而非含退避的总期限；maxAttempts 包含初次尝试。",
+        "evidence": [
+          {
+            "lines": [
+              79,
+              95
+            ],
+            "code": "        if (config == null) {\n            return embeddingMono;\n        }\n\n        // 应用已配置的超时。\n        Duration timeout = config.getTimeout();\n        if (timeout != null) {\n            embeddingMono =\n                    embeddingMono.timeout(\n                            timeout,\n                            Mono.error(\n                                    new EmbeddingException(\n                                            operationType + \" request timeout after \" + timeout,\n                                            modelName,\n                                            provider)));\n            logger.debug(\"Applied timeout: {} for {} model: {}\", timeout, operationType, modelName);\n        }"
+          },
+          {
+            "lines": [
+              97,
+              130
+            ],
+            "code": "        // 应用已配置的重试（maxAttempts > 1 表示启用）。\n        Integer maxAttempts = config.getMaxAttempts();\n        if (maxAttempts != null && maxAttempts > 1) {\n            Duration initialBackoff = config.getInitialBackoff();\n            Duration maxBackoff = config.getMaxBackoff();\n            Predicate<Throwable> retryOn = config.getRetryOn();\n\n            // 未指定时使用默认值。\n            if (initialBackoff == null) {\n                initialBackoff = DEFAULT_INITIAL_BACKOFF;\n            }\n            if (maxBackoff == null) {\n                maxBackoff = DEFAULT_MAX_BACKOFF;\n            }\n            if (retryOn == null) {\n                retryOn = error -> true; // 默认重试全部错误。\n            }\n\n            Retry retrySpec =\n                    Retry.backoff(maxAttempts - 1, initialBackoff)\n                            .maxBackoff(maxBackoff)\n                            .jitter(0.5)\n                            .filter(retryOn)\n                            .doBeforeRetry(\n                                    signal ->\n                                            logger.warn(\n                                                    \"Retrying {} request (attempt {}/{}) due to:\"\n                                                            + \" {}\",\n                                                    operationType,\n                                                    signal.totalRetriesInARow() + 1,\n                                                    maxAttempts - 1,\n                                                    signal.failure().getMessage()));\n\n            embeddingMono = embeddingMono.retryWhen(retrySpec);"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "先包装 embeddingMono.timeout，再对其 retryWhen；Retry.backoff(maxAttempts - 1, initialBackoff) 明确重试次数减一，filter(retryOn) 生效；缺省谓词为全部错误。注释准确区分单次尝试时限与总耗时，未承诺取消远端工作。",
+        "suggested_comment": null
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/knowledge/SimpleKnowledge.java",
+        "method": "retrieve",
+        "comment_lines": [
+          42,
+          42
+        ],
+        "comment": "查询先嵌入、向量库按 limit 取候选，最后过滤空文档/空分数/低分并降序排序。",
+        "evidence": [
+          {
+            "lines": [
+              159,
+              187
+            ],
+            "code": "        // 将查询字符串转换为 TextBlock。\n        TextBlock queryBlock = TextBlock.builder().text(query).build();\n        return embeddingModel\n                .embed(queryBlock)\n                .doOnNext(response -> notifyUsage(response.getUsage()))\n                .flatMap(\n                        response ->\n                                embeddingStore.search(\n                                        SearchDocumentDto.builder()\n                                                .vectorName(config.getVectorName())\n                                                .queryEmbedding(response.getEmbedding())\n                                                .limit(config.getLimit())\n                                                .scoreThreshold(null)\n                                                .build()))\n                .flatMap(\n                        results ->\n                                Flux.fromIterable(results)\n                                        .filter(\n                                                doc ->\n                                                        doc != null\n                                                                && doc.getScore() != null\n                                                                && doc.getScore()\n                                                                        >= config\n                                                                                .getScoreThreshold())\n                                        .sort(\n                                                Comparator.comparing(\n                                                        Document::getScore,\n                                                        Comparator.reverseOrder()))\n                                        .collectList());"
+          }
+        ],
+        "status": "NEEDS_QUALIFICATION",
+        "conclusion": "候选 limit 在 search 中设置，scoreThreshold(null) 后在本层比较阈值、降序排序；不足 limit 不补查且无额外重排模型均准确。但 Flux.fromIterable(results) 位于 doc != null filter 之前；响应式流不允许 null 元素，上游可能先报错，因此不能将防御判断写成对含 null 列表的成功过滤保证。",
+        "suggested_comment": "查询嵌入后，向量库按 limit 返回候选；本层对有效候选过滤空分数及低于阈值的结果并降序排序，过滤后可能不足 limit，且不做额外模型重排。filter 虽包含空文档判断，但上游 Flux 不接受 null 元素，不能据此保证含 null 的结果列表可正常处理。"
+      },
+      {
+        "file": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/knowledge/SimpleKnowledge.java",
+        "method": "addDocuments",
+        "comment_lines": [
+          44,
+          44
+        ],
+        "comment": "flatMap 生成向量、collectList 后批量存储；缺内容跳过，嵌入错误传播，已写回 Document 的向量不回滚，doOnError 不恢复。",
+        "evidence": [
+          {
+            "lines": [
+              114,
+              144
+            ],
+            "code": "        return Flux.fromIterable(documents)\n                .flatMap(\n                        doc -> {\n                            // 从文档元数据提取 ContentBlock。\n                            ContentBlock contentBlock = extractContentBlock(doc.getMetadata());\n                            if (contentBlock == null) {\n                                log.warn(\n                                        \"Cannot extract ContentBlock from document: {}\",\n                                        doc.getId());\n                                return Mono.empty();\n                            }\n                            // 为文档内容生成嵌入。\n                            return embeddingModel\n                                    .embed(contentBlock)\n                                    .doOnNext(\n                                            response -> {\n                                                doc.setEmbedding(response.getEmbedding());\n                                                notifyUsage(response.getUsage());\n                                            })\n                                    .thenReturn(doc);\n                        })\n                .collectList()\n                .flatMap(\n                        docsWithEmbeddings -> {\n                            // 向向量库批量存储文档，包含元数据/载荷。\n                            if (docsWithEmbeddings.isEmpty()) {\n                                return Mono.empty();\n                            }\n                            return embeddingStore.add(docsWithEmbeddings);\n                        })\n                .doOnError(error -> log.error(\"Failed to add documents to knowledge base\", error));"
+          },
+          {
+            "lines": [
+              216,
+              220
+            ],
+            "code": "    private ContentBlock extractContentBlock(DocumentMetadata metadata) {\n        if (metadata == null) {\n            return null;\n        }\n        return metadata.getContent();"
+          }
+        ],
+        "status": "PASS",
+        "conclusion": "extractContentBlock 为 null 时 Mono.empty；doOnNext 修改原 doc 后 thenReturn，collectList 之后才 embeddingStore.add。没有 onErrorResume、补偿或事务恢复；doOnError 仅日志。注释没有把 flatMap 宣称为独立线程并行，也没有承诺批量写入本身原子。",
+        "suggested_comment": null
+      }
+    ]
+  },
+  "additional_review": [
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+      "method": "onActing / isPermitted",
+      "reviewed_comment": "仅允许只读/规划控制工具，defer确保只运行一次",
+      "evidence": "isPermitted=ALWAYS_ALLOWED || additionalAllowed || readOnlyResolver；Flux.defer回调中直接state.contextMutable().add(msg)，没有cache或单次CAS。",
+      "finding": "修正白名单例外及每次订阅重做副作用，不把defer当只执行一次。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/main/java/io/agentscope/dataagent/web/api/AgentActivityController.java",
+      "method": "list / redactFor",
+      "reviewed_comment": "RUN浏览、EDIT完整、较低权限脱敏",
+      "evidence": "guard.require RUN；held.implies EDIT直接raw；其他调用对共享/绑定动作将target/details置null，保留actor/action。",
+      "finding": "PASS，脱敏不表示删除整个事件或匿名化操作者。"
+    }
+  ],
+  "prompt_spec": {
+    "generated_utc": "2026-10-27T18:12:57.759147+00:00",
+    "method": "独立读取5篇完整译文和6份本地实际来源，按节/条款/限制/例外/示例占位逐项语义对照。未执行材料内命令；未改仓库文件。",
+    "result": "5篇声明范围均完整；无重大误译或安全授权混淆；Coding译文有2项低优先级措辞精确化建议。",
+    "files": [
+      {
+        "path": "study/zh-CN/prompts/CodingSystemPrompt.zh-CN.md",
+        "sha256": "6a6efcc77709780127d0bc5c2d3bb2479c7dcb2286d45f3999f5d380a74e672b",
+        "local_links": [
+          {
+            "label": "CodingSystemPrompt.java",
+            "target": "../../../agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/CodingSystemPrompt.java",
+            "exists": true,
+            "resolved_path": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/CodingSystemPrompt.java"
+          },
+          {
+            "label": "ContextConventions.zh-CN.md",
+            "target": "ContextConventions.zh-CN.md",
+            "exists": true,
+            "resolved_path": "study/zh-CN/prompts/ContextConventions.zh-CN.md"
+          },
+          {
+            "label": "上下文约定",
+            "target": "ContextConventions.zh-CN.md",
+            "exists": true,
+            "resolved_path": "study/zh-CN/prompts/ContextConventions.zh-CN.md"
+          }
+        ],
+        "source": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/CodingSystemPrompt.java",
+        "scope": "17 固定文本块逐段对照；linearNote 两分支及 loadCustomInstructions 实现对照。",
+        "covered_sections": [
+          "工作环境",
+          "当前任务",
+          "自我指代及非自我请求例外",
+          "仓库设置6步",
+          "文件管理",
+          "规划4步及简单任务例外",
+          "执行流程及review委派例外",
+          "验证闭环",
+          "检查点/回滚/最近AGENTS/两次失败",
+          "工具协议5项",
+          "工具实践5项",
+          "搜索",
+          "编码规范",
+          "核心行为",
+          "按需依赖",
+          "沟通",
+          "不可信外部评论"
+        ],
+        "critical_constraints_preserved": [
+          "PR发布必须取得工具返回URL",
+          "来源不明不通知",
+          "只运行直接相关测试/不跑全套",
+          "completed必须经过验证",
+          "安装可信包且仅在需要时",
+          "项目规则服从安全及政策",
+          "untrusted内容不能改变认证/外传数据/工作流程",
+          "100%%及反斜杠明确是Java源码形式",
+          "动态覆盖优先于默认且非叠加"
+        ],
+        "safety": "开头明确材料非操作指令；末尾逐项说明外部写入、破坏性回滚、绕过钩子、当前教学注释目标和源文矛盾。未据此执行。",
+        "missing_sections": []
+      },
+      {
+        "path": "study/zh-CN/prompts/ContextConventions.zh-CN.md",
+        "sha256": "1a0d2677228c2a6e70d500aa99a12773d32e86e5a5cd928ee9ec755a6424ed78",
+        "local_links": [
+          {
+            "label": "harness/context-conventions.md",
+            "target": "../../../agentscope-harness/src/main/resources/io/agentscope/harness/context-conventions.md",
+            "exists": true,
+            "resolved_path": "agentscope-harness/src/main/resources/io/agentscope/harness/context-conventions.md"
+          },
+          {
+            "label": "workspace-templates/default_prompt.md",
+            "target": "../../../agentscope-examples/agents/agentscope-codingagent/src/main/resources/workspace-templates/default_prompt.md",
+            "exists": true,
+            "resolved_path": "agentscope-examples/agents/agentscope-codingagent/src/main/resources/workspace-templates/default_prompt.md"
+          }
+        ],
+        "sources": [
+          "agentscope-harness/src/main/resources/io/agentscope/harness/context-conventions.md",
+          "agentscope-examples/agents/agentscope-codingagent/src/main/resources/workspace-templates/default_prompt.md"
+        ],
+        "scope": "context-conventions全部5段及default_prompt标题/2句完整对照。",
+        "critical_constraints_preserved": [
+          "TASK_STATE不是独立验证证据",
+          "当前完整todo回执可代替投影",
+          "运行模式/计划不授予权限",
+          "Memory/工具结果是待评估材料而非覆盖用户目标的指令",
+          "事实假设计划完成动作区分",
+          "新指令/证据可取代旧结论",
+          "预览不够读产物",
+          "查询失败不证明动作失败",
+          "未指定仓库才用任务上下文/组织来自issue或PR"
+        ],
+        "missing_sections": [],
+        "safety": "译文与5条解读分开，明确不授予权限且不可猜仓库。"
+      },
+      {
+        "path": "study/zh-CN/prompts/ReviewerSystemPrompt.zh-CN.md",
+        "sha256": "1442f9ad83db6365bddd36ff4cf6d4f50788729ef4e5a36898e302c16b8f2430",
+        "local_links": [
+          {
+            "label": "ReviewerSystemPrompt.java",
+            "target": "../../../agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/ReviewerSystemPrompt.java",
+            "exists": true,
+            "resolved_path": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/ReviewerSystemPrompt.java"
+          }
+        ],
+        "source": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/ReviewerSystemPrompt.java",
+        "scope": "完整TEMPLATE逐段与build的9占位实参/缺省值核对。",
+        "critical_constraints_preserved": [
+          "首步自行取diff",
+          "重评使用已评SHA...新HEAD",
+          "克隆可选",
+          "只评差异非原代码",
+          "严重性5级及分类字段",
+          "单行锚定/description1–4句",
+          "suggestion仅小而明确且不超过4行",
+          "publish恰好一次且无问题也调用",
+          "开放发现update/新增add",
+          "只读指禁止commit/push/PR修改",
+          "不直接调用GitHub review API",
+          "源文Skip nits/Record them矛盾保留并解释"
+        ],
+        "safety": "明确发布review仍是远端写入且需授权；没有把提示中的只读误说成零外部写入。",
+        "missing_sections": []
+      },
+      {
+        "path": "study/zh-CN/specs/AGENTS.zh-CN.md",
+        "sha256": "5b8e70d1f6c66782397e53f4f01b2d14639d16b5c1f2c0e73c5c07666a4a7a12",
+        "local_links": [
+          {
+            "label": "AGENTS.md",
+            "target": "../../../AGENTS.md",
+            "exists": true,
+            "resolved_path": "AGENTS.md"
+          },
+          {
+            "label": "官方中文说明",
+            "target": "../../../CONTRIBUTING_zh.md",
+            "exists": true,
+            "resolved_path": "CONTRIBUTING_zh.md"
+          },
+          {
+            "label": "CONTRIBUTING.md",
+            "target": "../../../CONTRIBUTING.md",
+            "exists": true,
+            "resolved_path": "CONTRIBUTING.md"
+          },
+          {
+            "label": "docs/v2/en/docs/harness/architecture.md",
+            "target": "../../../docs/v2/en/docs/harness/architecture.md",
+            "exists": true,
+            "resolved_path": "docs/v2/en/docs/harness/architecture.md"
+          },
+          {
+            "label": "CONTEXT.md",
+            "target": "../../../CONTEXT.md",
+            "exists": true,
+            "resolved_path": "CONTEXT.md"
+          },
+          {
+            "label": "agentscope-service/README.md",
+            "target": "../../../agentscope-service/README.md",
+            "exists": true,
+            "resolved_path": "agentscope-service/README.md"
+          },
+          {
+            "label": "docs/README.md",
+            "target": "../../../docs/README.md",
+            "exists": true,
+            "resolved_path": "docs/README.md"
+          },
+          {
+            "label": "CONTRIBUTING.md",
+            "target": "../../../CONTRIBUTING.md",
+            "exists": true,
+            "resolved_path": "CONTRIBUTING.md"
+          },
+          {
+            "label": "CONTEXT 中文译本",
+            "target": "CONTEXT.zh-CN.md",
+            "exists": true,
+            "resolved_path": "study/zh-CN/specs/CONTEXT.zh-CN.md"
+          }
+        ],
+        "source": "AGENTS.md",
+        "scope": "6主节及所有子节/条目逐项对照；完整保留Java/服务/docs命令。",
+        "critical_constraints_preserved": [
+          "非任务代码不清理/死代码不主动删",
+          "库不得依赖examples",
+          "core独立",
+          "扩展需同步父模块distribution/BOM和脚本",
+          "Reactor取消/错误/清理/权限语义",
+          "Java17无preview/switch模式匹配",
+          "测试不得用真凭据/提供商服务",
+          "Windows flakes不削弱断言",
+          "不手改生成UI",
+          "跨模块/公共契约需要full check",
+          "提交推送需用户授权",
+          "跳过测试作为缺口报告"
+        ],
+        "missing_sections": [],
+        "safety": "学习解读和译文分开；用户授权限制未漏。"
+      },
+      {
+        "path": "study/zh-CN/specs/CONTEXT.zh-CN.md",
+        "sha256": "aac1799e167aeb38aa89d17e444f5bf7534edcbe7897febeb4977453191d9fff",
+        "local_links": [
+          {
+            "label": "CONTEXT.md",
+            "target": "../../../CONTEXT.md",
+            "exists": true,
+            "resolved_path": "CONTEXT.md"
+          },
+          {
+            "label": "工程规范译本",
+            "target": "AGENTS.zh-CN.md",
+            "exists": true,
+            "resolved_path": "study/zh-CN/specs/AGENTS.zh-CN.md"
+          },
+          {
+            "label": "已有贡献中文说明",
+            "target": "../../../CONTRIBUTING_zh.md",
+            "exists": true,
+            "resolved_path": "CONTRIBUTING_zh.md"
+          }
+        ],
+        "source": "CONTEXT.md",
+        "scope": "14个渠道概念+5个投递概念；逐个定义及19条Avoid完整对照。",
+        "critical_constraints_preserved": [
+          "平台用户compId+userId",
+          "平台身份不等于外部微信身份",
+          "登录会话过期独立于connection",
+          "runtime credential不混同context token",
+          "peer可为群聊",
+          "回复由宿主持久化独立重试",
+          "回执证明提供商接受不是仅本地接受",
+          "dispatch failure包括Agent失败或交宿主失败",
+          "delivery failure不重放入站",
+          "abandoned终止重试且与completed同保留策略"
+        ],
+        "missing_sections": [],
+        "safety": "原文服务/产品描述明确按原文语境非最新外部事实背书；提供商接受不等于读到是标注的译者补充。"
+      }
+    ],
+    "findings": [
+      {
+        "id": "QA-PS-01",
+        "severity": "low",
+        "type": "implementation_explanation_overstatement",
+        "translation_path": "study/zh-CN/prompts/CodingSystemPrompt.zh-CN.md",
+        "translation_line": 213,
+        "translation_evidence": "异常被捕获，不会在此向外抛出。",
+        "source_path": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/CodingSystemPrompt.java",
+        "source_lines": [
+          415,
+          416,
+          421,
+          434
+        ],
+        "source_evidence": "if (override != null && Files.isRegularFile(override)) 在第一个 try 之外；两个 catch (Exception e) 仅覆盖各自读取块。",
+        "assessment": "固定提示全文翻译没有遗漏；附加实现解读把局部catch泛化成整个方法不抛异常。Files.isRegularFile判定不在catch范围，且catch(Exception)不涵盖Error。无须把具体运行环境的异常可达性当成已发生缺陷，但避免绝对保证。",
+        "suggested_change": "将末句改为“两个读取块中的 Exception 被捕获：覆盖文件读取失败后回退默认资源，默认资源读取失败后返回空字符串；这不代表整个方法绝不会抛出异常。”"
+      },
+      {
+        "id": "QA-PS-02",
+        "severity": "low",
+        "type": "wording_scope_precision",
+        "translation_path": "study/zh-CN/prompts/CodingSystemPrompt.zh-CN.md",
+        "translation_line": 160,
+        "translation_evidence": "对新增或修改函数添加的文档字符串必须非常简洁，最好 1 行。",
+        "source_path": "agentscope-examples/agents/agentscope-codingagent/src/main/java/io/agentscope/harness/coding/prompt/CodingSystemPrompt.java",
+        "source_lines": [
+          348
+        ],
+        "source_evidence": "Any docstrings on functions you add or modify must be VERY concise (1 line preferred).",
+        "assessment": "中文容易被理解为仅新添加的文档字符串；原文限定的是新增或修改的函数，其上任何docstring都应简洁。轻微措辞收窄，不影响主要流程。",
+        "suggested_change": "“新增或修改的函数，其文档字符串都必须非常简洁，最好 1 行。”"
+      }
+    ],
+    "execution_boundary": "仅本地只读QA和写/tmp报告；冻结批9未改，无远端写。",
+    "limits": "未核验源文所述外部服务是否最新，亦未证明源实现自身正确；本QA检查翻译忠实性及解释边界。"
+  },
+  "applied_corrections": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/ReActAgent.java",
+      "before": "// 为每个经过门控的工具在上下文标记 ToolUseBlock.state。ALLOWED\n                                // 调用立即执行；ASKING 调用使智能体暂停并\n                                // 返回；DENIED 调用在下面写入 DENIED ToolResultBlock。",
+      "after": "// 为每个经过门控的工具标记 ToolUseBlock.state。只有整批没有 ASKING\n                                // 时才进入 runToolBatch；若仍有待确认项，ALLOWED 也暂不执行。\n                                // DENIED 调用在下面写入 DENIED ToolResultBlock。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+      "before": " *   <li>{@code plan_exit}：请求离开计划模式并开始执行。由 {@code ASK} 自检控制，\n *       用户通过现有权限 HITL 流程确认计划后，智能体才恢复写权限。",
+      "after": " *   <li>{@code plan_exit}：请求离开计划模式并开始执行，自检返回 {@code ASK}。\n *       通常通过权限 HITL 请求确认，但最终是否询问由调用链和权限策略决定；该工具方法不自行验证批准证据。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+      "before": " * {@code plan_exit}；计划模式启用时拒绝其他所有修改性工具。",
+      "after": " * {@code plan_exit}；另外还有内置协作/待办白名单及 additionalAllowed 显式例外。\n * 不在允许集合中且未被判为只读的工具才被拒绝，不能把该机制等同于无例外的只读沙箱。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+      "before": "         * 仅在用户批准上面的 ASK 后执行。",
+      "after": "         * 执行退出计划模式；本方法不会自行检查用户批准证据。\n         * 应由调用方先走权限管线；当前非 safety 的 ASK 在完整权限引擎中还会继续检查后续策略。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/tool/PlanModeTools.java",
+      "before": "// 负责提出 ASK，权限管线批准后才应调用此方法。不要只靠提示文本模拟审批。",
+      "after": "// 负责提出 ASK；本方法本身不校验人工批准。是否暂停询问取决于实际权限路径与配置，\n            // 不要把返回的“Plan approved”文本当作独立批准证据。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+      "before": " * 拒绝修改型工具调用，使智能体只能读取、调研和起草计划。\n *\n * <p>规则确定地在 {@link #onActing} 中执行：仅允许只读工具或规划控制工具\n * （{@code plan_enter} / {@code plan_write} / {@code plan_exit} / {@code todo_write}）；\n * 其余调用不执行，而是得到写入上下文并流式发出的合成 {@code DENIED} 工具结果。",
+      "after": " * 按工具名和只读解析器限制调用；这不是操作系统级只读隔离。\n *\n * <p>规则在 {@link #onActing} 中执行：允许只读工具、内置白名单\n * （包括 {@code plan_enter} / {@code plan_write} / {@code plan_exit} / {@code todo_write}，\n * 以及智能体协作和任务工具），还允许 additionalAllowed 显式配置的例外。\n * 其余调用不执行，而是得到写入上下文并流式发出的合成 {@code DENIED} 工具结果。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/middleware/PlanModeMiddleware.java",
+      "before": "// 延迟到订阅时执行，确保上下文修改与事件只运行一次。",
+      "after": "// 延迟到每次订阅时写入上下文并生成事件；defer 不提供跨订阅的“只执行一次”保证。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceArchiveExtractor.java",
+      "before": "@param tarStream tar 归档输入流，由调用方负责关闭",
+      "after": "@param tarStream tar 归档输入流；本方法关闭其归档包装流，不应依赖调用后底层流仍可读取"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/WorkspaceArchiveExtractor.java",
+      "before": "// 最终检查：验证目标严格位于根目录内",
+      "after": "// 最终词法检查：目标路径不能越出根目录；此检查不解析符号链接。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/sandbox/snapshot/LocalSandboxSnapshot.java",
+      "before": "这样快照要么完整写入，要么不存在，不会出现部分写入的快照。",
+      "after": "这样不会将部分写入的新文件发布为最终快照；失败时可能仍保留之前已有的旧快照。"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/gateway/HarnessGateway.java",
+      "before": "// doFinally 覆盖终止清理。注意 leaseRef 在 defer 外创建，同一个返回值被重复／并发订阅",
+      "after": "// doFinally 终止时尝试清理已记录租约；取消与 acquire/set 交错时不能据此保证租约必定释放。\n    // 注意 leaseRef 在 defer 外创建，同一个返回值被重复／并发订阅"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/knowledge/SimpleKnowledge.java",
+      "before": "最后在此过滤空文档/空分数及低于阈值的结果并降序排序。",
+      "after": "最后对有效候选过滤空分数及低于阈值的结果并降序排序。filter 虽含空文档防御判断，但不能据此承诺上游接受带 null 元素的结果列表。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/main/java/io/agentscope/extensions/model/gemini/formatter/GeminiMessageConverter.java",
+      "before": "// 服务端结果保留在 model Content 内；本地结果排队，",
+      "after": "// 服务端结果保留在原消息的 Content 内（正常助手响应为 model 角色）；本地结果排队，"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/main/java/io/agentscope/extensions/model/gemini/formatter/GeminiMessageConverter.java",
+      "before": "// 用户轮次中的响应 Part，后者留在模型 Content，不能只按“都是工具结果”平铺。",
+      "after": "// 用户轮次中的响应 Part，后者留在原消息 Content；其角色经 convertRole 映射而非强制 model。"
+    },
+    {
+      "path": "study/zh-CN/prompts/CodingSystemPrompt.zh-CN.md",
+      "before": "对新增或修改函数添加的文档字符串必须非常简洁，最好 1 行。",
+      "after": "新增或修改的函数，其文档字符串都必须非常简洁，最好 1 行。"
+    },
+    {
+      "path": "study/zh-CN/prompts/CodingSystemPrompt.zh-CN.md",
+      "before": "默认资源存在且非空时，同样加前缀；否则返回空字符串。异常被捕获，不会在此向外抛出。",
+      "after": "默认资源存在且非空时，同样加前缀；否则返回空字符串。两个读取块中的 `Exception` 分别被捕获以回退默认资源或空字符串；这不代表整个方法绝不会抛出异常。"
+    }
+  ],
+  "frozen_batch9_unchanged": true,
+  "runtime_tests_run": false,
+  "line_number_note": "各独立报告行号对应审阅时批9；修正后行号可能移动，应用记录给出精确旧/新文本。"
+}

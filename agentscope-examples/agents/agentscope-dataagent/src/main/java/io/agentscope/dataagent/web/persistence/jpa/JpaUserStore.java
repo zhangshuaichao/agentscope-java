@@ -1,0 +1,164 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.dataagent.web.persistence.jpa;
+
+import io.agentscope.dataagent.web.auth.UserStore;
+import jakarta.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+
+/** 基于 JPA 的 {@link UserStore}，是应用随附的唯一 {@link UserStore} 实现，始终由 {@link JpaPersistenceConfig} 装配。<p>启动时若 {@code dataagent_user} 中没有管理员记录，初始化默认 {@code admin/admin} 用户，便于运维连接新数据库后登录。初始化密码会连同“立即修改”警告写入日志，与文件模式一致。<p>通过 {@link io.agentscope.dataagent.web.persistence.jpa.JpaPersistenceConfig} 装配为普通 {@code @Service} 风格 Spring Bean（经配置类而非 {@code @Component} 注册），配置未加载时不启用 JPA 后端。 */
+@Transactional
+public class JpaUserStore implements UserStore {
+
+    private static final Logger log = LoggerFactory.getLogger(JpaUserStore.class);
+
+    private final UserEntityRepository repository;
+    private final PasswordEncoder encoder = new BCryptPasswordEncoder();
+
+    public JpaUserStore(UserEntityRepository repository) {
+        this.repository = repository;
+    }
+
+    @PostConstruct
+    void seedDefaultAdmin() {
+        // 使用 existsById 而不是 count() > 0，确保即使其他初始化脚本
+        // （例如仅用于 H2 的 data-h2.sql 为本地开发添加 bob / alice）已提前写入表，
+        // 本次 @PostConstruct 仍创建 admin。admin 已存在时重复执行不做修改。
+        if (repository.existsById("admin")) {
+            return;
+        }
+        UserEntity admin = new UserEntity("admin", "admin", encoder.encode("admin"), "user,admin");
+        repository.save(admin);
+        log.info(
+                "Initialized default admin user in database (password: admin) — change"
+                        + " immediately!");
+    }
+
+    @Override
+    public PasswordEncoder passwordEncoder() {
+        return encoder;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserRecord> findById(String userId) {
+        return repository.findById(userId).map(JpaUserStore::toRecord);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserRecord> findByUsername(String username) {
+        if (username == null) return Optional.empty();
+        return repository.findByUsernameIgnoreCase(username).map(JpaUserStore::toRecord);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserRecord> listAll() {
+        return repository.findAll().stream().map(JpaUserStore::toRecord).toList();
+    }
+
+    @Override
+    public UserRecord createUser(
+            String userId, String username, String password, List<String> roles) {
+        if (repository.existsById(userId)) {
+            throw new IllegalArgumentException("userId already exists: " + userId);
+        }
+        if (repository.existsByUsernameIgnoreCase(username)) {
+            throw new IllegalArgumentException("username already exists: " + username);
+        }
+        List<String> effectiveRoles = roles != null ? roles : List.of("user");
+        UserEntity entity =
+                new UserEntity(
+                        userId, username, encoder.encode(password), joinRoles(effectiveRoles));
+        repository.save(entity);
+        return toRecord(entity);
+    }
+
+    @Override
+    public boolean verifyPassword(UserRecord user, String rawPassword) {
+        return encoder.matches(rawPassword, user.passwordHash());
+    }
+
+    @Override
+    public Optional<UserRecord> updatePassword(String userId, String newPassword) {
+        return repository
+                .findById(userId)
+                .map(
+                        u -> {
+                            u.setPasswordHash(encoder.encode(newPassword));
+                            UserEntity saved = repository.save(u);
+                            log.info("Password updated for user '{}'", userId);
+                            return toRecord(saved);
+                        });
+    }
+
+    @Override
+    public Optional<UserRecord> updateRoles(String userId, List<String> newRoles) {
+        return repository
+                .findById(userId)
+                .map(
+                        u -> {
+                            u.setRolesCsv(joinRoles(newRoles));
+                            return toRecord(repository.save(u));
+                        });
+    }
+
+    @Override
+    public boolean deleteUser(String userId) {
+        Optional<UserEntity> target = repository.findById(userId);
+        if (target.isEmpty()) return false;
+        if (hasRole(target.get(), "admin")) {
+            long admins = repository.findAll().stream().filter(u -> hasRole(u, "admin")).count();
+            if (admins <= 1) {
+                throw new IllegalStateException("Cannot delete the last admin user");
+            }
+        }
+        repository.deleteById(userId);
+        log.info("Deleted user '{}'", userId);
+        return true;
+    }
+
+    // -----------------------------------------------------------------
+    // 映射辅助方法
+    // -----------------------------------------------------------------
+
+    private static UserRecord toRecord(UserEntity u) {
+        return new UserRecord(
+                u.getUserId(), u.getUsername(), u.getPasswordHash(), splitRoles(u.getRolesCsv()));
+    }
+
+    private static List<String> splitRoles(String csv) {
+        if (csv == null || csv.isBlank()) return List.of("user");
+        return Arrays.stream(csv.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+    }
+
+    private static String joinRoles(List<String> roles) {
+        if (roles == null || roles.isEmpty()) return "user";
+        return String.join(",", roles);
+    }
+
+    private static boolean hasRole(UserEntity u, String role) {
+        return splitRoles(u.getRolesCsv()).contains(role);
+    }
+}

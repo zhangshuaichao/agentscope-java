@@ -48,6 +48,8 @@ import java.util.stream.Collectors;
  * {keyPrefix}{namespace[0]}/{namespace[1]}/.../{key}.version    — version counter
  * </pre>
  *
+ * <p>键布局中文说明：命名空间各段拼接后，.json 对象保存条目数据，.version 对象保存版本计数；两个独立对象不自动构成原子事务。
+ *
  * <p>【学习提示】此实现的 putIfVersion 是“读版本→比较→写数据→写版本”的分步调用，
  * 没有条件写请求或跨进程锁，不能作为原子分布式 CAS 使用。数据和版本也位于两个独立对象，
  * 部分写失败可能使二者不一致；需要强并发保证时必须选择满足契约的后端，而不是仅看方法名。

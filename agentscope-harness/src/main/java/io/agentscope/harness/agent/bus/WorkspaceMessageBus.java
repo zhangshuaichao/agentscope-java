@@ -54,6 +54,8 @@ import reactor.core.scheduler.Schedulers;
  *   logs/{key-hash}/
  *     {entryId}.json       — Mode C entries (append-only)
  * </pre>
+ *
+ * <p>目录图中文说明：queues 下存放模式 A 的队列项，消费过程为列目录、读取、删除；logs 下存放模式 C 的追加式日志项。两个 key-hash 目录按通道键区分，entryId 标识消息项。
  */
 public class WorkspaceMessageBus implements MessageBus {
 

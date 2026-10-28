@@ -108,7 +108,7 @@ public class BailianConfig {
     /**
      * 获取阿里云 Access Key ID。
      *
-     * @return Access Key ID
+     * @return 访问密钥标识（Access Key ID）
      */
     public String getAccessKeyId() {
         return accessKeyId;
@@ -117,7 +117,7 @@ public class BailianConfig {
     /**
      * 获取阿里云 Access Key Secret。
      *
-     * @return Access Key Secret
+     * @return 访问密钥秘密值（Access Key Secret）
      */
     public String getAccessKeySecret() {
         return accessKeySecret;
@@ -257,7 +257,7 @@ public class BailianConfig {
         /**
          * 设置阿里云 Access Key ID。
          *
-         * @param accessKeyId Access Key ID
+         * @param accessKeyId 访问密钥标识（Access Key ID）
          * @return 此构建器，支持链式调用
          */
         public Builder accessKeyId(String accessKeyId) {
@@ -268,7 +268,7 @@ public class BailianConfig {
         /**
          * 设置阿里云 Access Key Secret。
          *
-         * @param accessKeySecret Access Key Secret
+         * @param accessKeySecret 访问密钥秘密值（Access Key Secret）
          * @return 此构建器，支持链式调用
          */
         public Builder accessKeySecret(String accessKeySecret) {

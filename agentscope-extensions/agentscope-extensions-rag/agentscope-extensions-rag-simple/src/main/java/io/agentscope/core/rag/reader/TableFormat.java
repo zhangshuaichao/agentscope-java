@@ -31,6 +31,8 @@ public enum TableFormat {
      * | Cell1   | Cell2   |
      * </pre>
      *
+     * <p>表格示例中文说明：Header1、Header2 是两列标题，下一行分隔标题和数据，Cell1、Cell2 是一行单元格内容。
+     *
      * <p>单元格内换行渲染为 {@code <br>}，使每个表格行仍占一行 Markdown。
      */
     MARKDOWN,
@@ -46,6 +48,8 @@ public enum TableFormat {
      * ["Header1", "Header2"]
      * ["Cell1", "Cell2"]
      * </pre>
+     *
+     * <p>文本格式示例中文说明：system-info 提示“按 JSON 数组载入的表格”；第一组数组保存列名，后续数组保存每行单元格。示例字符串保持原样以对应实际输出。
      */
     JSON
 }

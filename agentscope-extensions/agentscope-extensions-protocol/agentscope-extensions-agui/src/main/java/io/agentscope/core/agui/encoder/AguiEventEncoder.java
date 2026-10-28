@@ -30,6 +30,8 @@ import io.agentscope.core.util.JsonUtils;
  * data: {"type":"EVENT_TYPE",...}\n\n
  * </pre>
  *
+ * <p>SSE 帧中文说明：data: 后是事件 JSON，两个换行符结束一帧；EVENT_TYPE 为事件类型占位值，不是单独的 SSE 事件名。
+ *
  * <p>编码器线程安全，可由多个请求共享。
  */
 public class AguiEventEncoder {
@@ -46,6 +48,8 @@ public class AguiEventEncoder {
      * <pre>
      * data: {"type":"EVENT_TYPE",...}\n\n
      * </pre>
+     *
+     * <p>SSE 帧中文说明：data: 行承载事件 JSON，末尾两个换行结束帧。
      *
      * @param event 要编码的事件
      * @return SSE 格式字符串
@@ -85,6 +89,8 @@ public class AguiEventEncoder {
      * <pre>
      * : comment text\n\n
      * </pre>
+     *
+     * <p>SSE 注释帧中文说明：冒号开头的 comment text 是注释或心跳正文，两个换行结束帧，不是业务事件 JSON。
      *
      * @param comment 注释文本
      * @return SSE 格式注释

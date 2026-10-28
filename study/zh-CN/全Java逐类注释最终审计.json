@@ -1,0 +1,25 @@
+{
+  "report_format": "concise_audit_summary",
+  "detailed_entries_embedded": false,
+  "detail_note": "逐项机器审计记录保留离线，不在仓库内嵌；本文件保留审计范围、结果与限制。逐文件覆盖请参阅全仓覆盖进度.csv。",
+  "full_report_sha256": "3b20bfc979b8ac1f3ccaced3582a36d30704bc2f19be16503db73c906b6ee1c8",
+  "per_file_coverage": "全仓覆盖进度.csv",
+  "reproducible_checks": [
+    "python study/zh-CN/verify_comment_only.py",
+    "python study/zh-CN/verify_java_syntax.py ."
+  ],
+  "reproduction_limit": "脚本复核词元保护与语法；人工语义审阅不能仅凭脚本重现。",
+  "generated_utc": "2026-10-27T17:59:29.410731+00:00",
+  "scope": "全仓3194 Java：生产2121、测试1072、文档示例1；不含Go/TS/Python等其他语言，不表示全仓所有文件均翻译",
+  "method": "按Java词法提取注释、启发式定位英文片段，再人工逐条复核116个候选；JDK AST识别全部具名类型。示例块另审计。启发式零剩余不等于形式证明或完整语义正确性。",
+  "summary": {
+    "files": 3194,
+    "files_with_candidates": 91,
+    "candidate_lines": 116,
+    "named_types_ast": 5212,
+    "named_types_with_javadoc": 3410,
+    "manual_reviewed_candidates": 116,
+    "untranslated_explanatory_candidates_after_review": 0
+  },
+  "files_entry_count": 3194
+}

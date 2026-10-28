@@ -51,20 +51,22 @@ import org.slf4j.LoggerFactory;
  * ---
  * description: Reviews code for security and performance issues.
  * workspace:
- *   mode: isolated          # isolated | shared  (default: isolated)
- *   path: ./defs/reviewer   # optional; relative to mainWorkspace, or absolute
- * model: qwen3-max          # optional model override
- * maxIters: 12              # optional (default 10)
- * tools: [read_file, grep_files, edit_file]   # optional allowlist
- * compaction:              # absent/null: inherit; false: disable; true: defaults
+ *   mode: isolated          # isolated（隔离）或 shared（共享），默认 isolated
+ *   path: ./defs/reviewer   # 可选，相对 mainWorkspace 或绝对路径
+ * model: qwen3-max          # 可选模型覆盖值
+ * maxIters: 12              # 可选，默认 10
+ * tools: [read_file, grep_files, edit_file]   # 可选允许列表
+ * compaction:              # 缺省/null 继承，false 禁用，true 默认配置
  *   triggerMessages: 20
  *   keepMessages: 5
- *   keepTokens: 0         # use the message-count keep window
+ *   keepTokens: 0         # 使用按消息数量保留的窗口
  * ---
  *
- * # Inline body (only when workspace.path is absent)
+ * # 内联正文，仅 workspace.path 缺省时使用
  * You are a code reviewer...
  * </pre>
+ *
+ * <p>YAML 示例中文说明：description 描述代码安全与性能审查职责；workspace.mode 可选 isolated（隔离，默认）或 shared（共享）；path 是可选定义目录，可相对主工作区或为绝对路径。model 覆盖模型，maxIters 为可选最大迭代数（示例为 12，默认 10），tools 是允许工具列表。compaction 缺省或 null 表示继承，false 禁用，true 使用默认值；triggerMessages=20 表示触发消息数，keepMessages=5 保留尾部消息，keepTokens=0 使用消息数量窗口。仅当 workspace.path 缺省时读取下方内联正文，其示例意思是“你是一名代码审查员”。
  *
  * <p>规则：
  * <ul>

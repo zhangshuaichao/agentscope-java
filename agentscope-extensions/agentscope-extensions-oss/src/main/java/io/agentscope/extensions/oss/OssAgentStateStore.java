@@ -46,6 +46,8 @@ import java.util.Set;
  * {keyPrefix}{userId}/{sessionId}/{stateKey}.list.hash  — hash for incremental append detection
  * </pre>
  *
+ * <p>键布局中文说明：.json 保存单个 State；.list.json 保存状态列表的 JSON 数组；.list.hash 保存增量追加检测哈希。前缀、用户、会话和状态键共同定位对象。
+ *
  * <p>【学习提示】列表内容与检测哈希分别存储；这里的对象写入并不将整个会话变成事务。
  * 应区分存储可被多节点访问与多节点并发更新受到保护。
  *

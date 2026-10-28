@@ -11,6 +11,7 @@
 5. [工程规范译本](specs/AGENTS.zh-CN.md)与[渠道术语规范译本](specs/CONTEXT.zh-CN.md)：对照原文学习仓库约定。
 6. 提示词中文对照：[代码审查](prompts/ReviewerSystemPrompt.zh-CN.md)、[编码代理](prompts/CodingSystemPrompt.zh-CN.md)、[上下文边界与默认规则](prompts/ContextConventions.zh-CN.md)。
 7. [翻译范围与验证](翻译范围与验证.md)：查当前覆盖范围、保留内容与验证限制。
+8. [非 Java 范围说明](非Java范围说明.md)：明确 Go、前端、脚本与其他文档仍保留原文，避免误把 Java 完成当成全仓所有语言完成。
 
 ## 学习版约定
 

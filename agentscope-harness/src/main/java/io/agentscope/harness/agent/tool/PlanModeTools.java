@@ -32,12 +32,13 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li>{@code plan_enter}：切换到只读计划模式，在修改之前先调查和设计。
  *   <li>{@code plan_write}：创建／覆盖 Markdown 计划蓝图（计划模式中允许）。
- *   <li>{@code plan_exit}：请求离开计划模式并开始执行。由 {@code ASK} 自检控制，
- *       用户通过现有权限 HITL 流程确认计划后，智能体才恢复写权限。
+ *   <li>{@code plan_exit}：请求离开计划模式并开始执行，自检返回 {@code ASK}。
+ *       通常通过权限 HITL 请求确认，但最终是否询问由调用链和权限策略决定；该工具方法不自行验证批准证据。
  * </ul>
  *
  * <p>{@code PlanModeMiddleware} 始终允许 {@code plan_enter} / {@code plan_write} /
- * {@code plan_exit}；计划模式启用时拒绝其他所有修改性工具。
+ * {@code plan_exit}；另外还有内置协作/待办白名单及 additionalAllowed 显式例外。
+ * 不在允许集合中且未被判为只读的工具才被拒绝，不能把该机制等同于无例外的只读沙箱。
  */
 public final class PlanModeTools {
 
@@ -195,7 +196,8 @@ public final class PlanModeTools {
         }
 
         /**
-         * 仅在用户批准上面的 ASK 后执行。
+         * 执行退出计划模式；本方法不会自行检查用户批准证据。
+         * 应由调用方先走权限管线；当前非 safety 的 ASK 在完整权限引擎中还会继续检查后续策略。
          */
         @Override
         public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
@@ -204,7 +206,8 @@ public final class PlanModeTools {
                 return Mono.just(result(param, "Error: agent state unavailable."));
             }
             // 【学习提示】写权限恢复发生在工具真正执行时；前面的 checkPermissions
-            // 负责提出 ASK，权限管线批准后才应调用此方法。不要只靠提示文本模拟审批。
+            // 负责提出 ASK；本方法本身不校验人工批准。是否暂停询问取决于实际权限路径与配置，
+            // 不要把返回的“Plan approved”文本当作独立批准证据。
             manager.exit(state);
             return Mono.just(
                     result(

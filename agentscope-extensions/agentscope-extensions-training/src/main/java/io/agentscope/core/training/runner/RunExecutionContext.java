@@ -31,6 +31,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *   ├─ Run "1" → RunExecutionContext (msgIds=[msg-3, msg-4], msgs=[...], reward=0.9)
  *   └─ Run "2" → RunExecutionContext (msgIds=[msg-5, msg-6], msgs=[...], reward=0.85)
  * </pre>
+ *
+ * <p>关系图中文说明：同一任务 task-001 表示用户询问天气，分别运行 0、1、2 次，每次有独立的消息 ID 集合、消息内容和奖励值。任务标识关联原请求，运行标识区分重复实验。
  * <p>数据包括任务 ID、从 0 递增的运行 ID、Trinity 模型交互返回的 msg_ids、
  * 供奖励计算的智能体消息，以及开始时间和耗时。
  * <h2>生命周期（原示意图）</h2>
@@ -42,6 +44,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 5. TrainingRouter submits Feedback using (taskId, runId, msg_ids, reward)
  * 6. Registered to TaskExecutionRegistry (optional, for later queries)
  * </pre>
+ *
+ * <p>生命周期中文说明：TrainingRouter 创建单次运行上下文，传给 TrinityModelAdapter 收集消息 ID；影子智能体完成后收集数据，计算奖励，按 taskId、runId、msg_ids、reward 提交反馈，最后可注册上下文供查询。
  * <p>msg_ids 使用 {@link CopyOnWriteArrayList} 支持并发追加。
  * <p>【学习提示】集合单个操作线程安全不等于多步操作原子：setMessages 先 clear 再 addAll。
  * 读取返回的是可修改列表副本，不是不可修改视图，也不是 Msg 元素深拷贝。

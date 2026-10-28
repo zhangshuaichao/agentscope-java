@@ -1,0 +1,766 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.extensions.model.ollama.formatter;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.agentscope.core.message.ContentBlock;
+import io.agentscope.core.message.ImageBlock;
+import io.agentscope.core.message.Msg;
+import io.agentscope.core.message.MsgRole;
+import io.agentscope.core.message.TextBlock;
+import io.agentscope.core.message.ToolResultBlock;
+import io.agentscope.core.message.ToolUseBlock;
+import io.agentscope.core.message.URLSource;
+import io.agentscope.core.model.ChatResponse;
+import io.agentscope.core.model.GenerateOptions;
+import io.agentscope.core.model.ToolChoice;
+import io.agentscope.core.model.ToolSchema;
+import io.agentscope.extensions.model.ollama.dto.OllamaMessage;
+import io.agentscope.extensions.model.ollama.dto.OllamaRequest;
+import io.agentscope.extensions.model.ollama.dto.OllamaResponse;
+import io.agentscope.extensions.model.ollama.options.OllamaOptions;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/**
+ * OllamaMultiAgentFormatter 单元测试。
+ */
+@DisplayName("OllamaMultiAgentFormatter Unit Tests")
+class OllamaMultiAgentFormatterTest {
+
+    private OllamaMultiAgentFormatter formatter;
+    private String imagePath;
+
+    @BeforeEach
+    void setUp() {
+        formatter = new OllamaMultiAgentFormatter();
+        imagePath = "src/test/resources/dog.png";
+    }
+
+    @Test
+    @DisplayName("Should create formatter with default constructor")
+    void testConstructor() {
+        assertNotNull(formatter);
+    }
+
+    @Test
+    @DisplayName("Should create formatter with custom conversation history prompt")
+    void testConstructorWithCustomPrompt() {
+        String customPrompt = "Custom history prompt";
+        OllamaMultiAgentFormatter customFormatter = new OllamaMultiAgentFormatter(customPrompt);
+
+        assertNotNull(customFormatter);
+    }
+
+    @Test
+    @DisplayName("Should format multi-agent conversation")
+    void testFormatMultiAgentConversation() {
+        // 准备：系统消息
+        List<Msg> msgsSystem =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.SYSTEM)
+                                .name("system")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("You're a helpful assistant.")
+                                                .build())
+                                .build());
+
+        // 准备：对话消息
+        List<Msg> msgsConversation =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        Arrays.asList(
+                                                TextBlock.builder()
+                                                        .text("What is the capital of France?")
+                                                        .build(),
+                                                ImageBlock.builder()
+                                                        .source(
+                                                                URLSource.builder()
+                                                                        .url(imagePath)
+                                                                        .build())
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of France is Paris.")
+                                                .build())
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("What is the capital of Japan?")
+                                                .build())
+                                .build());
+
+        // 准备：工具消息
+        List<Msg> msgsTools =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        Arrays.asList(
+                                                ToolUseBlock.builder()
+                                                        .id("1")
+                                                        .name("get_capital")
+                                                        .input(
+                                                                Collections.singletonMap(
+                                                                        "country", "Japan"))
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.TOOL)
+                                .name("system")
+                                .content(
+                                        Arrays.asList(
+                                                ToolResultBlock.of(
+                                                        "1",
+                                                        "get_capital",
+                                                        Arrays.asList(
+                                                                TextBlock.builder()
+                                                                        .text(
+                                                                                "The capital of"
+                                                                                    + " Japan is"
+                                                                                    + " Tokyo.")
+                                                                        .build(),
+                                                                ImageBlock.builder()
+                                                                        .source(
+                                                                                URLSource.builder()
+                                                                                        .url(
+                                                                                                imagePath)
+                                                                                        .build())
+                                                                        .build()))))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of Japan is Tokyo.")
+                                                .build())
+                                .build());
+
+        // 准备：第二轮对话
+        List<Msg> msgsConversation2 =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("What is the capital of South Korea?")
+                                                .build())
+                                .build());
+
+        // 准备：第二轮工具消息
+        List<Msg> msgsTools2 =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        Arrays.asList(
+                                                ToolUseBlock.builder()
+                                                        .id("2")
+                                                        .name("get_capital")
+                                                        .input(
+                                                                Collections.singletonMap(
+                                                                        "country", "South Korea"))
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.TOOL)
+                                .name("system")
+                                .content(
+                                        Arrays.asList(
+                                                ToolResultBlock.of(
+                                                        "2",
+                                                        "get_capital",
+                                                        Arrays.asList(
+                                                                TextBlock.builder()
+                                                                        .text(
+                                                                                "The capital of"
+                                                                                    + " South Korea"
+                                                                                    + " is Seoul.")
+                                                                        .build(),
+                                                                ImageBlock.builder()
+                                                                        .source(
+                                                                                URLSource.builder()
+                                                                                        .url(
+                                                                                                imagePath)
+                                                                                        .build())
+                                                                        .build()))))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of South Korea is Seoul.")
+                                                .build())
+                                .build());
+
+        // 执行：system + conversation + tools + conversation + tools
+        List<OllamaMessage> formatted =
+                formatter.format(
+                        concatLists(
+                                msgsSystem,
+                                msgsConversation,
+                                msgsTools,
+                                msgsConversation2,
+                                msgsTools2));
+
+        // 断言：应匹配 ground_truth_multiagent_2
+        assertEquals(8, formatted.size());
+        assertEquals("system", formatted.get(0).getRole());
+        assertEquals("user", formatted.get(1).getRole());
+        assertEquals("assistant", formatted.get(2).getRole());
+        assertEquals("tool", formatted.get(3).getRole());
+        assertEquals("user", formatted.get(4).getRole());
+        assertEquals("assistant", formatted.get(5).getRole());
+        assertEquals("tool", formatted.get(6).getRole());
+        assertEquals("user", formatted.get(7).getRole());
+    }
+
+    @Test
+    @DisplayName("Should format multi-agent conversation without second tools")
+    void testFormatMultiAgentWithoutSecondTools() {
+        // 准备：系统消息
+        List<Msg> msgsSystem =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.SYSTEM)
+                                .name("system")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("You're a helpful assistant.")
+                                                .build())
+                                .build());
+
+        // 准备：对话消息
+        List<Msg> msgsConversation =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        Arrays.asList(
+                                                TextBlock.builder()
+                                                        .text("What is the capital of France?")
+                                                        .build(),
+                                                ImageBlock.builder()
+                                                        .source(
+                                                                URLSource.builder()
+                                                                        .url(imagePath)
+                                                                        .build())
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of France is Paris.")
+                                                .build())
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("What is the capital of Japan?")
+                                                .build())
+                                .build());
+
+        // 准备：工具消息
+        List<Msg> msgsTools =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        Arrays.asList(
+                                                ToolUseBlock.builder()
+                                                        .id("1")
+                                                        .name("get_capital")
+                                                        .input(
+                                                                Collections.singletonMap(
+                                                                        "country", "Japan"))
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.TOOL)
+                                .name("system")
+                                .content(
+                                        Arrays.asList(
+                                                ToolResultBlock.of(
+                                                        "1",
+                                                        "get_capital",
+                                                        Arrays.asList(
+                                                                TextBlock.builder()
+                                                                        .text(
+                                                                                "The capital of"
+                                                                                    + " Japan is"
+                                                                                    + " Tokyo.")
+                                                                        .build(),
+                                                                ImageBlock.builder()
+                                                                        .source(
+                                                                                URLSource.builder()
+                                                                                        .url(
+                                                                                                imagePath)
+                                                                                        .build())
+                                                                        .build()))))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of Japan is Tokyo.")
+                                                .build())
+                                .build());
+
+        // 准备：第二轮对话
+        List<Msg> msgsConversation2 =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("What is the capital of South Korea?")
+                                                .build())
+                                .build());
+
+        // 执行：system + conversation + tools + conversation
+        List<OllamaMessage> formatted =
+                formatter.format(
+                        concatLists(msgsSystem, msgsConversation, msgsTools, msgsConversation2));
+
+        // 断言：应匹配 ground_truth_multiagent_2 去掉最后 3 条消息
+        assertTrue(formatted.size() >= 5); // 至少 5 条消息
+        assertEquals("system", formatted.get(0).getRole());
+        assertEquals("user", formatted.get(1).getRole());
+        assertEquals("assistant", formatted.get(2).getRole());
+        assertEquals("tool", formatted.get(3).getRole());
+        assertEquals("user", formatted.get(4).getRole());
+    }
+
+    @Test
+    @DisplayName("Should format multi-agent conversation with promote tool result images")
+    void testFormatMultiAgentWithPromoteToolResultImages() {
+        // 准备：创建 promoteToolResultImages = true 的格式化器
+        OllamaMultiAgentFormatter formatterWithPromote = new OllamaMultiAgentFormatter(true);
+
+        // 准备：系统消息
+        List<Msg> msgsSystem =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.SYSTEM)
+                                .name("system")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("You're a helpful assistant.")
+                                                .build())
+                                .build());
+
+        // 准备：对话消息
+        List<Msg> msgsConversation =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        Arrays.asList(
+                                                TextBlock.builder()
+                                                        .text("What is the capital of France?")
+                                                        .build(),
+                                                ImageBlock.builder()
+                                                        .source(
+                                                                URLSource.builder()
+                                                                        .url(imagePath)
+                                                                        .build())
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of France is Paris.")
+                                                .build())
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.USER)
+                                .name("user")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("What is the capital of Japan?")
+                                                .build())
+                                .build());
+
+        // 准备：工具消息
+        List<Msg> msgsTools =
+                Arrays.asList(
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        Arrays.asList(
+                                                ToolUseBlock.builder()
+                                                        .id("1")
+                                                        .name("get_capital")
+                                                        .input(
+                                                                Collections.singletonMap(
+                                                                        "country", "Japan"))
+                                                        .build()))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.TOOL)
+                                .name("system")
+                                .content(
+                                        Arrays.asList(
+                                                ToolResultBlock.of(
+                                                        "1",
+                                                        "get_capital",
+                                                        Arrays.asList(
+                                                                TextBlock.builder()
+                                                                        .text(
+                                                                                "The capital of"
+                                                                                    + " Japan is"
+                                                                                    + " Tokyo.")
+                                                                        .build(),
+                                                                ImageBlock.builder()
+                                                                        .source(
+                                                                                URLSource.builder()
+                                                                                        .url(
+                                                                                                imagePath)
+                                                                                        .build())
+                                                                        .build()))))
+                                .build(),
+                        Msg.builder()
+                                .role(MsgRole.ASSISTANT)
+                                .name("assistant")
+                                .content(
+                                        TextBlock.builder()
+                                                .text("The capital of Japan is Tokyo.")
+                                                .build())
+                                .build());
+
+        // 执行
+        List<OllamaMessage> formatted =
+                formatterWithPromote.format(concatLists(msgsSystem, msgsConversation, msgsTools));
+
+        // 断言：应存在提升后的图像消息
+        assertTrue(formatted.size() >= 6); // 至少 6 条消息，包含提升后的消息
+        assertEquals("system", formatted.get(0).getRole());
+        assertEquals("user", formatted.get(1).getRole());
+        assertEquals("assistant", formatted.get(2).getRole());
+        assertEquals("tool", formatted.get(3).getRole());
+
+        // 检查是否有提升后的图像消息；若存在，应位于索引 4
+        boolean hasPromotedImageMessage = false;
+        for (int i = 4; i < formatted.size(); i++) {
+            if (formatted.get(i).getRole().equals("user")
+                    && formatted.get(i).getContent() != null
+                    && formatted
+                            .get(i)
+                            .getContent()
+                            .contains("image contents from the tool result")) {
+                hasPromotedImageMessage = true;
+                break;
+            }
+        }
+        assertTrue(hasPromotedImageMessage, "Should contain a promoted image message");
+    }
+
+    @Test
+    @DisplayName("Should format single system message")
+    void testFormatSystemMessage() {
+        // 准备
+        Msg systemMsg =
+                Msg.builder()
+                        .role(MsgRole.SYSTEM)
+                        .content(TextBlock.builder().text("System instructions").build())
+                        .build();
+        List<Msg> msgs = Arrays.asList(systemMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(1, formatted.size());
+        assertEquals("system", formatted.get(0).getRole());
+        assertEquals("System instructions", formatted.get(0).getContent());
+    }
+
+    @Test
+    @DisplayName("Should format single user message")
+    void testFormatUserMessage() {
+        // 准备
+        Msg userMsg =
+                Msg.builder()
+                        .role(MsgRole.USER)
+                        .content(TextBlock.builder().text("Hello").build())
+                        .build();
+        List<Msg> msgs = Arrays.asList(userMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(1, formatted.size());
+        assertEquals("user", formatted.get(0).getRole());
+        assertEquals("Hello", formatted.get(0).getContent());
+    }
+
+    @Test
+    @DisplayName("Should format single assistant message")
+    void testFormatAssistantMessage() {
+        // 准备
+        Msg assistantMsg =
+                Msg.builder()
+                        .role(MsgRole.ASSISTANT)
+                        .content(TextBlock.builder().text("Hi there").build())
+                        .build();
+        List<Msg> msgs = Arrays.asList(assistantMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(1, formatted.size());
+        assertEquals("assistant", formatted.get(0).getRole());
+        assertEquals("Hi there", formatted.get(0).getContent());
+    }
+
+    @Test
+    @DisplayName("Should format multi-agent conversation with system message")
+    void testFormatMultiAgentWithSystemMessage() {
+        // 准备
+        Msg systemMsg =
+                Msg.builder()
+                        .role(MsgRole.SYSTEM)
+                        .content(TextBlock.builder().text("System instructions").build())
+                        .build();
+        Msg userMsg =
+                Msg.builder()
+                        .role(MsgRole.USER)
+                        .name("Alice")
+                        .content(TextBlock.builder().text("Hello from Alice").build())
+                        .build();
+        Msg assistantMsg =
+                Msg.builder()
+                        .role(MsgRole.ASSISTANT)
+                        .name("Bob")
+                        .content(TextBlock.builder().text("Hi Alice").build())
+                        .build();
+        List<Msg> msgs = Arrays.asList(systemMsg, userMsg, assistantMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(2, formatted.size());
+        assertEquals("system", formatted.get(0).getRole());
+        assertEquals("user", formatted.get(1).getRole());
+    }
+
+    @Test
+    @DisplayName("Should format tool result message")
+    void testFormatToolResultMessage() {
+        // 准备
+        ToolResultBlock toolResult =
+                new ToolResultBlock(
+                        "call123",
+                        "calc",
+                        List.of(TextBlock.builder().text("Result: 42").build()),
+                        null);
+        Msg toolMsg = Msg.builder().role(MsgRole.TOOL).content(toolResult).build();
+        List<Msg> msgs = Arrays.asList(toolMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(1, formatted.size());
+        assertEquals("tool", formatted.get(0).getRole());
+        assertEquals("Result: 42", formatted.get(0).getContent());
+    }
+
+    @Test
+    @DisplayName("Should format assistant message with tool use")
+    void testFormatAssistantWithToolUse() {
+        // 准备
+        ToolUseBlock toolUse =
+                new ToolUseBlock(
+                        "call123", "calculator", Map.of("operation", "add", "a", 5, "b", 3), null);
+        Msg assistantMsg =
+                Msg.builder()
+                        .role(MsgRole.ASSISTANT)
+                        .content(
+                                Arrays.asList(
+                                        TextBlock.builder()
+                                                .text("Let me calculate that for you.")
+                                                .build(),
+                                        toolUse))
+                        .build();
+        List<Msg> msgs = Arrays.asList(assistantMsg);
+
+        // 执行
+        List<OllamaMessage> formatted = formatter.format(msgs);
+
+        // 断言
+        assertEquals(1, formatted.size());
+        assertEquals("assistant", formatted.get(0).getRole());
+        assertEquals("Let me calculate that for you.", formatted.get(0).getContent());
+    }
+
+    @Test
+    @DisplayName("Should parse response correctly")
+    void testParseResponse() {
+        // 准备
+        OllamaResponse response = new OllamaResponse();
+        response.setModel("test-model");
+        response.setCreatedAt("2024-01-01T00:00:00.000Z");
+        response.setMessage(new OllamaMessage("assistant", "Response"));
+
+        // 执行
+        ChatResponse chatResponse = formatter.parseResponse(response, Instant.now());
+
+        // 断言
+        assertNotNull(chatResponse);
+        assertEquals("test-model", chatResponse.getMetadata().get("model"));
+    }
+
+    @Test
+    @DisplayName("Should apply GenerateOptions correctly")
+    void testApplyGenerateOptions() {
+        // 准备
+        OllamaRequest request = new OllamaRequest();
+        GenerateOptions options = GenerateOptions.builder().temperature(0.7).build();
+        GenerateOptions defaultOptions = GenerateOptions.builder().temperature(0.5).build();
+
+        // 执行并断言：不应抛异常
+        assertDoesNotThrow(() -> formatter.applyOptions(request, options, defaultOptions));
+    }
+
+    @Test
+    @DisplayName("Should apply OllamaOptions correctly")
+    void testApplyOllamaOptions() {
+        // 准备
+        OllamaRequest request = new OllamaRequest();
+        OllamaOptions options = OllamaOptions.builder().temperature(0.7).build();
+        OllamaOptions defaultOptions = OllamaOptions.builder().temperature(0.5).build();
+
+        // 执行并断言：不应抛异常
+        assertDoesNotThrow(() -> formatter.applyOptions(request, options, defaultOptions));
+    }
+
+    @Test
+    @DisplayName("Should apply tools correctly")
+    void testApplyTools() {
+        // 准备
+        OllamaRequest request = new OllamaRequest();
+        ToolSchema tool1 =
+                ToolSchema.builder().name("test_tool").description("A test tool").build();
+        List<ToolSchema> tools = Arrays.asList(tool1);
+
+        // 执行并断言：不应抛异常
+        assertDoesNotThrow(() -> formatter.applyTools(request, tools));
+    }
+
+    @Test
+    @DisplayName("Should apply tool choice correctly")
+    void testApplyToolChoice() {
+        // 准备
+        OllamaRequest request = new OllamaRequest();
+        ToolChoice toolChoice = new ToolChoice.Auto();
+
+        // 执行并断言：不应抛异常
+        assertDoesNotThrow(() -> formatter.applyToolChoice(request, toolChoice));
+    }
+
+    @Test
+    @DisplayName("Should build complete request with all parameters")
+    void testBuildRequest() {
+        // 准备
+        String model = "test-model";
+        OllamaMessage msg1 = new OllamaMessage("user", "Hello");
+        List<OllamaMessage> messages = Arrays.asList(msg1);
+        boolean stream = false;
+        OllamaOptions options = OllamaOptions.builder().temperature(0.7).build();
+        OllamaOptions defaultOptions = OllamaOptions.builder().temperature(0.5).build();
+        ToolSchema tool = ToolSchema.builder().name("test_tool").description("A test tool").build();
+        List<ToolSchema> tools = Arrays.asList(tool);
+        ToolChoice toolChoice = new ToolChoice.Auto();
+
+        // 执行
+        OllamaRequest request =
+                formatter.buildRequest(
+                        model, messages, stream, options, defaultOptions, tools, toolChoice);
+
+        // 断言
+        assertNotNull(request);
+        assertEquals(model, request.getModel());
+        assertEquals(messages, request.getMessages());
+        assertEquals(stream, request.getStream());
+    }
+
+    @Test
+    @DisplayName("Should convert tool result to string")
+    void testConvertToolResultToString() {
+        // 准备
+        ToolResultBlock toolResult =
+                new ToolResultBlock(
+                        "call123",
+                        "calc",
+                        List.of(TextBlock.builder().text("Result: 42").build()),
+                        null);
+        List<ContentBlock> blocks = Arrays.asList(toolResult);
+
+        // 执行
+        String result = formatter.convertToolResultToString(blocks);
+
+        // 断言
+        assertEquals("Result: 42", result);
+    }
+
+    // 连接列表的辅助方法
+    private <T> List<T> concatLists(List<T>... lists) {
+        return Arrays.stream(lists).flatMap(List::stream).toList();
+    }
+}

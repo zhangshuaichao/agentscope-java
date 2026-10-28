@@ -1,0 +1,4278 @@
+{
+  "generated_utc": "2026-10-27T17:58:42.863400+00:00",
+  "scope": "稳定测试：core 232 + harness 182 + service 59 + examples 48；不含 extensions 测试",
+  "method": "词法提取所有非许可注释；跨中英文混合行提取任意两个英文词（不要求常用词命中），人工复核 146 行；另查单词阶段标签及英文词频；检查全部 3 个 pre。不是测试运行或完整语义正确性证明。",
+  "summary": {
+    "files": 521,
+    "initial_broad_candidate_lines": 146,
+    "pre_blocks": 3,
+    "translated_leftovers": 6,
+    "duplicate_chinese_phrases_fixed": 2,
+    "adjacent_diagram_translations_added": 2,
+    "verified": 521,
+    "code_tokens": 816122
+  },
+  "findings": [
+    "原窄启发式遗漏了执行 & Assert、META deactivated / EXTERNAL preserved、deactivate analytics / activate admin 及 Active / Inactive / Ungrouped 标签；本次补齐 6 行。",
+    "MarkdownSkillParserTest 两行重复“换行”已修复。",
+    "Harness 工作区树和跨节点恢复流程保留原图，并添加紧邻中文对照。第三个 pre 是 Maven 命令，原样保留。",
+    "剩余英文主要为标识符、协议/框架名、断言中引用的固定字符串及命令；不修改这些受保护内容。"
+  ],
+  "changed_paths": [
+    "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserTest.java",
+    "agentscope-core/src/test/java/io/agentscope/core/tool/ToolGroupManagerTest.java",
+    "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaProviderTest.java",
+    "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+    "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SubagentRegistryRecoveryIntegrationTest.java"
+  ],
+  "errors": [],
+  "verification": [
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/SimpleIntegrationTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 234,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/VersionTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 1038,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/AgentBaseTest.java",
+      "original_comments": 38,
+      "current_comments": 38,
+      "code_tokens": 1877,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/AgentBuilderReuseTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 505,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/AgentRunTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2889,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/AgentStreamingTest.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 1691,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/EventTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 1643,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ModelRequestPreparerIntegrationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2022,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ProgressiveToolResultTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 3178,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentBuilderLegacyShimTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1014,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentCallFailurePersistenceTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2327,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentCoarseStreamTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1255,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentEmptyResponseRetryTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1427,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentFailoverBoundaryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 641,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentGenerateOptionsTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 2441,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentHitlTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 6900,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentInterruptToolCallTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1763,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentMiddlewareIntegrationTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 3221,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentNewLoopBuilderTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1163,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentNewLoopE2ETest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 3198,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentNewLoopReplyTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 5375,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentOnAgentStateReadyTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 3007,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentPerSessionStateTest.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 4746,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentReturnDirectTest.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 7522,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentRunIdVisibilityTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 862,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentRuntimeContextTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2188,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentServerToolTest.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 3564,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentStateLoadFailureTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1380,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentStructuredOutputTest.java",
+      "original_comments": 59,
+      "current_comments": 59,
+      "code_tokens": 5552,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentStructuredOutputWithToolsTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 2889,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentSummarizingTest.java",
+      "original_comments": 60,
+      "current_comments": 60,
+      "code_tokens": 3913,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentTest.java",
+      "original_comments": 109,
+      "current_comments": 109,
+      "code_tokens": 6281,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentThinkingCumulativeTest.java",
+      "original_comments": 20,
+      "current_comments": 20,
+      "code_tokens": 1005,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentTimeoutTest.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 1374,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentToolResultStateTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 987,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentUnknownVersionPersistTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 973,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/RuntimeContextTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1482,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/StreamOptionsTest.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 1308,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/StreamableAgentTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 301,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/StructuredOutputDynamicDefineTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 1485,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/TruncatedToolCallIntegrityTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 2168,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ReasoningContextTest.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 4211,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ServerToolResultAccumulatorTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1032,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/TextAccumulatorTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 128,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ThinkingAccumulatorReasoningDetailsTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 947,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ToolCallsAccumulatorParseWarningTest.java",
+      "original_comments": 18,
+      "current_comments": 18,
+      "code_tokens": 1361,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ToolCallsAccumulatorTest.java",
+      "original_comments": 35,
+      "current_comments": 35,
+      "code_tokens": 3328,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/config/ModelConfigTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 294,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/config/ReactConfigTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 301,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/integration/AgentBoundaryTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 1122,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/integration/AgentPerformanceTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1096,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/test/MockModel.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 1114,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/test/MockToolkit.java",
+      "original_comments": 15,
+      "current_comments": 15,
+      "code_tokens": 843,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/test/TestConstants.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 190,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/test/TestUtils.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 812,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/user/StreamUserInputTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 3261,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/user/UserAgentTest.java",
+      "original_comments": 18,
+      "current_comments": 18,
+      "code_tokens": 3593,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/credential/CredentialBaseTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 295,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/credential/CredentialsTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 268,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/event/AgentEventStreamTest.java",
+      "original_comments": 36,
+      "current_comments": 36,
+      "code_tokens": 1387,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/formatter/MediaUtilsTest.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 2177,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/formatter/ResponseFormatTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 2145,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/interruption/InterruptContextTest.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 1583,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/interruption/InterruptSourceTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 579,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/HookEventTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2412,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/HookStopAgentTest.java",
+      "original_comments": 50,
+      "current_comments": 50,
+      "code_tokens": 4248,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/HookToolsRegistrationTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 939,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/ReActAgentSystemMsgTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1699,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/SummaryEventTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2029,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/hook/recorder/JsonlTraceExporterTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 3553,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/InMemoryMemoryNewApiTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1173,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/InMemoryMemoryTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 983,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/LongTermMemoryModeTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 337,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/LongTermMemoryToolsTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 2505,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/StaticLongTermMemoryHookTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 2250,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/rag/KnowledgeTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 308,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/rag/model/DocumentMetadataTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1990,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/rag/model/DocumentTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1703,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/rag/model/RetrieveConfigTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 672,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/tracing/TracerContextPropagationTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 483,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/tracing/TracerRegistryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 242,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/DataBlockTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 908,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/GenerateReasonTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 806,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/MsgSubclassesTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2125,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/MsgTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1423,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/MsgUsageSerializationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1198,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/RoleContentValidationTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2132,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/ToolResultBlockTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 496,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/ToolUseBlockTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1975,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/middleware/FinalAnswerFilterMiddlewareTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 919,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/middleware/MiddlewareActivePointsTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2848,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/middleware/ModelCallInputTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 108,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/middleware/TaskContextProjectionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1569,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ExecutionConfigTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 453,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/GenerateOptionsTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 2831,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/GenerateOptionsToolChoiceTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 993,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelExceptionTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 620,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelProviderSupportTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 309,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelRegistryTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 3238,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelTimeoutRetryTest.java",
+      "original_comments": 37,
+      "current_comments": 37,
+      "code_tokens": 2331,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ToolChoiceTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 813,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/test/MockHttpClient.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 585,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/test/ModelTestUtils.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 708,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/HttpTransportFactoryTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1176,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/JdkHttpTransportTest.java",
+      "original_comments": 52,
+      "current_comments": 52,
+      "code_tokens": 8683,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/OkHttpTransportConstructorTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1750,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/OkHttpTransportTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 2062,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/ProxyConfigTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1337,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/CloseInfoTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 350,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/JdkWebSocketConnectionTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 3768,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/JdkWebSocketTransportTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 2362,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/OkHttpWebSocketConnectionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1149,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/OkHttpWebSocketTransportTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2499,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/WebSocketRequestTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 400,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/WebSocketTransportConfigTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1791,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/websocket/WebSocketTransportExceptionTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1474,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/msg/MsgTests.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 206,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/observation/ActionObservationsTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1663,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionBehaviorTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 288,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionContextStateTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 621,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionDecisionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 733,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionEngineTest.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 2041,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionModeTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 301,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/permission/PermissionRuleTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 441,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/session/JournalSessionLogTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1410,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/session/ReActSessionLogTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1856,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/session/SessionExecutionIdentityTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2284,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/session/SessionInboxCrashRecoveryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 947,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/session/SessionTranscriptExportTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 443,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/shutdown/GracefulShutdownTest.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 4211,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/AgentSkillPromptProviderTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2273,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/AgentSkillTest.java",
+      "original_comments": 20,
+      "current_comments": 20,
+      "code_tokens": 2631,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/DynamicSkillMiddlewareTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 4269,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillBoxFileLockTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 714,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillBoxTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 1830,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillBoxToolsTest.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 4122,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillFilterTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 866,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillHookTest.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 1599,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillRegistryTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 696,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillRuntimeIntegrationTest.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 2342,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillToolFactoryDiskFallbackTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1128,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillUtilTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 2185,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "original_comments": 73,
+      "current_comments": 73,
+      "code_tokens": 4517,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/FileSystemSkillRepositoryLazyTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 965,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/FileSystemSkillRepositoryTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 2157,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserDelimiterTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1376,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 4306,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/SkillFileSystemHelperTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 3038,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/AgentStateStoreVersioningContractTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 949,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/AgentStateTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1249,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/InMemoryAgentStateStoreTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1279,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/InMemoryUnconditionalVersionTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 261,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/JsonFileAgentStateStoreTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 426,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/LegacyStateLoaderTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 662,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/ListHashUtilTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 983,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/PlanModeContextStatePersistenceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 238,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/ReadCacheEntryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 317,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/TaskContextStateTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1432,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/TaskTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 914,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/state/ToolContextStateTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 2147,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/AsyncToolTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1381,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/DangerousPathBypassTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 544,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/DefaultToolEmitterTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 186,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/DefaultToolResultConverterTest.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 1703,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ExampleConfig.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 322,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ExternalToolSupportTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1982,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/McpClientManagerTest.java",
+      "original_comments": 72,
+      "current_comments": 72,
+      "code_tokens": 4513,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/MetaToolFactoryTest.java",
+      "original_comments": 71,
+      "current_comments": 71,
+      "code_tokens": 3813,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/NoOpToolEmitterTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 409,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 607,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptorTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1571,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ReActAgentToolkitConcurrencyTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 2923,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ReflectiveFunctionToolTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 799,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/RegisteredToolFunctionTest.java",
+      "original_comments": 37,
+      "current_comments": 37,
+      "code_tokens": 1951,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/SchemaOnlyToolTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1240,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/SkillToolGroupTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1247,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolAnnotationTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 1094,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolBaseTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1486,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolBoundaryTest.java",
+      "original_comments": 20,
+      "current_comments": 20,
+      "code_tokens": 735,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallInterceptorTest.java",
+      "original_comments": 21,
+      "current_comments": 21,
+      "code_tokens": 5000,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallParamTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 2955,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolDangerousPathConstantsTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 330,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolDispatchCheckTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2210,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolEmitterIntegrationTest.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 2388,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolExecutionCallbackTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1534,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolExecutionContextIntegrationTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 2488,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolExecutionContextTest.java",
+      "original_comments": 34,
+      "current_comments": 34,
+      "code_tokens": 1481,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolExecutorTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 3822,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolGroupManagerTest.java",
+      "original_comments": 99,
+      "current_comments": 99,
+      "code_tokens": 2929,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolGroupTest.java",
+      "original_comments": 51,
+      "current_comments": 51,
+      "code_tokens": 1403,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolIntegrationTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 873,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolInvocationTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 769,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolMergeModeTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 152,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolMethodInvokerInterruptTest.java",
+      "original_comments": 14,
+      "current_comments": 14,
+      "code_tokens": 1650,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolMethodInvokerTest.java",
+      "original_comments": 33,
+      "current_comments": 33,
+      "code_tokens": 5970,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolRegistryTest.java",
+      "original_comments": 45,
+      "current_comments": 45,
+      "code_tokens": 1685,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolRequestConfigTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 2173,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolResultMessageBuilderTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 610,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaGeneratorTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1600,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaModuleTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 982,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaProviderTest.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 1866,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSuspendExceptionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 699,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolValidatorTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 5169,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolkitTest.java",
+      "original_comments": 125,
+      "current_comments": 125,
+      "code_tokens": 8910,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolkitToolBaseIntegrationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 503,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/builtin/TodoToolsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1718,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/file/ReadFileToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 403,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpAsyncClientWrapperTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1348,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientBuilderTest.java",
+      "original_comments": 88,
+      "current_comments": 88,
+      "code_tokens": 7528,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientWrapperTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1046,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientWrapperTestSupport.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 97,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpContentConverterTest.java",
+      "original_comments": 39,
+      "current_comments": 39,
+      "code_tokens": 3597,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpMetaTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2168,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpNamespacedToolTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 644,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpSyncClientWrapperTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 2021,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolMetaExtractionTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 1735,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolMetaPropagationTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1439,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolTest.java",
+      "original_comments": 48,
+      "current_comments": 48,
+      "code_tokens": 8734,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolTitleTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 894,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/method/MethodTool.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 107,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/method/MethodToolExample.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 422,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/subagent/SubAgentConfigTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1208,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/subagent/SubAgentToolCancellationTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 672,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/subagent/SubAgentToolTimeoutRetryIntegrationTest.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 1016,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/test/SampleTools.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 684,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/test/ToolTestUtils.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 398,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tracing/OtelTracingMiddlewareTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 6021,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/util/JacksonJsonCodecTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1538,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/util/JsonSchemaUtilsTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1515,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/util/JsonUtilsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1488,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/util/MessageUtilsServerToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 426,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/util/TypeUtilsTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 608,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatItemsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1305,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 2516,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/CodingBootstrapRunnerExamplesTest.java",
+      "original_comments": 33,
+      "current_comments": 33,
+      "code_tokens": 1114,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/control/ThreadIdFactoryTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 360,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/middleware/ModelCallLimitMiddlewareTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 313,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/middleware/ThreadBudgetMiddlewareTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 481,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/model/FallbackModelTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 923,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/reviewer/ReviewerFindingsServiceTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 553,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/store/SqliteBaseStoreCASTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 701,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/store/SqliteBaseStoreTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 868,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/webhook/github/GitHubWebhookSignatureTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 498,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/runtime/channel/webhook/WebhookInboundMapperTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 707,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/runtime/channel/webhook/WebhookSignatureTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 611,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/api/AgentSkillsControllerFrontMatterTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 827,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/api/ChatControllerLanguagePreferenceTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 416,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/api/UserBindingControllerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 794,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/marketplace/MarketContributionServiceTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1648,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/persistence/jpa/H2DemoSeedTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 758,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/persistence/jpa/JpaPersistenceIntegrationTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1137,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/persistence/jpa/JpaUserBindingStoreTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 319,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/scaffold/WorkspaceScaffolderTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 338,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/builder/BuilderAppContextLoadTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 462,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/builder/BuilderBootstrapSmokeTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 994,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/marketplace/ClawMarketplaceRegistryTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1367,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/marketplace/MarketplacePersistenceTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1541,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/runtime/channel/ChannelRouterGroupTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 668,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/runtime/session/tool/SessionsToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1373,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/api/AgentSkillsControllerTest.java",
+      "original_comments": 18,
+      "current_comments": 18,
+      "code_tokens": 3112,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/api/AgentToolsControllerTest.java",
+      "original_comments": 24,
+      "current_comments": 24,
+      "code_tokens": 1597,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/api/MarketplacesControllerTest.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 3305,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/catalog/UserAgentDefinitionStoreTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 390,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/scaffold/WorkspaceScaffolderTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 470,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/examples/jev/JevApplicationScenariosTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 727,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/examples/jev/JevHarnessScenariosTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 324,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/examples/jev/JevToolGuardBenchmarkTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 3254,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevBrowserTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 3126,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevCodeReviewTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 4000,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevContextCompactionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 4607,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevEvidenceProcessorTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 3964,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevJudgeTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1441,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevPhaseRoutingTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 5366,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevResponseIntegrationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 4047,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevRetrievalEvaluationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1853,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevSupervisionMiddlewareTest.java",
+      "original_comments": 23,
+      "current_comments": 23,
+      "code_tokens": 2853,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevSupervisionTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 2226,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevTextBackendTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 631,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevTraceEvaluationTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 4139,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/jev/src/test/java/io/agentscope/extensions/judge/jev/JevTraceIntegrationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1384,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/AguiPermissionResumeTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1857,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentBuilderSupportSubagentDisciplineTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 123,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentDistributedSandboxTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 810,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentDynamicHookBuilderTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 3177,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIdTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 670,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1450,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentModelStringTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 730,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentOverflowRecoveryTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1566,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamEventsTest.java",
+      "original_comments": 46,
+      "current_comments": 46,
+      "code_tokens": 2770,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamTest.java",
+      "original_comments": 47,
+      "current_comments": 47,
+      "code_tokens": 2780,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentTest.java",
+      "original_comments": 38,
+      "current_comments": 38,
+      "code_tokens": 12131,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessBuilderReuseTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1158,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessMiddlewareActivePointsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 623,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessMiddlewareOrderTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 460,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/JsonSessionDefaultLocationTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1227,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/ManagedSubagentBoundaryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 439,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/PlanModeSubagentPropagationTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1045,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentFactoryDeclarationTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2632,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentPendingToolRecoveryTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 2680,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentRunIdChainTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 1298,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentSessionKeyTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 684,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/WorkspaceResolutionTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 295,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/bus/WorkspaceAsyncToolRegistryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 875,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/bus/WorkspaceMessageBusTest.java",
+      "original_comments": 15,
+      "current_comments": 15,
+      "code_tokens": 2344,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/context/ContextPipelineV2Test.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 3786,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/context/ContextRendererTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 340,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/context/ContextSourceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 3264,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/context/HarnessContextBuilderTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2009,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/context/TaskRequirementIntegrationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 799,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/coordination/PeriodicGateTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 414,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/LocalFilesystemPersonalAssistantExampleTest.java",
+      "original_comments": 20,
+      "current_comments": 20,
+      "code_tokens": 991,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/LocalFilesystemUserIsolationExampleTest.java",
+      "original_comments": 30,
+      "current_comments": 30,
+      "code_tokens": 2366,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/RemoteFilesystemIsolationScopeExampleTest.java",
+      "original_comments": 30,
+      "current_comments": 30,
+      "code_tokens": 1485,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/SandboxFilesystemIsolationScopeExampleTest.java",
+      "original_comments": 26,
+      "current_comments": 26,
+      "code_tokens": 1565,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/support/InMemorySandbox.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 564,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/support/InMemorySandboxClient.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 616,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/support/InMemorySandboxFilesystemSpec.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 198,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/support/InMemorySandboxState.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 90,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/CompositeFilesystemTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 1267,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/FilesystemDeleteMoveExistsTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 1382,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/FilesystemGlobTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 929,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/LocalFilesystemModeTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 3133,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/LocalFilesystemSpecSharedWorkspaceTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 538,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/ProjectAwareOverlayTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 3866,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/RemoteFilesystemCASTest.java",
+      "original_comments": 16,
+      "current_comments": 16,
+      "code_tokens": 2109,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/RemoteFilesystemGrepTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 450,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/RemoteFilesystemSpecTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 996,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/local/LocalFilesystemWithShellTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 324,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/remote/store/BaseStoreContractTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 883,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystemTest.java",
+      "original_comments": 70,
+      "current_comments": 70,
+      "code_tokens": 8226,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/PinnedSandboxFilesystemTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1338,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/SandboxBackedFilesystemTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 3206,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/util/FilesystemUtilsTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 1610,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/HarnessGatewayRuntimeContextMergeTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1504,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/HarnessGatewaySessionIdTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 299,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/LocalSessionTurnGateTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 776,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SessionIdUtilsTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 245,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SubagentRegistryRecoveryIntegrationTest.java",
+      "original_comments": 18,
+      "current_comments": 18,
+      "code_tokens": 1237,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/WakeupDispatcherTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 974,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/channel/ChannelRouterOutboundAddressTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 657,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/channel/OutboundAddressSerializationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 193,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/channel/chatui/ChatUiChannelMsgSendTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1069,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/MemoryConfigTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 915,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/MemoryConsolidatorFilesystemTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 746,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/MemoryFlushManagerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 734,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactorPruneTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 2012,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactorSummaryShapeTest.java",
+      "original_comments": 15,
+      "current_comments": 15,
+      "code_tokens": 1754,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactorTest.java",
+      "original_comments": 27,
+      "current_comments": 27,
+      "code_tokens": 2849,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/compaction/ConversationCompactorTruncateArgsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1416,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/memory/compaction/TokenCounterUtilTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 252,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/AsyncToolMiddlewareTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1377,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/AtPathExpansionMiddlewareTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 2103,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/CompactionMiddlewareTest.java",
+      "original_comments": 26,
+      "current_comments": 26,
+      "code_tokens": 3059,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/HarnessSkillManageNamespaceTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1919,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/HarnessSkillMiddlewareContextIsolationTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1420,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/InboxMiddlewareTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 3432,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryBackgroundContextPropagationTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 978,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryFlushMiddlewareAsyncFlushTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 2331,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryFlushMiddlewareTriggerTest.java",
+      "original_comments": 26,
+      "current_comments": 26,
+      "code_tokens": 1457,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryMaintenanceMiddlewareAsyncGateTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 653,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryMaintenanceMiddlewareStaleEntryTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 268,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/MemoryMiddlewareThrottleIsolationTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 880,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/PlanModeMiddlewareTest.java",
+      "original_comments": 22,
+      "current_comments": 22,
+      "code_tokens": 3221,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SandboxLifecycleConcurrencyReproTest.java",
+      "original_comments": 17,
+      "current_comments": 17,
+      "code_tokens": 935,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SandboxLifecycleMiddlewareCallbackTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 978,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SandboxLifecycleMiddlewareReleaseOrderTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1303,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SkillUsageMiddlewareTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 809,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SubagentDeliveryTest.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 2144,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SubagentsMiddlewareHeadStabilityTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1769,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/TeamsMiddlewareTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 3069,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/ToolResultEvictionMiddlewareTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 3113,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewareMemoryPromptTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1358,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewarePathBoundsTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 857,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewareRulesContentTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 906,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewareSandboxPromptTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1257,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceEnvironmentPlacementTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 403,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspacePromptTestSupport.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 189,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/observation/HarnessActionObservationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 948,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/observation/StateStoreActionObserverTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 594,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/SandboxIsolationKeyTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1104,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/SandboxManagerIsolationTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 2411,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/SessionSandboxStateStoreTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 595,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/WorkspaceMountSupportTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 776,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/WorkspaceProjectionApplierTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 598,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerFilesystemSpecTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 360,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferIntegrationTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1107,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 1614,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxRunCommandTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 523,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/json/HarnessSandboxJacksonModuleTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1169,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/session/AgentSessionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1589,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/session/SqliteSessionStorageTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1247,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/session/WorkspaceSessionLogStoreTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1959,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/WorkspaceSkillRepositoryTest.java",
+      "original_comments": 30,
+      "current_comments": 30,
+      "code_tokens": 2746,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/CanaryFilterTest.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 720,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/EnvironmentAndAllowListFilterTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 682,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillAuditLogTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 610,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillCuratorTest.java",
+      "original_comments": 12,
+      "current_comments": 12,
+      "code_tokens": 1493,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillPromoterTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1934,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillSecurityScannerTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1246,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillUsageStoreBaseStoreTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 489,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/curator/SkillUsageStoreTest.java",
+      "original_comments": 9,
+      "current_comments": 9,
+      "code_tokens": 1283,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/MarketplaceStagerExecBitTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 528,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/MarketplaceStagerLazyRepositoryTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 1127,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/MarketplaceStagerOrphanGcTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 1975,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/SharedWorkspaceSkillStagingE2ETest.java",
+      "original_comments": 26,
+      "current_comments": 26,
+      "code_tokens": 2140,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/SkillLoadToolFrontmatterViewTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 791,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/SkillRuntimeTest.java",
+      "original_comments": 29,
+      "current_comments": 29,
+      "code_tokens": 4155,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/store/InMemoryStoreCASTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 856,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/DefaultAgentManagerRuntimeContextTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 507,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/SubagentDeclarationPhaseATest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1370,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/SubagentIsolationIntegrationTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 828,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/SubagentModeHiddenTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 588,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/SubagentPendingToolRecoveryDeclarationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 300,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/SubagentSpecGeneratorTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 664,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/protocol/RemoteEventCodecPassthroughTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 2281,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/protocol/RemoteEventCodecTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 932,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/AdoptedTaskRunSpecTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1088,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/RemoteSubmitContextTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 360,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepositoryDeliveryTest.java",
+      "original_comments": 13,
+      "current_comments": 13,
+      "code_tokens": 1145,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepositoryRemoteStreamingTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 1247,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepositorySandboxMaintenanceTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1799,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepositoryScopedMaintenanceTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 2319,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/subagent/task/WorkspaceTaskRepositoryTest.java",
+      "original_comments": 65,
+      "current_comments": 65,
+      "code_tokens": 5309,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/team/LocalTeamClientTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2039,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/testing/HarnessBackgroundTaskQuiescenceExtension.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 119,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/testing/HarnessQuiescence.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 87,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentGenerateToolTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1872,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolCancelEndEventTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 1240,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolDelegationSemanticsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 238,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolForceSyncTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 1897,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolKeyTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1904,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolOrphanCancelTest.java",
+      "original_comments": 35,
+      "current_comments": 35,
+      "code_tokens": 1339,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolPermissionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2141,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolPlanModeTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 902,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolPromotionTest.java",
+      "original_comments": 18,
+      "current_comments": 18,
+      "code_tokens": 1383,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolRemoteHelpersTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 981,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolResultStateTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2057,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/ArtifactDeliveryToolTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 2155,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FilesystemToolTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 3215,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "original_comments": 53,
+      "current_comments": 53,
+      "code_tokens": 1874,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/KeywordSearchModesTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1839,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/MemorySearchToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 475,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/ProposeSkillToolTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 881,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/SessionSearchToolCeilingTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 717,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/ShellExecuteToolTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 813,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/SkillManageToolTest.java",
+      "original_comments": 19,
+      "current_comments": 19,
+      "code_tokens": 3228,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/TaskToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 733,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/TeamToolTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 968,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/ToolResultAssertions.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 134,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/WaitAsyncResultsToolTest.java",
+      "original_comments": 10,
+      "current_comments": 10,
+      "code_tokens": 3981,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/WebToolsTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1007,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/HarnessAgentToolsConfigTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 1327,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/ManagedToolSelectionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 301,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/McpConnectionLifecycleTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 224,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/McpInitializationOrderTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 262,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/McpServerRegistrarTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1985,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/ToolFilterTest.java",
+      "original_comments": 4,
+      "current_comments": 4,
+      "code_tokens": 1277,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tools/ToolsConfigLoaderTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1054,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/verification/VerificationServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 2572,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/workspace/PathPolicyTest.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 422,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/workspace/WorkspaceManagerPathSafetyTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 495,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/workspace/plan/PlanModeManagerTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 558,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/BuilderCommonTestApp.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 65,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/api/error/ApiExceptionTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 393,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/catalog/spec/ManagedMcpContractTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 565,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/coord/HitlCoordinationStoreTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 859,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/coord/TurnInterruptCoordinationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 871,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/managed/AgentVersionSnapshotTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 145,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/managed/service/SessionEventLogCrossProcessTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1168,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/managed/service/SessionEventLogMirrorTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 950,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/persistence/jpa/JpaAgentStateStoreTransactionTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 243,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/persistence/jpa/JpaUserStoreSeedTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 225,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/share/AgentAclServiceTest.java",
+      "original_comments": 51,
+      "current_comments": 51,
+      "code_tokens": 1038,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/DataAppContextLoadTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 401,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/RegressionDataPlaneApplication.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1029,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/control/ControlPlaneClientExecutionScopeTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1344,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/control/ManagedEventOutboxPersistenceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 674,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/control/ManagedEventOutboxTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 1837,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/control/PostgresSessionDurabilityTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1619,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/api/AgentSessionEventsControllerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 759,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/api/DataSessionRunCancellationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 687,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/api/InternalManagedAttemptControllerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 363,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/api/InternalToolConfirmationControllerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 734,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/HarnessAgentBuildServiceCacheKeyTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1453,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevBrowserServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 748,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevCodeReviewServiceTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 745,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevContextServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 783,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevEvidenceServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 681,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevPhaseRoutingServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 903,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevServiceSupportTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 450,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevSupervisionServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 861,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevTraceManagedAgentTest.java",
+      "original_comments": 7,
+      "current_comments": 7,
+      "code_tokens": 2748,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/JevTraceServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 861,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/catalog/ManagedDefinitionMaterializerTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 389,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/coord/TurnLeaseServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 794,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/AgentRunRegistryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 684,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/AgentSessionRecoveryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1639,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/AgentSessionResourcesTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1115,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/AgentSessionViewTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1831,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/DataSessionServiceStatusFenceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 395,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/EnvironmentSpecFactoryE2bTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 520,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/HandsLeaseServiceFenceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 412,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/LegacySessionEventAdapterTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1220,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/ManagedMemoryAccessTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 224,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/ManagedVaultIsolationTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 478,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/MemoryMountServiceTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 512,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/SessionNativeMirrorStatusTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 826,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/SessionTurnAdmissionTest.java",
+      "original_comments": 3,
+      "current_comments": 3,
+      "code_tokens": 2814,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/SessionTurnInboxResumeTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 627,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/VaultCredentialResolverMemoryTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 353,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/selfhosted/ManagedSkillsBundleTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 540,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/selfhosted/SelfHostedHandsDataPlaneTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 809,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/toolbus/ToolConfirmationCoordinatorTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 4350,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/toolbus/ToolConfirmationMiddlewareTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 1981,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-gateway/src/test/java/io/agentscope/builder/GatewayAppContextLoadTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 100,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-gateway/src/test/java/io/agentscope/builder/GatewayRouteTableTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 748,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/builder/SchedulerAppContextLoadTest.java",
+      "original_comments": 8,
+      "current_comments": 8,
+      "code_tokens": 412,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/builder/web/managed/ChannelExternalKeysTest.java",
+      "original_comments": 1,
+      "current_comments": 1,
+      "code_tokens": 266,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/builder/web/managed/ChannelWorkBridgeTest.java",
+      "original_comments": 6,
+      "current_comments": 6,
+      "code_tokens": 1422,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/builder/web/managed/selfhosted/SelfHostedHandsUnitTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 387,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/extensions/channel/feishu/FeishuChannelCallbackTest.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 455,
+      "learning_notes": 0
+    }
+  ],
+  "initial_candidates": [
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/VersionTest.java",
+      "line": " * <p>验证构建时解析的版本和用于标识 AgentScope Java 客户端的 User-Agent 字符串生成。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/EventTest.java",
+      "line": "// 因为 getter isLast() 的 is 前缀被移除。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentBuilderLegacyShimTest.java",
+      "line": "     * 反射保护：已彻底删除的 1.x API 必须保持不存在。重新加入 builder 的 {@code memory(...)} / {@code statePersistence(...)} 或 {@link ReActAgent} 的 {@code saveTo} / {@code loadFrom} / {@code loadIfExists} / {@code getMemory} / {@code setMemory} 会使测试失败。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentGenerateOptionsTest.java",
+      "line": " * ReActAgent GenerateOptions 配置测试，覆盖问题 #767：Builder 增加 generateOptions()；temperature、topP、maxTokens 等正确传给模型；与 modelExecutionConfig 合并正确。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentHitlTest.java",
+      "line": "// 返回 Msg 必须包含 ASKING ToolUseBlock，使阻塞 API 调用方"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentHitlTest.java",
+      "line": "// 上下文应包含 tc1 的 DENIED ToolResultBlock"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentPerSessionStateTest.java",
+      "line": "// 每个订阅通过 Reactor Context 携带自己的事件 sink，而非共享字段；"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentStructuredOutputTest.java",
+      "line": "// 应优雅处理 null eventMsg，可以返回空或继续循环，"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentThinkingCumulativeTest.java",
+      "line": " * ReActAgent ThinkingBlock 累计与增量块测试。验证 ReasoningChunkEvent 同时提供两种思考内容，供钩子选择。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/ReActAgentTimeoutTest.java",
+      "line": "     * @param delay 响应前延迟"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/StructuredOutputDynamicDefineTest.java",
+      "line": " * StructuredOutputCapableAgent 动态 JSON Schema 测试，使用延迟强制模式。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/accumulator/ToolCallsAccumulatorTest.java",
+      "line": "// null ID 回退到最后一个键"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/integration/AgentBoundaryTest.java",
+      "line": " * <p>标记 integration，仅在 CI 或显式启用时运行。命令：mvn test -Dtest.integration=true。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/agent/integration/AgentPerformanceTest.java",
+      "line": " * <p>标记 integration 和 performance，只在 CI 或显式启用时运行。命令：mvn test -Dtest.integration=true -Dtest.performance=true。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/formatter/ResponseFormatTest.java",
+      "line": " * ResponseFormat 和 JsonSchema DTO 单元测试。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/formatter/ResponseFormatTest.java",
+      "line": " * <p>测试 OpenAI API 响应的结构化输出配置。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/legacy/memory/InMemoryMemoryNewApiTest.java",
+      "line": " * 测试 InMemoryMemory 的 StateModule API：saveTo/loadFrom。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/message/ToolUseBlockTest.java",
+      "line": " * {@link ToolUseBlock} 单元测试，重点验证 Jackson JSON 序列化与反序列化。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelTimeoutRetryTest.java",
+      "line": "     * @param delay 响应前延迟时长"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelTimeoutRetryTest.java",
+      "line": "     * @param attemptCount 跟踪尝试次数的原子计数器"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/ModelTimeoutRetryTest.java",
+      "line": "     * @param failCount 成功前模型应失败的次数"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/JdkHttpTransportTest.java",
+      "line": "// 测试 502 Bad Gateway"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/model/transport/JdkHttpTransportTest.java",
+      "line": "// 测试 503 Service Unavailable"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/shutdown/GracefulShutdownTest.java",
+      "line": "// ==================== AgentBase call() 生命周期 ===================="
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/SkillHookTest.java",
+      "line": "// 断言：SkillHook 现在使用 systemMsg API，不修改 inputMessages。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 创建模拟 Spring Boot LaunchedURLClassLoader 行为的自定义 ClassLoader"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// Spring Boot 中 classLoader.getResource(\"jar-skills\") 自动解析为"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 模拟 Spring Boot 行为：自动添加前缀"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 模拟 Spring Boot 3.2+ 多模块项目使用的 URL 模式："
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 模拟 Spring Boot 运行时解析嵌套 JAR"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 生产中由 Spring Boot 的 NestedFileSystemProvider 处理。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "     * 创建具有 Spring Boot 结构（BOOT-INF/classes/）的测试 JAR。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 添加 Spring Boot 结构"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "     * 创建模拟 Spring Boot 多模块项目的测试 fat JAR。外部 JAR 包含 BOOT-INF/lib/nested-skill.jar，内部再包含 jar-skills/{skillName}/SKILL.md。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 再创建外部 fat JAR，将内部 JAR 放在 BOOT-INF/lib/ 下"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "// 添加 Spring Boot 目录结构"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "     * 将内部 JAR 从外部 JAR 提取到临时文件，模拟 Spring Boot 运行时解析嵌套 JAR。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/repository/ClasspathSkillRepositoryTest.java",
+      "line": "     * <p>Spring Boot 3.2+ 中，{@code nested:} 协议由 {@code spring-boot-loader} 的 {@code NestedFileSystemProvider} 处理。测试环境不含 Spring Boot，此提供者模拟相同行为。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserTest.java",
+      "line": "// Unix LF 换行 换行"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserTest.java",
+      "line": "// Windows CRLF 换行 换行"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/skill/util/MarkdownSkillParserTest.java",
+      "line": "// 旧 Mac CR 换行"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/DangerousPathBypassTest.java",
+      "line": " * 验证危险路径检测无法通过 .env 变体、相对路径、大小写变化或符号链接绕过，对齐 Python PR #1656。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": " * @author shanhongyu"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param invocation 调用快照"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param next 下游链"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * 重新检查真实路径：normalize() 不解析符号链接、Windows 8.3 短文件名或 NTFS ADS。目标或根尚不存在时，比较双方最近已有祖先的真实路径；新文件不得通过符号链接目录越界，全新工作区则仍应允许。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param resolved 已通过词法验证并规范化的候选路径"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param root 调用方沙箱根目录"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param path 起始路径"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptor.java",
+      "line": "     * @param modelMessage 展示给模型的拒绝原因"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/PathSandboxInterceptorTest.java",
+      "line": " * @author shanhongyu"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolAnnotationTest.java",
+      "line": "// Schema 应为有效 JSON Schema 结构"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallInterceptorTest.java",
+      "line": " * @author shanhongyu"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallInterceptorTest.java",
+      "line": "// 模型参数、预设参数与 JSON null 值合并后均到达拦截器"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallInterceptorTest.java",
+      "line": "// 终端工具抛异常，消息仍为 \"Tool execution failed: ...\""
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolCallParamTest.java",
+      "line": "// 因为 ToolCallParam 构造器执行 new HashMap<>(builder.input)"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolExecutionContextIntegrationTest.java",
+      "line": "     * 使用自定义 UserContext POJO 的测试工具。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolGroupManagerTest.java",
+      "line": "// 断言 - META deactivated, EXTERNAL preserved"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolGroupManagerTest.java",
+      "line": "// 执行 - deactivate analytics, activate admin"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolInvocationTest.java",
+      "line": " * @author shanhongyu"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolMethodInvokerInterruptTest.java",
+      "line": "// 应包含 \"Tool execution failed\"，而非特殊中断标记"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolMethodInvokerInterruptTest.java",
+      "line": "// 均应以 \"Error: Tool execution failed:\" 开头"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaProviderTest.java",
+      "line": "// 准备 - Active group"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaProviderTest.java",
+      "line": "// 准备 - Inactive group"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolSchemaProviderTest.java",
+      "line": "// 准备 - Ungrouped tool"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolkitTest.java",
+      "line": "// 参数应为有效 JSON Schema 对象"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolkitTest.java",
+      "line": "// 验证 JSON schema 排除预设参数"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/ToolkitTest.java",
+      "line": "// 报 \"Schema validation error: Reference /$defs/Material cannot be resolved\""
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientBuilderTest.java",
+      "line": "// 在 streamable http 传输上定制 SSE 客户端不应出错"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientBuilderTest.java",
+      "line": "// 在 stdio 传输上定制 streamable http 客户端不应出错"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientBuilderTest.java",
+      "line": "// 在 SSE 传输上定制 streamable http 客户端不应出错"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientWrapperTestSupport.java",
+      "line": "     * @param name {@link McpClientWrapper#getName()} 返回值"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpClientWrapperTestSupport.java",
+      "line": "     * @param propagateMeta {@link McpClientWrapper#isPropagateMeta()} 返回值"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpContentConverterTest.java",
+      "line": "// MCP SDK 仅允许特定 Content 实现，即 Text、Image、Audio、"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpContentConverterTest.java",
+      "line": "// 空错误内容应得到 \"Unknown error\""
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpContentConverterTest.java",
+      "line": "// 验证：新版 MCP SDK 不允许 CallToolResult content 为 null"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpContentConverterTest.java",
+      "line": "// MCP SDK 仅允许 TextResourceContents 和 BlobResourceContents"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolMetaExtractionTest.java",
+      "line": " * {@link McpTool#callAsync(ToolCallParam)} 的 MCP meta 提取逻辑测试。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolMetaExtractionTest.java",
+      "line": "     * 辅助方法：捕获传给 clientWrapper.callTool(name, args, meta) 的 meta Map。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolTest.java",
+      "line": "// 创建带 defs 的 MCP JsonSchema"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tool/mcp/McpToolTest.java",
+      "line": "// 在旧版 JSON Schema 的 definitions 中创建 Material 定义"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tracing/OtelTracingMiddlewareTest.java",
+      "line": "// 仅使用 OTel ThreadLocal 会在这里丢失父 span。"
+    },
+    {
+      "path": "agentscope-core/src/test/java/io/agentscope/core/tracing/OtelTracingMiddlewareTest.java",
+      "line": "     * GlobalOpenTelemetry.get() 会包装注册的 SDK，因此通过 tracer provider 加上仅全局 exporter 能收到的 span 来确认身份。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// Windows CI 上两个带流式输出的持久化轮次可能超过 15 秒。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// -T1C 并行竞争下，Windows CI 的单次流式回复也可能超过 15 秒，"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// Windows CI 上两个带流式输出的持久化轮次可能超过 15 秒。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// Windows CI 上两个持久化轮次可能超过 15 秒，参见前述说明。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// 完整模型分发加人工确认挂起的轮次，在 Windows CI 的"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/test/java/io/agentscope/examples/chat/ChatSessionsTest.java",
+      "line": "// 带流式工具进度的多步演示在 Windows CI 可能超过 15 秒。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-codingagent/src/test/java/io/agentscope/harness/coding/webhook/github/GitHubWebhookSignatureTest.java",
+      "line": " * 测试 {@link GitHubWebhookHandler} 的 GitHub webhook HMAC 验签逻辑。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/runtime/channel/webhook/WebhookSignatureTest.java",
+      "line": "     * RFC 4231 §4.2：key=0x0b*20、data=\"Hi There\" 对应已知 SHA-256 HMAC。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/persistence/jpa/H2DemoSeedTest.java",
+      "line": " * <p>文件模式覆盖很重要：Spring Boot 4 的 {@code spring.sql.init.mode=embedded} 仅将"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/test/java/io/agentscope/dataagent/web/persistence/jpa/JpaPersistenceIntegrationTest.java",
+      "line": " * 基于内存 H2 启动完整 Spring Boot 上下文，端到端验证 DataAgent 唯一随附的 JPA 持久化路径。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/builder/BuilderAppContextLoadTest.java",
+      "line": " * 启动完整 Spring Boot 上下文，捕捉单元级 {@link BuilderBootstrapSmokeTest} 无法发现的装配问题，"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/builder/BuilderAppContextLoadTest.java",
+      "line": " * 例如 logback appender 类名、Bean 缺失或控制器配置错误。使用 {@link Model} 替身保持离线。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/api/AgentToolsControllerTest.java",
+      "line": "// /config GET：读取配置"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/test/java/io/agentscope/claw2/web/api/AgentToolsControllerTest.java",
+      "line": "// /config PUT：写入配置"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " * ├── AGENTS.md              # persona / local rules"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " * ├── MEMORY.md              # optional long-term scratch (loaded into &lt;memory_context&gt;)"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " * │   └── KNOWLEDGE.md       # optional domain summary"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " *     ├── helper.md          # YAML front matter + body as sys prompt"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " *     └── reviewer.md        # second spec example"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "line": " * <p>使用占位 {@link Model}，无需 API 密钥。{@code integration} 标签便于在 IDE 或以后配置 {@code groups} 时通过 JUnit Platform 筛选。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamEventsTest.java",
+      "line": "// Reactor Context，使 runToolBatch 的 deferContextual 捕获空上下文，"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamEventsTest.java",
+      "line": "// 会在行动阶段脱离 Reactor Context。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamTest.java",
+      "line": "     *   <li>父模型第 2 轮 → 最终回复 \"summary done\"。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentSubagentStreamTest.java",
+      "line": "/** 使用 {@code call()} 时，Reactor Context 中没有 {@link io.agentscope.core.agent.SubagentEventBus}。子智能体走普通阻塞路径，父级返回单个最终 {@link Msg}。 */"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentFactoryDeclarationTest.java",
+      "line": " * 覆盖 {@link HarnessAgent.Builder#subagentFactory(SubagentDeclaration,"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/SubagentPendingToolRecoveryTest.java",
+      "line": "// synchronous=EXTRA）。Windows CI 的并行构建和对新生成"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/bus/WorkspaceMessageBusTest.java",
+      "line": "// 非 Noop Tracer 的 register() 会启用全局 onEachOperator lift。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/LocalFilesystemPersonalAssistantExampleTest.java",
+      "line": "     * 演示底层工作区目录是普通本地文件路径，可与智能体并行使用标准 Java I/O 读写文件。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/example/support/InMemorySandboxFilesystemSpec.java",
+      "line": "     * @param client 用于会话创建／恢复的内存客户端"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/CompositeFilesystemTest.java",
+      "line": "     * 工作区文件树缺陷的回归测试：平台 {@code AgentWorkspaceController#tree} 等列出整个工作区的调用方使用 {@code glob(\"**&#47;*\", \"/\")}。Java NIO 的 {@code PathMatcher} 对 {@code **&#47;*} 要求至少一个分隔符，因此仅靠递归匹配器无法匹配根层精确文件路由（如 {@code AGENTS.md} / {@code MEMORY.md} / {@code tools.json}）。组合文件系统必须提供去掉前导 {@code **&#47;} 的直接匹配后备逻辑，使深度为 1 的条目也可见，否则工作区树 UI 会静默遗漏这些文件。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/CompositeFilesystemTest.java",
+      "line": "// 精确文件路由由以工作区为根的 virtualMode LocalFilesystem 支持，"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystemTest.java",
+      "line": "// \"unexpected server response\"，而不是映射后的错误。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystemTest.java",
+      "line": "// 某些后端在 stderr 报告 \"python3: not found\"，但末尾"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystemTest.java",
+      "line": "// \"unexpected server response\"，而不是降级到传输路径。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/filesystem/sandbox/BaseSandboxFilesystemTest.java",
+      "line": "// ==================== 缺陷复现：ls shell 吞掉错误 ===================="
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SubagentRegistryRecoveryIntegrationTest.java",
+      "line": " *   node A: expose → persist record + state   ⟶   shared store"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SubagentRegistryRecoveryIntegrationTest.java",
+      "line": " *   node B: cache miss → registry.find → materialize → load state by sessionId → continue"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/PlanModeMiddlewareTest.java",
+      "line": "// 公开 exitPlanMode API，因为会话日志已有活动写入者；"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/SandboxLifecycleConcurrencyReproTest.java",
+      "line": "// \"No active sandbox\" 并触发失败。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewarePathBoundsTest.java",
+      "line": "// 未配置 additionalRoots 时，不应出现 \"Additional roots:\" 行"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/middleware/WorkspaceContextMiddlewareSandboxPromptTest.java",
+      "line": "/** 确保工作区段落的沙箱分支在配置了实际制品交付工具时使用其名称 {@code deliver_artifact}，而不引用不存在的 \"upload/download tools\"。 */"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferIntegrationTest.java",
+      "line": " * mvn -pl agentscope-harness -Ddocker.it=true -Dtest=DockerSandboxFileTransferIntegrationTest test"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferIntegrationTest.java",
+      "line": "// docker cp 源不存在时退出码非零，runDockerCliBlocking 抛异常。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferTest.java",
+      "line": "// 文件字节完整传给 docker cp，从未经过 exec argv。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferTest.java",
+      "line": "     * 拦截 Docker CLI，无需真实 Docker 守护进程即可端到端运行上传／下载临时文件流程：向容器执行 {@code docker cp} 时捕获源字节，从容器执行 {@code docker cp} 时将 {@link #downloadPayload} 写入主机目标。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxRunCommandTest.java",
+      "line": " * <p>问题 #2884 回归防护：旧入口 {@code while :; do sleep 3600; done} 使 PID 1（{@code sh}）阻塞于前台 {@code sleep}，无法及时处理 SIGTERM，导致 {@code docker stop --time=30} 等待完整 30 秒后才 SIGKILL，每轮智能体调用都多出约 30 秒销毁延迟。入口应安装 SIGTERM trap 并等待后台 sleep，使 PID 1 及时退出。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxRunCommandTest.java",
+      "line": "// 必须安装 SIGTERM trap，使 PID 1（sh）在 `docker stop` 时退出。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxRunCommandTest.java",
+      "line": "// `sleep infinity` 是 GNU coreutils 扩展，BusyBox/Alpine 不支持，"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/skill/runtime/SharedWorkspaceSkillStagingE2ETest.java",
+      "line": "// 因为 HarnessAgent 持有维护线程，泄漏到共享 surefire JVM"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/testing/HarnessBackgroundTaskQuiescenceExtension.java",
+      "line": " * JUnit Jupiter 扩展，在每个测试方法后等待 Harness 发出后不等待的记忆刷新／维护后台任务结束。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/AgentSpawnToolPromotionTest.java",
+      "line": "// ---- 有状态 MockModel：首次调用返回 tool_call，后续返回最终文本 \"task done\"。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// 原始偏移应覆盖从 \"line one\" 起点到 \"line three\" 末尾。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// \"line three\" 末尾，即最后换行前的字符位于索引 31。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// - 一处精确匹配（\"hello world\"）"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// - 一处空白变形（\"hello  world\"，双空格）"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// 带尾空格的 header 及 old value → new value 的尾空格都应保留。"
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/tool/FuzzyTextMatcherTest.java",
+      "line": "// 作为普通内容，导致 CRLF 原文无法在任何匹配级别匹配 LF needle，"
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/BuilderCommonTestApp.java",
+      "line": " * 最小 Spring Boot 配置，让 service-common 的 {@code @DataJpaTest} 能启动。"
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/share/AgentAclServiceTest.java",
+      "line": "// ACL 是内层关卡，JWT 认证由上游执行，运行时不应出现 null userId。"
+    },
+    {
+      "path": "agentscope-service/service-common/src/test/java/io/agentscope/builder/web/share/AgentAclServiceTest.java",
+      "line": "// 工作区级授权也要求非 null userId。"
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/RegressionDataPlaneApplication.java",
+      "line": " * 隔离的 HTTP 回归测试启动器：真实持久化、确定性模型，无需提供商 API key。"
+    },
+    {
+      "path": "agentscope-service/service-dataplane/src/test/java/io/agentscope/builder/web/managed/SessionTurnAdmissionTest.java",
+      "line": "// 即使 run id 正确，旧租约发来的取消也不能终止替代执行者。"
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/test/java/io/agentscope/builder/web/managed/ChannelWorkBridgeTest.java",
+      "line": "// Windows CI 中 -T1C 并行构建其他模块时，本地回环 HTTP 的取令牌与发送往返"
+    }
+  ],
+  "pre_review": [
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/HarnessAgentIntegrationExampleTest.java",
+      "pre": "\n * workspace/\n * ├── AGENTS.md              # persona / local rules\n * ├── MEMORY.md              # optional long-term scratch (loaded into &lt;memory_context&gt;)\n * ├── knowledge/\n * │   └── KNOWLEDGE.md       # optional domain summary\n * └── subagents/\n *     ├── helper.md          # YAML front matter + body as sys prompt\n *     └── reviewer.md        # second spec example\n * "
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/gateway/SubagentRegistryRecoveryIntegrationTest.java",
+      "pre": "\n *   node A: expose → persist record + state   ⟶   shared store\n *   node B: cache miss → registry.find → materialize → load state by sessionId → continue\n * "
+    },
+    {
+      "path": "agentscope-harness/src/test/java/io/agentscope/harness/agent/sandbox/impl/docker/DockerSandboxFileTransferIntegrationTest.java",
+      "pre": "{@code\n * mvn -pl agentscope-harness -Ddocker.it=true -Dtest=DockerSandboxFileTransferIntegrationTest test\n * }"
+    }
+  ]
+}

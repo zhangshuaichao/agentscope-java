@@ -149,6 +149,8 @@ public class Event {
      * Event(type=REASONING, msg(id="abc", content=[...]), isLast=true)  ← Final
      * </pre>
      *
+     * <p>图示中文说明：前两项是同一推理消息的非终结事件；最后一项的 isLast=true 标记该消息的最后一个事件。Final 是终结标记，不是另一条模型消息。
+     *
      *  <pre>{@code
      * agent.stream(userMsg, options)
      *     .subscribe(event -> {

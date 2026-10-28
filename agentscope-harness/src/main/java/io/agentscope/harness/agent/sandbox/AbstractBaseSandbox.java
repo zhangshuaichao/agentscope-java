@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
  * Branch D: workspaceRootReady=false &amp; no restorable snapshot → fresh init from full workspace spec
  * </pre>
  *
+ * <p>分支图中文说明：A，工作区已就绪且目录存在，只应用临时条目；B，已就绪但目录丢失，从快照恢复并应用临时条目；C，尚未就绪且快照可恢复，用快照填充后应用全部条目；D，尚未就绪且无可用快照，按完整工作区配置从头初始化。
+ *
  * <p>子类实现后端专用操作：
  * <ul>
  *   <li>{@link #doExec(RuntimeContext, String, int)}：在工作区执行 Shell 命令</li>

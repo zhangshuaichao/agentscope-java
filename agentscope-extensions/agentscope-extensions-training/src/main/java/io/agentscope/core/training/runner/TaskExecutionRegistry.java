@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
  *   ├─ "task-002" → [ctx(run=0), ctx(run=1)]
  *   └─ "task-003" → [ctx(run=0)]
  * </pre>
+ *
+ * <p>映射图中文说明：键是任务 ID，值是该任务各次 RunExecutionContext 的列表；例如 task-001 对应运行 0、1、2，task-002 对应运行 0、1，task-003 只有运行 0。
  * <p>底层为 {@link ConcurrentHashMap}，列表使用同步包装，支持并发读写。
  * 提供 {@link #cleanup(String)} 与 {@link #clearAll()} 手动清理，长生命周期进程应安排清理以限制内存占用。
  * <p>【学习提示】这些静态进程内表不是持久训练日志，重启会丢失；读取上下文也不会自动复制其可变对象。

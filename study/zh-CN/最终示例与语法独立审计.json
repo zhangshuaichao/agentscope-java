@@ -1,0 +1,262 @@
+{
+  "pre_count": 496,
+  "candidates": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/agent/EventSource.java",
+      "text": "// grandchild.getDepth() == 2, grandchild.getPath() == \"main/researcher/sub-executor\"",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/main/java/io/agentscope/dataagent/web/persistence/jpa/JpaPersistenceConfig.java",
+      "text": "//host:5432/agentscope_builder",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/workspace/WorkspaceSharedStoreExample.java",
+      "text": "//your-redis-host:6379",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/mcp/McpSseExample.java",
+      "text": "//localhost:3000/sse",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/mcp/McpStreamableHttpExample.java",
+      "text": "//localhost:3000/mcp",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/model/ModelRegistryExample.java",
+      "text": "//localhost:11434)",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-nacos/agentscope-extensions-nacos-a2a/src/main/java/io/agentscope/core/nacos/a2a/discovery/NacosAgentCardResolver.java",
+      "text": "// AiService a2aService = AiFactory.createAiService(properties);",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-nacos/agentscope-extensions-nacos-a2a/src/main/java/io/agentscope/core/nacos/a2a/discovery/NacosAgentCardResolver.java",
+      "text": "// NacosAgentCardResolver nacosAgentCardResolver = new NacosAgentCardResolver(a2aService)",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/CompositeFilesystem.java",
+      "text": "// → storeFs.read(...)",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/filesystem/CompositeFilesystem.java",
+      "text": "// → localFs.read(...)",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-service/service-common/src/main/java/io/agentscope/builder/web/persistence/jpa/JpaPersistenceConfig.java",
+      "text": "//host:5432/agentscope_builder",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    },
+    {
+      "path": "agentscope-service/service-scheduler/src/main/java/io/agentscope/builder/worker/HandsWorkerMain.java",
+      "text": "//builder:8080 \\",
+      "review": "保留URL、注释代码或纯表达式；未发现遗漏说明"
+    }
+  ],
+  "non_java": [
+    {
+      "path": "agentscope-extensions/agentscope-extensions-jdbc/src/main/java/io/agentscope/extensions/jdbc/dialect/package-info.java",
+      "text": "<pre>\n * (1) dialect.table: one interface per table (abstract DDL + ANSI business SQL defaults), methods prefixed with table short name\n *\n *   +--------------------+   +------------------------+   +--------------------+\n *   | StoreDialect       |   | SessionStateDialect    |   | SnapshotDialect    |\n *   | DDL (abstract)     |   | DDL (abstract)         |   | DDL (abstract)     |\n *   | ANSI SQL (default) |   | ANSI SQL (default)     |   | ANSI SQL (default) |\n *   | base name \"store\"  |   | base name \"sessions\"   |   | base name \"snaps\"  |\n *   +--------------------+   +------------------------+   +--------------------+\n *   +--------------------+   +----------------------------+\n *   | SkillDialect       |   | SkillResourcesDialect      |     base table group: store/sessions/snapshots\n *   | base name \"skills\" |   | base name \"skill_resources\"|     skill table group: skills/skill_resources\n *   +--------------------+   +----------------------------+\n *            |                          |                          |\n *            v                          v                          v             &lt;- implements (aggregate implements all table-domain interfaces + SandboxLockStrategy)\n *   +--------+--------------------------+--------------------------+-----------+\n *   | AbstractJdbcDialect  aggregate abstract class                                |\n *   | Implements all table-domain interfaces + SandboxLockStrategy                |\n *   | Holds tablePrefix + per-table overrides + table-group flags; from(DataSource) returns builder |\n *   | build() detects DB -> binds DataSource -> assembles names/groups -> creates or validates tables |\n *   | createTableDdls() collects the enabled groups' DDL; tryEnter() default = table-based lock    |\n *   | Final name resolution: override > prefix + base                               |\n *   +--------+--------------------------+--------------------------+-----------+\n *            |                          |                          |\n *            v                          v                          v             &lt;- extends (one class per database — ALL differences in one file)\n *\n * (2) dialect.vendor: override only DDL + divergent SQL + lock (if native), inherit ANSI defaults\n *\n *   +----------------------+   +----------------------+   +------------------+   +------------------+\n *   | MysqlDialect         |   | PostgresDialect      |   | H2Dialect        |   | SqliteDialect    |\n *   | ON DUPLICATE KEY     |   | ON CONFLICT          |   | MERGE INTO       |   | ON CONFLICT      |\n *   | LONGTEXT/LONGBLOB    |   | TEXT/BYTEA           |   | CLOB/BLOB        |   | TEXT/BLOB        |\n *   | tryEnter: GET_LOCK   |   | tryEnter: inherited  |   | tryEnter: inherited | | tryEnter: inherited |\n *   +----------------------+   +----------------------+   +------------------+   +------------------+\n *\n * (3) Adding a database with native locks = override tryEnter() in the vendor class (no separate strategy class)\n * </pre>",
+      "review": "原文本结构保留，既有紧邻中文对照"
+    },
+    {
+      "path": "agentscope-harness/src/main/java/io/agentscope/harness/agent/workspace/WorkspaceManager.java",
+      "text": "<pre>\n * workspace/\n * ├── AGENTS.md\n * ├── MEMORY.md\n * ├── memory/YYYY-MM-DD.md\n * ├── skills/&lt;skill-name&gt;/SKILL.md\n * ├── knowledge/KNOWLEDGE.md\n * ├── knowledge/*\n * ├── subagents/&lt;id&gt;.md                     (subagent declarations)\n * ├── agents/&lt;agentId&gt;/workspace/           (isolated subagent runtime root, auto-created)\n * ├── agents/&lt;agentId&gt;/sessions/sessions.json\n * └── .agentscope-runtime/ — private native session journal (local backend)\n * </pre>",
+      "review": "原文本结构保留，既有紧邻中文对照"
+    }
+  ],
+  "scope": "全仓2121个生产Java的Javadoc pre；不修改extensions测试",
+  "method": "词法提取示例中的Java注释后人工核查；非Java图示另看紧邻对照，不将URL中的//当作解释注释。",
+  "added_adjacent_chinese_notes": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/repository/FileSystemSkillRepository.java",
+      "pre_index": 0,
+      "chinese_explanation": "目录图中文对照：每个 skill-name 目录代表一个技能；SKILL.md 是必需入口，包含 YAML 前置元数据；references 是可选参考文档，examples 是可选示例，scripts 是可选脚本。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/async/AsyncSubagentExample.java",
+      "pre_index": 0,
+      "chinese_explanation": "流程图中文对照：HarnessAgent 共享 messageBus；SubagentsMiddleware 接入任务完成回调；子智能体完成后推送收件箱并加入唤醒队列；WakeupDispatcher 轮询后调用网关唤醒；InboxMiddleware 取出消息，使模型看到结果。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/subagent/SubagentStreamingExample.java",
+      "pre_index": 0,
+      "chinese_explanation": "事件图中文对照：父智能体开始并输出推理，调用 agent_spawn；子智能体开始、流式输出思考内容并结束，事件都带 source 路径；父智能体收到工具结果，输出最终回复并结束。parent 指父智能体，child 指子智能体。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/model/ModelRegistryExample.java",
+      "pre_index": 0,
+      "chinese_explanation": "对照表中文说明：各模型 ID 右侧为所需环境变量；qwen-* 可使用无提供方前缀的简写。Ollama 的 OLLAMA_BASE_URL 缺省地址为 http://localhost:11434。模型名称与密钥变量保留原样，能否调用还取决于已安装提供方及账号权限。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/skill/SkillWithToolGroupExample.java",
+      "pre_index": 1,
+      "chinese_explanation": "技能文件中文对照：name 是技能名 data-analysis；description 表示“统计数据分析技能”；正文要求处理数据集时使用 analyze_data 与 summarize 工具。原 YAML 及工具标识保留不变。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/streaming/AgentEventStreamExample.java",
+      "pre_index": 0,
+      "chinese_explanation": "事件图中文对照：智能体开始后进入模型调用；文本块开始，按流式 token 块反复发出 TEXT_BLOCK_DELTA，随后文本块结束；MODEL_CALL_END 携带 token 用量，最后智能体结束。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/streaming/AgentEventStreamExample.java",
+      "pre_index": 1,
+      "chinese_explanation": "工具事件图中文对照：TOOL_CALL_START 携带工具名及调用 ID，可选 TOOL_CALL_DELTA 传递流式参数，随后调用描述结束；工具结果开始，发出文本或数据增量；TOOL_RESULT_END 携带 SUCCESS 或 ERROR 状态。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/streaming/ToolStreamingExample.java",
+      "pre_index": 0,
+      "chinese_explanation": "事件图中文对照：工具执行开始后，TOOL_PROGRESS 报告“步骤 1：获取数据”“步骤 2：处理”，仅供界面使用；TOOL_RESULT_TEXT_DELTA 才是工具返回值并交给模型，最后以 SUCCESS 结束。"
+    }
+  ],
+  "additional_label_translations": {
+    "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/main/java/io/agentscope/core/rag/integration/bailian/BailianConfig.java": {
+      "@return Access Key ID": "@return 访问密钥标识（Access Key ID）",
+      "@return Access Key Secret": "@return 访问密钥秘密值（Access Key Secret）",
+      "@param accessKeyId Access Key ID": "@param accessKeyId 访问密钥标识（Access Key ID）",
+      "@param accessKeySecret Access Key Secret": "@param accessKeySecret 访问密钥秘密值（Access Key Secret）"
+    },
+    "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/QdrantStore.java": {
+      "@return Qdrant Value": "@return Qdrant 值对象",
+      "@param value Qdrant Value": "@param value Qdrant 值对象",
+      "@return Java Object": "@return Java 对象"
+    }
+  },
+  "syntax_parse": {
+    "files": 3194,
+    "errors": 0,
+    "command": "python study/zh-CN/verify_java_syntax.py .",
+    "scope": "当前工作树全部Java（含main/test）",
+    "limits": "只调用JDK17 JavacTask.parse；不解析依赖类型、不运行注解处理、不编译执行或运行测试。"
+  },
+  "patch_verification": [
+    {
+      "path": "agentscope-core/src/main/java/io/agentscope/core/skill/repository/FileSystemSkillRepository.java",
+      "original_comments": 19,
+      "current_comments": 23,
+      "code_tokens": 1131,
+      "learning_notes": 2
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/async/AsyncSubagentExample.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 650,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/subagent/SubagentStreamingExample.java",
+      "original_comments": 5,
+      "current_comments": 5,
+      "code_tokens": 628,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/model/ModelRegistryExample.java",
+      "original_comments": 26,
+      "current_comments": 26,
+      "code_tokens": 346,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/skill/SkillWithToolGroupExample.java",
+      "original_comments": 28,
+      "current_comments": 28,
+      "code_tokens": 1072,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/streaming/AgentEventStreamExample.java",
+      "original_comments": 31,
+      "current_comments": 31,
+      "code_tokens": 694,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/streaming/ToolStreamingExample.java",
+      "original_comments": 11,
+      "current_comments": 11,
+      "code_tokens": 692,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/main/java/io/agentscope/core/rag/integration/bailian/BailianConfig.java",
+      "original_comments": 38,
+      "current_comments": 38,
+      "code_tokens": 908,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/main/java/io/agentscope/core/rag/store/QdrantStore.java",
+      "original_comments": 82,
+      "current_comments": 82,
+      "code_tokens": 4219,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-chat/src/main/java/io/agentscope/examples/chat/ChatController.java",
+      "original_comments": 2,
+      "current_comments": 2,
+      "code_tokens": 1205,
+      "learning_notes": 0
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/main/java/io/agentscope/claw2/web/api/ChatController.java",
+      "original_comments": 16,
+      "current_comments": 17,
+      "code_tokens": 1967,
+      "learning_notes": 1
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/main/java/io/agentscope/dataagent/web/api/ChatController.java",
+      "original_comments": 41,
+      "current_comments": 41,
+      "code_tokens": 2947,
+      "learning_notes": 1
+    }
+  ],
+  "semantic_findings": [
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/tool/PermissionContextExample.java",
+      "finding": "原BYPASS表格声称跳过全部权限检查；中文已解释显式拒绝/询问和安全自检不可绕过。"
+    },
+    {
+      "path": "agentscope-examples/documentation/src/main/java/io/agentscope/examples/documentation2/harness/planmode/PlanModeAutoExample.java",
+      "finding": "原注释声称使用内存store，但创建行已注释且builder未配置；明确旧说明与实际代码区别，未修改行为。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-scheduler/agentscope-extensions-scheduler-xxl-job/src/main/java/io/agentscope/extensions/scheduler/xxljob/XxlJobAgentScheduler.java",
+      "finding": "旧注释声称支持旧版注册方法回退，代码直接调用新API后重抛；已纠正。成功调用的执行计数在公共run及适配器各加一次，中文提示不将其当作成功任务数。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-studio/src/main/java/io/agentscope/core/studio/StudioWebSocketClient.java",
+      "finding": "等待项在响应/错误时移除；取消没有相同清理钩子，学习提示明确局限，未改代码。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-dataagent/src/main/java/io/agentscope/dataagent/web/api/ChatController.java",
+      "finding": "父代理按代码纠正：SSE成功响应为完整单文本块，不是逐token；existingSessionKey只在创建流时读取，首轮缺失时toolEvents为Flux.empty，不会逐事件重新查询。当前版本token验证PASS。"
+    },
+    {
+      "path": "agentscope-examples/agents/agentscope-paw/src/main/java/io/agentscope/claw2/web/api/ChatController.java",
+      "finding": "PAW ChatController有与dataagent相同的SSE完整单块输出和首轮空工具事件流边界；按代码补充中文说明，词元验证PASS。"
+    }
+  ],
+  "all_production_verification": {
+    "files": 2121,
+    "passed": 2121,
+    "errors": [],
+    "code_tokens": 1649555,
+    "method": "逐个对比基线的Java可执行token和字符串、许可、Javadoc符号标签及示例非注释token；所有2121个src/main Java，不仅检查已修改文件。",
+    "baseline": "a543f993cce6e22fb37c31ae14443cf9104dbeae",
+    "report": "全部生产源码词元独立验证.json"
+  }
+}

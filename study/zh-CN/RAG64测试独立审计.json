@@ -1,0 +1,1263 @@
+{
+  "generated_utc": "2026-10-27T17:56:13.531268+00:00",
+  "scope": "全部64个RAG测试Java",
+  "method": "Lexical comment extraction; excludes Apache license, pre/code/inline Javadoc examples, formatter directives, pure symbols. English-prose heuristic with exact line snippets; NO_ENGLISH_PROSE_DETECTED is not proof of semantic correctness. Snapshot may change while workers edit.",
+  "summary": {
+    "files": 64,
+    "files_with_candidates": 2,
+    "candidate_lines": 2,
+    "classes_with_english_candidates": 0,
+    "manual_untranslated_prose": 0
+  },
+  "files": [
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/BailianClientTest.java",
+      "nonlicense_comment_blocks": 18,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BailianClientTest",
+          "declaration_line": 42,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/BailianConfigTest.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BailianConfigTest",
+          "declaration_line": 24,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/BailianDocumentConverterTest.java",
+      "nonlicense_comment_blocks": 10,
+      "chinese_comment_blocks": 10,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BailianDocumentConverterTest",
+          "declaration_line": 30,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/BailianKnowledgeE2ETest.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BailianKnowledgeE2ETest",
+          "declaration_line": 50,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/BailianKnowledgeTest.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "BailianKnowledgeTest",
+          "declaration_line": 43,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/QueryHistoryEntryTest.java",
+      "nonlicense_comment_blocks": 0,
+      "chinese_comment_blocks": 0,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "QueryHistoryEntryTest",
+          "declaration_line": 24,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/RerankConfigTest.java",
+      "nonlicense_comment_blocks": 0,
+      "chinese_comment_blocks": 0,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RerankConfigTest",
+          "declaration_line": 25,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-bailian/src/test/java/io/agentscope/core/rag/integration/bailian/RewriteConfigTest.java",
+      "nonlicense_comment_blocks": 0,
+      "chinese_comment_blocks": 0,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RewriteConfigTest",
+          "declaration_line": 23,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/DifyDocumentConverterTest.java",
+      "nonlicense_comment_blocks": 10,
+      "chinese_comment_blocks": 10,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DifyDocumentConverterTest",
+          "declaration_line": 30,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/DifyKnowledgeTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DifyKnowledgeTest",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/DifyRAGClientTest.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DifyRAGClientTest",
+          "declaration_line": 41,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/DifyRAGConfigTest.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DifyRAGConfigTest",
+          "declaration_line": 28,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/RerankConfigTest.java",
+      "nonlicense_comment_blocks": 0,
+      "chinese_comment_blocks": 0,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RerankConfigTest",
+          "declaration_line": 25,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-dify/src/test/java/io/agentscope/core/rag/integration/dify/RetrievalModeTest.java",
+      "nonlicense_comment_blocks": 0,
+      "chinese_comment_blocks": 0,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RetrievalModeTest",
+          "declaration_line": 23,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/test/java/io/agentscope/core/rag/integration/haystack/HayStackClientRequestTest.java",
+      "nonlicense_comment_blocks": 11,
+      "chinese_comment_blocks": 11,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HayStackClientRequestTest",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/test/java/io/agentscope/core/rag/integration/haystack/HayStackClientTest.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HayStackClientTest",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/test/java/io/agentscope/core/rag/integration/haystack/HayStackConfigTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HayStackConfigTest",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RequiredParametersTest",
+          "declaration_line": 38,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "DefaultValuesTest",
+          "declaration_line": 56,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "RetrievalParametersTest",
+          "declaration_line": 76,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "GroupingAndWindowTest",
+          "declaration_line": 126,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "EmbeddingTest",
+          "declaration_line": 154,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "FiltersTest",
+          "declaration_line": 188,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "DocumentsTest",
+          "declaration_line": 217,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "HttpConfigurationTest",
+          "declaration_line": 249,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/test/java/io/agentscope/core/rag/integration/haystack/HayStackDocumentConverterTest.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HayStackDocumentConverterTest",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ConvertToDocumentsTest",
+          "declaration_line": 38,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "ConvertToDocumentTest",
+          "declaration_line": 119,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-haystack/src/test/java/io/agentscope/core/rag/integration/haystack/HayStackKnowledgeTest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "HayStackKnowledgeTest",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/test/java/io/agentscope/core/rag/integration/ragflow/RAGFlowClientRequestTest.java",
+      "nonlicense_comment_blocks": 31,
+      "chinese_comment_blocks": 31,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGFlowClientRequestTest",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/test/java/io/agentscope/core/rag/integration/ragflow/RAGFlowClientTest.java",
+      "nonlicense_comment_blocks": 17,
+      "chinese_comment_blocks": 17,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGFlowClientTest",
+          "declaration_line": 53,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/test/java/io/agentscope/core/rag/integration/ragflow/RAGFlowConfigTest.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGFlowConfigTest",
+          "declaration_line": 34,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "RequiredParametersTest",
+          "declaration_line": 37,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "DefaultValuesTest",
+          "declaration_line": 105,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "RetrievalParametersTest",
+          "declaration_line": 131,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "PaginationTest",
+          "declaration_line": 243,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "AdvancedFeaturesTest",
+          "declaration_line": 288,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "MetadataConditionTest",
+          "declaration_line": 403,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "HttpConfigurationTest",
+          "declaration_line": 432,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "MultipleIdsTest",
+          "declaration_line": 481,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/test/java/io/agentscope/core/rag/integration/ragflow/RAGFlowDocumentConverterTest.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGFlowDocumentConverterTest",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "ConvertToDocumentsTest",
+          "declaration_line": 36,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        },
+        {
+          "name": "ConvertToDocumentTest",
+          "declaration_line": 119,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-ragflow/src/test/java/io/agentscope/core/rag/integration/ragflow/RAGFlowKnowledgeTest.java",
+      "nonlicense_comment_blocks": 5,
+      "chinese_comment_blocks": 5,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGFlowKnowledgeTest",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/EmbeddingExceptionTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "EmbeddingExceptionTest",
+          "declaration_line": 33,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/EmbeddingUtilsTest.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "EmbeddingUtilsTest",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/dashscope/DashScopeMultiModalEmbeddingE2ETest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DashScopeMultiModalEmbeddingE2ETest",
+          "declaration_line": 42,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/dashscope/DashScopeMultiModalEmbeddingTest.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DashScopeMultiModalEmbeddingTest",
+          "declaration_line": 52,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/dashscope/DashScopeTextEmbeddingE2ETest.java",
+      "nonlicense_comment_blocks": 4,
+      "chinese_comment_blocks": 4,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DashScopeTextEmbeddingE2ETest",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/dashscope/DashScopeTextEmbeddingTest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DashScopeTextEmbeddingTest",
+          "declaration_line": 55,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/ollama/OllamaTextEmbeddingE2ETest.java",
+      "nonlicense_comment_blocks": 16,
+      "chinese_comment_blocks": 16,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OllamaTextEmbeddingE2ETest",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/ollama/OllamaTextEmbeddingEmbedTest.java",
+      "nonlicense_comment_blocks": 18,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OllamaTextEmbeddingEmbedTest",
+          "declaration_line": 46,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/ollama/OllamaTextEmbeddingTest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OllamaTextEmbeddingTest",
+          "declaration_line": 44,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/openai/OpenAITextEmbeddingE2ETest.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OpenAITextEmbeddingE2ETest",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/openai/OpenAITextEmbeddingEmbedTest.java",
+      "nonlicense_comment_blocks": 18,
+      "chinese_comment_blocks": 18,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OpenAITextEmbeddingEmbedTest",
+          "declaration_line": 54,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/openai/OpenAITextEmbeddingLifecycleTest.java",
+      "nonlicense_comment_blocks": 3,
+      "chinese_comment_blocks": 3,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OpenAITextEmbeddingLifecycleTest",
+          "declaration_line": 58,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/embedding/openai/OpenAITextEmbeddingTest.java",
+      "nonlicense_comment_blocks": 7,
+      "chinese_comment_blocks": 7,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "OpenAITextEmbeddingTest",
+          "declaration_line": 44,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/KnowledgeRetrievalToolsTest.java",
+      "nonlicense_comment_blocks": 24,
+      "chinese_comment_blocks": 24,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "KnowledgeRetrievalToolsTest",
+          "declaration_line": 52,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TestMockEmbeddingModel",
+          "declaration_line": 307,
+          "comment_index": 21,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/ToolTestUtils.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ToolTestUtils",
+          "declaration_line": 28,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/e2e/ContentValidator.java",
+      "nonlicense_comment_blocks": 20,
+      "chinese_comment_blocks": 20,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ContentValidator",
+          "declaration_line": 26,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/e2e/RAGInMemoryE2ETest.java",
+      "nonlicense_comment_blocks": 26,
+      "chinese_comment_blocks": 26,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "RAGInMemoryE2ETest",
+          "declaration_line": 77,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/e2e/TestUtils.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 15,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TestUtils",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/exception/ReaderExceptionTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ReaderExceptionTest",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/exception/VectorStoreExceptionTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "VectorStoreExceptionTest",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/hook/GenericRAGHookTest.java",
+      "nonlicense_comment_blocks": 17,
+      "chinese_comment_blocks": 17,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "GenericRAGHookTest",
+          "declaration_line": 59,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TestMockEmbeddingModel",
+          "declaration_line": 373,
+          "comment_index": 17,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/knowledge/SimpleKnowledgeTest.java",
+      "nonlicense_comment_blocks": 13,
+      "chinese_comment_blocks": 13,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SimpleKnowledgeTest",
+          "declaration_line": 49,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "MockEmbeddingModel",
+          "declaration_line": 361,
+          "comment_index": 10,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/ExternalApiReaderTest.java",
+      "nonlicense_comment_blocks": 32,
+      "chinese_comment_blocks": 32,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ExternalApiReaderTest",
+          "declaration_line": 43,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/ImageReaderTest.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 6,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "ImageReaderTest",
+          "declaration_line": 39,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": [
+        {
+          "line": 163,
+          "comment_index": 6,
+          "snippet": "\"path/to/image.jpg\" 的预期 MD5 哈希",
+          "english_fragments": [
+            "\"path/to/image.jpg\""
+          ],
+          "class_level": false,
+          "manual_review": "保留的样例路径或Java术语/测试方法名，解释为中文"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/PDFReaderTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PDFReaderTest",
+          "declaration_line": 35,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/ReaderInputTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ReaderInputTest",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/ReaderTest.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ReaderTest",
+          "declaration_line": 37,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TestReader",
+          "declaration_line": 42,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/SplitStrategyTest.java",
+      "nonlicense_comment_blocks": 1,
+      "chinese_comment_blocks": 1,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SplitStrategyTest",
+          "declaration_line": 29,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/TextChunkerTest.java",
+      "nonlicense_comment_blocks": 15,
+      "chinese_comment_blocks": 15,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TextChunkerTest",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/TextReaderTest.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 9,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TextReaderTest",
+          "declaration_line": 36,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/TikaReaderTest.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "TikaReaderTest",
+          "declaration_line": 71,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/reader/WordReaderTest.java",
+      "nonlicense_comment_blocks": 9,
+      "chinese_comment_blocks": 8,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "WordReaderTest",
+          "declaration_line": 45,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/DistanceCalculatorTest.java",
+      "nonlicense_comment_blocks": 6,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "DistanceCalculatorTest",
+          "declaration_line": 31,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/ElasticsearchStoreTest.java",
+      "nonlicense_comment_blocks": 42,
+      "chinese_comment_blocks": 41,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "ElasticsearchStoreTest",
+          "declaration_line": 68,
+          "comment_index": null,
+          "likely_english_prose_lines": 0,
+          "status": "NO_CLASS_JAVADOC"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/InMemoryStoreTest.java",
+      "nonlicense_comment_blocks": 34,
+      "chinese_comment_blocks": 34,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "InMemoryStoreTest",
+          "declaration_line": 44,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CustomObject",
+          "declaration_line": 563,
+          "comment_index": 34,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/MilvusStoreTest.java",
+      "nonlicense_comment_blocks": 37,
+      "chinese_comment_blocks": 37,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "MilvusStoreTest",
+          "declaration_line": 69,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CustomObject",
+          "declaration_line": 1387,
+          "comment_index": 37,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/PgVectorStoreTest.java",
+      "nonlicense_comment_blocks": 25,
+      "chinese_comment_blocks": 25,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "PgVectorStoreTest",
+          "declaration_line": 61,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CustomObject",
+          "declaration_line": 1104,
+          "comment_index": 25,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/QdrantStoreTest.java",
+      "nonlicense_comment_blocks": 35,
+      "chinese_comment_blocks": 35,
+      "likely_english_prose_lines": 1,
+      "class_docs": [
+        {
+          "name": "QdrantStoreTest",
+          "declaration_line": 62,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "CustomObject",
+          "declaration_line": 602,
+          "comment_index": 35,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": [
+        {
+          "line": 354,
+          "comment_index": 7,
+          "snippet": " testAutoCloseable - 验证 try-with-resources 正常工作",
+          "english_fragments": [
+            "try-with-resources"
+          ],
+          "class_level": false,
+          "manual_review": "保留的样例路径或Java术语/测试方法名，解释为中文"
+        }
+      ]
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/VDBStoreBaseTest.java",
+      "nonlicense_comment_blocks": 2,
+      "chinese_comment_blocks": 2,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "VDBStoreBaseTest",
+          "declaration_line": 40,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        },
+        {
+          "name": "TestVDBStore",
+          "declaration_line": 45,
+          "comment_index": 2,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-rag/agentscope-extensions-rag-simple/src/test/java/io/agentscope/core/rag/store/dto/SearchDocumentDtoTest.java",
+      "nonlicense_comment_blocks": 48,
+      "chinese_comment_blocks": 48,
+      "likely_english_prose_lines": 0,
+      "class_docs": [
+        {
+          "name": "SearchDocumentDtoTest",
+          "declaration_line": 32,
+          "comment_index": 1,
+          "likely_english_prose_lines": 0,
+          "status": "NO_ENGLISH_PROSE_DETECTED"
+        }
+      ],
+      "samples": []
+    }
+  ]
+}

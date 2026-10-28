@@ -1,0 +1,168 @@
+{
+  "report_format": "concise_audit_summary",
+  "detailed_entries_embedded": false,
+  "detail_note": "逐项机器审计记录保留离线，不在仓库内嵌；本文件保留审计范围、结果与限制。逐文件覆盖请参阅全仓覆盖进度.csv。",
+  "full_report_sha256": "82a01d5782ff29b62b248c90b80ae1fd4f8d85f38cd1971927b97eac7a64b17e",
+  "per_file_coverage": "全仓覆盖进度.csv",
+  "reproducible_checks": [
+    "python study/zh-CN/verify_comment_only.py",
+    "python study/zh-CN/verify_java_syntax.py ."
+  ],
+  "reproduction_limit": "脚本复核词元保护与语法；人工语义审阅不能仅凭脚本重现。",
+  "scope_files": 167,
+  "latin_lines_manually_reviewed": 1229,
+  "pre_blocks_reviewed": 3,
+  "pre_explanation_comments": 4,
+  "untranslated_english_prose_found": 0,
+  "terminology_polish_edits": [
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/test/java/io/agentscope/extensions/model/gemini/GeminiChatModelTest.java",
+      "before": "// 可在 stream 调用中传入工具 schema",
+      "after": "// 可在 stream 调用中传入工具模式"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/test/java/io/agentscope/extensions/model/gemini/formatter/GeminiResponseParserTest.java",
+      "before": "// 否则下游记账无法识别缓存命中、定价会按全量 prompt 估算。",
+      "after": "// 否则下游记账无法识别缓存命中、定价会按全量提示词估算。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/test/java/io/agentscope/extensions/model/gemini/formatter/GeminiToolsHelperTest.java",
+      "before": "// 创建简单工具 schema",
+      "after": "// 创建简单工具模式"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/test/java/io/agentscope/extensions/model/gemini/formatter/GeminiToolsHelperTest.java",
+      "before": "// 验证参数 schema 作为 JSON Schema 透传",
+      "after": "// 验证参数模式作为 JSON Schema 透传"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-gemini/src/test/java/io/agentscope/extensions/model/gemini/formatter/GeminiToolsHelperTest.java",
+      "before": "// 创建嵌套对象 schema",
+      "after": "// 创建嵌套对象模式"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-ollama/src/test/java/io/agentscope/extensions/model/ollama/OllamaChatModelTest.java",
+      "before": "// 通过序列化或可用 getter 检查对象，验证此行为",
+      "after": "// 通过序列化或可用的取值方法检查对象，验证此行为"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-ollama/src/test/java/io/agentscope/extensions/model/ollama/OllamaChatModelTest.java",
+      "before": "// thinkOption 非公开，通过 getter 访问：",
+      "after": "// thinkOption 非公开，通过取值方法访问："
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai/src/test/java/io/agentscope/extensions/model/openai/formatter/OpenAIChatFormatterTest.java",
+      "before": "// 使用 setter 创建响应（OpenAIResponse 没有构建器）",
+      "after": "// 使用赋值方法创建响应（OpenAIResponse 没有构建器）"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai-official/src/test/java/io/agentscope/extensions/model/openaiofficial/ResponsesRequestMapperTest.java",
+      "before": "// 仅 strict=true 才合成最小严格 schema",
+      "after": "// 仅 strict=true 才合成最小严格模式"
+    }
+  ],
+  "prior_heuristic_candidates_reviewed": [
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-anthropic/src/test/java/io/agentscope/extensions/model/anthropic/formatter/AnthropicToolsHelperTest.java",
+      "line": 743,
+      "comment_index": 30,
+      "snippet": "应合并为 A=override、B=value-b、C=value-c",
+      "english_fragments": [
+        "A=override、B=value-b、C=value-c"
+      ],
+      "class_level": false,
+      "disposition": "保留断言预期键值；中文已说明合并结果。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-anthropic/src/test/java/io/agentscope/extensions/model/anthropic/formatter/AnthropicToolsHelperTest.java",
+      "line": 768,
+      "comment_index": 33,
+      "snippet": "应合并为 A=override、B=value-b、C=value-c",
+      "english_fragments": [
+        "A=override、B=value-b、C=value-c"
+      ],
+      "class_level": false,
+      "disposition": "保留断言预期键值；中文已说明合并结果。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-anthropic/src/test/java/io/agentscope/extensions/model/anthropic/formatter/AnthropicToolsHelperTest.java",
+      "line": 793,
+      "comment_index": 36,
+      "snippet": "应合并为 A=override、B=value-b、C=value-c",
+      "english_fragments": [
+        "A=override、B=value-b、C=value-c"
+      ],
+      "class_level": false,
+      "disposition": "保留断言预期键值；中文已说明合并结果。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-dashscope/src/test/java/io/agentscope/extensions/model/dashscope/formatter/DashScopeChatFormatterGroundTruthTest.java",
+      "line": 636,
+      "comment_index": 54,
+      "snippet": "匹配此类行的模式：\"- The returned audio can be found at:",
+      "english_fragments": [
+        "\"- The returned audio can be found at:"
+      ],
+      "class_level": false,
+      "disposition": "保留实际输出匹配样本，不是未译说明；周围已说明匹配模式。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-dashscope/src/test/java/io/agentscope/extensions/model/dashscope/formatter/DashScopeMultiAgentFormatterGroundTruthTest.java",
+      "line": 841,
+      "comment_index": 76,
+      "snippet": "匹配此类行的模式：\"- The returned audio can be found at:",
+      "english_fragments": [
+        "\"- The returned audio can be found at:"
+      ],
+      "class_level": false,
+      "disposition": "保留实际输出匹配样本，不是未译说明；周围已说明匹配模式。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-ollama/src/test/java/io/agentscope/extensions/model/ollama/OllamaChatModelTest.java",
+      "line": 472,
+      "comment_index": 37,
+      "snippet": "Ollama 格式：message: { role: assistant, tool_calls: [ { function: { name: ...,",
+      "english_fragments": [
+        "message: { role: assistant, tool_calls: [ { function: { name: ...,"
+      ],
+      "class_level": false,
+      "disposition": "保留JSON/协议结构示意及键值，不是自然语言。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-ollama/src/test/java/io/agentscope/extensions/model/ollama/OllamaChatModelTest.java",
+      "line": 586,
+      "comment_index": 47,
+      "snippet": "假设序列化为 \"tool_choice\": {\"type\": \"function\", \"function\": {\"name\":",
+      "english_fragments": [
+        "\"tool_choice\": {\"type\": \"function\", \"function\": {\"name\":"
+      ],
+      "class_level": false,
+      "disposition": "保留JSON/协议结构示意及键值，不是自然语言。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai/src/test/java/io/agentscope/extensions/model/openai/compat/kimi/KimiModelProviderTest.java",
+      "line": 211,
+      "comment_index": 7,
+      "snippet": "可配置思考模型中，Specific 仅在 thinking.type=disabled 时有效，",
+      "english_fragments": [
+        "thinking.type=disabled"
+      ],
+      "class_level": false,
+      "disposition": "逐行复核为技术名称、变量/方法/字段、协议值、表达式、命令、路径或夹具引用；非半译英语说明。"
+    },
+    {
+      "path": "agentscope-extensions/agentscope-extensions-model/agentscope-extensions-model-openai-official/src/test/java/io/agentscope/extensions/model/openaiofficial/OpenAISdkClientFactoryTest.java",
+      "line": 67,
+      "comment_index": 2,
+      "snippet": "请求头值为 null 会触发 putHeader(name, value) 的 Kotlin 非空检查",
+      "english_fragments": [
+        "putHeader(name, value)"
+      ],
+      "class_level": false,
+      "disposition": "逐行复核为技术名称、变量/方法/字段、协议值、表达式、命令、路径或夹具引用；非半译英语说明。"
+    }
+  ],
+  "verification_entry_count": 167,
+  "line_by_line_review_entry_count": 1229,
+  "limitations": "仅独立说明残留审计及词法验证；未执行测试、编译或调用真实API。"
+}

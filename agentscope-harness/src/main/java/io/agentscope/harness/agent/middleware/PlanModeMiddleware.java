@@ -46,10 +46,11 @@ import reactor.core.publisher.Mono;
 
 /**
  * 强制执行规划模式：当 {@code AgentState.planModeContext.planActive} 为 {@code true} 时，
- * 拒绝修改型工具调用，使智能体只能读取、调研和起草计划。
+ * 按工具名和只读解析器限制调用；这不是操作系统级只读隔离。
  *
- * <p>规则确定地在 {@link #onActing} 中执行：仅允许只读工具或规划控制工具
- * （{@code plan_enter} / {@code plan_write} / {@code plan_exit} / {@code todo_write}）；
+ * <p>规则在 {@link #onActing} 中执行：允许只读工具、内置白名单
+ * （包括 {@code plan_enter} / {@code plan_write} / {@code plan_exit} / {@code todo_write}，
+ * 以及智能体协作和任务工具），还允许 additionalAllowed 显式配置的例外。
  * 其余调用不执行，而是得到写入上下文并流式发出的合成 {@code DENIED} 工具结果。
  * 这里刻意不复用 {@code PermissionMode.EXPLORE}：该模式在
  * {@code PermissionEngine} 构造时被不可变地快照，无法在运行时切换，
@@ -228,7 +229,7 @@ public class PlanModeMiddleware implements HarnessRuntimeMiddleware {
         String replyId = state.getReplyId();
         String agentName = agent.getName();
 
-        // 延迟到订阅时执行，确保上下文修改与事件只运行一次。
+        // 延迟到每次订阅时写入上下文并生成事件；defer 不提供跨订阅的“只执行一次”保证。
         Flux<AgentEvent> deniedFlux =
                 Flux.defer(
                         () -> {

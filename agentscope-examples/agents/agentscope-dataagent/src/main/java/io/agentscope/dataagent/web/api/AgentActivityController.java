@@ -1,0 +1,130 @@
+/*
+ * Copyright 2024-2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.agentscope.dataagent.web.api;
+
+import io.agentscope.dataagent.web.audit.ActivityEvent;
+import io.agentscope.dataagent.web.audit.AgentActivityStore;
+import io.agentscope.dataagent.web.catalog.AgentDefinition;
+import io.agentscope.dataagent.web.share.AgentAccessGuard;
+import io.agentscope.dataagent.web.share.AgentAclService;
+import io.agentscope.dataagent.web.share.AgentAclService.Tier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
+
+/**
+ * 读取智能体的活动日志。
+ * <p>{@code GET /api/agents/{id}/activity?since={ms}&limit={n}} 至少要求 RUN 权限。
+ * 涉及共享或渠道绑定的事件（{@code GRANT_SHARE}、{@code REVOKE_SHARE}、
+ * {@code BIND_CHANNEL}、{@code UNBIND_CHANNEL}、{@code EDIT_BINDING}）向 EDIT 级调用者返回完整信息，
+ * 向较低权限调用者返回脱敏摘要（拥有者更新了共享或渠道绑定）；拥有者可查看全部信息。
+ */
+@RestController
+@RequestMapping("/api/agents/{id}/activity")
+public class AgentActivityController {
+
+    private static final Set<String> REDACTED_SHARE_ACTIONS =
+            Set.of(ActivityEvent.Action.GRANT_SHARE, ActivityEvent.Action.REVOKE_SHARE);
+
+    private static final Set<String> REDACTED_BINDING_ACTIONS =
+            Set.of(
+                    ActivityEvent.Action.BIND_CHANNEL,
+                    ActivityEvent.Action.UNBIND_CHANNEL,
+                    ActivityEvent.Action.EDIT_BINDING);
+
+    private final AgentAccessGuard guard;
+    private final AgentAclService acl;
+    private final AgentActivityStore store;
+
+    public AgentActivityController(
+            AgentAccessGuard guard, AgentAclService acl, AgentActivityStore store) {
+        this.guard = guard;
+        this.acl = acl;
+        this.store = store;
+    }
+
+    @GetMapping
+    public Mono<List<ActivityEvent>> list(
+            @PathVariable("id") String agentId,
+            @RequestParam(name = "since", required = false) Long since,
+            @RequestParam(name = "limit", defaultValue = "50") int limit,
+            Authentication auth) {
+        String userId = (String) auth.getPrincipal();
+        return Mono.fromCallable(
+                        () -> {
+                            AgentDefinition def = guard.require(userId, agentId, Tier.RUN);
+                            if (!AgentDefinition.SCOPE_USER.equals(def.scope())
+                                    || def.ownerId() == null) {
+                                // 全局智能体没有按智能体划分的活动日志；其工作区
+                                // 不通过这里的用户级日志存储
+                                // 建立独立命名空间。
+                                return List.<ActivityEvent>of();
+                            }
+                            String ownerId = def.ownerId();
+                            Tier held = acl.tierFor(userId, def);
+                            boolean fullDetail = held != null && held.implies(Tier.EDIT);
+                            List<ActivityEvent> raw = store.list(ownerId, agentId, since, limit);
+                            if (fullDetail) {
+                                return raw;
+                            }
+                            List<ActivityEvent> out = new ArrayList<>(raw.size());
+                            for (ActivityEvent ev : raw) {
+                                out.add(redactFor(ev));
+                            }
+                            return out;
+                        })
+                .onErrorResume(ResponseStatusException.class, Mono::error)
+                .onErrorMap(
+                        ex ->
+                                new ResponseStatusException(
+                                        HttpStatus.INTERNAL_SERVER_ERROR,
+                                        "Failed to load activity: " + ex.getMessage()));
+    }
+
+    private static ActivityEvent redactFor(ActivityEvent ev) {
+        if (ev == null || ev.action() == null) return ev;
+        if (REDACTED_SHARE_ACTIONS.contains(ev.action())) {
+            return new ActivityEvent(
+                    ev.id(),
+                    ev.timestampMs(),
+                    ev.actorUserId(),
+                    ev.actorUsername(),
+                    ev.action(),
+                    null,
+                    null);
+        }
+        if (REDACTED_BINDING_ACTIONS.contains(ev.action())) {
+            return new ActivityEvent(
+                    ev.id(),
+                    ev.timestampMs(),
+                    ev.actorUserId(),
+                    ev.actorUsername(),
+                    ev.action(),
+                    null,
+                    null);
+        }
+        return ev;
+    }
+}

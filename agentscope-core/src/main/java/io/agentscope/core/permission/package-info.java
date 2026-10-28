@@ -24,5 +24,7 @@
  * <pre>
  *   deny → ask → tool self-check → allow → BYPASS → default ASK
  * </pre>
+ *
+ * <p>流程图中文说明：拒绝规则→询问规则→工具自检→允许规则→BYPASS 模式回退→默认询问；这是优先级链，后面的模式不能覆盖前面已经返回的结果。
  */
 package io.agentscope.core.permission;

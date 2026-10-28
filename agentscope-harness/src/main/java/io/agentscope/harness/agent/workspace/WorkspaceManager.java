@@ -95,6 +95,8 @@ import org.slf4j.LoggerFactory;
  * └── .agentscope-runtime/ — private native session journal (local backend)
  * </pre>
  *
+ * <p>目录图中文说明：AGENTS.md 是工作约定，MEMORY.md 与按日 memory 文件承载记忆；skills 保存技能，knowledge 保存知识。subagents 下是子智能体声明；agents/agentId/workspace 是自动建立的隔离运行根，sessions/sessions.json 是会话索引；.agentscope-runtime 是本地后端的私有原生会话日志目录。
+ *
  * <p>【学习提示】双层读取的回退规则不等于覆盖文件一定存在；“非空才覆盖”也意味着空内容可能触发本地回退。
  * 阅读隔离问题时，应同时查看运行时命名空间、路由后端和本地回退路径。
  */

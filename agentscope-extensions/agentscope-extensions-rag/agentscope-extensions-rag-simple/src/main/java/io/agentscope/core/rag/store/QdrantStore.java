@@ -499,7 +499,7 @@ public class QdrantStore implements VDBStoreBase, AutoCloseable {
      * 将 Java Object 转换为 Qdrant Value。
      *
      * @param obj 待转换对象
-     * @return Qdrant Value
+     * @return Qdrant 值对象
      */
     private Value convertObjectToValue(Object obj) {
         if (obj == null) {
@@ -745,8 +745,8 @@ public class QdrantStore implements VDBStoreBase, AutoCloseable {
     /**
      * 将 Qdrant Value 转换为 Java Object。
      *
-     * @param value Qdrant Value
-     * @return Java Object
+     * @param value Qdrant 值对象
+     * @return Java 对象
      */
     private Object convertValueToObject(Value value) {
         if (value.hasNullValue()) {
